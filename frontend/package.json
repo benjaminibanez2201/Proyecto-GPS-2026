@@ -1,8 +1,11 @@
 {
-  "name": "frontend",
+  "name": "proyecto-gps-2026-frontend",
   "private": true,
   "version": "0.0.0",
+  "description": "Frontend de Proyecto-GPS-2026",
   "type": "module",
+  "author": "Benjamín Ibáñez Verdejo",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

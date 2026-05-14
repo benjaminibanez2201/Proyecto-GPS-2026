@@ -1,7 +1,7 @@
 {
-  "name": "plantillaisw2024",
+  "name": "proyecto-gps-2026",
   "version": "1.0.0",
-  "description": "Plantilla de proyecto para Ingenieria de Software 2024-2",
+  "description": "Backend de Proyecto-GPS-2026",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -11,8 +11,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\""
   },
-  "author": "Diego Salazar Jara",
-  "license": "ISC",
+  "author": "Benjamín Ibáñez Verdejo",
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.0.0",
