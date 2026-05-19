@@ -28,13 +28,59 @@ const UserSchema = new EntitySchema({
       unique: true,
     },
     rol: {
-      type: "varchar",
-      length: 50,
+      type: "enum",
+      enum: ["admin", "estudiante", "arrendador"],
+      default: "estudiante",
       nullable: false,
     },
     password: {
       type: "varchar",
       nullable: false,
+      selecct: false,
+    },
+    estadoVerificacion: {
+      type: "enum",
+      enum: ["pendiente", "aprobado", "rechazado"],
+      default: "pendiente",
+      nullable: false,
+    },
+    fotoPerfil: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    telefono: {
+      type: "varchar",
+      length: 20,
+      nullable: true,
+    },
+    universidad: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    carrera: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    documentoVerificacion: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    resetPasswordToken: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    resetPasswordExpires: {
+      type: "timestamp with time zone",
+      nullable: true,
+    },
+    ultimoLogin: {
+      type: "timestamp with time zone",
+      nullable: true,
     },
     createdAt: {
       type: "timestamp with time zone",
@@ -49,11 +95,6 @@ const UserSchema = new EntitySchema({
     },
   },
   indices: [
-    {
-      name: "IDX_USER",
-      columns: ["id"],
-      unique: true,
-    },
     {
       name: "IDX_USER_RUT",
       columns: ["rut"],

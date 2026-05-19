@@ -16,8 +16,9 @@ async function createUsers() {
           nombreCompleto: "Usuario Administrador",
           rut: "21.308.779-3",
           email: "administrador2024@gmail.cl",
-          password: await encryptPassword("admin1234"),
-          rol: "administrador",
+          password: await encryptPassword("Admin1234."),
+          rol: "admin",
+          estadoVerificacion: "aprobado",
         }),
       ),
     ]);

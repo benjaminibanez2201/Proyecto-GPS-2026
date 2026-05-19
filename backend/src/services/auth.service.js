@@ -20,20 +20,28 @@ export async function loginService(user) {
     });
 
     if (!userFound) {
-      return [null, createErrorMessage("email", "El correo electrónico es incorrecto")];
+      return [null, createErrorMessage("auth", "Credenciales incorrectas")];
     }
 
     const isMatch = await comparePassword(password, userFound.password);
 
     if (!isMatch) {
-      return [null, createErrorMessage("password", "La contraseña es incorrecta")];
+      return [null, createErrorMessage("auth", "Credenciales incorrectas")];
     }
 
-    const payload = {
+    if (userFound.estadoVerificacion === "pendiente") {
+      return [null, createErrorMessage("estadoVerificacion", "Tu cuenta está pendiente de verificación. Por favor, espera a que sea aprobada.")];
+    } else if (userFound.estadoVerificacion === "rechazado") {
+      return [null, createErrorMessage("estadoVerificacion", "Tu cuenta ha sido rechazada. Por favor, contacta al soporte para más información.")];
+    }
+
+    // quien eres y que permisos tienes
+    const payload = { 
+      id: userFound.id,
       nombreCompleto: userFound.nombreCompleto,
       email: userFound.email,
-      rut: userFound.rut,
       rol: userFound.rol,
+      estadoVerificacion: userFound.estadoVerificacion,
     };
 
     const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, {

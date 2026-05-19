@@ -38,8 +38,8 @@ const Login = () => {
                         fieldType: 'input',
                         type: "email",
                         required: true,
-                        minLength: 15,
-                        maxLength: 30,
+                        minLength: 5,
+                        maxLength: 100,
                         errorMessageData: errorEmail,
                         validate: {
                             emailDomain: (value) => value.endsWith('@gmail.cl') || 'El correo debe terminar en @gmail.cl'
@@ -54,9 +54,9 @@ const Login = () => {
                         type: "password",
                         required: true,
                         minLength: 8,
-                        maxLength: 26,
-                        pattern: /^[a-zA-Z0-9]+$/,
-                        patternMessage: "Debe contener solo letras y números",
+                        maxLength: 50,
+                        pattern: /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/,
+                        patternMessage: "Debe contener al menos una mayúscula, un número y un carácter especial.",
                         errorMessageData: errorPassword,
                         onChange: (e) => handleInputChange('password', e.target.value)
                     },
