@@ -101,3 +101,4 @@ export async function registerService(user) {
     return [null, "Error interno del servidor"];
   }
 }
+
