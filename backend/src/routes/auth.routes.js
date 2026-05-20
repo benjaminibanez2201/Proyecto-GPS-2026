@@ -1,12 +1,12 @@
 "use strict";
 import { Router } from "express";
-import { login, logout, register } from "../controllers/auth.controller.js";
-
+import { forgotPassword, login, logout, register } from "../controllers/auth.controller.js";
 const router = Router();
 
 router
   .post("/login", login)
   .post("/register", register)
-  .post("/logout", logout);
+  .post("/logout", logout)
+  .post("/forgot-password", forgotPassword);
 
 export default router;

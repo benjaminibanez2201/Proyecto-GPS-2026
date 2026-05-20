@@ -1,5 +1,5 @@
 "use strict";
-import { loginService, registerService } from "../services/auth.service.js";
+import { loginService, registerService, forgotPasswordService } from "../services/auth.service.js";
 import {
   authValidation,
   registerValidation,
@@ -57,6 +57,17 @@ export async function logout(req, res) {
   try {
     res.clearCookie("jwt", { httpOnly: true });
     handleSuccess(res, 200, "Sesión cerrada exitosamente");
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+    const [message, error] = await forgotPasswordService(email);
+    if (error) return handleErrorClient(res, 400, error);
+    handleSuccess(res, 200, message);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
