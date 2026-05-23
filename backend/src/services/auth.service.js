@@ -112,7 +112,7 @@ export async function forgotPasswordService(email) {
     });
 
     if (!userFound) {
-      return [null, "Se envió un correo electrónico a la dirección proporcionada si existe una cuenta asociada. Si no recibes un correo, por favor verifica tu dirección de correo electrónico o contacta al soporte. Gracias por tu comprensión."];
+      return ["Instrucciones enviadas si el correo existe", null];
     }
 
     // generar el token de restablecimiento de contraseña
@@ -131,6 +131,48 @@ export async function forgotPasswordService(email) {
     return ["Instrucciones para restablecer la contraseña han sido enviadas a tu correo electrónico", null];
   } catch (error) {
     console.error("Error al solicitar restablecimiento de contraseña:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function resetPasswordService(token, newPassword) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    //Verificamos que el token sea valido
+    let decoded;
+    try {
+      decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    } catch {
+      return [null, "El enlace de restablecimiento es inválido o ha expirado"];
+    }
+
+    // buscamos el usuario con el token
+    const userFound = await userRepository.findOne({
+      where: { resetPasswordToken: token },
+    });
+
+    if (!userFound) {
+      return [null, "El token no existe o ya ha sido utilizado"];
+    }
+
+    if (userFound.resetPasswordExpires < new Date()) {
+    return [null, "El enlace de restablecimiento ha expirado"];
+    }
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await encryptPassword(newPassword);
+
+    // Actualizar la contraseña y limpiar el token
+    userFound.password = hashedPassword;
+    userFound.resetPasswordToken = null;
+    userFound.resetPasswordExpires = null;
+
+    await userRepository.save(userFound);
+
+    return ["Contraseña restablecida exitosamente", null];
+  } catch (error) {
+    console.error("Error al restablecer la contraseña:", error);
     return [null, "Error interno del servidor"];
   }
 }
