@@ -4,10 +4,12 @@ import {
   getUserService,
   getUsersService,
   updateUserService,
+  updateProfileService,
 } from "../services/user.service.js";
 import {
   userBodyValidation,
   userQueryValidation,
+  profileBodyValidation,
 } from "../validations/user.validation.js";
 import {
   handleErrorClient,
@@ -119,6 +121,32 @@ export async function deleteUser(req, res) {
     if (errorUserDelete) return handleErrorClient(res, 404, "Error eliminado al usuario", errorUserDelete);
 
     handleSuccess(res, 200, "Usuario eliminado correctamente", userDelete);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function updateProfile(req, res) {
+  try {
+    const { body } = req;
+    const { id } = req.user;
+
+    const { error: bodyError } = profileBodyValidation.validate(body);
+
+    if (bodyError) {
+      return handleErrorClient(
+        res,
+        400,
+        "Error de validación en los datos enviados",
+        bodyError.message,
+      );
+    }
+
+    const [user, userError] = await updateProfileService(id, body);
+
+    if (userError) return handleErrorClient(res, 400, "Error actualizando perfil", userError);
+
+    handleSuccess(res, 200, "Perfil actualizado correctamente", user);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
