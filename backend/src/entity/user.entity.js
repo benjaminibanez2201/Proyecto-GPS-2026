@@ -93,6 +93,16 @@ const UserSchema = new EntitySchema({
       onUpdate: "CURRENT_TIMESTAMP",
       nullable: false,
     },
+    avgRating: {
+      type: "float",
+      nullable: false,
+      default: 0,
+    },
+    reviewsCount: {
+      type: "int",
+      nullable: false,
+      default: 0,
+    },
   },
   indices: [
     {
