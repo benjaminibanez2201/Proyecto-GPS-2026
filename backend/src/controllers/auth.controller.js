@@ -3,6 +3,7 @@ import { loginService, registerService, forgotPasswordService, resetPasswordServ
 import {
   authValidation,
   registerValidation,
+  newPasswordValidation,
 } from "../validations/auth.validation.js";
 import {
   handleErrorClient,
@@ -77,11 +78,18 @@ export async function resetPassword(req, res) {
   try {
     const { token } = req.params;
     const { newPassword } = req.body;
-    const [message, error] = await resetPasswordService(token, newPassword);
+
+    const { error } = newPasswordValidation.validate({ newPassword });
+
+    if (error) {
+      return handleErrorClient(res, 400, "Error de validación", error.message);
+    }
+
+    const [message, errorNewUser] = await resetPasswordService(token, newPassword);
     
-    if (error) return handleErrorClient(res, 400, error);
+    if (errorNewUser) return handleErrorClient(res, 400, errorNewUser);
     handleSuccess(res, 200, message);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
-}
+} 

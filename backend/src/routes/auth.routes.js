@@ -8,6 +8,6 @@ router
   .post("/register", register)
   .post("/logout", logout)
   .post("/forgot-password", forgotPassword)
-  .put("/reset-password/:token", resetPassword);
+  .post("/reset-password/:token", resetPassword);
 
 export default router;

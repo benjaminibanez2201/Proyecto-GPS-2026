@@ -119,6 +119,13 @@ export async function sendRecoveryEmail(email, resetToken) {
         ].join("\n"),
     };
 
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    console.log("[email.service] Recovery email sent", {
+        messageId: info.messageId,
+        accepted: info.accepted,
+        rejected: info.rejected,
+        response: info.response,
+        envelope: info.envelope,
+    });
 }
 
