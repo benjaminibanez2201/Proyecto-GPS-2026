@@ -106,17 +106,13 @@ export async function registerService(user) {
 export async function forgotPasswordService(email) {
   try {
     const userRepository = AppDataSource.getRepository(User);
-    const normalizedEmail = email?.trim().toLowerCase();
-
-    console.log("=> Solicitud forgot-password para:", normalizedEmail);
 
     const userFound = await userRepository.findOne({
-      where: { email: normalizedEmail }
+      where: { email }
     });
 
     if (!userFound) {
-      console.log("=> No se encontró usuario para forgot-password");
-      return ["Instrucciones enviadas si el correo existe", null];
+      return [null, "Se envió un correo electrónico a la dirección proporcionada si existe una cuenta asociada. Si no recibes un correo, por favor verifica tu dirección de correo electrónico o contacta al soporte. Gracias por tu comprensión."];
     }
 
     // generar el token de restablecimiento de contraseña
@@ -131,9 +127,8 @@ export async function forgotPasswordService(email) {
 
     // enviar el correo con el token de restablecimiento 
     await sendRecoveryEmail(userFound.email, resetToken);
-    console.log("=> Correo de recuperación solicitado para:", userFound.email);
 
-    return ["Instrucciones enviadas si el correo existe", null];
+    return ["Instrucciones para restablecer la contraseña han sido enviadas a tu correo electrónico", null];
   } catch (error) {
     console.error("Error al solicitar restablecimiento de contraseña:", error);
     return [null, "Error interno del servidor"];
@@ -144,7 +139,6 @@ export async function resetPasswordService(token, newPassword) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
-    //Verificamos que el token sea valido
     let decoded;
     try {
       decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
@@ -152,7 +146,6 @@ export async function resetPasswordService(token, newPassword) {
       return [null, "El enlace de restablecimiento es inválido o ha expirado"];
     }
 
-    // buscamos el usuario con el token
     const userFound = await userRepository.findOne({
       where: { resetPasswordToken: token },
     });
@@ -162,13 +155,11 @@ export async function resetPasswordService(token, newPassword) {
     }
 
     if (userFound.resetPasswordExpires < new Date()) {
-    return [null, "El enlace de restablecimiento ha expirado"];
+      return [null, "El enlace de restablecimiento ha expirado"];
     }
 
-    // Hashear la nueva contraseña
     const hashedPassword = await encryptPassword(newPassword);
 
-    // Actualizar la contraseña y limpiar el token
     userFound.password = hashedPassword;
     userFound.resetPasswordToken = null;
     userFound.resetPasswordExpires = null;

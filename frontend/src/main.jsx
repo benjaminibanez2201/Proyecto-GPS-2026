@@ -10,6 +10,7 @@ import Error404 from '@pages/Error404';
 import Root from '@pages/Root';
 import ProtectedRoute from '@components/ProtectedRoute';
 import Profile from '@pages/Profile';
+import AdminPanel from '@pages/AdminPanel';
 import '@styles/styles.css';
 import HistorialArriendos from './pages/HistorialArriendos.jsx';
 import PerfilUsuario from './pages/PerfilUsuario.jsx';
@@ -42,6 +43,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['estudiante']}>
             <Profile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/admin',
+        element: (
+          <ProtectedRoute allowedRoles={['admin', 'administrador']}>
+            <AdminPanel />
           </ProtectedRoute>
         ),
       },

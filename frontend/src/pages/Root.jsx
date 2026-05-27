@@ -46,9 +46,9 @@ function PageRoot() {
             padding: '10px 5px'
           }}>
             <img 
-              src={logoSlideBar} 
-              alt="ArriendU Logo" 
-              style={{ height: '40px', width: 'auto', filter: 'brightness(0) invert(1)' }} 
+              src="/BannerArriendU.png" 
+              alt="ArriendU Banner" 
+              style={{ height: '40px', width: 'auto' }} 
             />
           </div>
 
