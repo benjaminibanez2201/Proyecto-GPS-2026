@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { resetPassword } from '@services/auth.service.js';
 
 // token can be provided to the hook (for flexibility) or read from route params
@@ -11,48 +11,52 @@ const useResetPassword = (providedToken) => {
     const [responseMessage, setResponseMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const navigate = useNavigate();
     const params = useParams();
     const token = providedToken || params.token || null;
 
-    const handleSubmit = async (e) => {
-        if (e && e.preventDefault) e.preventDefault();
+    const handleSubmit = async (formData) => {
+        if (responseMessage) return false;
+        const nextPassword = formData?.password ?? password;
+        const nextConfirmPassword = formData?.confirmPassword ?? confirmPassword;
         setLoading(true);
         setErrorPassword('');
         setErrorConfirmPassword('');
         setResponseMessage('');
 
-        if (!password || password.length < 8) {
+        if (!nextPassword || nextPassword.length < 8) {
             setErrorPassword('La contraseña debe tener al menos 8 caracteres');
             setLoading(false);
-            return;
+            return false;
         }
 
-        if (password !== confirmPassword) {
+        if (nextPassword !== nextConfirmPassword) {
             setErrorConfirmPassword('Las contraseñas no coinciden');
             setLoading(false);
-            return;
+            return false;
         }
 
         if (!token) {
             setErrorPassword('Token de restablecimiento inválido');
             setLoading(false);
-            return;
+            return false;
         }
 
         try {
-            const payload = await resetPassword(token, password);
+            const payload = await resetPassword(token, nextPassword);
             if (payload?.status === 'Success') {
-                setResponseMessage(payload.message || 'Contraseña restablecida correctamente');
-                // limpiar URL / navegar al login para no dejar token expuesto
-                navigate('/auth', { replace: true });
+                setResponseMessage('La contraseña fue actualizada exitosamente');
+                setPassword('');
+                setConfirmPassword('');
+                return true;
             } else {
                 const msg = payload?.details || payload?.message || 'No se pudo restablecer la contraseña';
                 setErrorPassword(msg);
+                return false;
             }
         } catch (error) {
             console.error('Error en resetPassword hook:', error);
             setErrorPassword('Error al restablecer la contraseña');
+            return false;
         } finally {
             setLoading(false);
         }

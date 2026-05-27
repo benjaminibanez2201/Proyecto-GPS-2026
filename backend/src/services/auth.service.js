@@ -106,14 +106,17 @@ export async function registerService(user) {
 export async function forgotPasswordService(email) {
   try {
     const userRepository = AppDataSource.getRepository(User);
-    const genericMessage = "Instrucciones enviadas si el correo existe";
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    console.log("=> Solicitud forgot-password para:", normalizedEmail);
 
     const userFound = await userRepository.findOne({
-      where: { email }
+      where: { email: normalizedEmail }
     });
 
     if (!userFound) {
-      return [genericMessage, null];
+      console.log("=> No se encontró usuario para forgot-password");
+      return ["Instrucciones enviadas si el correo existe", null];
     }
 
     // generar el token de restablecimiento de contraseña
@@ -128,8 +131,9 @@ export async function forgotPasswordService(email) {
 
     // enviar el correo con el token de restablecimiento 
     await sendRecoveryEmail(userFound.email, resetToken);
+    console.log("=> Correo de recuperación solicitado para:", userFound.email);
 
-    return [genericMessage, null];
+    return ["Instrucciones enviadas si el correo existe", null];
   } catch (error) {
     console.error("Error al solicitar restablecimiento de contraseña:", error);
     return [null, "Error interno del servidor"];

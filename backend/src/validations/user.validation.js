@@ -139,3 +139,56 @@ export const userBodyValidation = Joi.object({
     "object.missing":
       "Debes proporcionar al menos un campo: nombreCompleto, email, password, newPassword, rut o rol.",
   });
+
+  export const profileBodyValidation = Joi.object({
+    nombreCompleto: Joi.string()
+      .min(15)
+      .max(50)
+      .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      .messages({
+        "string.empty": "El nombre completo no puede estar vacío.",
+        "string.base": "El nombre completo debe ser de tipo string.",
+        "string.min": "El nombre completo debe tener como mínimo 15 caracteres.",
+        "string.max": "El nombre completo debe tener como máximo 50 caracteres.",
+        "string.pattern.base": "El nombre completo solo puede contener letras y espacios.",
+      }),
+      universidad: Joi.string()
+    .min(3)
+    .max(255)
+    .messages({
+      "string.empty": "La universidad no puede estar vacía.",
+      "string.base": "La universidad debe ser de tipo string.",
+      "string.min": "La universidad debe tener como mínimo 3 caracteres.",
+      "string.max": "La universidad debe tener como máximo 255 caracteres.",
+    }),
+    carrera: Joi.string()
+    .min(3)
+    .max(255)
+    .messages({
+      "string.empty": "La carrera no puede estar vacía.",
+      "string.base": "La carrera debe ser de tipo string.",
+      "string.min": "La carrera debe tener como mínimo 3 caracteres.",
+      "string.max": "La carrera debe tener como máximo 255 caracteres.",
+    }),
+    telefono: Joi.string()
+    .pattern(/^\+?[\d\s\-]{7,20}$/)
+    .messages({
+      "string.empty": "El teléfono no puede estar vacío.",
+      "string.base": "El teléfono debe ser de tipo string.",
+      "string.pattern.base": "Formato de teléfono inválido.",
+    }),
+    fotoPerfil: Joi.string()
+    .max(255)
+    .uri()
+    .messages({
+      "string.empty": "La foto de perfil no puede estar vacía.",
+      "string.uri": "La foto de perfil debe ser una URL válida.",
+      "string.max": "La URL de la foto no puede superar los 255 caracteres.",
+    }),
+  })
+  .or("nombreCompleto", "universidad", "carrera", "telefono", "fotoPerfil")
+  .unknown(false)
+  .messages({
+    "object.unknown": "No se permiten propiedades adicionales.",
+    "object.missing": "Debes proporcionar al menos un campo para actualizar.",
+  });

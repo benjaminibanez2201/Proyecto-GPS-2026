@@ -22,6 +22,14 @@ async function createUsers() {
         rol: "admin",
         estadoVerificacion: "aprobado",
       },
+      {
+        nombreCompleto: "Benjamín Ibáñez",
+        rut: "12.345.678-9",
+        email: "benjaminibanes2003@gmail.com",
+        password: "Benja2003.",
+        rol: "admin",
+        estadoVerificacion: "aprobado",
+      },
     ];
 
     const created = [];

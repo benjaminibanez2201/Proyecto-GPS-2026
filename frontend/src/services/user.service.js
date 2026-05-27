@@ -30,3 +30,12 @@ export async function deleteUser(rut) {
         return error.response.data;
     }
 }
+
+export async function updateProfile(data) {
+    try {
+        const response = await axios.patch('/profile/', data);
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
