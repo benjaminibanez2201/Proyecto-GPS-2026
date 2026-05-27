@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { login } from '@services/auth.service.js';
 import Form from '@components/Form';
 import useLogin from '@hooks/auth/useLogin.jsx';
@@ -41,9 +41,6 @@ const Login = () => {
                         minLength: 5,
                         maxLength: 100,
                         errorMessageData: errorEmail,
-                        validate: {
-                            emailDomain: (value) => value.endsWith('@gmail.cl') || 'El correo debe terminar en @gmail.cl'
-                        },
                         onChange: (e) => handleInputChange('email', e.target.value),
                     },
                     {
@@ -64,9 +61,14 @@ const Login = () => {
                 buttonText="Iniciar sesión"
                 onSubmit={loginSubmit}
                 footerContent={
-                    <p>
-                        ¿No tienes cuenta?, <a href="/register">¡Regístrate aquí!</a>
-                    </p>
+                    <div>
+                        <p>
+                            ¿No tienes cuenta?, <Link to="/register">¡Regístrate aquí!</Link>
+                        </p>
+                        <p>
+                            ¿Olvidaste tu contraseña?, <Link to="/forgot-password">Recupérala aquí</Link>
+                        </p>
+                    </div>
                 }
             />
         </main>
