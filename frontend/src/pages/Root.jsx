@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { Home, User, History, LogOut } from 'lucide-react';
-import { AuthProvider } from '@context/AuthContext';
+import { useAuth, AuthProvider } from '@context/AuthContext';
 import logoSlideBar from '../assets/logoSlideBar.svg';
 
 function Root() {
@@ -13,6 +13,7 @@ function Root() {
 
 function PageRoot() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Tu paleta de colores corporativa
   const colores = {
