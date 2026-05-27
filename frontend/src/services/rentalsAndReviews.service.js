@@ -39,3 +39,13 @@ export const obtenerResenasUsuario = async (userId) => {
     return [null, error.response?.data?.message || "Error al cargar las reseñas"];
   }
 };
+
+//obtener los datos del usuario para su perfil
+export async function obtenerPerfilUsuario(userId) {
+  try {
+    const response = await axios.get(`/users/${userId}`);
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || "Error al cargar el perfil del usuario"];
+  }
+}
