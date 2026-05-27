@@ -51,7 +51,7 @@ const Register = () => {
                     {
                         label: 'Nombre completo',
                         name: 'nombreCompleto',
-                        placeholder: 'Diego Alexis Salazar Jara',
+                        placeholder: 'Ingresa tu nombre completo',
                         fieldType: 'input',
                         type: 'text',
                         required: true,
@@ -63,7 +63,7 @@ const Register = () => {
                     {
                         label: 'Correo electrónico',
                         name: 'email',
-                        placeholder: 'example@gmail.cl',
+                        placeholder: 'correo@ejemplo.cl',
                         fieldType: 'input',
                         type: 'email',
                         required: true,
@@ -75,7 +75,7 @@ const Register = () => {
                     {
                         label: 'Rut',
                         name: 'rut',
-                        placeholder: '23.770.330-1',
+                        placeholder: '12.345.678-9',
                         fieldType: 'input',
                         type: 'text',
                         minLength: 9,
@@ -115,7 +115,7 @@ const Register = () => {
                             {
                                 label: 'Universidad',
                                 name: 'universidad',
-                                placeholder: 'Universidad de Concepción',
+                                placeholder: 'Ingresa tu universidad',
                                 fieldType: 'input',
                                 type: 'text',
                                 required: true,
@@ -125,7 +125,7 @@ const Register = () => {
                             {
                                 label: 'Carrera',
                                 name: 'carrera',
-                                placeholder: 'Ingeniería Civil Informática',
+                                placeholder: 'Ingresa tu carrera',
                                 fieldType: 'input',
                                 type: 'text',
                                 required: true,
@@ -137,7 +137,7 @@ const Register = () => {
                             {
                                 label: 'Teléfono',
                                 name: 'telefono',
-                                placeholder: '+56 9 1234 5678',
+                                placeholder: 'Ingresa tu teléfono',
                                 fieldType: 'input',
                                 type: 'tel',
                                 required: true,
