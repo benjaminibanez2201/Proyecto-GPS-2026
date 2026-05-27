@@ -289,40 +289,43 @@ input {
 	background-image: none;
 }
 
-.form .terms-toggle {
-	display: inline;
-	width: auto;
-	margin: 0;
-	padding: 0;
-	border: 0;
-	border-radius: 0;
-	background: transparent;
+.form .field-extra-content {
+	margin: 0 0 8px;
+}
+
+.form .terms-disclosure {
+	width: 100%;
 	color: #003366;
-	font-size: inherit;
+	font-size: 13px;
+}
+
+.form .terms-disclosure summary {
+	padding: 8px 10px;
+	border: 2px solid rgba(0, 51, 102, 0.26);
+	border-radius: 8px;
+	background-color: rgba(0, 110, 223, 0.08);
 	font-weight: bold;
-	text-decoration: underline;
 	cursor: pointer;
 }
 
-.form .terms-toggle:hover {
-	border: 0;
-	background: transparent;
-	color: #006edf;
-}
-
-.form .field-extra-content {
-	margin: 0 0 8px;
+.form .terms-disclosure[open] summary {
+	border-radius: 8px 8px 0 0;
 }
 
 .form .terms-panel {
 	gap: 8px;
 	padding: 12px;
 	border: 2px solid rgba(0, 51, 102, 0.18);
+	border-top: 0;
 	border-radius: 8px;
 	background-color: rgba(0, 110, 223, 0.08);
 	color: #003366;
 	font-size: 13px;
 	line-height: 1.45;
+}
+
+.form .terms-disclosure[open] .terms-panel {
+	border-radius: 0 0 8px 8px;
 }
 
 .form .terms-panel p {
