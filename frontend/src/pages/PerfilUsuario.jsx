@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft } from 'lucide-react'; 
-import { obtenerResenasUsuario } from '../services/rentalsAndReviews.service.js';
+import { obtenerResenasUsuario, obtenerPerfilUsuario } from '../services/rentalsAndReviews.service.js';
 
 export default function PerfilUsuario() {
   const { id } = useParams(); 
@@ -24,16 +24,17 @@ export default function PerfilUsuario() {
     const cargarPerfilYResenas = async () => {
       setLoading(true);
       const [dataResenas, errResenas] = await obtenerResenasUsuario(id);
+      const [dataUsuario, errUsuario] = await obtenerPerfilUsuario(id);
       
       if (errResenas) {
         setError(errResenas);
       } else {
         setResenas(dataResenas);
         setUsuario({
-          nombre: "Cata Muñoz",
-          rol: "Arrendador",
-          avatar: null,
-          avgRating: 4, 
+          nombre: dataUsuario.nombre || 'Usuario no encontrado',
+          rol: dataUsuario.rol || "Usuario",
+          avatar: dataUsuario.avatar || null,
+          avgRating: dataUsuario.avgRating || 0, 
           reviewsCount: dataResenas?.length || 0 
         });
       }
