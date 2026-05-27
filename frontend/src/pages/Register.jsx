@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { register } from '@services/auth.service.js';
 import Form from "@components/Form";
 import useRegister from '@hooks/auth/useRegister.jsx';
@@ -94,11 +94,11 @@ const patternRut = new RegExp(/^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d
 				]}
 				buttonText="Registrarse"
 				onSubmit={registerSubmit}
-				footerContent={
-					<p>
-						¿Ya tienes cuenta?, <a href="/auth">¡Inicia sesión aquí!</a>
-					</p>
-				}
+                footerContent={
+                    <p>
+                        ¿Ya tienes cuenta?, <Link to="/auth">¡Inicia sesión aquí!</Link>
+                    </p>
+                }
 			/>
 		</main>
 	);

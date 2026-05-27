@@ -4,7 +4,7 @@ import '@styles/form.css';
 import HideIcon from '../assets/HideIcon.svg';
 import ViewIcon from '../assets/ViewIcon.svg';
 
-const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundColor }) => {
+const Form = ({ title, description, fields, buttonText, onSubmit, footerContent, backgroundColor, inlineMessage }) => {
     const { register, handleSubmit, formState: { errors } } = useForm();
     const [showPassword, setShowPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
@@ -29,6 +29,7 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
             autoComplete="off"
         >
             <h1>{title}</h1>
+            {description && <p className="form-description">{description}</p>}
             {fields.map((field, index) => (
                 <div className="container_inputs" key={index}>
                     {field.label && <label htmlFor={field.name}>{field.label}</label>}
@@ -102,6 +103,11 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
                 </div>
             ))}
             {buttonText && <button type="submit">{buttonText}</button>}
+            {inlineMessage && (
+                <div className="form-inline-message">
+                    {typeof inlineMessage === 'string' ? <p>{inlineMessage}</p> : inlineMessage}
+                </div>
+            )}
             {footerContent && <div className="footerContent">{footerContent}</div>}
         </form>
     );
