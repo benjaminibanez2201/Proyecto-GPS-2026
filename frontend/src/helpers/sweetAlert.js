@@ -20,6 +20,15 @@ export const showSuccessAlert = (titleMessage, message) => {
   );
 };
 
+export const showSuccessConfirm = (titleMessage, message, confirmText = "Volver al login") => {
+  return Swal.fire({
+    title: titleMessage,
+    text: message,
+    icon: 'success',
+    confirmButtonText: confirmText,
+  });
+};
+
 export const showErrorAlert = (titleMessage, message) => {
   Swal.fire(
     titleMessage,
