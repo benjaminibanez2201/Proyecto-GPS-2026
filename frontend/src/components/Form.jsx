@@ -5,7 +5,9 @@ import HideIcon from '../assets/HideIcon.svg';
 import ViewIcon from '../assets/ViewIcon.svg';
 
 const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundColor }) => {
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const { register, handleSubmit, formState: { errors } } = useForm({
+        shouldUnregister: true,
+    });
     const [showPassword, setShowPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
 
@@ -85,6 +87,23 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
                                 </option>
                             ))}
                         </select>
+                    )}
+                    {field.fieldType === 'checkbox' && (
+                        <label className="checkbox-field" htmlFor={field.name}>
+                            <input
+                                {...register(field.name, {
+                                    required: field.required ? field.requiredMessage || 'Este campo es obligatorio' : false,
+                                    validate: field.validate || {},
+                                })}
+                                id={field.name}
+                                name={field.name}
+                                type="checkbox"
+                                defaultChecked={field.defaultChecked || false}
+                                disabled={field.disabled}
+                                onChange={field.onChange}
+                            />
+                            <span>{field.checkboxLabel}</span>
+                        </label>
                     )}
                     {field.type === 'password' && field.name === 'password' && (
                         <span className="toggle-password-icon" onClick={togglePasswordVisibility}>

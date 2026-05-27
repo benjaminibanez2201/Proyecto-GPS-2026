@@ -187,6 +187,21 @@
 	align-items: center;
 }
 
+.register-container {
+	min-height: 100vh;
+	height: auto;
+	padding: 28px 16px;
+	box-sizing: border-box;
+	overflow-y: auto;
+}
+
+.register-container .form {
+	width: min(460px, 100%);
+	padding: 28px;
+	border-radius: 8px;
+	box-sizing: border-box;
+}
+
 input[type='email'] {
 	background-image: url('../assets/MentionIcon.svg');
 }
@@ -202,6 +217,12 @@ input[name='nombreCompleto'] {
 input[name='rol'] {
 	background-image: url('../assets/PasskeyIcon.svg');
 	
+}
+
+input[name='universidad'],
+input[name='carrera'],
+input[name='telefono'] {
+	background-image: url('../assets/PersonIcon.svg');
 }
 
 .container_inputs {
@@ -232,4 +253,25 @@ input {
 	width: 25px;
 	height: 25px;
 	margin-top: 4px;
+}
+
+.form .checkbox-field {
+	display: grid;
+	grid-template-columns: 20px 1fr;
+	gap: 10px;
+	align-items: start;
+	color: #003366;
+	font-weight: bold;
+	line-height: 1.35;
+	margin: 2px 0 6px;
+}
+
+.form .checkbox-field input {
+	width: 18px;
+	height: 18px;
+	margin: 1px 0 0;
+	padding: 0;
+	border-radius: 4px;
+	accent-color: #003366;
+	background-image: none;
 }
