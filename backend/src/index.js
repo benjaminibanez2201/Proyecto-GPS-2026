@@ -18,10 +18,16 @@ async function setupServer() {
 
     app.disable("x-powered-by");
 
+    const allowedOrigins = [process.env.FRONTEND_URL || "http://localhost:5173", "http://localhost:3000"];
+    const isProd = process.env.NODE_ENV === "production";
+
     app.use(
       cors({
         credentials: true,
-        origin: true,
+        origin: function (origin, callback) {
+          if (!origin) return callback(null, true);
+          callback(null, allowedOrigins.indexOf(origin) !== -1);
+        },
       }),
     );
 
@@ -48,9 +54,9 @@ async function setupServer() {
         resave: false,
         saveUninitialized: false,
         cookie: {
-          secure: false,
+          secure: isProd,
           httpOnly: true,
-          sameSite: "strict",
+          sameSite: isProd ? "none" : "strict",
         },
       }),
     );

@@ -24,11 +24,17 @@ export async function login(req, res) {
 
     if (errorToken) return handleErrorClient(res, 400, "Error iniciando sesión", errorToken);
 
+    // Configuración de cookie (la versión de seguridad q puse)
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("jwt", accessToken, {
       httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "strict",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
+    // No incluir el token en el body cuando se usa cookie httpOnly
     handleSuccess(res, 200, "Inicio de sesión exitoso", { token: accessToken });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
@@ -63,6 +69,7 @@ export async function logout(req, res) {
   }
 }
 
+// Funciones nuevas del benja para la contraseña
 export async function forgotPassword(req, res) {
   try {
     const { email } = req.body;
@@ -92,4 +99,4 @@ export async function resetPassword(req, res) {
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
-} 
+}

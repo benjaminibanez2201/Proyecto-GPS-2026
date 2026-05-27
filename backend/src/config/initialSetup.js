@@ -5,6 +5,11 @@ import { encryptPassword } from "../helpers/bcrypt.helper.js";
 
 async function createUsers() {
   try {
+    if (!AppDataSource.isInitialized) {
+      console.log("DB no inicializada - omitiendo creación de usuarios de inicialización");
+      return;
+    }
+
     const userRepository = AppDataSource.getRepository(User);
 
     // Lista de usuarios que queremos asegurar en la base de datos
