@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 "use strict";
 import { loginService, registerService, forgotPasswordService, resetPasswordService } from "../services/auth.service.js";
 import {
@@ -25,11 +24,17 @@ export async function login(req, res) {
 
     if (errorToken) return handleErrorClient(res, 400, "Error iniciando sesión", errorToken);
 
+    // Configuración de cookie (la versión de seguridad q puse)
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("jwt", accessToken, {
       httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "strict",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
+    // No incluir el token en el body cuando se usa cookie httpOnly
     handleSuccess(res, 200, "Inicio de sesión exitoso", { token: accessToken });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
@@ -64,6 +69,7 @@ export async function logout(req, res) {
   }
 }
 
+// Funciones nuevas del benja para la contraseña
 export async function forgotPassword(req, res) {
   try {
     const { email } = req.body;
@@ -93,74 +99,4 @@ export async function resetPassword(req, res) {
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
-} 
-=======
-"use strict";
-import { loginService, registerService } from "../services/auth.service.js";
-import {
-  authValidation,
-  registerValidation,
-} from "../validations/auth.validation.js";
-import {
-  handleErrorClient,
-  handleErrorServer,
-  handleSuccess,
-} from "../handlers/responseHandlers.js";
-
-export async function login(req, res) {
-  try {
-    const { body } = req;
-
-    const { error } = authValidation.validate(body);
-
-    if (error) {
-      return handleErrorClient(res, 400, "Error de validación", error.message);
-    }
-    const [accessToken, errorToken] = await loginService(body);
-
-    if (errorToken) return handleErrorClient(res, 400, "Error iniciando sesión", errorToken);
-
-    const isProd = process.env.NODE_ENV === "production";
-
-    res.cookie("jwt", accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? "none" : "strict",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-
-    // No incluir el token en el body cuando se usa cookie httpOnly
-    handleSuccess(res, 200, "Inicio de sesión exitoso",{ token: accessToken });
-  } catch (error) {
-    handleErrorServer(res, 500, error.message);
-  }
 }
-
-export async function register(req, res) {
-  try {
-    const { body } = req;
-
-    const { error } = registerValidation.validate(body);
-
-    if (error)
-      return handleErrorClient(res, 400, "Error de validación", error.message);
-
-    const [newUser, errorNewUser] = await registerService(body);
-
-    if (errorNewUser) return handleErrorClient(res, 400, "Error registrando al usuario", errorNewUser);
-
-    handleSuccess(res, 201, "Usuario registrado con éxito", newUser);
-  } catch (error) {
-    handleErrorServer(res, 500, error.message);
-  }
-}
-
-export async function logout(req, res) {
-  try {
-    res.clearCookie("jwt", { httpOnly: true });
-    handleSuccess(res, 200, "Sesión cerrada exitosamente");
-  } catch (error) {
-    handleErrorServer(res, 500, error.message);
-  }
-}
->>>>>>> Stashed changes
