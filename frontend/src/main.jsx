@@ -9,6 +9,7 @@ import Register from '@pages/Register';
 import Error404 from '@pages/Error404';
 import Root from '@pages/Root';
 import ProtectedRoute from '@components/ProtectedRoute';
+import Profile from '@pages/Profile';
 import '@styles/styles.css';
 
 const router = createBrowserRouter([
@@ -28,6 +29,14 @@ const router = createBrowserRouter([
           <Users />
         </ProtectedRoute>
         ),
+    },
+    {
+      path: '/profile',
+      element: (
+        <ProtectedRoute allowedRoles={['estudiante']}>
+          <Profile />
+        </ProtectedRoute>
+      ),
     }
     ]
   },
