@@ -9,9 +9,15 @@ const ForgotPassword = () => { // declaramos el componente ForgotPassword
         errorEmail,
         responseMessage,
         loading,
+        cooldownSeconds,
         handleInputChange,
         handleSubmit,
     } = useForgotPassword();
+
+    const isCooldown = cooldownSeconds > 0;
+    const buttonLabel = isCooldown
+        ? `Enviar correo en ${cooldownSeconds}s`
+        : 'Enviar correo de recuperación';
     return (
     <main className="container">
         <Form
@@ -37,7 +43,8 @@ const ForgotPassword = () => { // declaramos el componente ForgotPassword
                     onChange: (e) => handleInputChange(e.target.value),
                 },
             ]}
-            buttonText="Enviar correo de recuperación"
+            buttonText={buttonLabel}
+            buttonDisabled={loading || isCooldown}
             onSubmit={handleSubmit}
             footerContent={
                 <p>¿Recordaste tu contraseña? <Link to="/auth">Inicia sesión</Link></p>

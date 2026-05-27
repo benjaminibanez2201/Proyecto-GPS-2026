@@ -1,20 +1,26 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
+import { isValidElement } from 'react';
 import '@styles/form.css';
 import HideIcon from '../assets/HideIcon.svg';
 import ViewIcon from '../assets/ViewIcon.svg';
 
-const Form = ({ title, description, fields, buttonText, onSubmit, footerContent, backgroundColor, inlineMessage }) => {
+const Form = ({ title, description, fields, buttonText, buttonDisabled, onSubmit, footerContent, backgroundColor, inlineMessage }) => {
     const { register, handleSubmit, formState: { errors } } = useForm();
-    const [showPassword, setShowPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [visiblePasswords, setVisiblePasswords] = useState({});
 
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
+    const renderInlineMessage = () => {
+        if (!inlineMessage) return null;
+        if (typeof inlineMessage === 'string') return <p>{inlineMessage}</p>;
+        if (isValidElement(inlineMessage)) return inlineMessage;
+        return null;
     };
 
-    const toggleNewPasswordVisibility = () => {
-        setShowNewPassword(!showNewPassword);
+    const togglePasswordVisibility = (fieldName) => {
+        setVisiblePasswords((current) => ({
+            ...current,
+            [fieldName]: !current[fieldName]
+        }));
     };
 
     const onFormSubmit = (data) => {
@@ -34,50 +40,73 @@ const Form = ({ title, description, fields, buttonText, onSubmit, footerContent,
                 <div className="container_inputs" key={index}>
                     {field.label && <label htmlFor={field.name}>{field.label}</label>}
                     {field.fieldType === 'input' && (
-                        <input
-                            {...register(field.name, {
+                        (() => {
+                            const registerProps = register(field.name, {
                                 required: field.required ? 'Este campo es obligatorio' : false,
                                 minLength: field.minLength ? { value: field.minLength, message: `Debe tener al menos ${field.minLength} caracteres` } : false,
                                 maxLength: field.maxLength ? { value: field.maxLength, message: `Debe tener máximo ${field.maxLength} caracteres` } : false,
                                 pattern: field.pattern ? { value: field.pattern, message: field.patternMessage || 'Formato no válido' } : false,
                                 validate: field.validate || {},
-                            })}
+                            });
+
+                            return (
+                        <input
+                            {...registerProps}
                             name={field.name}
                             placeholder={field.placeholder}
-                            type={field.type === 'password' && field.name === 'password' ? (showPassword ? 'text' : 'password') :
-                                field.type === 'password' && field.name === 'newPassword' ? (showNewPassword ? 'text' : 'password') :
-                                field.type}
+                            type={field.type === 'password' ? (visiblePasswords[field.name] ? 'text' : 'password') : field.type}
                             defaultValue={field.defaultValue || ''}
                             disabled={field.disabled}
-                            onChange={field.onChange}
+                            onChange={(e) => {
+                                registerProps.onChange(e);
+                                field.onChange?.(e);
+                            }}
                         />
+                            );
+                        })()
                     )}
                     {field.fieldType === 'textarea' && (
-                        <textarea
-                            {...register(field.name, {
+                        (() => {
+                            const registerProps = register(field.name, {
                                 required: field.required ? 'Este campo es obligatorio' : false,
                                 minLength: field.minLength ? { value: field.minLength, message: `Debe tener al menos ${field.minLength} caracteres` } : false,
                                 maxLength: field.maxLength ? { value: field.maxLength, message: `Debe tener máximo ${field.maxLength} caracteres` } : false,
                                 pattern: field.pattern ? { value: field.pattern, message: field.patternMessage || 'Formato no válido' } : false,
                                 validate: field.validate || {},
-                            })}
+                            });
+
+                            return (
+                        <textarea
+                            {...registerProps}
                             name={field.name}
                             placeholder={field.placeholder}
                             defaultValue={field.defaultValue || ''}
                             disabled={field.disabled}
-                            onChange={field.onChange}
+                            onChange={(e) => {
+                                registerProps.onChange(e);
+                                field.onChange?.(e);
+                            }}
                         />
+                            );
+                        })()
                     )}
                     {field.fieldType === 'select' && (
-                        <select
-                            {...register(field.name, {
+                        (() => {
+                            const registerProps = register(field.name, {
                                 required: field.required ? 'Este campo es obligatorio' : false,
                                 validate: field.validate || {},
-                            })}
+                            });
+
+                            return (
+                        <select
+                            {...registerProps}
                             name={field.name}
                             defaultValue={field.defaultValue || ''}
                             disabled={field.disabled}
-                            onChange={field.onChange}
+                            onChange={(e) => {
+                                registerProps.onChange(e);
+                                field.onChange?.(e);
+                            }}
                         >
                             <option value="">Seleccionar opción</option>
                             {field.options && field.options.map((option, optIndex) => (
@@ -86,26 +115,36 @@ const Form = ({ title, description, fields, buttonText, onSubmit, footerContent,
                                 </option>
                             ))}
                         </select>
+                            );
+                        })()
                     )}
-                    {field.type === 'password' && field.name === 'password' && (
-                        <span className="toggle-password-icon" onClick={togglePasswordVisibility}>
-                            <img src={showPassword ? ViewIcon : HideIcon} />
-                        </span>
-                    )}
-                    {field.type === 'password' && field.name === 'newPassword' && (
-                        <span className="toggle-password-icon" onClick={toggleNewPasswordVisibility}>
-                            <img src={showNewPassword ? ViewIcon : HideIcon} />
-                        </span>
+                    {field.type === 'password' && field.showVisibilityToggle !== false && (
+                        <button
+                            type="button"
+                            className="toggle-password-icon"
+                            onClick={() => togglePasswordVisibility(field.name)}
+                            aria-label={visiblePasswords[field.name] ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                        >
+                            <img src={visiblePasswords[field.name] ? ViewIcon : HideIcon} alt="" />
+                        </button>
                     )}
                     <div className={`error-message ${errors[field.name] || field.errorMessageData ? 'visible' : ''}`}>
-                        {errors[field.name]?.message || field.errorMessageData || ''}
+                        {typeof errors[field.name]?.message === 'string'
+                            ? errors[field.name]?.message
+                            : typeof field.errorMessageData === 'string'
+                                ? field.errorMessageData
+                                : ''}
                     </div>
                 </div>
             ))}
-            {buttonText && <button type="submit">{buttonText}</button>}
+            {buttonText && (
+                <button type="submit" disabled={buttonDisabled}>
+                    {buttonText}
+                </button>
+            )}
             {inlineMessage && (
                 <div className="form-inline-message">
-                    {typeof inlineMessage === 'string' ? <p>{inlineMessage}</p> : inlineMessage}
+                    {renderInlineMessage()}
                 </div>
             )}
             {footerContent && <div className="footerContent">{footerContent}</div>}
