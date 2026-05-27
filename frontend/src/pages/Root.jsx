@@ -122,7 +122,7 @@ function PageRoot() {
             }}>
               C
             </div>
-            <span style={{ fontSize: '14px', fontWeight: '500', color: colores.textoOscuro }}>Cata Muñoz</span>
+            <span style={{ fontSize: '14px', fontWeight: '500', color: colores.textoOscuro }}>{user?.nombreCompleto || 'Usuario'}</span>
           </div>
         </header>
 
