@@ -8,11 +8,14 @@ const router = Router();
 
 router.use(authenticateJwt);
 
-router.post("/", crearArriendo);
-router.get("/:id", obtenerArriendo);
-router.post("/:id/confirm", confirmarArriendo);
+//rutas generales
 router.get("/", listarArriendos);
+router.post("/", crearArriendo);
+//rutas especificas por id
+router.get("/:id", obtenerArriendo);
 router.put("/:id", actualizarArriendo);
 router.delete("/:id", eliminarArriendo);
+//confirmacion del arriendo
+router.post("/:id/confirm", confirmarArriendo);
 
 export default router;
