@@ -14,6 +14,7 @@ const patternTelefono = /^[0-9+\-\s()]+$/;
 const Register = () => {
     const navigate = useNavigate();
     const [role, setRole] = useState('estudiante');
+    const [showTerms, setShowTerms] = useState(false);
     const {
         errorEmail,
         errorRut,
@@ -152,7 +153,31 @@ const Register = () => {
                         fieldType: 'checkbox',
                         required: true,
                         requiredMessage: 'Debes aceptar los términos y condiciones',
-                        checkboxLabel: 'Acepto los términos y condiciones',
+                        checkboxLabel: 'Acepto los',
+                        checkboxAction: (
+                            <button
+                                aria-controls="terms-panel"
+                                aria-expanded={showTerms}
+                                className="terms-toggle"
+                                type="button"
+                                onClick={() => setShowTerms((currentValue) => !currentValue)}
+                            >
+                                términos y condiciones
+                            </button>
+                        ),
+                        extraContent: showTerms && (
+                            <div className="terms-panel" id="terms-panel">
+                                <p>
+                                    Al registrarte aceptas usar ArriendU de forma responsable, entregar información
+                                    verídica para la verificación de la cuenta y respetar las normas de convivencia
+                                    de la plataforma.
+                                </p>
+                                <p>
+                                    También autorizas la revisión de tus antecedentes de verificación y el uso de los
+                                    datos necesarios para operar el servicio de arriendo.
+                                </p>
+                            </div>
+                        ),
                     },
                 ]}
                 buttonText="Registrarse"

@@ -89,7 +89,7 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
                         </select>
                     )}
                     {field.fieldType === 'checkbox' && (
-                        <label className="checkbox-field" htmlFor={field.name}>
+                        <div className="checkbox-field">
                             <input
                                 {...register(field.name, {
                                     required: field.required ? field.requiredMessage || 'Este campo es obligatorio' : false,
@@ -102,9 +102,13 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
                                 disabled={field.disabled}
                                 onChange={field.onChange}
                             />
-                            <span>{field.checkboxLabel}</span>
-                        </label>
+                            <span className="checkbox-copy">
+                                <label htmlFor={field.name}>{field.checkboxLabel}</label>
+                                {field.checkboxAction}
+                            </span>
+                        </div>
                     )}
+                    {field.extraContent && <div className="field-extra-content">{field.extraContent}</div>}
                     {field.type === 'password' && field.name === 'password' && (
                         <span className="toggle-password-icon" onClick={togglePasswordVisibility}>
                             <img src={showPassword ? ViewIcon : HideIcon} />

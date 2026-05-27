@@ -266,6 +266,19 @@ input {
 	margin: 2px 0 6px;
 }
 
+.form .checkbox-copy {
+	display: inline-flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 4px;
+	align-items: baseline;
+	width: auto;
+}
+
+.form .checkbox-copy label {
+	margin: 0;
+}
+
 .form .checkbox-field input {
 	width: 18px;
 	height: 18px;
@@ -274,4 +287,44 @@ input {
 	border-radius: 4px;
 	accent-color: #003366;
 	background-image: none;
+}
+
+.form .terms-toggle {
+	display: inline;
+	width: auto;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: #003366;
+	font-size: inherit;
+	font-weight: bold;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.form .terms-toggle:hover {
+	border: 0;
+	background: transparent;
+	color: #006edf;
+}
+
+.form .field-extra-content {
+	margin: 0 0 8px;
+}
+
+.form .terms-panel {
+	gap: 8px;
+	padding: 12px;
+	border: 2px solid rgba(0, 51, 102, 0.18);
+	border-radius: 8px;
+	background-color: rgba(0, 110, 223, 0.08);
+	color: #003366;
+	font-size: 13px;
+	line-height: 1.45;
+}
+
+.form .terms-panel p {
+	margin: 0;
 }
