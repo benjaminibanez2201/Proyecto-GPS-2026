@@ -26,7 +26,7 @@ export const authValidation = Joi.object({
       "any.required": "La contraseña es obligatoria.",
       "string.base": "La contraseña debe ser de tipo texto.",
       "string.min": "La contraseña debe tener al menos 8 caracteres.",
-      "string.max": "La contraseña debe tener como máximo 26 caracteres.",
+      "string.max": "La contraseña debe tener como máximo 50 caracteres.",
       "string.pattern.base": "La contraseña debe contener al menos una letra mayúscula, un número y un carácter especial.",
     }),
 }).unknown(false).messages({
@@ -70,8 +70,8 @@ export const registerValidation = Joi.object({
       "any.required": "El correo electrónico es obligatorio.",
       "string.base": "El correo electrónico debe ser de tipo texto.",
       "string.email": "El correo electrónico debe tener un formato válido.",
-      "string.min": "El correo electrónico debe tener al menos 15 caracteres.",
-      "string.max": "El correo electrónico debe tener como máximo 35 caracteres.",
+      "string.min": "El correo electrónico debe tener al menos 5 caracteres.",
+      "string.max": "El correo electrónico debe tener como máximo 100 caracteres.",
     }),
   password: Joi.string()
     .min(8)
@@ -80,10 +80,10 @@ export const registerValidation = Joi.object({
     .required()
     .messages({
       "string.empty": "La contraseña no puede estar vacía.",
-      "any.required": "La contraseña es obligatorio.",
+      "any.required": "La contraseña es obligatoria.",
       "string.base": "La contraseña debe ser de tipo texto.",
       "string.min": "La contraseña debe tener al menos 8 caracteres.",
-      "string.max": "La contraseña debe tener como máximo 26 caracteres.",
+      "string.max": "La contraseña debe tener como máximo 50 caracteres.",
       "string.pattern.base": "La contraseña debe contener al menos una letra mayúscula, un número y un carácter especial.",
     }),
 })
@@ -91,3 +91,22 @@ export const registerValidation = Joi.object({
   .messages({
   "object.unknown": "No se permiten propiedades adicionales.",
 });
+
+export const newPasswordValidation = Joi.object({
+  newPassword: Joi.string()
+    .min(8)
+    .max(50)
+    .pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/)
+    .required()
+    .messages({
+      "string.empty": "La contraseña no puede estar vacía.",
+      "any.required": "La contraseña es obligatoria.",
+      "string.base": "La contraseña debe ser de tipo texto.",
+      "string.min": "La contraseña debe tener al menos 8 caracteres.",
+      "string.max": "La contraseña debe tener como máximo 50 caracteres.",
+      "string.pattern.base": "La contraseña debe contener al menos una letra mayúscula, un número y un carácter especial.",
+    }),
+}).unknown(false).messages({
+  "object.unknown": "No se permiten propiedades adicionales.",
+});
+

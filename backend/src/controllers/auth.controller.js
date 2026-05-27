@@ -1,8 +1,9 @@
 "use strict";
-import { loginService, registerService } from "../services/auth.service.js";
+import { loginService, registerService, forgotPasswordService, resetPasswordService } from "../services/auth.service.js";
 import {
   authValidation,
   registerValidation,
+  newPasswordValidation,
 } from "../validations/auth.validation.js";
 import {
   handleErrorClient,
@@ -61,3 +62,34 @@ export async function logout(req, res) {
     handleErrorServer(res, 500, error.message);
   }
 }
+
+export async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+    const [message, error] = await forgotPasswordService(email);
+    if (error) return handleErrorClient(res, 400, error);
+    handleSuccess(res, 200, message);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function resetPassword(req, res) {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    const { error } = newPasswordValidation.validate({ newPassword });
+
+    if (error) {
+      return handleErrorClient(res, 400, "Error de validación", error.message);
+    }
+
+    const [message, errorNewUser] = await resetPasswordService(token, newPassword);
+    
+    if (errorNewUser) return handleErrorClient(res, 400, errorNewUser);
+    handleSuccess(res, 200, message);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+} 

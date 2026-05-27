@@ -49,3 +49,21 @@ export async function logout() {
         console.error('Error al cerrar sesión:', error);
     }
 }
+
+export async function forgotPassword(email) {
+    try {
+        const response = await axios.post('/auth/forgot-password', { email });
+        return response.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function resetPassword(token, newPassword) {
+    try {
+        const response = await axios.post(`/auth/reset-password/${token}`, { newPassword });
+        return response.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}

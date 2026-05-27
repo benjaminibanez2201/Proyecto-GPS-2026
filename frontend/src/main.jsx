@@ -1,6 +1,8 @@
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from '@pages/Login';
+import ForgotPassword from '@pages/ForgotPassword';
+import ResetPassword from '@pages/ResetPassword';
 import Home from '@pages/Home';
 import Users from '@pages/Users';
 import Register from '@pages/Register';
@@ -32,6 +34,14 @@ const router = createBrowserRouter([
   {
     path: '/auth',
     element: <Login/>
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPassword/>
+  },
+  {
+    path: '/reset-password/:token',
+    element: <ResetPassword/>
   },
   {
     path: '/register',
