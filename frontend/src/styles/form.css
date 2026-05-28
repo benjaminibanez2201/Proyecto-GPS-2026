@@ -65,6 +65,79 @@
 			font-weight: 600;
 			text-align: center;
 		}
+
+		.form-inline-message .forgot-password-help {
+			display: inline-flex !important;
+			flex-direction: row;
+			flex-wrap: nowrap;
+			align-items: center;
+			gap: 6px;
+			font-size: 13px;
+			font-weight: 400;
+			color: #374151;
+			position: relative;
+			line-height: 1.4;
+		}
+
+		.form-inline-message .forgot-password-trigger {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			border: none;
+			background: transparent;
+			padding: 0;
+			margin: 0;
+			color: #374151;
+			font-size: 13px;
+			font-weight: 400;
+			cursor: pointer;
+		}
+
+		.form-inline-message .forgot-password-trigger .forgot-password-trigger-icon {
+			color: #008080;
+			display: inline-flex;
+			width: 16px;
+			height: 16px;
+			flex: 0 0 16px;
+		}
+
+		.form-inline-message .forgot-password-tooltip-text {
+			position: absolute;
+			bottom: calc(100% + 8px);
+			left: 0;
+			transform: translateX(0);
+			max-width: 320px;
+			background: #ffffff;
+			color: #374151;
+			border: 1px solid #e5e7eb;
+			border-radius: 10px;
+			box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+			padding: 10px 12px;
+			font-size: 12px;
+			line-height: 1.45;
+			font-weight: 500;
+			text-align: left;
+			visibility: hidden;
+			opacity: 0;
+			transition: opacity 0.15s ease;
+			z-index: 10;
+		}
+
+		.form-inline-message .forgot-password-tooltip-text.is-open {
+			visibility: visible;
+			opacity: 1;
+		}
+
+		.form-inline-message .forgot-password-tooltip:hover + .forgot-password-tooltip-text {
+			visibility: visible;
+			opacity: 1;
+		}
+
+		.form-inline-message .forgot-password-tooltip-text a {
+			color: #008080;
+			font-weight: 600;
+			text-decoration: none;
+		}
 	div {
 		width: 100%;
 		display: flex;
@@ -192,12 +265,26 @@
 		margin-top: 12px;
 		width: 100%;
 	}
+
+	.footerContent .forgot-password-footer {
+		margin: 0;
+		width: 100%;
+		font-size: 13px;
+		color: #4b5563;
+		text-align: center;
+	}
+
+	.footerContent .forgot-password-footer a {
+		color: #008080;
+		font-weight: 600;
+		text-decoration: none;
+	}
 	.form-secondary-action {
 		padding: 1.2vh 0;
 		border-radius: 12px;
-		border: 3px solid #003366;
+		border: 3px solid #008080;
 		width: 100%;
-		background-color: #003366;
+		background-color: #008080;
 		color: #fdfefe;
 		font-weight: bold;
 		font-size: 16px;
@@ -205,7 +292,7 @@
 	}
 	.form-secondary-action:hover {
 		background-color: #fdfefe;
-		color: #003366;
+		color: #008080;
 		transition: .3s ease-out;
 	}
 }

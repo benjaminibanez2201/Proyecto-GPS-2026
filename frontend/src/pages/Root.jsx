@@ -71,7 +71,7 @@ function PageRoot() {
       items: [
         { label: 'Panel Administrador', icon: Home, to: '/admin' },
         { label: 'Verificaciones Pendientes', icon: ShieldCheck, disabled: true },
-        { label: 'Gestión de Usuarios', icon: Users, to: '/users' },
+        { label: 'Gestión de Usuarios', icon: Users, to: '/admin/users' },
         { label: 'Publicaciones Reportadas', icon: FlagTriangleRight, disabled: true },
       ],
     },

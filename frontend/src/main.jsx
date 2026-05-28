@@ -5,6 +5,7 @@ import ForgotPassword from '@pages/ForgotPassword';
 import ResetPassword from '@pages/ResetPassword';
 import Home from '@pages/Home';
 import Users from '@pages/Users';
+import AdminUsers from '@pages/AdminUsers';
 import Register from '@pages/Register';
 import Error404 from '@pages/Error404';
 import Root from '@pages/Root';
@@ -32,9 +33,13 @@ const router = createBrowserRouter([
       },
       {
         path: 'users',
+        element: <Navigate to="/admin/users" replace />,
+      },
+      {
+        path: 'admin/users',
         element: (
-        <ProtectedRoute allowedRoles={['administrador']}>
-          <Users />
+        <ProtectedRoute allowedRoles={['admin', 'administrador']}>
+          <AdminUsers />
         </ProtectedRoute>
         ),
       },
@@ -47,7 +52,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: '/admin',
+        path: 'admin',
         element: (
           <ProtectedRoute allowedRoles={['admin', 'administrador']}>
             <AdminPanel />

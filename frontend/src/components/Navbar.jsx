@@ -75,7 +75,7 @@ const Navbar = () => {
           {userRole === "administrador" && (
             <li>
               <NavLink
-                to="/users"
+                to="/admin/users"
                 onClick={() => {
                   setMenuOpen(false);
                   addActiveClass();

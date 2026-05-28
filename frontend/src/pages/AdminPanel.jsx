@@ -1,5 +1,6 @@
-import { BadgeCheck, ClipboardList, FlagTriangleRight, ShieldCheck, Users } from 'lucide-react';
+import { BadgeCheck, ClipboardList, FlagTriangleRight, ShieldCheck, Users as UsersIcon } from 'lucide-react';
 import { useAuth } from '@context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const AdminPanel = () => {
     const { user } = useAuth();
@@ -17,7 +18,7 @@ const AdminPanel = () => {
             label: 'Usuarios por revisar',
             value: '7',
             detail: '3 con verificacion pendiente',
-            icon: Users
+            icon: UsersIcon
         },
         {
             label: 'Documentos en cola',
@@ -60,6 +61,10 @@ const AdminPanel = () => {
         }
     ];
 
+    const navigate = useNavigate();
+
+    const goToUsers = () => navigate('/admin/users');
+
     return (
         <div style={styles.page}>
             <section style={{ ...styles.hero, background: 'linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%)' }}>
@@ -101,6 +106,18 @@ const AdminPanel = () => {
                                 <p style={{ ...styles.cardEyebrow, color: colores.principal }}>Resumen</p>
                                 <h3 style={styles.cardTitle}>{card.title}</h3>
                                 <p style={styles.cardSubtitle}>{card.subtitle}</p>
+                                {card.title === 'Gestion de usuarios' && (
+                                    <div style={styles.cardActionBlock}>
+                                        <p style={styles.cardActionLabel}>Opciones</p>
+                                        <button
+                                            type="button"
+                                            onClick={goToUsers}
+                                            style={styles.listUsersButton}
+                                        >
+                                            Listar usuarios
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                             <div style={{ ...styles.cardIcon, backgroundColor: '#e6f4f1', color: colores.principal }}>
                                 <ClipboardList size={18} strokeWidth={2.1} />
@@ -252,6 +269,32 @@ const styles = {
         fontSize: '14px',
         lineHeight: 1.55,
         color: '#64748b'
+    },
+    cardActionBlock: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        marginTop: '14px'
+    },
+    cardActionLabel: {
+        margin: 0,
+        fontSize: '12px',
+        fontWeight: '700',
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase',
+        color: '#64748b'
+    },
+    listUsersButton: {
+        alignSelf: 'flex-start',
+        padding: '10px 14px',
+        border: 'none',
+        borderRadius: '10px',
+        backgroundColor: '#008080',
+        color: '#ffffff',
+        fontSize: '14px',
+        fontWeight: '700',
+        cursor: 'pointer',
+        boxShadow: '0 10px 18px rgba(0, 128, 128, 0.18)'
     },
     cardIcon: {
         width: '42px',
