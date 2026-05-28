@@ -281,19 +281,6 @@ function PageRoot() {
               })()}
             </div>
             <span style={{ fontSize: '14px', fontWeight: '500', color: colores.textoOscuro }}>{user?.nombreCompleto || 'Usuario'}</span>
-            <span
-              style={{
-                fontSize: '12px',
-                fontWeight: '700',
-                color: colores.principal,
-                backgroundColor: '#e9f5f5',
-                padding: '4px 10px',
-                borderRadius: '999px',
-                textTransform: 'capitalize',
-              }}
-            >
-              {userRole || 'estudiante'}
-            </span>
           </div>
         </header>
 

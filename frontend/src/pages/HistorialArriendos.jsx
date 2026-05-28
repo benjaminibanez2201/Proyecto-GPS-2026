@@ -92,7 +92,7 @@ export default function HistorialArriendos() {
           <tr style={{ backgroundColor: colores.secundario, color: colores.textoOscuro }}>
             <th>Nombre del contratante</th>
             <th>Acciones de Confirmación</th>
-            <th>Evaluación Mutua</th>
+            <th>Evaluación mutua</th>
           </tr>
         </thead>
         <tbody>
@@ -107,7 +107,7 @@ export default function HistorialArriendos() {
                 <td>
                   {item.status === 'COMPLETED' ? (
                     <span style={{ color: '#28a745', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <CheckCircle size={16} /> Arriendo Concretado
+                      <CheckCircle size={16} /> Arriendo concretado
                     </span>
                   ) : yaConfirme ? (
                     <span style={{ color: '#ffc107', display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -128,7 +128,7 @@ export default function HistorialArriendos() {
                       onClick={() => abrirModalCalificar(item)}
                       style={{ backgroundColor: '#ffc107', color: colores.textoOscuro, border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}
                     >
-                      <Star size={16} fill={colores.textoOscuro} /> Calificar Contraparte
+                      <Star size={16} fill={colores.textoOscuro} /> Calificar contraparte
                     </button>
                   ) : (
                     <span style={{ color: '#aaa', fontSize: '13px', fontStyle: 'italic' }}>Faltan confirmaciones</span>
