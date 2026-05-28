@@ -1,0 +1,8 @@
+.login-page {
+  background-color: #f8fafa;
+  background-image: radial-gradient(rgba(0, 112, 112, 0.25) 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
+  position: relative;
+  overflow: hidden;
+}
+

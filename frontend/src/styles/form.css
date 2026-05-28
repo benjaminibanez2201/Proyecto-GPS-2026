@@ -43,7 +43,7 @@
 	border-radius: 24px;
 	align-items: center;
 	h1 {
-		color: #003366; /*Color del titulo del formulario*/
+		color: #008080; /*Color del titulo del formulario*/
 		font-size: 30px;
 		font-weight: bold;
 		margin: 0;
@@ -54,14 +54,14 @@
 			max-width: 42rem;
 			text-align: center;
 			font-size: 16px;
-			color: #003366;
+			color: #000000;
 			line-height: 1.4;
 			word-break: break-word;
 		}
 
 		.form-inline-message {
 			margin-top: 1rem;
-			color: #008080;
+			color: #000000;
 			font-weight: 600;
 			text-align: center;
 		}
@@ -70,45 +70,45 @@
 		display: flex;
 	}
 	label {
-		color: #003366; /*Color label de inputs del formulario*/
+		color: #008080; /*Color label de inputs del formulario*/
 		font-weight: bold;
 		margin-bottom: 0.7vh;
 	}
 	input {
 		display: flex;
-		border: 3px solid #003366; /*Color del borde de inputs del formulario*/
+		border: 3px solid #008080; /*Color del borde de inputs del formulario*/
 		border-radius: 12px;
 		padding: 8px 5px;
 		background-repeat: no-repeat;
 		margin-bottom: 0.8vh;
-		background-color: #eef7ff;
+		background-color: #ffffff;
 		font-weight: regular;
 		font-size: 16px;
-		color: #003366;
+		color: #000000;
 		border-radius: 12px;
 		background-position: right 10px center;
 		background-size: 25px 25px;
 		box-sizing: border-box;
 	}
 	input::placeholder {
-		color: rgba(0, 51, 102, 0.3);
+		color: rgba(0, 128, 128, 0.3);
 		font-weight: light;
 	}
 	input:focus {
-		background-color: rgba(0, 110, 223, 0.14);
+		background-color: rgba(0, 128, 128, 0.14);
 		font-weight: regular;
 	}
 	select {
 		display: flex;
-		border: 3px solid #003366; /*Color del borde de selects del formulario*/
+		border: 3px solid #008080; /*Color del borde de selects del formulario*/
 		border-radius: 12px;
 		padding: 8px 5px;
 		background-repeat: no-repeat;
 		margin-bottom: 0.8vh;
-		background-color: #eef7ff;
+		background-color: #ffffff;
 		font-weight: regular;
 		font-size: 16px;
-		color: #003366;
+		color: #008080;
 		border-radius: 12px;
 		background-position: right 30px center;
 		background-size: 25px 25px;
@@ -121,35 +121,35 @@
 		appearance: none;
 	}
 	select::placeholder {
-		color: rgba(0, 51, 102, 0.3);
+		color: rgba(0, 128, 128, 0.3);
 		font-weight: light;
 	}
 	select:focus {
-		background-color: rgba(0, 110, 223, 0.14);
+		background-color: rgba(0, 128, 128, 0.14);
 		font-weight: regular;
 	}
 	textarea {
 		display: flex;
-		border: 3px solid #003366; /*Color del borde de textareas del formulario*/
+		border: 3px solid #008080; /*Color del borde de textareas del formulario*/
 		border-radius: 12px;
 		padding: 8px 5px;
 		background-repeat: no-repeat;
 		margin-bottom: 0.8vh;
-		background-color: #eef7ff;
+		background-color: #ffffff;
 		font-weight: regular;
 		font-size: 16px;
-		color: #003366;
+		color: #008080;
 		border-radius: 12px;
 		background-position: right 10px center;
 		background-size: 25px 25px;
 		box-sizing: border-box;
 	}
 	textarea::placeholder {
-		color: rgba(0, 51, 102, 0.3);
+		color: rgba(0, 128, 128, 0.3);
 		font-weight: light;
 	}
 	textarea:focus {
-		background-color: rgba(0, 110, 223, 0.14);
+		background-color: rgba(0, 128, 128, 0.14);
 		font-weight: regular;
 	}
 	button {
@@ -160,24 +160,24 @@
 		border-radius: 12px;
 		border: none;
 		width: 100%;
-		background-color: #003366; /*Color del boton del formulario*/
-		color: #eef7ff;
+		background-color: #008080; /*Color del boton del formulario*/
+		color: #ffffff;
 		font-weight: bold;
 		font-size: 16px;
-		border: 3px solid #003366; /*Color del borde del boton*/
+		border: 3px solid #008080; /*Color del borde del boton*/
 		margin-top: 10px;
 	}
 	button:hover{
-		border: 3px solid #003366;
-		background-color: #eef7ff;
-		color: #003366;
+		border: 3px solid #008080;
+		background-color: #ffffff;
+		color: #008080;
 		transition: .3s ease-out;
 	}
 	button:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
-		background-color: #003366;
-		color: #eef7ff;
+		background-color: #008080;
+		color: #ffffff;
 	}
 	div {
 		display: flex;
@@ -219,7 +219,7 @@
 
 .container {
 	height: 100vh;	
-	background: linear-gradient(90deg, #003366, #001a33); /*Color principal para login (gradiente)*/
+	background: linear-gradient(90deg, #008080, #005f5f); /*Color principal para login (gradiente)*/
 	display: flex;
 	justify-content: center;
 	align-items: center;

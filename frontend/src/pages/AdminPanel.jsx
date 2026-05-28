@@ -13,11 +13,11 @@ const AdminPanel = () => {
 
     const actions = [
         {
-            title: 'Gestion de usuarios',
+            title: 'Gestión de usuarios',
             description: 'Listar usuarios, revisar estados y bloquear cuentas.'
         },
         {
-            title: 'Documentos de verificacion',
+            title: 'Documentos de verificación',
             description: 'Revisar documentos subidos por los usuarios.'
         },
         {
@@ -56,20 +56,12 @@ const AdminPanel = () => {
                     gap: '20px'
                 }}>
                     <div>
-                        <h2 style={{ margin: 0, fontSize: '26px' }}>Panel de Administracion</h2>
+                        <h2 style={{ margin: 0, fontSize: '26px' }}>Panel de Administración</h2>
                         <p style={{ margin: '6px 0 0', color: '#546e7a' }}>
                             Supervisa usuarios, revisa documentos y controla publicaciones.
                         </p>
                     </div>
-                    <div style={{
-                        backgroundColor: colores.principal,
-                        color: colores.blanco,
-                        padding: '10px 16px',
-                        borderRadius: '999px',
-                        fontWeight: 'bold'
-                    }}>
-                        {user?.nombreCompleto || 'Administrador'}
-                    </div>
+                    <div />
                 </div>
 
                 <div style={{ padding: '30px 40px' }}>
@@ -125,9 +117,9 @@ const AdminPanel = () => {
                             gap: '12px'
                         }}>
                             {[
-                                'Revicion de documentos pendiente',
+                                'Revisión de documentos pendiente',
                                 'Usuario bloqueado por incumplimiento',
-                                'Publicacion reportada desactivada'
+                                'Publicación reportada desactivada'
                             ].map((item) => (
                                 <div key={item} style={{
                                     display: 'flex',
