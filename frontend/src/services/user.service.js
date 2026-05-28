@@ -2,12 +2,18 @@ import axios from './root.service.js';
 import { formatUserData } from '@helpers/formatData.js';
 
 export async function getUsers() {
+    const [formattedData, err] = await obtenerUsuarios();
+    if (err) return [];
+    return formattedData;
+}
+
+export async function obtenerUsuarios() {
     try {
         const { data } = await axios.get('/user/');
         const formattedData = data.data.map(formatUserData);
-        return formattedData;
+        return [formattedData, null];
     } catch (error) {
-        return error.response.data;
+        return [null, error.response?.data?.message || 'Error al cargar usuarios'];
     }
 }
 

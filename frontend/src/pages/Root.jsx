@@ -121,7 +121,11 @@ function PageRoot() {
               fontWeight: 'bold',
               fontSize: '14px'
             }}>
-              C
+              {(() => {
+                const name = user?.nombreCompleto || '';
+                const first = name.trim() ? name.trim().charAt(0).toUpperCase() : 'U';
+                return first;
+              })()}
             </div>
             <span style={{ fontSize: '14px', fontWeight: '500', color: colores.textoOscuro }}>{user?.nombreCompleto || 'Usuario'}</span>
           </div>
