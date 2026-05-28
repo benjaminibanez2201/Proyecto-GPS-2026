@@ -16,3 +16,15 @@ body {
 	min-height: 100vh;
 	margin: 0 auto;
 }
+
+/* Hover suave y ligero para imágenes en la app */
+img {
+	transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+	will-change: transform;
+}
+
+img:hover {
+	transform: translateY(-3px) scale(1.02);
+	box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+	opacity: 0.98;
+}

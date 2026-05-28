@@ -44,10 +44,9 @@ function PageRoot() {
 
   const menus = {
     estudiante: {
-      title: 'Menú',
       subtitle: 'Buscar, conversar y gestionar tus arriendos.',
       items: [
-        { label: 'Buscar Arriendos', icon: Home, to: '/home' },
+        { label: 'Buscar Arriendos', icon: Home, disabled: true },
         { label: 'Mis Favoritos', icon: Heart, disabled: true },
         { label: 'Mensajes', icon: MessageCircle, disabled: true },
         { label: 'Historial de Arriendos', icon: History, to: '/historial' },
@@ -55,7 +54,6 @@ function PageRoot() {
       ],
     },
     arrendador: {
-      title: 'Menú',
       subtitle: 'Gestiona tus propiedades y responde interesados.',
       items: [
         { label: 'Mis Publicaciones', icon: Home, disabled: true },
@@ -183,7 +181,8 @@ function PageRoot() {
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
-              marginBottom: '22px',
+              marginTop: isSidebarCollapsed ? '18px' : '34px',
+              marginBottom: '18px',
               padding: '10px 5px',
               justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
             }}
@@ -191,12 +190,16 @@ function PageRoot() {
             <img
               src={isSidebarCollapsed ? miLogo : slidebaar}
               alt="ArriendU Logo"
+              role="button"
+              aria-label="Ir al panel"
+              onClick={() => navigate('/home')}
               style={{
                 height: isSidebarCollapsed ? '44px' : '40px',
                 width: 'auto',
                 maxWidth: isSidebarCollapsed ? '44px' : '100%',
                 objectFit: 'contain',
                 display: 'block',
+                cursor: 'pointer',
               }}
             />
           </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Star, CheckCircle, Clock } from 'lucide-react';
 import { listarArriendos, confirmarArriendo, crearResena } from '../services/rentalsAndReviews.service.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -32,6 +33,8 @@ export default function HistorialArriendos() {
     const enriched = data.map((r) => ({
       ...r,
       contratanteNombre: Number(user?.id) === r.arrendadorId ? r.estudiante?.nombreCompleto : r.arrendador?.nombreCompleto || '—',
+      contratanteId: Number(user?.id) === r.arrendadorId ? r.estudiante?.id : r.arrendador?.id || null,
+      contratanteAvatar: Number(user?.id) === r.arrendadorId ? r.estudiante?.avatar : r.arrendador?.avatar || null,
     }));
 
     setArriendos(enriched);
@@ -103,7 +106,22 @@ export default function HistorialArriendos() {
 
             return (
               <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ fontWeight: '600', color: colores.textoOscuro }}>{item.contratanteNombre || '—'}</td>
+                <td>
+                  {item.contratanteId ? (
+                    <Link to={`/perfil/${item.contratanteId}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: colores.textoOscuro, fontWeight: 600 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontWeight: '700', color: '#555' }}>
+                        {item.contratanteAvatar ? (
+                          <img src={item.contratanteAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          (item.contratanteNombre || '—').charAt(0)
+                        )}
+                      </div>
+                      <span>{item.contratanteNombre || '—'}</span>
+                    </Link>
+                  ) : (
+                    <span style={{ fontWeight: '600', color: colores.textoOscuro }}>{item.contratanteNombre || '—'}</span>
+                  )}
+                </td>
                 <td>
                   {item.status === 'COMPLETED' ? (
                     <span style={{ color: '#28a745', display: 'flex', alignItems: 'center', gap: '5px' }}>
