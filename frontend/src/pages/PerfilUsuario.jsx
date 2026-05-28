@@ -23,22 +23,29 @@ export default function PerfilUsuario() {
   useEffect(() => {
     const cargarPerfilYResenas = async () => {
       setLoading(true);
-      const [dataResenas, errResenas] = await obtenerResenasUsuario(id);
-      const [dataUsuario, errUsuario] = await obtenerPerfilUsuario(id);
-      
-      if (errResenas) {
-        setError(errResenas);
-      } else {
-        setResenas(dataResenas);
-        setUsuario({
-          nombre: dataUsuario.nombre || 'Usuario no encontrado',
-          rol: dataUsuario.rol || "Usuario",
-          avatar: dataUsuario.avatar || null,
-          avgRating: dataUsuario.avgRating || 0, 
-          reviewsCount: dataResenas?.length || 0 
-        });
+      try {
+        const [dataResenas, errResenas] = await obtenerResenasUsuario(id);
+        const [dataUsuario, errUsuario] = await obtenerPerfilUsuario(id);
+
+        if (errResenas) setError(errResenas);
+        if (errUsuario) setError(errUsuario);
+
+        if (dataResenas) setResenas(dataResenas);
+
+        if (dataUsuario) {
+          setUsuario({
+            nombre: dataUsuario.nombreCompleto || dataUsuario.nombre || 'Usuario no encontrado',
+            rol: dataUsuario.rol || 'Usuario',
+            avatar: dataUsuario.fotoPerfil || dataUsuario.avatar || null,
+            avgRating: dataUsuario.avgRating || dataUsuario.avg_rating || 0,
+            reviewsCount: dataUsuario.reviewsCount || dataResenas?.length || 0,
+          });
+        }
+      } catch (e) {
+        setError('Error inesperado al cargar el perfil');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     if (id) cargarPerfilYResenas();
@@ -146,14 +153,14 @@ export default function PerfilUsuario() {
           textAlign: 'center'
         }}>
           <div>
-            <h4 style={{ margin: '0 0 5px 0', color: '#7f8c8d' }}>Calificación Promedio</h4>
+            <h4 style={{ margin: '0 0 5px 0', color: '#7f8c8d' }}>Calificación promedio</h4>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '18px', fontWeight: 'bold' }}>
               {renderComponenteEstrellas(usuario?.avgRating)}
               <span>({usuario?.avgRating})</span>
             </div>
           </div>
           <div>
-            <h4 style={{ margin: '0 0 5px 0', color: '#7f8c8d' }}>Reseñas Recibidas</h4>
+            <h4 style={{ margin: '0 0 5px 0', color: '#7f8c8d' }}>Reseñas recibidas</h4>
             <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{usuario?.reviewsCount} opiniones</div>
           </div>
         </div>
@@ -175,8 +182,7 @@ export default function PerfilUsuario() {
                   borderLeft: `4px solid ${colores.principal}`,
                   boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 'bold', fontSize: '14px' }}>Usuario Anonimo (ID Autor: {resena.authorId})</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                     {renderComponenteEstrellas(resena.rating)}
                   </div>
                   <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#555' }}>

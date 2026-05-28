@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { showErrorAlert } from '@helpers/sweetAlert.js';
 
 const useLogin = () => {
     const [errorEmail, setErrorEmail] = useState('');
@@ -15,6 +16,10 @@ const useLogin = () => {
             setErrorEmail(dataMessage.message);
         } else if (dataMessage.dataInfo === 'password') {
             setErrorPassword(dataMessage.message);
+        } else if (dataMessage.dataInfo === 'auth') {
+            showErrorAlert('Credenciales incorrectas', dataMessage.message);
+        } else if (dataMessage.dataInfo === 'estadoVerificacion') {
+            showErrorAlert('Cuenta no disponible', dataMessage.message);
         }
     };
 

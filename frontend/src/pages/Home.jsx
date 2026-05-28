@@ -1,8 +1,5 @@
-const Home = () => {
-  return (
-    <>
-    </>
-  )
-}
+import PanelInicio from './PanelInicio.jsx';
 
-export default Home
+const Home = () => <PanelInicio />;
+
+export default Home;

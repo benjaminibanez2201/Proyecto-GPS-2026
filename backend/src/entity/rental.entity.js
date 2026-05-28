@@ -41,6 +41,24 @@ const ArriendoEsquema = new EntitySchema({
       nullable: true,
     },
   },
+  relations: {
+    arrendador: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: {
+        name: "arrendadorId",
+      },
+      nullable: false,
+    },
+    estudiante: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: {
+        name: "estudianteId",
+      },
+      nullable: false,
+    },
+  },
 });
 
 export default ArriendoEsquema;

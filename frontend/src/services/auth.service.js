@@ -1,6 +1,18 @@
 import axios from './root.service.js';
 import cookies from 'js-cookie';
-import { jwtDecode } from 'jwt-decode';
+
+function decodeJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        return {};
+    }
+}
 import { convertirMinusculas } from '@helpers/formatData.js';
 
 export async function login(dataUser) {
@@ -11,15 +23,22 @@ export async function login(dataUser) {
         });
         const { status, data } = response;
         if (status === 200) {
-            const { nombreCompleto, email, rut, rol } = jwtDecode(data.data.token);
-            const userData = { nombreCompleto, email, rut, rol };
+            const { id, nombreCompleto, email, rut, rol } = decodeJwt(data.data.token);
+            const userData = { id, nombreCompleto, email, rut, rol };
             sessionStorage.setItem('usuario', JSON.stringify(userData));
             axios.defaults.headers.common['Authorization'] = `Bearer ${data.data.token}`;
             cookies.set('jwt-auth', data.data.token, {path:'/'});
             return response.data
         }
     } catch (error) {
-        return error.response.data;
+        if (error.response?.data) {
+            return error.response.data;
+        }
+        return {
+            status: "Server error",
+            message: "Error al conectar con el servidor",
+            details: null
+        };
     }
 }
 

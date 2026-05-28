@@ -25,7 +25,13 @@ export async function obtenerArriendoPorIdServicio(id) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
 
-    const arriendo = await repositorioArriendo.findOne({ where: { id } });
+    const arriendo = await repositorioArriendo.findOne({
+      where: { id },
+      relations: {
+        arrendador: true,
+        estudiante: true,
+      },
+    });
 
     if (!arriendo) return [null, "Arriendo no encontrado"];
 
@@ -72,7 +78,12 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
 export async function listarArriendosServicio() {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
-    const arriendos = await repositorioArriendo.find();
+    const arriendos = await repositorioArriendo.find({
+      relations: {
+        arrendador: true,
+        estudiante: true,
+      },
+    });
     return [arriendos, null];
   } catch (error) {
     console.error("Error listarArriendosServicio:", error);

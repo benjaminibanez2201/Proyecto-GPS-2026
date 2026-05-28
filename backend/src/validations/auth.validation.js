@@ -17,17 +17,11 @@ export const authValidation = Joi.object({
       "string.max": "El correo electrónico debe tener como máximo 100 caracteres.",
     }),
   password: Joi.string()
-    .min(8)
-    .max(50)
-    .pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/)
     .required()
     .messages({
       "string.empty": "La contraseña no puede estar vacía.",
       "any.required": "La contraseña es obligatoria.",
       "string.base": "La contraseña debe ser de tipo texto.",
-      "string.min": "La contraseña debe tener al menos 8 caracteres.",
-      "string.max": "La contraseña debe tener como máximo 50 caracteres.",
-      "string.pattern.base": "La contraseña debe contener al menos una letra mayúscula, un número y un carácter especial.",
     }),
 }).unknown(false).messages({
   "object.unknown": "No se permiten propiedades adicionales.",

@@ -119,10 +119,6 @@ const Login = () => {
                                     fieldType: 'input',
                                     type: "password",
                                     required: true,
-                                    minLength: 8,
-                                    maxLength: 50,
-                                    pattern: /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/,
-                                    patternMessage: "Debe contener al menos una mayúscula, un número y un carácter especial.",
                                     errorMessageData: errorPassword,
                                     onChange: (e) => handleInputChange('password', e.target.value)
                                 },
@@ -130,12 +126,14 @@ const Login = () => {
                             buttonText="Iniciar sesión"
                             onSubmit={loginSubmit}
                             footerContent={
-                                <div>
+                                <div className="login-footer">
                                     <p>
-                                        ¿No tienes cuenta?, <Link to="/register">¡Regístrate aquí!</Link>
+                                        ¿No tienes cuenta?{' '}
+                                        <Link to="/register">Regístrate aquí</Link>
                                     </p>
                                     <p>
-                                        ¿Olvidaste tu contraseña?, <Link to="/forgot-password">Recupérala aquí</Link>
+                                        ¿Olvidaste tu contraseña?{' '}
+                                        <Link to="/forgot-password">Recupérala aquí</Link>
                                     </p>
                                 </div>
                             }
