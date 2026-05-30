@@ -7,7 +7,9 @@ export function formatUserData(user) {
         ...user,
         nombreCompleto: startCase(user.nombreCompleto),
         rol: startCase(user.rol),
+        estadoVerificacion: startCase(user.estadoVerificacion || 'pendiente'),
         rut: formatRut(user.rut),
+        createdAtRaw: user.createdAt,
         createdAt: formatTempo(user.createdAt, "DD-MM-YYYY")
     };
 }
@@ -23,10 +25,13 @@ export function convertirMinusculas(obj) {
 
 export function formatPostUpdate(user) {
     return {
+        ...user,
         nombreCompleto: startCase(user.nombreCompleto),
         rol: startCase(user.rol),
+        estadoVerificacion: startCase(user.estadoVerificacion || 'pendiente'),
         rut: formatRut(user.rut),
         email: user.email,
+        createdAtRaw: user.createdAt,
         createdAt: formatTempo(user.createdAt, "DD-MM-YYYY")
     };
 }

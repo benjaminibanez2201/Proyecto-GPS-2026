@@ -1,4 +1,7 @@
 .table-container .tabulator {
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0;
     border: none;
     border-radius: 18px;
     overflow: hidden;
@@ -37,6 +40,23 @@
 
 .table-container .tabulator .tabulator-row.tabulator-selected {
     background: #e6f4f1;
+}
+
+.table-container .tabulator .table-view-button {
+    border: none;
+    border-radius: 999px;
+    padding: 6px 12px;
+    background: #008080;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: none;
+}
+
+.table-container .tabulator .table-view-button:hover {
+    background: #0b6b7a;
+    border-color: transparent;
 }
 
 .table-container .tabulator .tabulator-cell {
@@ -85,6 +105,9 @@
 }
 
 .table-container .tabulator .tabulator-tableholder {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
     background: #ffffff;
 }
 

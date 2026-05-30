@@ -10,7 +10,8 @@ export async function getUsers() {
 export async function obtenerUsuarios() {
     try {
         const { data } = await axios.get('/user/');
-        const formattedData = data.data.map(formatUserData);
+        const users = Array.isArray(data.data) ? data.data : [];
+        const formattedData = users.map(formatUserData);
         return [formattedData, null];
     } catch (error) {
         return [null, error.response?.data?.message || 'Error al cargar usuarios'];
