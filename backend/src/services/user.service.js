@@ -159,3 +159,20 @@ export async function updateProfileService(id, body) {
     return [null, "Error interno del servidor"];
   }
 }
+
+export async function getProfileService(id) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({ where: { id } });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+
+    const { password, ...userData } = userFound;
+
+    return [userData, null];
+  } catch (error) {
+    console.error("Error al obtener perfil:", error);
+    return [null, "Error interno del servidor"];
+  }
+}

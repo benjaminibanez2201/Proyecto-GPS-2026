@@ -177,3 +177,19 @@ export async function getPublicProfile(req, res) {
     handleErrorServer(res, 500, error.message);
   }
 }
+
+import { getProfileService } from "../services/user.service.js";
+
+export async function getProfile(req, res) {
+  try {
+    const { id } = req.user; // viene del token JWT
+
+    const [user, userError] = await getProfileService(id);
+
+    if (userError) return handleErrorClient(res, 404, "Error obteniendo perfil", userError);
+
+    handleSuccess(res, 200, "Perfil obtenido correctamente", user);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
