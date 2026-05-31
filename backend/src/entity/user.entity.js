@@ -36,7 +36,7 @@ const UserSchema = new EntitySchema({
     password: {
       type: "varchar",
       nullable: false,
-      selecct: false,
+      select: false,
     },
     estadoVerificacion: {
       type: "enum",
