@@ -15,7 +15,7 @@ router
     .use("/user", userRoutes)
     .use("/profile", profileRoutes)
     .use("/rentals", rentalsRoutes)
-    .use("/reviews", reviewsRoutes);
+    .use("/reviews", reviewsRoutes)
     .use("/mensajes", mensajeRoutes);
 
 export default router;
