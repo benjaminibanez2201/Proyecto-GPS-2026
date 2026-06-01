@@ -22,6 +22,22 @@ async function createUsers() {
         rol: "admin",
         estadoVerificacion: "aprobado",
       },
+      {
+        nombreCompleto: "Usuario Estudiante",
+        rut: "19.123.456-7",
+        email: "estudiante1@gmail.cl",
+        password: "Estudiante1234.",
+        rol: "estudiante",
+        estadoVerificacion: "aprobado",
+      },
+      {
+        nombreCompleto: "Usuario Arrendador",
+        rut: "20.111.222-3",
+        email: "arrendador1@gmail.cl",
+        password: "Arrendador1234.",
+        rol: "arrendador",
+        estadoVerificacion: "aprobado",
+      },
     ];
 
     const created = [];
