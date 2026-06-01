@@ -1,8 +1,9 @@
 "use strict";
-import { loginService, registerService } from "../services/auth.service.js";
+import { loginService, registerService, forgotPasswordService, resetPasswordService } from "../services/auth.service.js";
 import {
   authValidation,
   registerValidation,
+  newPasswordValidation,
 } from "../validations/auth.validation.js";
 import {
   handleErrorClient,
@@ -23,11 +24,17 @@ export async function login(req, res) {
 
     if (errorToken) return handleErrorClient(res, 400, "Error iniciando sesión", errorToken);
 
+    // Configuración de cookie (la versión de seguridad q puse)
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("jwt", accessToken, {
       httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "strict",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
+    // No incluir el token en el body cuando se usa cookie httpOnly
     handleSuccess(res, 200, "Inicio de sesión exitoso", { token: accessToken });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
@@ -57,6 +64,38 @@ export async function logout(req, res) {
   try {
     res.clearCookie("jwt", { httpOnly: true });
     handleSuccess(res, 200, "Sesión cerrada exitosamente");
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+// Funciones nuevas del benja para la contraseña
+export async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+    const [message, error] = await forgotPasswordService(email);
+    if (error) return handleErrorClient(res, 400, error);
+    handleSuccess(res, 200, message);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function resetPassword(req, res) {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    const { error } = newPasswordValidation.validate({ newPassword });
+
+    if (error) {
+      return handleErrorClient(res, 400, "Error de validación", error.message);
+    }
+
+    const [message, errorNewUser] = await resetPasswordService(token, newPassword);
+    
+    if (errorNewUser) return handleErrorClient(res, 400, errorNewUser);
+    handleSuccess(res, 200, message);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

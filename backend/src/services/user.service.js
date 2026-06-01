@@ -11,6 +11,15 @@ export async function getUserService(query) {
 
     const userFound = await userRepository.findOne({
       where: [{ id: id }, { rut: rut }, { email: email }],
+      select: {
+        id: true,
+        nombreCompleto: true,
+        rut: true,
+        email: true,
+        rol: true,
+        estadoVerificacion: true,
+        password: true,
+      },
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];
@@ -124,6 +133,38 @@ export async function deleteUserService(query) {
     return [dataUser, null];
   } catch (error) {
     console.error("Error al eliminar un usuario:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function updateProfileService(id, body) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({ where: { id } });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+
+    const dataToUpdate = {
+      ...(body.nombreCompleto && { nombreCompleto: body.nombreCompleto }),
+      ...(body.universidad && { universidad: body.universidad }),
+      ...(body.carrera && { carrera: body.carrera }),
+      ...(body.telefono && { telefono: body.telefono }),
+      ...(body.fotoPerfil && { fotoPerfil: body.fotoPerfil }),
+      updatedAt: new Date(),
+    };
+
+    await userRepository.update({ id: userFound.id }, dataToUpdate);
+
+    const userData = await userRepository.findOne({ where: { id: userFound.id } });
+
+    if (!userData) return [null, "Usuario no encontrado después de actualizar"];
+
+    const { password, ...userUpdated } = userData;
+
+    return [userUpdated, null];
+  } catch (error) {
+    console.error("Error al actualizar el perfil del usuario:", error);
     return [null, "Error interno del servidor"];
   }
 }

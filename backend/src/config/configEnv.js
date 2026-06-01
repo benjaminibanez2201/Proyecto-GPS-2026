@@ -20,3 +20,5 @@ export const DB_PORT = Number(process.env.DB_PORT || 5432);
 export const ACCESS_TOKEN_SECRET =
 	process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
 export const cookieKey = process.env.cookieKey || process.env.COOKIE_KEY;
+export const EMAIL_USER = process.env.EMAIL_USER;
+export const EMAIL_PASS = process.env.EMAIL_PASS;
