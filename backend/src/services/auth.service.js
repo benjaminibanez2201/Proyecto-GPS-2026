@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
 import { ACCESS_TOKEN_SECRET } from "../config/configEnv.js";
+import { sendRecoveryEmail } from "./email.service.js";
 
 export async function loginService(user) {
   try {
@@ -16,7 +17,16 @@ export async function loginService(user) {
     });
 
     const userFound = await userRepository.findOne({
-      where: { email }
+      where: { email },
+      select: {
+        id: true,
+        nombreCompleto: true,
+        rut: true,
+        email: true,
+        rol: true,
+        estadoVerificacion: true,
+        password: true,
+      },
     });
 
     if (!userFound) {
@@ -98,6 +108,76 @@ export async function registerService(user) {
     return [dataUser, null];
   } catch (error) {
     console.error("Error al registrar un usuario", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+// funcion para solicitar la recuperacion de contraseña
+export async function forgotPasswordService(email) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({
+      where: { email }
+    });
+
+    if (!userFound) {
+      return [null, "Se envió un correo electrónico a la dirección proporcionada si existe una cuenta asociada. Si no recibes un correo, por favor verifica tu dirección de correo electrónico o contacta al soporte. Gracias por tu comprensión."];
+    }
+
+    // generar el token de restablecimiento de contraseña
+
+    const resetToken = jwt.sign({ id: userFound.id }, ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+
+    // Guardar en usuario
+    userFound.resetPasswordToken = resetToken;
+    userFound.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hora
+
+    await userRepository.save(userFound);
+
+    // enviar el correo con el token de restablecimiento 
+    await sendRecoveryEmail(userFound.email, resetToken);
+
+    return ["Instrucciones para restablecer la contraseña han sido enviadas a tu correo electrónico", null];
+  } catch (error) {
+    console.error("Error al solicitar restablecimiento de contraseña:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function resetPasswordService(token, newPassword) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    } catch {
+      return [null, "El enlace de restablecimiento es inválido o ha expirado"];
+    }
+
+    const userFound = await userRepository.findOne({
+      where: { resetPasswordToken: token },
+    });
+
+    if (!userFound) {
+      return [null, "El token no existe o ya ha sido utilizado"];
+    }
+
+    if (userFound.resetPasswordExpires < new Date()) {
+      return [null, "El enlace de restablecimiento ha expirado"];
+    }
+
+    const hashedPassword = await encryptPassword(newPassword);
+
+    userFound.password = hashedPassword;
+    userFound.resetPasswordToken = null;
+    userFound.resetPasswordExpires = null;
+
+    await userRepository.save(userFound);
+
+    return ["Contraseña restablecida exitosamente", null];
+  } catch (error) {
+    console.error("Error al restablecer la contraseña:", error);
     return [null, "Error interno del servidor"];
   }
 }

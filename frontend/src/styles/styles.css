@@ -3,16 +3,28 @@
 html,
 body {
 	margin: 0;
-	display: flex;
-	flex-direction: column;
-	place-items: center;
+	display: block;
 	min-width: 100%;
 	min-height: 100vh;
 	overflow-x: hidden;
 	font-family: "Montserrat", sans-serif;
 }
 #root {
-	min-width: 100%;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
 	min-height: 100vh;
-	margin: 0 auto;
+	margin: 0;
+}
+
+/* Hover suave y ligero para imágenes en la app */
+img {
+	transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+	will-change: transform;
+}
+
+img:hover {
+	transform: translateY(-3px) scale(1.02);
+	box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+	opacity: 0.98;
 }

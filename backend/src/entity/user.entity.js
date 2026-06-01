@@ -36,7 +36,7 @@ const UserSchema = new EntitySchema({
     password: {
       type: "varchar",
       nullable: false,
-      selecct: false,
+      select: false,
     },
     estadoVerificacion: {
       type: "enum",
@@ -92,6 +92,16 @@ const UserSchema = new EntitySchema({
       default: () => "CURRENT_TIMESTAMP",
       onUpdate: "CURRENT_TIMESTAMP",
       nullable: false,
+    },
+    avgRating: {
+      type: "float",
+      nullable: false,
+      default: 0,
+    },
+    reviewsCount: {
+      type: "int",
+      nullable: false,
+      default: 0,
     },
   },
   indices: [
