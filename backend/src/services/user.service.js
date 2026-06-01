@@ -176,3 +176,41 @@ export async function getProfileService(id) {
     return [null, "Error interno del servidor"];
   }
 }
+
+export async function updateArrendadorProfileService(id, body) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({ where: { id } });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+
+    if (body.email) {
+      const existingEmail = await userRepository.findOne({ where: { email: body.email } });
+      if (existingEmail && existingEmail.id !== userFound.id) {
+        return [null, "El correo ya está en uso por otro usuario"];
+      }
+    }
+
+    const dataToUpdate = {
+      ...(body.nombreCompleto && { nombreCompleto: body.nombreCompleto }),
+      ...(body.email && { email: body.email }),
+      ...(body.telefono && { telefono: body.telefono }),
+      ...(body.fotoPerfil && { fotoPerfil: body.fotoPerfil }),
+      updatedAt: new Date(),
+    };
+
+    await userRepository.update({ id: userFound.id }, dataToUpdate);
+
+    const userData = await userRepository.findOne({ where: { id: userFound.id } });
+
+    if (!userData) return [null, "Usuario no encontrado después de actualizar"];
+
+    const { password, ...userUpdated } = userData;
+
+    return [userUpdated, null];
+  } catch (error) {
+    console.error("Error al actualizar perfil del arrendador:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
