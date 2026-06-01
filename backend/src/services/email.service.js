@@ -1,5 +1,7 @@
 import nodemailer from "nodemailer";
 import { EMAIL_PASS, EMAIL_USER } from "../config/configEnv.js";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -24,14 +26,18 @@ const FRONTEND_URL = process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL;
 
 export async function sendRecoveryEmail(email, resetToken) {
     try {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
         const baseUrl = FRONTEND_URL.replace(/\/$/, "");
         const encodedToken = encodeURIComponent(resetToken);
         const resetUrl = `${baseUrl}/reset-password/${encodedToken}`;
+        const bannerPath = path.resolve(__dirname, "..", "..", "..", "frontend", "public", "BannerArriendU.png");
+        const bannerCid = "arriendu-banner";
 
         const wrapperStyle = [
             "margin:0",
             "padding:0",
-            "background-color:#f6f7fb",
+            "background-color:#fdfefe",
             "font-family:Arial,Helvetica,sans-serif",
         ].join(";");
         const containerStyle = ["max-width:600px", "margin:0 auto", "padding:24px"].join(";");
@@ -41,7 +47,14 @@ export async function sendRecoveryEmail(email, resetToken) {
             "border-radius:10px",
             "overflow:hidden",
         ].join(";");
-        const headerStyle = ["padding:18px 24px", "background:#0b2a5b", "color:#ffffff"].join(";");
+        const headerStyle = ["padding:18px 24px", "background:#008080", "color:#ffffff"].join(";");
+        const bannerStyle = [
+            "display:block",
+            "max-width:220px",
+            "width:100%",
+            "height:auto",
+            "margin:0 0 10px",
+        ].join(";");
         const titleStyle = ["margin:0", "font-size:18px", "font-weight:700"].join(";");
         const subtitleStyle = ["margin:6px 0 0", "font-size:13px", "opacity:0.95"].join(";");
         const bodyStyle = ["padding:24px", "color:#111827"].join(";");
@@ -52,7 +65,7 @@ export async function sendRecoveryEmail(email, resetToken) {
             "display:inline-block",
             "padding:12px 18px",
             "border-radius:8px",
-            "background:#2563eb",
+            "background:#008080",
             "color:#ffffff",
             "text-decoration:none",
             "font-weight:700",
@@ -70,11 +83,11 @@ export async function sendRecoveryEmail(email, resetToken) {
             "line-height:1.6",
             "word-break:break-all",
         ].join(";");
-        const linkStyle = ["color:#2563eb", "text-decoration:underline"].join(";");
+        const linkStyle = ["color:#008080", "text-decoration:underline"].join(";");
         const noteStyle = ["margin:0", "font-size:13px", "line-height:1.6", "color:#6b7280"].join(";");
         const footerStyle = [
             "padding:16px 24px",
-            "background:#f9fafb",
+            "background:#fdfefe",
             "border-top:1px solid #e6e8ef",
             "color:#6b7280",
             "font-size:12px",
@@ -97,7 +110,7 @@ export async function sendRecoveryEmail(email, resetToken) {
                 `  <div style="${containerStyle}">`,
                 `    <div style="${cardStyle}">`,
                 `      <div style="${headerStyle}">`,
-                `        <h1 style="${titleStyle}">ArriendU</h1>`,
+                `        <img src="cid:${bannerCid}" alt="ArriendU" style="${bannerStyle}" />`,
                 `        <p style="${subtitleStyle}">Restablecimiento de contraseña</p>`,
                 "      </div>",
                 `      <div style="${bodyStyle}">`,
@@ -126,6 +139,13 @@ export async function sendRecoveryEmail(email, resetToken) {
                 "  </div>",
                 "</div>",
             ].join("\n"),
+            attachments: [
+                {
+                    filename: "BannerArriendU.png",
+                    path: bannerPath,
+                    cid: bannerCid,
+                },
+            ],
         };
 
         const info = await transporter.sendMail(mailOptions);

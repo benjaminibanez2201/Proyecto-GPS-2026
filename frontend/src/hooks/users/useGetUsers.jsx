@@ -7,13 +7,7 @@ const useUsers = () => {
     const fetchUsers = async () => {
         try {
             const response = await getUsers();
-            const formattedData = response.map(user => ({
-                nombreCompleto: user.nombreCompleto,
-                rut: user.rut,
-                email: user.email,
-                rol: user.rol,
-                createdAt: user.createdAt
-            }));
+            const formattedData = Array.isArray(response) ? [...response] : [];
             dataLogged(formattedData);
             setUsers(formattedData);
         } catch (error) {

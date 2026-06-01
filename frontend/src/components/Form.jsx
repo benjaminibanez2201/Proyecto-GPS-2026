@@ -142,12 +142,12 @@ const Form = ({ title, description, fields, buttonText, buttonDisabled, onSubmit
                     {buttonText}
                 </button>
             )}
+            {footerContent && <div className="footerContent">{footerContent}</div>}
             {inlineMessage && (
                 <div className="form-inline-message">
                     {renderInlineMessage()}
                 </div>
             )}
-            {footerContent && <div className="footerContent">{footerContent}</div>}
         </form>
     );
 };

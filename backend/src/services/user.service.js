@@ -11,6 +11,15 @@ export async function getUserService(query) {
 
     const userFound = await userRepository.findOne({
       where: [{ id: id }, { rut: rut }, { email: email }],
+      select: {
+        id: true,
+        nombreCompleto: true,
+        rut: true,
+        email: true,
+        rol: true,
+        estadoVerificacion: true,
+        password: true,
+      },
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];
