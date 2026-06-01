@@ -17,7 +17,16 @@ export async function loginService(user) {
     });
 
     const userFound = await userRepository.findOne({
-      where: { email }
+      where: { email },
+      select: {
+        id: true,
+        nombreCompleto: true,
+        rut: true,
+        email: true,
+        rol: true,
+        estadoVerificacion: true,
+        password: true,
+      },
     });
 
     if (!userFound) {

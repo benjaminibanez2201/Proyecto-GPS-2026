@@ -71,13 +71,16 @@ function PageRoot() {
       items: [
         { label: 'Panel Administrador', icon: Home, to: '/admin' },
         { label: 'Verificaciones Pendientes', icon: ShieldCheck, disabled: true },
-        { label: 'Gestión de Usuarios', icon: Users, to: '/users' },
+        { label: 'Gestión de Usuarios', icon: Users, to: '/admin/users' },
         { label: 'Publicaciones Reportadas', icon: FlagTriangleRight, disabled: true },
       ],
     },
   };
 
   const menu = menus[normalizedRole] || menus.estudiante;
+  const handleBannerClick = () => {
+    navigate(normalizedRole === 'administrador' ? '/admin' : '/home');
+  };
 
   const getSidebarItemStyle = ({ active = false, hovered = false, disabled = false }) => {
     const highlight = active || hovered;
@@ -195,8 +198,8 @@ function PageRoot() {
               src={isSidebarCollapsed ? miLogo : slidebaar}
               alt="ArriendU Logo"
               role="button"
-              aria-label="Ir al panel"
-              onClick={() => navigate('/home')}
+              aria-label={normalizedRole === 'administrador' ? 'Ir al panel administrador' : 'Ir al inicio'}
+              onClick={handleBannerClick}
               style={{
                 height: isSidebarCollapsed ? '44px' : '40px',
                 width: 'auto',
@@ -255,7 +258,7 @@ function PageRoot() {
         </div>
       </aside>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: colores.grisSuave }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', backgroundColor: colores.grisSuave }}>
         <header
           style={{
             height: '60px',
@@ -291,7 +294,7 @@ function PageRoot() {
           </div>
         </header>
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+        <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px' }}>
           <Outlet />
         </main>
       </div>
