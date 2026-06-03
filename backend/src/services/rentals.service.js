@@ -1,6 +1,8 @@
 "use strict";
 import Rental from "../entity/rental.entity.js";
 import { AppDataSource } from "../config/configDb.js";
+import { sendRentalCompleteEmail } from "./email.service.js";
+import { createNotificacionService } from "./notificacion.service.js";
 
 export async function crearArriendoServicio(body) {
   try {
@@ -46,7 +48,7 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
 
-    const arriendo = await repositorioArriendo.findOne({ where: { id: arriendoId } });
+    const arriendo = await repositorioArriendo.findOne({ where: { id: arriendoId }, relations: { arrendador: true, estudiante: true } });
     if (!arriendo) return [null, "Arriendo no encontrado"];
 
     const esArrendador = arriendo.arrendadorId === Number(userId);
@@ -60,11 +62,44 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
 
     await repositorioArriendo.update({ id: arriendo.id }, actualizacion);
 
-    const actualizado = await repositorioArriendo.findOne({ where: { id: arriendoId } });
+    const actualizado = await repositorioArriendo.findOne({ where: { id: arriendoId }, relations: { arrendador: true, estudiante: true } });
 
     if (actualizado.confirmedByArrendador && actualizado.confirmedByEstudiante) {
       await repositorioArriendo.update({ id: arriendo.id }, { status: "COMPLETED", completedAt: new Date() });
-      const final = await repositorioArriendo.findOne({ where: { id: arriendoId } });
+      const final = await repositorioArriendo.findOne({ where: { id: arriendoId }, relations: { arrendador: true, estudiante: true } });
+
+      // Crear notificaciones para arrendador y estudiante
+      try {
+        if (final?.arrendador?.id) {
+          await createNotificacionService({
+            userId: final.arrendador.id,
+            tipo: "RENTAL_COMPLETED",
+            mensaje: `El arriendo #${final.id} ha sido confirmado por ambas partes`,
+            targetType: "rental",
+            targetId: final.id,
+          });
+        }
+
+        if (final?.estudiante?.id) {
+          await createNotificacionService({
+            userId: final.estudiante.id,
+            tipo: "RENTAL_COMPLETED",
+            mensaje: `El arriendo #${final.id} ha sido confirmado por ambas partes`,
+            targetType: "rental",
+            targetId: final.id,
+          });
+        }
+      } catch (notifError) {
+        console.error("Error creando notificaciones de arriendo completado:", notifError);
+      }
+
+      // Enviar correos a ambas partes (no bloquear en caso de error)
+      try {
+        await sendRentalCompleteEmail(final);
+      } catch (emailError) {
+        console.error("Error enviando correo de arriendo completado:", emailError);
+      }
+
       return [final, null];
     }
 
