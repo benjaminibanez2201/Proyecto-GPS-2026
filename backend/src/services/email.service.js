@@ -211,8 +211,8 @@ export async function sendRentalCompleteEmail(rental) {
         const mailToArrendador = {
             from: `ArriendU <${EMAIL_USER}>`,
             to: rental.arrendador?.email,
-            subject: "Arriendo confirmado por ambas partes",
-            text: `Hola ${greetingNameArrendador},\n\nEl arriendo #${rental.id} ha sido confirmado por ambas partes. Puedes ver los detalles en: ${rentalUrl}\n\nSaludos,\nSoporte ArriendU`,
+            subject: "¡Felicitaciones! se ha confirmado el arriendo.",
+            text: `Hola ${greetingNameArrendador},\n\nTu arriendo con ${greetingNameEstudiante} ha sido confirmado por ambas partes. Gracias por usar ArriendU.\n\nSaludos,\nSoporte ArriendU`,
             html: [
                 `<div style="${commonWrapper}">`,
                 `  <div style="${containerStyle}">`,
@@ -223,9 +223,9 @@ export async function sendRentalCompleteEmail(rental) {
                 "      </div>",
                 `      <div style="${bodyStyle}">`,
                 `        <p style="${pStyle}">Hola ${greetingNameArrendador},</p>`,
-                `        <p style="${pStyle}">El arriendo #${rental.id} con ${greetingNameEstudiante} ha sido confirmado por ambas partes.</p>`,
+                `        <p style="${pStyle}">Tu arriendo con ${greetingNameEstudiante} ha sido confirmado por ambas partes.</p>`,
                 `        <div style="${centerStyle}">`,
-                `          <a href="${rentalUrl}" style="${buttonStyle}">Ver arriendo</a>`,
+                `          <span style="${buttonStyle};opacity:0.9;cursor:default;">Ver arriendo</span>`,
                 "        </div>",
                 `        <p style="margin:0;font-size:13px;line-height:1.6;color:#6b7280;">Este es un mensaje automático, por favor no respondas.</p>`,
                 "      </div>",
@@ -245,13 +245,42 @@ export async function sendRentalCompleteEmail(rental) {
             ],
         };
 
-        // correo para estudiante (contenido similar)
+        // correo para estudiante (contenido similar, con nombres invertidos cuando corresponde)
         const mailToEstudiante = {
-            ...mailToArrendador,
+            from: `ArriendU <${EMAIL_USER}>`,
             to: rental.estudiante?.email,
-            subject: "Arriendo confirmado por ambas partes",
-            html: mailToArrendador.html.replace(`Hola ${greetingNameArrendador},`, `Hola ${greetingNameEstudiante},`).replace(greetingNameEstudiante, greetingNameEstudiante),
-            text: `Hola ${greetingNameEstudiante},\n\nEl arriendo #${rental.id} ha sido confirmado por ambas partes. Puedes ver los detalles en: ${rentalUrl}\n\nSaludos,\nSoporte ArriendU`,
+            subject: "¡Felicitaciones! se ha confirmado el arriendo.",
+            text: `Hola ${greetingNameEstudiante},\n\nTu arriendo con ${greetingNameArrendador} ha sido confirmado por ambas partes. Gracias por usar ArriendU.\n\nSaludos,\nSoporte ArriendU`,
+            html: [
+                `<div style="${commonWrapper}">`,
+                `  <div style="${containerStyle}">`,
+                `    <div style="${cardStyle}">`,
+                `      <div style="${headerStyle}">`,
+                `        <img src=\"cid:${bannerCid}\" alt=\"ArriendU\" style=\"${bannerStyle}\" />`,
+                `        <p style=\"margin:6px 0 0;font-size:13px;opacity:0.95\">Arriendo confirmado</p>`,
+                "      </div>",
+                `      <div style="${bodyStyle}">`,
+                `        <p style="${pStyle}">Hola ${greetingNameEstudiante},</p>`,
+                `        <p style="${pStyle}">Tu arriendo con ${greetingNameArrendador} ha sido confirmado por ambas partes.</p>`,
+                `        <div style="${centerStyle}">`,
+                `          <span style="${buttonStyle};opacity:0.9;cursor:default;">Ver arriendo</span>`,
+                "        </div>",
+                `        <p style="margin:0;font-size:13px;line-height:1.6;color:#6b7280;">Este es un mensaje automático, por favor no respondas.</p>`,
+                "      </div>",
+                `      <div style="${footerStyle}">`,
+                `        <p style=\"margin:0\">Gracias por usar ArriendU</p>`,
+                "      </div>",
+                "    </div>",
+                "  </div>",
+                "</div>",
+            ].join("\n"),
+            attachments: [
+                {
+                    filename: "BannerArriendU.png",
+                    path: bannerPath,
+                    cid: bannerCid,
+                },
+            ],
         };
 
         // enviar a arrendador

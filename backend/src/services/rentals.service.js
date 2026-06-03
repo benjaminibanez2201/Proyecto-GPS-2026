@@ -56,6 +56,10 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
 
     if (!esArrendador && !esEstudiante) return [null, "No eres parte de este arriendo"];
 
+    // Si el usuario ya confirmó previamente, no hacer nada (evita envíos múltiples)
+    if (esArrendador && arriendo.confirmedByArrendador) return [arriendo, null];
+    if (esEstudiante && arriendo.confirmedByEstudiante) return [arriendo, null];
+
     const actualizacion = {};
     if (esArrendador) actualizacion.confirmedByArrendador = true;
     if (esEstudiante) actualizacion.confirmedByEstudiante = true;
@@ -74,7 +78,7 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
           await createNotificacionService({
             userId: final.arrendador.id,
             tipo: "RENTAL_COMPLETED",
-            mensaje: `El arriendo #${final.id} ha sido confirmado por ambas partes`,
+            mensaje: `El arriendo ha sido confirmado por ambas partes`,
             targetType: "rental",
             targetId: final.id,
           });
@@ -84,7 +88,7 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
           await createNotificacionService({
             userId: final.estudiante.id,
             tipo: "RENTAL_COMPLETED",
-            mensaje: `El arriendo #${final.id} ha sido confirmado por ambas partes`,
+            mensaje: `El arriendo ha sido confirmado por ambas partes`,
             targetType: "rental",
             targetId: final.id,
           });
