@@ -3,6 +3,7 @@ import User from "../entity/user.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
 
+//LA OCUPO PARA VER UN PERFIL, REVISAR SUS RESEÑAS Y CALIFICACIÓN.
 export async function getUserService(query) {
   try {
     const { rut, id, email } = query;
@@ -19,6 +20,9 @@ export async function getUserService(query) {
         rol: true,
         estadoVerificacion: true,
         password: true,
+        avgRating: true,
+        reviewsCount: true,
+        fotoPerfil: true,
       },
     });
 
