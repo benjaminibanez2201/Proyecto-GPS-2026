@@ -110,15 +110,24 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
   }
 }
 
-export async function listarArriendosServicio() {
+export async function listarArriendosServicio(userId) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
+    
     const arriendos = await repositorioArriendo.find({
+      where: [
+        { arrendadorId: Number(userId) },
+        { estudianteId: Number(userId) }
+      ],
       relations: {
         arrendador: true,
         estudiante: true,
       },
+      order: {
+        createdAt: "DESC" 
+      }
     });
+    
     return [arriendos, null];
   } catch (error) {
     console.error("Error listarArriendosServicio:", error);
