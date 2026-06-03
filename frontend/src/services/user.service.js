@@ -46,3 +46,12 @@ export async function updateProfile(data) {
         return error.response.data;
     }
 }
+
+export async function getProfile() {
+    try {
+        const response = await axios.get('/profile/');
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
