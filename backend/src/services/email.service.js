@@ -156,3 +156,118 @@ export async function sendRecoveryEmail(email, resetToken) {
     }
 }
 
+export async function sendRentalCompleteEmail(rental) {
+    try {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const baseUrl = FRONTEND_URL.replace(/\/$/, "");
+        const rentalUrl = `${baseUrl}/rental/${rental.id}`;
+        const bannerPath = path.resolve(__dirname, "..", "..", "..", "frontend", "public", "BannerArriendU.png");
+        const bannerCid = "arriendu-banner";
+
+        const greetingNameArrendador = rental.arrendador?.nombreCompleto || "Arrendador";
+        const greetingNameEstudiante = rental.estudiante?.nombreCompleto || "Estudiante";
+
+        const commonWrapper = [
+            "margin:0",
+            "padding:0",
+            "background-color:#fdfefe",
+            "font-family:Arial,Helvetica,sans-serif",
+        ].join(";");
+
+        // se ocupan los mismos estilos para ambos correos, solo cambia el contenido específico de saludo y mensaje, pero la estructura es la misma
+        const containerStyle = ["max-width:600px", "margin:0 auto", "padding:24px"].join(";");
+        const cardStyle = [
+            "background:#ffffff",
+            "border:1px solid #e6e8ef",
+            "border-radius:10px",
+            "overflow:hidden",
+        ].join(";");
+        const headerStyle = ["padding:18px 24px", "background:#008080", "color:#ffffff"].join(";");
+        const bannerStyle = ["display:block", "max-width:220px", "width:100%", "height:auto", "margin:0 0 10px"].join(";");
+        const bodyStyle = ["padding:24px", "color:#111827"].join(";");
+        const pStyle = ["margin:0 0 12px", "font-size:14px", "line-height:1.6"].join(";");
+        const centerStyle = ["text-align:center", "margin:22px 0"].join(";");
+        const buttonStyle = [
+            "display:inline-block",
+            "padding:12px 18px",
+            "border-radius:8px",
+            "background:#008080",
+            "color:#ffffff",
+            "text-decoration:none",
+            "font-weight:700",
+            "font-size:14px",
+        ].join(";");
+        const footerStyle = [
+            "padding:16px 24px",
+            "background:#fdfefe",
+            "border-top:1px solid #e6e8ef",
+            "color:#6b7280",
+            "font-size:12px",
+            "line-height:1.5",
+        ].join(";");
+
+        // correo para arrendador
+        const mailToArrendador = {
+            from: `ArriendU <${EMAIL_USER}>`,
+            to: rental.arrendador?.email,
+            subject: "Arriendo confirmado por ambas partes",
+            text: `Hola ${greetingNameArrendador},\n\nEl arriendo #${rental.id} ha sido confirmado por ambas partes. Puedes ver los detalles en: ${rentalUrl}\n\nSaludos,\nSoporte ArriendU`,
+            html: [
+                `<div style="${commonWrapper}">`,
+                `  <div style="${containerStyle}">`,
+                `    <div style="${cardStyle}">`,
+                `      <div style="${headerStyle}">`,
+                `        <img src=\"cid:${bannerCid}\" alt=\"ArriendU\" style=\"${bannerStyle}\" />`,
+                `        <p style=\"margin:6px 0 0;font-size:13px;opacity:0.95\">Arriendo confirmado</p>`,
+                "      </div>",
+                `      <div style="${bodyStyle}">`,
+                `        <p style="${pStyle}">Hola ${greetingNameArrendador},</p>`,
+                `        <p style="${pStyle}">El arriendo #${rental.id} con ${greetingNameEstudiante} ha sido confirmado por ambas partes.</p>`,
+                `        <div style="${centerStyle}">`,
+                `          <a href="${rentalUrl}" style="${buttonStyle}">Ver arriendo</a>`,
+                "        </div>",
+                `        <p style="margin:0;font-size:13px;line-height:1.6;color:#6b7280;">Este es un mensaje automático, por favor no respondas.</p>`,
+                "      </div>",
+                `      <div style="${footerStyle}">`,
+                `        <p style=\"margin:0\">Gracias por usar ArriendU</p>`,
+                "      </div>",
+                "    </div>",
+                "  </div>",
+                "</div>",
+            ].join("\n"),
+            attachments: [
+                {
+                    filename: "BannerArriendU.png",
+                    path: bannerPath,
+                    cid: bannerCid,
+                },
+            ],
+        };
+
+        // correo para estudiante (contenido similar)
+        const mailToEstudiante = {
+            ...mailToArrendador,
+            to: rental.estudiante?.email,
+            subject: "Arriendo confirmado por ambas partes",
+            html: mailToArrendador.html.replace(`Hola ${greetingNameArrendador},`, `Hola ${greetingNameEstudiante},`).replace(greetingNameEstudiante, greetingNameEstudiante),
+            text: `Hola ${greetingNameEstudiante},\n\nEl arriendo #${rental.id} ha sido confirmado por ambas partes. Puedes ver los detalles en: ${rentalUrl}\n\nSaludos,\nSoporte ArriendU`,
+        };
+
+        // enviar a arrendador
+        if (mailToArrendador.to) {
+            await transporter.sendMail(mailToArrendador);
+            console.log(`=> Correo enviado a arrendador: ${mailToArrendador.to}`);
+        }
+
+        // enviar a estudiante
+        if (mailToEstudiante.to) {
+            await transporter.sendMail(mailToEstudiante);
+            console.log(`=> Correo enviado a estudiante: ${mailToEstudiante.to}`);
+        }
+    } catch (error) {
+        console.error("Error al enviar correos de arriendo completado:", error);
+        // no throw para no romper el flujo principal en caso de fallo de correo
+    }
+}
+
