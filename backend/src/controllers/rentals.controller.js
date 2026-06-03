@@ -37,7 +37,8 @@ export async function confirmarArriendo(req, res) {
 
 export async function listarArriendos(req, res) {
   try {
-    const [data, error] = await listarArriendosServicio();
+    const userId = req.user.id; // Extraemos el ID del usuario logueado
+    const [data, error] = await listarArriendosServicio(userId); // Le pasamos el ID
     if (error) return handleErrorClient(res, 400, error);
     return handleSuccess(res, 200, "Lista de arriendos", data);
   } catch (error) {
