@@ -58,10 +58,6 @@ const PublicacionSchema = new EntitySchema({
       onUpdate: "CURRENT_TIMESTAMP",
       nullable: false,
     },
-    arrendadorId: {
-      type: "int",
-      nullable: false,
-    },
   },
   relations: {
     arrendador: {
