@@ -10,6 +10,20 @@ const patternRut = /^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d
 const patternPassword = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/;
 const patternNombre = /^[a-zA-Z\u00C0-\u017F\s]+$/;
 const patternTelefono = /^[0-9+\-\s()]+$/;
+const MAX_PROFILE_PHOTO_SIZE = 5 * 1024 * 1024;
+const MAX_VERIFICATION_DOCUMENT_SIZE = 10 * 1024 * 1024;
+const PROFILE_PHOTO_TYPES = ['image/jpeg', 'image/png'];
+const VERIFICATION_DOCUMENT_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+
+const validateFile = (allowedTypes, maxSize, formatMessage) => (value) => {
+    const file = value?.[0];
+
+    if (!file) return 'Este campo es obligatorio';
+    if (!allowedTypes.includes(file.type)) return formatMessage;
+    if (file.size > maxSize) return `El archivo debe pesar maximo ${maxSize / 1024 / 1024} MB`;
+
+    return true;
+};
 
 const Register = () => {
     const navigate = useNavigate();
@@ -174,6 +188,36 @@ const Register = () => {
                                 maxLength: 20,
                                 pattern: patternTelefono,
                                 patternMessage: 'Debe ingresar un teléfono válido',
+                            },
+                            {
+                                label: 'Foto de perfil',
+                                name: 'fotoPerfil',
+                                fieldType: 'input',
+                                type: 'file',
+                                accept: '.jpg,.jpeg,.png,image/jpeg,image/png',
+                                required: true,
+                                validate: {
+                                    validFile: validateFile(
+                                        PROFILE_PHOTO_TYPES,
+                                        MAX_PROFILE_PHOTO_SIZE,
+                                        'La foto de perfil debe ser JPG o PNG',
+                                    ),
+                                },
+                            },
+                            {
+                                label: 'Foto de carnet de identidad',
+                                name: 'documentoVerificacion',
+                                fieldType: 'input',
+                                type: 'file',
+                                accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
+                                required: true,
+                                validate: {
+                                    validFile: validateFile(
+                                        VERIFICATION_DOCUMENT_TYPES,
+                                        MAX_VERIFICATION_DOCUMENT_SIZE,
+                                        'El documento debe ser JPG, PNG o PDF',
+                                    ),
+                                },
                             },
                         ]),
                     {

@@ -23,6 +23,18 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
         onSubmit(data);
     };
 
+    const getInputType = (field) => {
+        if (field.type === 'password' && field.name === 'password') {
+            return showPassword ? 'text' : 'password';
+        }
+
+        if (field.type === 'password' && field.name === 'newPassword') {
+            return showNewPassword ? 'text' : 'password';
+        }
+
+        return field.type;
+    };
+
     useEffect(() => {
         fields.forEach((field) => {
             if (field.fieldType === 'checkbox' && typeof field.checked === 'boolean') {
@@ -72,6 +84,32 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
         );
     };
 
+    const renderInput = (field) => {
+        const inputRegister = register(field.name, {
+            required: field.required ? 'Este campo es obligatorio' : false,
+            minLength: field.minLength ? { value: field.minLength, message: `Debe tener al menos ${field.minLength} caracteres` } : false,
+            maxLength: field.maxLength ? { value: field.maxLength, message: `Debe tener máximo ${field.maxLength} caracteres` } : false,
+            pattern: field.pattern ? { value: field.pattern, message: field.patternMessage || 'Formato no válido' } : false,
+            validate: field.validate || {},
+        });
+
+        return (
+            <input
+                {...inputRegister}
+                name={field.name}
+                placeholder={field.placeholder}
+                type={getInputType(field)}
+                accept={field.accept}
+                defaultValue={field.type === 'file' ? undefined : field.defaultValue || ''}
+                disabled={field.disabled}
+                onChange={(event) => {
+                    inputRegister.onChange(event);
+                    field.onChange?.(event);
+                }}
+            />
+        );
+    };
+
     return (
         <form
             className="form"
@@ -83,25 +121,7 @@ const Form = ({ title, fields, buttonText, onSubmit, footerContent, backgroundCo
             {fields.map((field, index) => (
                 <div className="container_inputs" key={index}>
                     {field.label && <label htmlFor={field.name}>{field.label}</label>}
-                    {field.fieldType === 'input' && (
-                        <input
-                            {...register(field.name, {
-                                required: field.required ? 'Este campo es obligatorio' : false,
-                                minLength: field.minLength ? { value: field.minLength, message: `Debe tener al menos ${field.minLength} caracteres` } : false,
-                                maxLength: field.maxLength ? { value: field.maxLength, message: `Debe tener máximo ${field.maxLength} caracteres` } : false,
-                                pattern: field.pattern ? { value: field.pattern, message: field.patternMessage || 'Formato no válido' } : false,
-                                validate: field.validate || {},
-                            })}
-                            name={field.name}
-                            placeholder={field.placeholder}
-                            type={field.type === 'password' && field.name === 'password' ? (showPassword ? 'text' : 'password') :
-                                field.type === 'password' && field.name === 'newPassword' ? (showNewPassword ? 'text' : 'password') :
-                                field.type}
-                            defaultValue={field.defaultValue || ''}
-                            disabled={field.disabled}
-                            onChange={field.onChange}
-                        />
-                    )}
+                    {field.fieldType === 'input' && renderInput(field)}
                     {field.fieldType === 'textarea' && (
                         <textarea
                             {...register(field.name, {

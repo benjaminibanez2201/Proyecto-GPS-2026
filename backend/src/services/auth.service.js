@@ -71,7 +71,9 @@ export async function registerService(user) {
 
     const {
       carrera,
+      documentoVerificacion,
       email,
+      fotoPerfil,
       nombreCompleto,
       password,
       rol = "estudiante",
@@ -103,8 +105,10 @@ export async function registerService(user) {
 
     const newUser = userRepository.create({
       carrera,
+      documentoVerificacion: documentoVerificacion?.name,
       email,
       estadoVerificacion: "pendiente",
+      fotoPerfil: fotoPerfil?.name,
       nombreCompleto,
       password: await encryptPassword(password),
       rol,

@@ -2,6 +2,18 @@ import axios from './root.service.js';
 import cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
+function getFileMetadata(fileList) {
+    const file = fileList?.[0];
+
+    if (!file) return null;
+
+    return {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+    };
+}
+
 export async function login(dataUser) {
     try {
         const response = await axios.post('/auth/login', {
@@ -41,6 +53,8 @@ export async function register(data) {
             }
             : {
                 telefono: data.telefono.trim(),
+                fotoPerfil: getFileMetadata(data.fotoPerfil),
+                documentoVerificacion: getFileMetadata(data.documentoVerificacion),
             };
 
         const response = await axios.post('/auth/register', {

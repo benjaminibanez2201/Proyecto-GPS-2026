@@ -4,6 +4,10 @@ import Joi from "joi";
 const namePattern = /^[a-zA-Z\u00C0-\u017F\s]+$/;
 const passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/;
 const rutPattern = /^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/;
+const MAX_PROFILE_PHOTO_SIZE = 5 * 1024 * 1024;
+const MAX_VERIFICATION_DOCUMENT_SIZE = 10 * 1024 * 1024;
+const profilePhotoTypes = ["image/jpeg", "image/png"];
+const verificationDocumentTypes = ["image/jpeg", "image/png", "application/pdf"];
 
 const emailSchema = Joi.string()
   .min(5)
@@ -67,6 +71,29 @@ const baseRegisterFields = {
   rut: rutSchema,
 };
 
+const fileMetadataSchema = ({ allowedTypes, maxSize, label }) => Joi.object({
+  name: Joi.string().min(1).max(255).required().messages({
+    "any.required": `El nombre de ${label} es obligatorio.`,
+    "string.empty": `El nombre de ${label} no puede estar vacio.`,
+    "string.max": `El nombre de ${label} debe tener como maximo 255 caracteres.`,
+  }),
+  size: Joi.number().integer().positive().max(maxSize).required().messages({
+    "any.required": `El tamano de ${label} es obligatorio.`,
+    "number.max": `${label} supera el tamano maximo permitido.`,
+    "number.positive": `El tamano de ${label} debe ser mayor a cero.`,
+  }),
+  type: Joi.string().valid(...allowedTypes).required().messages({
+    "any.only": `${label} tiene un formato no permitido.`,
+    "any.required": `El formato de ${label} es obligatorio.`,
+  }),
+})
+  .required()
+  .unknown(false)
+  .messages({
+    "any.required": `${label} es obligatorio.`,
+    "object.base": `${label} debe enviarse como metadata de archivo.`,
+  });
+
 const strictMessages = {
   "object.unknown": "No se permiten propiedades adicionales.",
 };
@@ -101,6 +128,16 @@ export const registerEstudianteValidation = Joi.object({
 
 export const registerArrendadorValidation = Joi.object({
   ...baseRegisterFields,
+  documentoVerificacion: fileMetadataSchema({
+    allowedTypes: verificationDocumentTypes,
+    label: "El documento de verificacion",
+    maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
+  }),
+  fotoPerfil: fileMetadataSchema({
+    allowedTypes: profilePhotoTypes,
+    label: "La foto de perfil",
+    maxSize: MAX_PROFILE_PHOTO_SIZE,
+  }),
   rol: Joi.string().valid("arrendador").required(),
   telefono: Joi.string().min(8).max(20).required().messages({
     "any.required": "El telefono es obligatorio.",
