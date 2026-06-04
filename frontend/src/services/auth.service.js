@@ -1,7 +1,18 @@
 import axios from './root.service.js';
 import cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
-import { convertirMinusculas } from '@helpers/formatData.js';
+
+function getFileMetadata(fileList) {
+    const file = fileList?.[0];
+
+    if (!file) return null;
+
+    return {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+    };
+}
 
 export async function login(dataUser) {
     try {
@@ -25,13 +36,30 @@ export async function login(dataUser) {
 
 export async function register(data) {
     try {
-        const dataRegister = convertirMinusculas(data);
-        const { nombreCompleto, email, rut, password } = dataRegister
+        const rol = data.rol || 'estudiante';
+        const basePayload = {
+            nombreCompleto: data.nombreCompleto.trim(),
+            email: data.email.trim().toLowerCase(),
+            rut: data.rut.trim(),
+            password: data.password,
+            rol,
+            terminosAceptados: Boolean(data.terminosAceptados),
+        };
+
+        const rolePayload = rol === 'estudiante'
+            ? {
+                universidad: data.universidad.trim(),
+                carrera: data.carrera.trim(),
+            }
+            : {
+                telefono: data.telefono.trim(),
+                fotoPerfil: getFileMetadata(data.fotoPerfil),
+                documentoVerificacion: getFileMetadata(data.documentoVerificacion),
+            };
+
         const response = await axios.post('/auth/register', {
-            nombreCompleto,
-            email,
-            rut,
-            password
+            ...basePayload,
+            ...rolePayload,
         });
         return response.data;
     } catch (error) {

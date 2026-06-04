@@ -36,7 +36,7 @@ const UserSchema = new EntitySchema({
     password: {
       type: "varchar",
       nullable: false,
-      selecct: false,
+      select: false,
     },
     estadoVerificacion: {
       type: "enum",
@@ -67,6 +67,15 @@ const UserSchema = new EntitySchema({
     documentoVerificacion: {
       type: "varchar",
       length: 255,
+      nullable: true,
+    },
+    terminosAceptadosEn: {
+      type: "timestamp with time zone",
+      nullable: true,
+    },
+    terminosVersion: {
+      type: "varchar",
+      length: 20,
       nullable: true,
     },
     resetPasswordToken: {
