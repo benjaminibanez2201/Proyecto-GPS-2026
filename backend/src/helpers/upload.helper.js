@@ -15,9 +15,17 @@ export const MAX_VERIFICATION_FILE_SIZE = 8 * 1024 * 1024;
 export const uploadFieldConfig = {
   documentoVerificacion: {
     allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
-    label: "El frente del carnet de identidad",
+    label: "El documento de verificacion",
   },
   documentoVerificacionReverso: {
+    allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
+    label: "El reverso del carnet de identidad",
+  },
+  carnetIdentidadFrontal: {
+    allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
+    label: "El frente del carnet de identidad",
+  },
+  carnetIdentidadReverso: {
     allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
     label: "El reverso del carnet de identidad",
   },

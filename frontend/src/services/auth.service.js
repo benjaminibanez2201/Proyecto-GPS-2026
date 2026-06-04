@@ -69,8 +69,12 @@ export async function register(data) {
                 ['documentoVerificacion', data.documentoVerificacion?.[0]],
                 ['documentoVerificacionReverso', data.documentoVerificacionReverso?.[0]],
             );
-        } else if (data.documentoVerificacion?.[0]) {
-            filesToUpload.push(['documentoVerificacion', data.documentoVerificacion[0]]);
+        } else {
+            filesToUpload.push(
+                ['documentoVerificacion', data.documentoVerificacion?.[0]],
+                ['carnetIdentidadFrontal', data.carnetIdentidadFrontal?.[0]],
+                ['carnetIdentidadReverso', data.carnetIdentidadReverso?.[0]],
+            );
         }
 
         if (filesToUpload.length > 0) {

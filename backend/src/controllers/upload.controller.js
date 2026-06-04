@@ -37,6 +37,8 @@ export async function getVerificationFile(req, res) {
       getStoredVerificationFilename(user.fotoPerfil),
       getStoredVerificationFilename(user.documentoVerificacion),
       getStoredVerificationFilename(user.documentoVerificacionReverso),
+      getStoredVerificationFilename(user.carnetIdentidadFrontal),
+      getStoredVerificationFilename(user.carnetIdentidadReverso),
     ].filter(Boolean);
 
     if (!allowedFilenames.includes(filename)) {

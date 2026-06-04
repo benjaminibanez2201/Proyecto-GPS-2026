@@ -190,6 +190,36 @@ const Register = () => {
                                     ),
                                 },
                             },
+                            {
+                                label: 'Carnet de identidad - parte delantera',
+                                name: 'carnetIdentidadFrontal',
+                                fieldType: 'input',
+                                type: 'file',
+                                accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
+                                required: true,
+                                validate: {
+                                    validFile: validateFile(
+                                        VERIFICATION_DOCUMENT_TYPES,
+                                        MAX_VERIFICATION_DOCUMENT_SIZE,
+                                        'La parte delantera del carnet debe ser JPG, PNG o PDF',
+                                    ),
+                                },
+                            },
+                            {
+                                label: 'Carnet de identidad - parte trasera',
+                                name: 'carnetIdentidadReverso',
+                                fieldType: 'input',
+                                type: 'file',
+                                accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
+                                required: true,
+                                validate: {
+                                    validFile: validateFile(
+                                        VERIFICATION_DOCUMENT_TYPES,
+                                        MAX_VERIFICATION_DOCUMENT_SIZE,
+                                        'La parte trasera del carnet debe ser JPG, PNG o PDF',
+                                    ),
+                                },
+                            },
                         ]
                         : [
                             {
@@ -316,10 +346,12 @@ const Register = () => {
                                 proporcional de la informacion entregada.
                             </p>
                             <p>
-                                Los estudiantes deben entregar datos academicos reales, como universidad y carrera. Los
-                                arrendadores deben entregar informacion de contacto valida para facilitar la comunicacion
-                                con la administracion y con otros usuarios autorizados, ademas de antecedentes de
-                                verificacion como carnet de identidad y comprobante de residencia cuando corresponda.
+                                Los estudiantes deben entregar datos academicos reales, como universidad y carrera, ademas
+                                de certificado de alumno regular y carnet de identidad por ambos lados para validar su
+                                identidad y rol academico. Los arrendadores deben entregar informacion de contacto valida
+                                para facilitar la comunicacion con la administracion y con otros usuarios autorizados,
+                                ademas de antecedentes de verificacion como carnet de identidad y comprobante de
+                                residencia cuando corresponda.
                             </p>
                             <p>
                                 El usuario se compromete a mantener una conducta respetuosa, no entregar informacion
