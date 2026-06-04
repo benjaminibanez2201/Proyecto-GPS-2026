@@ -15,6 +15,6 @@ Ley N 19.628 y sus modificaciones vigentes. ArriendU resguardara la
 confidencialidad, integridad y uso proporcional de la informacion entregada.
 
 Los arrendadores autorizan la revision de antecedentes de identidad y residencia,
-como carnet de identidad, boletas de servicios, certificados de residencia,
+como carnet de identidad, boletas o facturas de servicios, certificados de residencia,
 contratos u otros documentos equivalentes, con el unico fin de validar su cuenta.
 `;

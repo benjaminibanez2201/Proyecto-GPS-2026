@@ -245,12 +245,12 @@ const Register = () => {
                                     validFile: validateFile(
                                         VERIFICATION_DOCUMENT_TYPES,
                                         MAX_VERIFICATION_DOCUMENT_SIZE,
-                                        'El comprobante debe ser boleta, certificado, contrato u otro respaldo en JPG, PNG o PDF',
+                                        'El comprobante debe ser boleta, factura, certificado, contrato u otro respaldo en JPG, PNG o PDF',
                                     ),
                                 },
                                 extraContent: (
                                     <span style={{ color: '#64748b', fontSize: '12px' }}>
-                                        Puedes subir una boleta de servicio, certificado de residencia o contrato.
+                                        Puedes subir una boleta o factura de servicio, certificado de residencia o contrato.
                                     </span>
                                 ),
                             },
