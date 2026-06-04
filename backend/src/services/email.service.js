@@ -50,6 +50,18 @@ export async function sendAccountApprovedEmail(user) {
   });
 }
 
+export async function sendRegistrationReceivedEmail(user) {
+  return sendTemplateEmail({
+    to: user.email,
+    subject: "Recibimos tu registro en ArriendU",
+    template: "registration-received",
+    data: {
+      nombreCompleto: user.nombreCompleto,
+      rol: user.rol,
+    },
+  });
+}
+
 export async function sendAccountRejectedEmail(user, motivoRechazo = "") {
   return sendTemplateEmail({
     to: user.email,

@@ -5,6 +5,7 @@ import { ACCESS_TOKEN_SECRET } from "../config/configEnv.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
 import { TERMINOS_VERSION } from "../helpers/terminos.helper.js";
+import { sendRegistrationReceivedEmail } from "./email.service.js";
 
 function createErrorMessage(dataInfo, message) {
   return {
@@ -122,6 +123,18 @@ export async function registerService(user) {
     });
 
     await userRepository.save(newUser);
+
+    try {
+      await sendRegistrationReceivedEmail(newUser);
+    } catch (emailError) {
+      await userRepository.delete({ id: newUser.id });
+      console.error("Error al enviar correo de registro:", emailError);
+
+      return [null, createErrorMessage(
+        "email",
+        "No se pudo enviar el correo de registro. Intenta nuevamente.",
+      )];
+    }
 
     const { password: _password, ...dataUser } = newUser;
 

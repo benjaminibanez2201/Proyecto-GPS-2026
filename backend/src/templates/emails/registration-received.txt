@@ -1,0 +1,9 @@
+Hola {{ nombreCompleto }},
+
+Recibimos tu registro como {{ rol }} en ArriendU.
+
+Tu cuenta quedo pendiente de verificacion. Cuando el administrador revise tus antecedentes, te avisaremos si fue aprobada o rechazada.
+
+Mientras tu cuenta este pendiente, no podras iniciar sesion en la plataforma.
+
+Este es un mensaje automatico, por favor no respondas a este correo.
