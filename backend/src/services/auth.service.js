@@ -5,7 +5,10 @@ import { ACCESS_TOKEN_SECRET } from "../config/configEnv.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
 import { TERMINOS_VERSION } from "../helpers/terminos.helper.js";
-import { sendRegistrationReceivedEmail } from "./email.service.js";
+import {
+  sendRecoveryEmail,
+  sendRegistrationReceivedEmail,
+} from "./email.service.js";
 
 function createErrorMessage(dataInfo, message) {
   return {
@@ -51,6 +54,7 @@ export async function loginService(user) {
       id: userFound.id,
       nombreCompleto: userFound.nombreCompleto,
       email: userFound.email,
+      rut: userFound.rut,
       rol: userFound.rol,
       estadoVerificacion: userFound.estadoVerificacion,
     };
@@ -141,6 +145,70 @@ export async function registerService(user) {
     return [dataUser, null];
   } catch (error) {
     console.error("Error al registrar un usuario", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function forgotPasswordService(email) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({
+      where: { email },
+    });
+
+    const fallbackMessage = "Se enviaron instrucciones de recuperacion si existe una cuenta asociada a ese correo.";
+
+    if (!userFound) {
+      return [fallbackMessage, null];
+    }
+
+    const resetToken = jwt.sign({ id: userFound.id }, ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+
+    userFound.resetPasswordToken = resetToken;
+    userFound.resetPasswordExpires = new Date(Date.now() + 3600000);
+
+    await userRepository.save(userFound);
+    await sendRecoveryEmail(userFound.email, resetToken);
+
+    return ["Instrucciones para restablecer la contrasena han sido enviadas a tu correo electronico", null];
+  } catch (error) {
+    console.error("Error al solicitar restablecimiento de contrasena:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function resetPasswordService(token, newPassword) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    try {
+      jwt.verify(token, ACCESS_TOKEN_SECRET);
+    } catch {
+      return [null, "El enlace de restablecimiento es invalido o ha expirado"];
+    }
+
+    const userFound = await userRepository.findOne({
+      where: { resetPasswordToken: token },
+    });
+
+    if (!userFound) {
+      return [null, "El token no existe o ya ha sido utilizado"];
+    }
+
+    if (userFound.resetPasswordExpires < new Date()) {
+      return [null, "El enlace de restablecimiento ha expirado"];
+    }
+
+    userFound.password = await encryptPassword(newPassword);
+    userFound.resetPasswordToken = null;
+    userFound.resetPasswordExpires = null;
+
+    await userRepository.save(userFound);
+
+    return ["Contrasena restablecida exitosamente", null];
+  } catch (error) {
+    console.error("Error al restablecer la contrasena:", error);
     return [null, "Error interno del servidor"];
   }
 }

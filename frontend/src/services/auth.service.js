@@ -17,20 +17,37 @@ function getFileMetadata(fileList) {
 export async function login(dataUser) {
     try {
         const response = await axios.post('/auth/login', {
-            email: dataUser.email, 
-            password: dataUser.password
+            email: dataUser.email,
+            password: dataUser.password,
         });
         const { status, data } = response;
+
         if (status === 200) {
-            const { nombreCompleto, email, rut, rol } = jwtDecode(data.data.token);
-            const userData = { nombreCompleto, email, rut, rol };
+            const {
+                email,
+                estadoVerificacion,
+                id,
+                nombreCompleto,
+                rol,
+                rut,
+            } = jwtDecode(data.data.token);
+            const userData = { email, estadoVerificacion, id, nombreCompleto, rol, rut };
+
             sessionStorage.setItem('usuario', JSON.stringify(userData));
             axios.defaults.headers.common['Authorization'] = `Bearer ${data.data.token}`;
-            cookies.set('jwt-auth', data.data.token, {path:'/'});
-            return response.data
+            cookies.set('jwt-auth', data.data.token, { path: '/' });
+            return response.data;
         }
     } catch (error) {
-        return error.response.data;
+        if (error.response?.data) {
+            return error.response.data;
+        }
+
+        return {
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
+        };
     }
 }
 
@@ -63,7 +80,15 @@ export async function register(data) {
         });
         return response.data;
     } catch (error) {
-        return error.response.data;
+        if (error.response?.data) {
+            return error.response.data;
+        }
+
+        return {
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
+        };
     }
 }
 
@@ -74,6 +99,32 @@ export async function logout() {
         cookies.remove('jwt');
         cookies.remove('jwt-auth');
     } catch (error) {
-        console.error('Error al cerrar sesión:', error);
+        console.error('Error al cerrar sesion:', error);
+    }
+}
+
+export async function forgotPassword(email) {
+    try {
+        const response = await axios.post('/auth/forgot-password', { email });
+        return response.data;
+    } catch (error) {
+        return error.response?.data || {
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
+        };
+    }
+}
+
+export async function resetPassword(token, newPassword) {
+    try {
+        const response = await axios.post(`/auth/reset-password/${token}`, { newPassword });
+        return response.data;
+    } catch (error) {
+        return error.response?.data || {
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
+        };
     }
 }

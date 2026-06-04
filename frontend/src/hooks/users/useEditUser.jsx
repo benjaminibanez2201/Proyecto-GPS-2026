@@ -6,7 +6,7 @@ import { formatPostUpdate } from '@helpers/formatData.js';
 const useEditUser = (setUsers) => {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [dataUser, setDataUser] = useState([]);
-    
+
     const handleClickUpdate = () => {
         if (dataUser.length > 0) {
             setIsPopupOpen(true);
@@ -22,13 +22,9 @@ const useEditUser = (setUsers) => {
             const formattedUser = formatPostUpdate(updatedUser);
 
             setUsers(prevUsers => prevUsers.map(user => {
-                console.log("Usuario actual:", user);
-                if (user.id === formattedUser.id) {
-                    console.log("Reemplazando con:", formattedUser);
-                }
-                return user.email === formattedUser.email ? formattedUser : user;
+                return user.id === formattedUser.id ? formattedUser : user;
             }));
-            
+
 
             setDataUser([]);
             } catch (error) {
