@@ -326,7 +326,7 @@ export default function UserDetailsModal({ show, setShow, user }) {
     return (
         <div
             className="bg"
-            style={{ position: 'fixed', inset: 0, zIndex: 1200, alignItems: 'center', justifyContent: 'center', padding: '16px' }}
+            style={{ position: 'fixed', inset: 0, zIndex: 1200, alignItems: 'center', justifyContent: 'center', padding: '24px 16px 56px' }}
             onClick={() => setShow(false)}
         >
             <div
@@ -334,7 +334,7 @@ export default function UserDetailsModal({ show, setShow, user }) {
                 style={{
                     width: 'min(760px, calc(100vw - 32px))',
                     height: 'auto',
-                    maxHeight: 'calc(100vh - 32px)',
+                    maxHeight: 'calc(100vh - 80px)',
                     overflow: 'auto',
                     padding: '0',
                     borderRadius: '22px',
@@ -407,7 +407,7 @@ export default function UserDetailsModal({ show, setShow, user }) {
                             </div>
                         </section>
 
-                        <section style={{ padding: '24px 32px 32px', backgroundColor: '#ffffff', borderBottomLeftRadius: '22px', borderBottomRightRadius: '22px' }}>
+                        <section style={{ padding: '24px 32px 56px', backgroundColor: '#ffffff', borderBottomLeftRadius: '22px', borderBottomRightRadius: '22px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {detailFields.map((field, index) => (
                                     <div
