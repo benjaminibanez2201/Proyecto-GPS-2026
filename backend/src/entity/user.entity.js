@@ -29,7 +29,7 @@ const UserSchema = new EntitySchema({
     },
     rol: {
       type: "enum",
-      enum: ["admin", "estudiante", "arrendador"],
+      enum: ["admin", "estudiante", "arrendador", "usuario"],
       default: "estudiante",
       nullable: false,
     },
@@ -101,6 +101,16 @@ const UserSchema = new EntitySchema({
       default: () => "CURRENT_TIMESTAMP",
       onUpdate: "CURRENT_TIMESTAMP",
       nullable: false,
+    },
+    avgRating: {
+      type: "float",
+      nullable: false,
+      default: 0,
+    },
+    reviewsCount: {
+      type: "int",
+      nullable: false,
+      default: 0,
     },
   },
   indices: [

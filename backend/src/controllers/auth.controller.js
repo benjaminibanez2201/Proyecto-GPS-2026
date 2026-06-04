@@ -1,7 +1,13 @@
 "use strict";
-import { loginService, registerService } from "../services/auth.service.js";
+import {
+  forgotPasswordService,
+  loginService,
+  registerService,
+  resetPasswordService,
+} from "../services/auth.service.js";
 import {
   authValidation,
+  newPasswordValidation,
   registerArrendadorValidation,
   registerEstudianteValidation,
   registerValidation,
@@ -42,8 +48,12 @@ export async function login(req, res) {
 
     if (errorToken) return handleErrorClient(res, 400, "Error iniciando sesion", errorToken);
 
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("jwt", accessToken, {
       httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "strict",
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -82,6 +92,40 @@ export async function logout(req, res) {
   try {
     res.clearCookie("jwt", { httpOnly: true });
     handleSuccess(res, 200, "Sesion cerrada exitosamente");
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+    const [message, error] = await forgotPasswordService(email);
+
+    if (error) return handleErrorClient(res, 400, "Error solicitando recuperacion", error);
+
+    handleSuccess(res, 200, message);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function resetPassword(req, res) {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    const { error } = newPasswordValidation.validate({ newPassword });
+
+    if (error) {
+      return handleErrorClient(res, 400, "Error de validacion", error.message);
+    }
+
+    const [message, errorNewPassword] = await resetPasswordService(token, newPassword);
+
+    if (errorNewPassword) return handleErrorClient(res, 400, "Error restableciendo contrasena", errorNewPassword);
+
+    handleSuccess(res, 200, message);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

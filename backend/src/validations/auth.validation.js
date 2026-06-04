@@ -150,3 +150,7 @@ export const registerArrendadorValidation = Joi.object({
 })
   .unknown(false)
   .messages(strictMessages);
+
+export const newPasswordValidation = Joi.object({
+  newPassword: passwordSchema,
+}).unknown(false).messages(strictMessages);

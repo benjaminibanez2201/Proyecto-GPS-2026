@@ -3,6 +3,9 @@ import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import indexRoutes from "./routes/index.routes.js";
+import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import mensajeRoutes from "./routes/mensaje.routes.js";
 import session from "express-session";
 import passport from "passport";
 import express, { json, urlencoded } from "express";
@@ -60,6 +63,9 @@ async function setupServer() {
     passportJwtSetup();
 
     app.use("/api", indexRoutes);
+    app.use("/auth", authRoutes);
+    app.use("/user", userRoutes);
+    app.use("/mensajes", mensajeRoutes);
 
     app.listen(PORT, () => {
       console.log(`=> Servidor corriendo en ${HOST}:${PORT}/api`);

@@ -4,9 +4,7 @@ import path from "path";
 import dotenv from "dotenv";
 
 const _filename = fileURLToPath(import.meta.url);
-
 const _dirname = path.dirname(_filename);
-
 const envFilePath = path.resolve(_dirname, "../../.env");
 
 dotenv.config({ path: envFilePath });
@@ -18,7 +16,7 @@ export const PASSWORD = process.env.PASSWORD;
 export const DATABASE = process.env.DATABASE;
 export const DB_PORT = Number(process.env.DB_PORT || 5432);
 export const ACCESS_TOKEN_SECRET =
-	process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
+  process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
 export const cookieKey = process.env.cookieKey || process.env.COOKIE_KEY;
 export const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 export const EMAIL_USER = process.env.EMAIL_USER;

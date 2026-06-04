@@ -1,5 +1,7 @@
 "use strict";
 import nodemailer from "nodemailer";
+import { fileURLToPath } from "url";
+import path from "path";
 import {
   EMAIL_FROM,
   EMAIL_PASS,
@@ -7,6 +9,11 @@ import {
   FRONTEND_URL,
 } from "../config/configEnv.js";
 import { renderEmailTemplate } from "../helpers/emailTemplate.helper.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const bannerPath = path.resolve(__dirname, "../../../frontend/public/BannerArriendU.png");
+const bannerCid = "arriendu-banner";
 
 function createTransporter() {
   if (!EMAIL_USER || !EMAIL_PASS) {
@@ -22,11 +29,21 @@ function createTransporter() {
   });
 }
 
-function normalizeBaseUrl(url) {
+function normalizeBaseUrl(url = "http://localhost:5173") {
   return url.replace(/\/$/, "");
 }
 
-async function sendTemplateEmail({ data, subject, template, to }) {
+function getBrandAttachments() {
+  return [
+    {
+      filename: "BannerArriendU.png",
+      path: bannerPath,
+      cid: bannerCid,
+    },
+  ];
+}
+
+async function sendTemplateEmail({ attachments = [], data, subject, template, to }) {
   const { html, text } = await renderEmailTemplate(template, data);
 
   return createTransporter().sendMail({
@@ -35,6 +52,7 @@ async function sendTemplateEmail({ data, subject, template, to }) {
     subject,
     text,
     to,
+    attachments,
   });
 }
 
@@ -55,6 +73,7 @@ export async function sendRegistrationReceivedEmail(user) {
     to: user.email,
     subject: "Recibimos tu registro en ArriendU",
     template: "registration-received",
+    attachments: getBrandAttachments(),
     data: {
       loginUrl: `${normalizeBaseUrl(FRONTEND_URL)}/auth`,
       nombreCompleto: user.nombreCompleto,
@@ -86,4 +105,119 @@ export async function sendRecoveryEmail(email, resetToken) {
       resetUrl,
     },
   });
+}
+
+export async function sendRentalCompleteEmail(rental) {
+  try {
+    const transporter = createTransporter();
+    const baseUrl = normalizeBaseUrl(FRONTEND_URL);
+    const rentalUrl = `${baseUrl}/rental/${rental.id}`;
+    const greetingNameArrendador = rental.arrendador?.nombreCompleto || "Arrendador";
+    const greetingNameEstudiante = rental.estudiante?.nombreCompleto || "Estudiante";
+
+    const commonWrapper = [
+      "margin:0",
+      "padding:0",
+      "background-color:#fdfefe",
+      "font-family:Arial,Helvetica,sans-serif",
+    ].join(";");
+    const containerStyle = ["max-width:600px", "margin:0 auto", "padding:24px"].join(";");
+    const cardStyle = [
+      "background:#ffffff",
+      "border:1px solid #e6e8ef",
+      "border-radius:10px",
+      "overflow:hidden",
+    ].join(";");
+    const headerStyle = ["padding:18px 24px", "background:#008080", "color:#ffffff"].join(";");
+    const bannerStyle = [
+      "display:block",
+      "max-width:220px",
+      "width:100%",
+      "height:auto",
+      "margin:0 0 10px",
+    ].join(";");
+    const bodyStyle = ["padding:24px", "color:#111827"].join(";");
+    const pStyle = ["margin:0 0 12px", "font-size:14px", "line-height:1.6"].join(";");
+    const centerStyle = ["text-align:center", "margin:22px 0"].join(";");
+    const buttonStyle = [
+      "display:inline-block",
+      "padding:12px 18px",
+      "border-radius:8px",
+      "background:#008080",
+      "color:#ffffff",
+      "text-decoration:none",
+      "font-weight:700",
+      "font-size:14px",
+    ].join(";");
+    const footerStyle = [
+      "padding:16px 24px",
+      "background:#fdfefe",
+      "border-top:1px solid #e6e8ef",
+      "color:#6b7280",
+      "font-size:12px",
+      "line-height:1.5",
+    ].join(";");
+
+    const buildMail = ({ name, otherName, subject, to }) => ({
+      from: EMAIL_FROM,
+      to,
+      subject,
+      text: [
+        `Hola ${name},`,
+        "",
+        `Tu arriendo con ${otherName} ha sido confirmado por ambas partes. Gracias por usar ArriendU.`,
+        "",
+        rentalUrl,
+        "",
+        "Saludos,",
+        "Soporte ArriendU",
+      ].join("\n"),
+      html: [
+        `<div style="${commonWrapper}">`,
+        `  <div style="${containerStyle}">`,
+        `    <div style="${cardStyle}">`,
+        `      <div style="${headerStyle}">`,
+        `        <img src="cid:${bannerCid}" alt="ArriendU" style="${bannerStyle}" />`,
+        "        <p style=\"margin:6px 0 0;font-size:13px;opacity:0.95\">Arriendo confirmado</p>",
+        "      </div>",
+        `      <div style="${bodyStyle}">`,
+        `        <p style="${pStyle}">Hola ${name},</p>`,
+        `        <p style="${pStyle}">Tu arriendo con ${otherName} ha sido confirmado por ambas partes.</p>`,
+        `        <div style="${centerStyle}">`,
+        `          <a href="${rentalUrl}" style="${buttonStyle}">Ver arriendo</a>`,
+        "        </div>",
+        "        <p style=\"margin:0;font-size:13px;line-height:1.6;color:#6b7280;\">",
+        "          Este es un mensaje automatico, por favor no respondas.",
+        "        </p>",
+        "      </div>",
+        `      <div style="${footerStyle}">`,
+        "        <p style=\"margin:0\">Gracias por usar ArriendU</p>",
+        "      </div>",
+        "    </div>",
+        "  </div>",
+        "</div>",
+      ].join("\n"),
+      attachments: getBrandAttachments(),
+    });
+
+    if (rental.arrendador?.email) {
+      await transporter.sendMail(buildMail({
+        name: greetingNameArrendador,
+        otherName: greetingNameEstudiante,
+        subject: "Arriendo confirmado",
+        to: rental.arrendador.email,
+      }));
+    }
+
+    if (rental.estudiante?.email) {
+      await transporter.sendMail(buildMail({
+        name: greetingNameEstudiante,
+        otherName: greetingNameArrendador,
+        subject: "Arriendo confirmado",
+        to: rental.estudiante.email,
+      }));
+    }
+  } catch (error) {
+    console.error("Error al enviar correos de arriendo completado:", error);
+  }
 }

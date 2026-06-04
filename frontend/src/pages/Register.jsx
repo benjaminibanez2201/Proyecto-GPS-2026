@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { register } from '@services/auth.service.js';
 import Form from '@components/Form';
 import useRegister from '@hooks/auth/useRegister.jsx';
@@ -43,7 +43,7 @@ const Register = () => {
             const response = await register(data);
 
             if (response.status === 'Success') {
-                showSuccessAlert('¡Registrado!', 'Usuario registrado exitosamente.');
+                showSuccessAlert('Registrado', 'Usuario registrado exitosamente.');
                 setTimeout(() => {
                     navigate('/auth');
                 }, 3000);
@@ -52,7 +52,7 @@ const Register = () => {
             }
         } catch (error) {
             console.error('Error al registrar un usuario: ', error);
-            showErrorAlert('Cancelado', 'Ocurrió un error al registrarse.');
+            showErrorAlert('Cancelado', 'Ocurrio un error al registrarse.');
         }
     };
 
@@ -104,7 +104,7 @@ const Register = () => {
                         patternMessage: 'Debe contener solo letras y espacios',
                     },
                     {
-                        label: 'Correo electrónico',
+                        label: 'Correo electronico',
                         name: 'email',
                         placeholder: 'correo@ejemplo.cl',
                         fieldType: 'input',
@@ -130,7 +130,7 @@ const Register = () => {
                         onChange: (e) => handleInputChange('rut', e.target.value),
                     },
                     {
-                        label: 'Contraseña',
+                        label: 'Contrasena',
                         name: 'password',
                         placeholder: '**********',
                         fieldType: 'input',
@@ -139,7 +139,7 @@ const Register = () => {
                         minLength: 8,
                         maxLength: 50,
                         pattern: patternPassword,
-                        patternMessage: 'Debe contener al menos una mayúscula, un número y un carácter especial.',
+                        patternMessage: 'Debe contener al menos una mayuscula, un numero y un caracter especial.',
                     },
                     {
                         label: 'Tipo de cuenta',
@@ -178,16 +178,16 @@ const Register = () => {
                         ]
                         : [
                             {
-                                label: 'Teléfono',
+                                label: 'Telefono',
                                 name: 'telefono',
-                                placeholder: 'Ingresa tu teléfono',
+                                placeholder: 'Ingresa tu telefono',
                                 fieldType: 'input',
                                 type: 'tel',
                                 required: true,
                                 minLength: 8,
                                 maxLength: 20,
                                 pattern: patternTelefono,
-                                patternMessage: 'Debe ingresar un teléfono válido',
+                                patternMessage: 'Debe ingresar un telefono valido',
                             },
                             {
                                 label: 'Foto de perfil',
@@ -224,8 +224,8 @@ const Register = () => {
                         name: 'terminosAceptados',
                         fieldType: 'checkbox',
                         required: true,
-                        requiredMessage: 'Debes aceptar los términos y condiciones',
-                        checkboxLabel: 'Acepto los términos y condiciones',
+                        requiredMessage: 'Debes aceptar los terminos y condiciones',
+                        checkboxLabel: 'Acepto los terminos y condiciones',
                         checked: termsAccepted,
                         readOnly: true,
                         onClick: openTermsModal,
@@ -236,7 +236,7 @@ const Register = () => {
                 onSubmit={registerSubmit}
                 footerContent={
                     <p>
-                        ¿Ya tienes cuenta?, <a href="/auth">¡Inicia sesión aquí!</a>
+                        Ya tienes cuenta?, <Link to="/auth">Inicia sesion aqui</Link>
                     </p>
                 }
             />
@@ -244,7 +244,7 @@ const Register = () => {
                 <div className="terms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="terms-modal-title">
                     <section className="terms-modal">
                         <div className="terms-modal-header">
-                            <h2 id="terms-modal-title">Términos y condiciones</h2>
+                            <h2 id="terms-modal-title">Terminos y condiciones</h2>
                             <button className="terms-modal-close" type="button" onClick={closeTermsModal}>
                                 Cerrar
                             </button>
@@ -252,22 +252,22 @@ const Register = () => {
                         <div className="terms-modal-body" onScroll={handleTermsScroll}>
                             <p>
                                 Bienvenido a ArriendU. Al crear una cuenta aceptas utilizar la plataforma para fines
-                                relacionados con la búsqueda, publicación y gestión responsable de arriendos.
+                                relacionados con la busqueda, publicacion y gestion responsable de arriendos.
                             </p>
                             <p>
-                                La información ingresada durante el registro debe ser verídica, actualizada y
-                                pertenecer al usuario que solicita la cuenta. La plataforma puede usar esos datos para
-                                verificar identidad, rol y antecedentes asociados al servicio.
+                                La informacion ingresada durante el registro debe ser veridica, actualizada y pertenecer
+                                al usuario que solicita la cuenta. La plataforma puede usar esos datos para verificar
+                                identidad, rol y antecedentes asociados al servicio.
                             </p>
                             <p>
-                                Los estudiantes deben entregar datos académicos reales, como universidad y carrera. Los
-                                arrendadores deben entregar información de contacto válida para facilitar la
-                                comunicación con la administración y con otros usuarios autorizados.
+                                Los estudiantes deben entregar datos academicos reales, como universidad y carrera. Los
+                                arrendadores deben entregar informacion de contacto valida para facilitar la comunicacion
+                                con la administracion y con otros usuarios autorizados.
                             </p>
                             <p>
-                                El usuario se compromete a mantener una conducta respetuosa, no entregar información
+                                El usuario se compromete a mantener una conducta respetuosa, no entregar informacion
                                 falsa, no suplantar identidades y no utilizar la plataforma para actividades ajenas al
-                                propósito del sistema.
+                                proposito del sistema.
                             </p>
                             <p>
                                 ArriendU puede revisar solicitudes de cuenta, aprobarlas, rechazarlas o solicitar
@@ -275,13 +275,13 @@ const Register = () => {
                                 del servicio.
                             </p>
                             <p>
-                                Los datos personales serán tratados únicamente para operar el sistema, gestionar cuentas,
-                                permitir la comunicación entre usuarios y cumplir procesos de verificación internos del
+                                Los datos personales seran tratados unicamente para operar el sistema, gestionar cuentas,
+                                permitir la comunicacion entre usuarios y cumplir procesos de verificacion internos del
                                 proyecto.
                             </p>
                             <p>
-                                Al aceptar estos términos confirmas que leíste el contenido completo y autorizas el uso
-                                de la información necesaria para el funcionamiento de ArriendU.
+                                Al aceptar estos terminos confirmas que leiste el contenido completo y autorizas el uso
+                                de la informacion necesaria para el funcionamiento de ArriendU.
                             </p>
                         </div>
                         <div className="terms-modal-actions">
@@ -294,7 +294,7 @@ const Register = () => {
                                 disabled={!termsCanAccept}
                                 onClick={acceptTerms}
                             >
-                                Aceptar términos
+                                Aceptar terminos
                             </button>
                         </div>
                     </section>
