@@ -26,6 +26,7 @@ function attachRegisterFileMetadata(req) {
   const documentoResidencia = req.files?.documentoResidencia?.[0];
   const fotoPerfil = req.files?.fotoPerfil?.[0];
   const documentoVerificacion = req.files?.documentoVerificacion?.[0];
+  const documentoVerificacionReverso = req.files?.documentoVerificacionReverso?.[0];
 
   if (documentoResidencia) {
     req.body.documentoResidencia = toUploadedFileMetadata(documentoResidencia);
@@ -37,6 +38,10 @@ function attachRegisterFileMetadata(req) {
 
   if (documentoVerificacion) {
     req.body.documentoVerificacion = toUploadedFileMetadata(documentoVerificacion);
+  }
+
+  if (documentoVerificacionReverso) {
+    req.body.documentoVerificacionReverso = toUploadedFileMetadata(documentoVerificacionReverso);
   }
 }
 
@@ -97,14 +102,14 @@ export async function register(req, res) {
       return handleErrorClient(res, 400, "Error de validacion", "Rol invalido");
     }
 
-    const { error } = validation.validate(body);
+    const { error, value: validatedBody } = validation.validate(body);
 
     if (error) {
       await removeUploadedTempFiles(req.files);
       return handleErrorClient(res, 400, "Error de validacion", error.message);
     }
 
-    const [newUser, errorNewUser] = await registerService(body, req.files);
+    const [newUser, errorNewUser] = await registerService(validatedBody, req.files);
 
     if (errorNewUser) return handleErrorClient(res, 400, "Error registrando al usuario", errorNewUser);
 

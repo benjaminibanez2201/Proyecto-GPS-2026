@@ -28,6 +28,7 @@ export async function getUserService(query) {
         carrera: true,
         documentoResidencia: true,
         documentoVerificacion: true,
+        documentoVerificacionReverso: true,
         terminosAceptadosEn: true,
         terminosVersion: true,
         createdAt: true,

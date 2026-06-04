@@ -23,6 +23,7 @@ const fieldLabels = {
     fotoPerfil: 'Foto de perfil',
     documentoResidencia: 'Comprobante de residencia',
     documentoVerificacion: 'Documento de verificación',
+    documentoVerificacionReverso: 'Documento de verificación posterior',
 };
 
 const statusColors = {
@@ -466,10 +467,11 @@ export default function UserDetailsModal({ show, setShow, user }) {
     const normalizedRole = (user?.rol || '').toString().toLowerCase();
     const verificationDocumentLabel = normalizedRole === 'estudiante'
         ? 'Certificado de alumno regular'
-        : 'Carnet de identidad';
+        : 'Carnet de identidad (frontal)';
     const documentFieldLabels = {
         documentoResidencia: fieldLabels.documentoResidencia,
         documentoVerificacion: verificationDocumentLabel,
+        documentoVerificacionReverso: 'Carnet de identidad (posterior)',
     };
     const initials = (user?.nombreCompleto || 'Usuario')
         .split(' ')
@@ -491,6 +493,7 @@ export default function UserDetailsModal({ show, setShow, user }) {
         'updatedAt',
         'ultimoLogin',
         'documentoVerificacion',
+        ...(normalizedRole === 'arrendador' ? ['documentoVerificacionReverso'] : []),
         'documentoResidencia',
         'fotoPerfil',
     ];
@@ -598,7 +601,7 @@ export default function UserDetailsModal({ show, setShow, user }) {
                                                 : fieldLabels[field] || field}
                                         </span>
                                         <span style={{ fontSize: '14px', lineHeight: 1.5, color: '#0f172a', wordBreak: 'break-word' }}>
-                                            {field === 'documentoResidencia' || field === 'documentoVerificacion' || field === 'fotoPerfil'
+                                            {field === 'documentoResidencia' || field === 'documentoVerificacion' || field === 'documentoVerificacionReverso' || field === 'fotoPerfil'
                                                 ? <VerificationFilePreview value={user?.[field]} />
                                                 : formatValue(user?.[field])}
                                         </span>

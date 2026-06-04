@@ -140,7 +140,12 @@ export const registerArrendadorValidation = Joi.object({
   }),
   documentoVerificacion: fileMetadataSchema({
     allowedTypes: verificationDocumentTypes,
-    label: "El documento de verificacion",
+    label: "El frente del carnet de identidad",
+    maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
+  }),
+  documentoVerificacionReverso: fileMetadataSchema({
+    allowedTypes: verificationDocumentTypes,
+    label: "El reverso del carnet de identidad",
     maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
   }),
   fotoPerfil: fileMetadataSchema({

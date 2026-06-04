@@ -220,7 +220,7 @@ const Register = () => {
                                 },
                             },
                             {
-                                label: 'Foto de carnet de identidad',
+                                label: 'Carnet de identidad - parte delantera',
                                 name: 'documentoVerificacion',
                                 fieldType: 'input',
                                 type: 'file',
@@ -230,7 +230,22 @@ const Register = () => {
                                     validFile: validateFile(
                                         VERIFICATION_DOCUMENT_TYPES,
                                         MAX_VERIFICATION_DOCUMENT_SIZE,
-                                        'El documento debe ser JPG, PNG o PDF',
+                                        'La parte delantera del carnet debe ser JPG, PNG o PDF',
+                                    ),
+                                },
+                            },
+                            {
+                                label: 'Carnet de identidad - parte trasera',
+                                name: 'documentoVerificacionReverso',
+                                fieldType: 'input',
+                                type: 'file',
+                                accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
+                                required: true,
+                                validate: {
+                                    validFile: validateFile(
+                                        VERIFICATION_DOCUMENT_TYPES,
+                                        MAX_VERIFICATION_DOCUMENT_SIZE,
+                                        'La parte trasera del carnet debe ser JPG, PNG o PDF',
                                     ),
                                 },
                             },
