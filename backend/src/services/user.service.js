@@ -2,6 +2,7 @@
 import User from "../entity/user.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
+import { removeVerificationUploadsForUser } from "../helpers/upload.helper.js";
 
 export async function getUserService(query) {
   try {
@@ -146,6 +147,7 @@ export async function deleteUserService(query) {
     }
 
     const userDeleted = await userRepository.remove(userFound);
+    await removeVerificationUploadsForUser(userFound.id);
 
     const { password, ...dataUser } = userDeleted;
 
