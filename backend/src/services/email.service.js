@@ -56,6 +56,7 @@ export async function sendRegistrationReceivedEmail(user) {
     subject: "Recibimos tu registro en ArriendU",
     template: "registration-received",
     data: {
+      loginUrl: `${normalizeBaseUrl(FRONTEND_URL)}/auth`,
       nombreCompleto: user.nombreCompleto,
       rol: user.rol,
     },
