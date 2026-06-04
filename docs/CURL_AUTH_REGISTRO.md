@@ -81,7 +81,7 @@ Payload usado para registrar a `sebastian.acua@gmail.com`:
 Resultado: `201 Created`  
 Mensaje: `Usuario registrado con exito`  
 Estado creado: `pendiente`
-Correo: se envia un email de registro recibido al correo del usuario.
+Correo: se envia un email de registro recibido al correo del usuario con estilos de ArriendU.
 
 Nota RF7: el flujo actual envia JSON y guarda metadata simple del archivo. No almacena el binario del archivo porque el proyecto no tiene middleware de `multipart/form-data` ni almacenamiento de uploads.
 
@@ -146,10 +146,10 @@ Mensaje: `Usuarios encontrados`
 
 ### Consulta admin por id
 
-Endpoint: `GET /user/detail/?id=4`
+Endpoint: `GET /user/detail/?id=6`
 
 ```powershell
-curl.exe -sS -X GET http://localhost:3000/api/user/detail/?id=4 `
+curl.exe -sS -X GET http://localhost:3000/api/user/detail/?id=6 `
   -H "Authorization: Bearer <TOKEN_ADMIN>"
 ```
 
@@ -158,7 +158,7 @@ Mensaje: `Usuario encontrado`
 
 Datos verificados para `sebastian.acua@gmail.com`:
 
-- `id`: `4`
+- `id`: `6`
 - `rol`: `arrendador`
 - `estadoVerificacion`: `pendiente`
 - `fotoPerfil`: `foto-perfil.png`

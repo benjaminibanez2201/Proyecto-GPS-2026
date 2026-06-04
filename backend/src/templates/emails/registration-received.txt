@@ -6,4 +6,7 @@ Tu cuenta quedo pendiente de verificacion. Cuando el administrador revise tus an
 
 Mientras tu cuenta este pendiente, no podras iniciar sesion en la plataforma.
 
+Puedes visitar ArriendU aqui:
+{{ loginUrl }}
+
 Este es un mensaje automatico, por favor no respondas a este correo.

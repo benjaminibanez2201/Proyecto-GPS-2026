@@ -1,32 +1,127 @@
 <!doctype html>
 <html lang="es">
-  <body style="margin:0;padding:0;background:#f6f7fb;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f7fb;padding:24px 0;">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Registro recibido - ArriendU</title>
+  </head>
+  <body style="margin:0;padding:0;background:#eef7ff;font-family:Arial,Helvetica,sans-serif;color:#003366;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+      Recibimos tu registro en ArriendU y quedo pendiente de verificacion.
+    </div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef7ff;padding:28px 12px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e6e8ef;border-radius:8px;overflow:hidden;">
+          <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid rgba(0,51,102,0.14);border-radius:18px;overflow:hidden;box-shadow:0 18px 44px rgba(0,26,51,0.16);">
             <tr>
-              <td style="padding:18px 24px;background:#0b2a5b;color:#ffffff;">
-                <h1 style="margin:0;font-size:20px;">ArriendU</h1>
-                <p style="margin:6px 0 0;font-size:13px;">Registro recibido</p>
+              <td style="padding:0;background:#003366;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:linear-gradient(90deg,#003366,#001a33);">
+                  <tr>
+                    <td style="padding:26px 30px 22px;">
+                      <table role="presentation" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td style="width:42px;height:42px;border-radius:12px;background:#eef7ff;color:#003366;font-weight:800;font-size:17px;text-align:center;line-height:42px;">
+                            AU
+                          </td>
+                          <td style="padding-left:12px;color:#ffffff;">
+                            <p style="margin:0;font-size:25px;line-height:1;font-weight:800;letter-spacing:0;">ArriendU</p>
+                            <p style="margin:6px 0 0;font-size:13px;line-height:1.35;color:#dcecff;">Tu arriendo universitario, mas cerca</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 30px 28px;color:#ffffff;">
+                      <p style="margin:0 0 8px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#b9d9ff;">Registro recibido</p>
+                      <h1 style="margin:0;font-size:28px;line-height:1.18;font-weight:800;letter-spacing:0;">
+                        Tu solicitud esta pendiente de verificacion
+                      </h1>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
-              <td style="padding:24px;">
-                <p style="margin:0 0 12px;font-size:14px;line-height:1.6;">Hola {{ nombreCompleto }},</p>
-                <p style="margin:0 0 16px;font-size:14px;line-height:1.6;">
-                  Recibimos tu registro como {{ rol }} en ArriendU.
+              <td style="padding:30px;">
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#003366;">Hola {{ nombreCompleto }},</p>
+                <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#183b5f;">
+                  Recibimos tu registro como <strong style="color:#003366;">{{ rol }}</strong> en ArriendU. Nuestro equipo revisara tus antecedentes antes de habilitar el acceso.
                 </p>
-                <p style="margin:0 0 16px;font-size:14px;line-height:1.6;">
-                  Tu cuenta quedo pendiente de verificacion. Cuando el administrador revise tus antecedentes, te avisaremos si fue aprobada o rechazada.
-                </p>
-                <p style="margin:0;font-size:13px;line-height:1.6;color:#6b7280;">
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:22px 0;border:2px solid #003366;border-radius:14px;background:#eef7ff;">
+                  <tr>
+                    <td style="padding:18px 20px;">
+                      <p style="margin:0 0 6px;font-size:12px;line-height:1.4;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#006edf;">Estado de la cuenta</p>
+                      <p style="margin:0;font-size:22px;line-height:1.25;font-weight:800;color:#003366;">Pendiente de verificacion</p>
+                      <p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:#315b82;">
+                        Te avisaremos por correo cuando el administrador apruebe o rechace la solicitud.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;">
+                  <tr>
+                    <td style="padding:0 0 14px;">
+                      <p style="margin:0;font-size:14px;font-weight:800;color:#003366;">Que ocurre ahora?</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 12px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td style="width:32px;vertical-align:top;">
+                            <span style="display:inline-block;width:24px;height:24px;border-radius:999px;background:#003366;color:#eef7ff;text-align:center;line-height:24px;font-size:12px;font-weight:800;">1</span>
+                          </td>
+                          <td style="font-size:14px;line-height:1.55;color:#183b5f;">Guardamos tu solicitud y los datos de verificacion enviados.</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 12px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td style="width:32px;vertical-align:top;">
+                            <span style="display:inline-block;width:24px;height:24px;border-radius:999px;background:#006edf;color:#ffffff;text-align:center;line-height:24px;font-size:12px;font-weight:800;">2</span>
+                          </td>
+                          <td style="font-size:14px;line-height:1.55;color:#183b5f;">El administrador revisara tu cuenta y el documento asociado.</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td style="width:32px;vertical-align:top;">
+                            <span style="display:inline-block;width:24px;height:24px;border-radius:999px;background:#b9d9ff;color:#003366;text-align:center;line-height:24px;font-size:12px;font-weight:800;">3</span>
+                          </td>
+                          <td style="font-size:14px;line-height:1.55;color:#183b5f;">Recibiras otro correo con el resultado de la revision.</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin:0 0 24px;font-size:13px;line-height:1.6;color:#5f7186;">
                   Mientras tu cuenta este pendiente, no podras iniciar sesion en la plataforma.
                 </p>
+
+                <table role="presentation" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto;">
+                  <tr>
+                    <td style="border-radius:12px;background:#003366;">
+                      <a href="{{ loginUrl }}" style="display:inline-block;padding:13px 22px;border-radius:12px;background:#003366;color:#eef7ff;text-decoration:none;font-size:14px;font-weight:800;">
+                        Ir a ArriendU
+                      </a>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
-              <td style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e6e8ef;color:#6b7280;font-size:12px;">
+              <td style="padding:18px 30px;background:#f7fbff;border-top:1px solid rgba(0,51,102,0.14);color:#5f7186;font-size:12px;line-height:1.6;">
                 Este es un mensaje automatico, por favor no respondas a este correo.
               </td>
             </tr>
