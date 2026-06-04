@@ -26,6 +26,7 @@ export async function getUserService(query) {
         telefono: true,
         universidad: true,
         carrera: true,
+        documentoResidencia: true,
         documentoVerificacion: true,
         terminosAceptadosEn: true,
         terminosVersion: true,

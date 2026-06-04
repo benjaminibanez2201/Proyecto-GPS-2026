@@ -133,6 +133,11 @@ export const registerEstudianteValidation = Joi.object({
 
 export const registerArrendadorValidation = Joi.object({
   ...baseRegisterFields,
+  documentoResidencia: fileMetadataSchema({
+    allowedTypes: verificationDocumentTypes,
+    label: "El comprobante de residencia",
+    maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
+  }),
   documentoVerificacion: fileMetadataSchema({
     allowedTypes: verificationDocumentTypes,
     label: "El documento de verificacion",

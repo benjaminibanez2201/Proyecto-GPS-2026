@@ -69,6 +69,11 @@ const UserSchema = new EntitySchema({
       length: 255,
       nullable: true,
     },
+    documentoResidencia: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
     terminosAceptadosEn: {
       type: "timestamp with time zone",
       nullable: true,

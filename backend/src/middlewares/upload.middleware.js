@@ -39,12 +39,13 @@ const registerUpload = multer({
   fileFilter,
   limits: {
     fileSize: MAX_VERIFICATION_FILE_SIZE,
-    files: 2,
+    files: 3,
   },
   storage,
 }).fields([
   { maxCount: 1, name: "fotoPerfil" },
   { maxCount: 1, name: "documentoVerificacion" },
+  { maxCount: 1, name: "documentoResidencia" },
 ]);
 
 function formatUploadError(error) {

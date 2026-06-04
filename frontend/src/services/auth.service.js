@@ -64,6 +64,7 @@ export async function register(data) {
 
         if (rol === 'arrendador') {
             filesToUpload.push(
+                ['documentoResidencia', data.documentoResidencia?.[0]],
                 ['fotoPerfil', data.fotoPerfil?.[0]],
                 ['documentoVerificacion', data.documentoVerificacion?.[0]],
             );

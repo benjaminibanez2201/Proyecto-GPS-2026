@@ -21,6 +21,7 @@ const fieldLabels = {
     updatedAt: 'Actualizado',
     ultimoLogin: 'Último acceso',
     fotoPerfil: 'Foto de perfil',
+    documentoResidencia: 'Comprobante de residencia',
     documentoVerificacion: 'Documento de verificación',
 };
 
@@ -291,9 +292,13 @@ export default function UserDetailsModal({ show, setShow, user }) {
 
     const normalizedStatus = (user?.estadoVerificacion || 'pendiente').toString().toLowerCase();
     const normalizedRole = (user?.rol || '').toString().toLowerCase();
-    const documentFieldLabel = normalizedRole === 'estudiante'
+    const verificationDocumentLabel = normalizedRole === 'estudiante'
         ? 'Certificado de alumno regular'
-        : fieldLabels.documentoVerificacion;
+        : 'Carnet de identidad';
+    const documentFieldLabels = {
+        documentoResidencia: fieldLabels.documentoResidencia,
+        documentoVerificacion: verificationDocumentLabel,
+    };
     const initials = (user?.nombreCompleto || 'Usuario')
         .split(' ')
         .filter(Boolean)
@@ -314,6 +319,7 @@ export default function UserDetailsModal({ show, setShow, user }) {
         'updatedAt',
         'ultimoLogin',
         'documentoVerificacion',
+        'documentoResidencia',
         'fotoPerfil',
     ];
 
@@ -415,12 +421,12 @@ export default function UserDetailsModal({ show, setShow, user }) {
                                         }}
                                     >
                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f766e' }}>
-                                            {field === 'documentoVerificacion'
-                                                ? documentFieldLabel
+                                            {documentFieldLabels[field]
+                                                ? documentFieldLabels[field]
                                                 : fieldLabels[field] || field}
                                         </span>
                                         <span style={{ fontSize: '14px', lineHeight: 1.5, color: '#0f172a', wordBreak: 'break-word' }}>
-                                            {field === 'documentoVerificacion' || field === 'fotoPerfil'
+                                            {field === 'documentoResidencia' || field === 'documentoVerificacion' || field === 'fotoPerfil'
                                                 ? <VerificationFilePreview value={user?.[field]} />
                                                 : formatValue(user?.[field])}
                                         </span>

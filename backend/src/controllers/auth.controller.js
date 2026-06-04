@@ -23,8 +23,13 @@ import {
 } from "../helpers/upload.helper.js";
 
 function attachRegisterFileMetadata(req) {
+  const documentoResidencia = req.files?.documentoResidencia?.[0];
   const fotoPerfil = req.files?.fotoPerfil?.[0];
   const documentoVerificacion = req.files?.documentoVerificacion?.[0];
+
+  if (documentoResidencia) {
+    req.body.documentoResidencia = toUploadedFileMetadata(documentoResidencia);
+  }
 
   if (fotoPerfil) {
     req.body.fotoPerfil = toUploadedFileMetadata(fotoPerfil);

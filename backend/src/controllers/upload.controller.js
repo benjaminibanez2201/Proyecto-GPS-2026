@@ -33,6 +33,7 @@ export async function getVerificationFile(req, res) {
     }
 
     const allowedFilenames = [
+      getStoredVerificationFilename(user.documentoResidencia),
       getStoredVerificationFilename(user.fotoPerfil),
       getStoredVerificationFilename(user.documentoVerificacion),
     ].filter(Boolean);

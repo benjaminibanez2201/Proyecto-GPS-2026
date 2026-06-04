@@ -234,6 +234,26 @@ const Register = () => {
                                     ),
                                 },
                             },
+                            {
+                                label: 'Comprobante de residencia',
+                                name: 'documentoResidencia',
+                                fieldType: 'input',
+                                type: 'file',
+                                accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
+                                required: true,
+                                validate: {
+                                    validFile: validateFile(
+                                        VERIFICATION_DOCUMENT_TYPES,
+                                        MAX_VERIFICATION_DOCUMENT_SIZE,
+                                        'El comprobante debe ser boleta, certificado, contrato u otro respaldo en JPG, PNG o PDF',
+                                    ),
+                                },
+                                extraContent: (
+                                    <span style={{ color: '#64748b', fontSize: '12px' }}>
+                                        Puedes subir una boleta de servicio, certificado de residencia o contrato.
+                                    </span>
+                                ),
+                            },
                         ]),
                     {
                         name: 'terminosAceptados',
@@ -275,9 +295,16 @@ const Register = () => {
                                 identidad, rol y antecedentes asociados al servicio.
                             </p>
                             <p>
+                                El tratamiento de datos personales se realizara conforme a la normativa chilena aplicable
+                                sobre proteccion de la vida privada y datos personales, incluyendo la Ley N 19.628 y sus
+                                modificaciones vigentes. ArriendU resguardara la confidencialidad, integridad y uso
+                                proporcional de la informacion entregada.
+                            </p>
+                            <p>
                                 Los estudiantes deben entregar datos academicos reales, como universidad y carrera. Los
                                 arrendadores deben entregar informacion de contacto valida para facilitar la comunicacion
-                                con la administracion y con otros usuarios autorizados.
+                                con la administracion y con otros usuarios autorizados, ademas de antecedentes de
+                                verificacion como carnet de identidad y comprobante de residencia cuando corresponda.
                             </p>
                             <p>
                                 El usuario se compromete a mantener una conducta respetuosa, no entregar informacion
