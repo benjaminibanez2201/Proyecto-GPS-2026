@@ -39,17 +39,26 @@ function formatValue(value) {
 }
 
 function PdfFilePreview({ preview }) {
-    const canvasRef = useRef(null);
+    const pagesRef = useRef(null);
     const [error, setError] = useState('');
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [isRendering, setIsRendering] = useState(true);
 
     useEffect(() => {
         let cancelled = false;
         let loadingTask = null;
+        const renderTasks = [];
+        const pagesContainer = pagesRef.current;
 
         setError('');
+        setIsRendering(true);
 
         async function renderPdf() {
             try {
+                if (!pagesContainer) return;
+
+                pagesContainer.innerHTML = '';
+
                 const response = await fetch(preview.url);
                 const data = new Uint8Array(await response.arrayBuffer());
                 const { GlobalWorkerOptions, getDocument } = await import('pdfjs-dist');
@@ -57,23 +66,59 @@ function PdfFilePreview({ preview }) {
                 GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
                 loadingTask = getDocument({ data });
                 const pdf = await loadingTask.promise;
-                const page = await pdf.getPage(1);
-                const baseViewport = page.getViewport({ scale: 1 });
-                const scale = Math.min(1.35, 420 / baseViewport.width);
-                const viewport = page.getViewport({ scale });
-                const canvas = canvasRef.current;
+                const targetWidth = isExpanded ? 800 : 420;
+                const maxScale = isExpanded ? 1.65 : 1.15;
 
-                if (!canvas || cancelled) return;
+                for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+                    if (cancelled) return;
 
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
+                    const page = await pdf.getPage(pageNumber);
+                    const baseViewport = page.getViewport({ scale: 1 });
+                    const scale = Math.min(maxScale, targetWidth / baseViewport.width);
+                    const viewport = page.getViewport({ scale });
+                    const pageWrap = document.createElement('div');
+                    const pageLabel = document.createElement('span');
+                    const canvas = document.createElement('canvas');
 
-                await page.render({
-                    canvasContext: canvas.getContext('2d'),
-                    viewport,
-                }).promise;
-            } catch {
-                if (!cancelled) setError('No se pudo previsualizar el PDF.');
+                    pageWrap.style.display = 'flex';
+                    pageWrap.style.flexDirection = 'column';
+                    pageWrap.style.alignItems = 'center';
+                    pageWrap.style.gap = '8px';
+                    pageWrap.style.marginBottom = pageNumber === pdf.numPages ? '0' : '18px';
+
+                    pageLabel.textContent = `Pagina ${pageNumber} de ${pdf.numPages}`;
+                    pageLabel.style.alignSelf = 'flex-start';
+                    pageLabel.style.color = '#64748b';
+                    pageLabel.style.fontSize = '12px';
+                    pageLabel.style.fontWeight = '700';
+
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    canvas.style.width = '100%';
+                    canvas.style.maxWidth = `${Math.floor(viewport.width)}px`;
+                    canvas.style.height = 'auto';
+                    canvas.style.borderRadius = '8px';
+                    canvas.style.border = '1px solid #d7eeee';
+                    canvas.style.backgroundColor = '#ffffff';
+
+                    pageWrap.appendChild(pageLabel);
+                    pageWrap.appendChild(canvas);
+                    pagesContainer.appendChild(pageWrap);
+
+                    const renderTask = page.render({
+                        canvasContext: canvas.getContext('2d'),
+                        viewport,
+                    });
+
+                    renderTasks.push(renderTask);
+                    await renderTask.promise;
+                }
+            } catch (renderError) {
+                if (!cancelled && renderError?.name !== 'RenderingCancelledException') {
+                    setError('No se pudo previsualizar el PDF.');
+                }
+            } finally {
+                if (!cancelled) setIsRendering(false);
             }
         }
 
@@ -81,27 +126,74 @@ function PdfFilePreview({ preview }) {
 
         return () => {
             cancelled = true;
+            renderTasks.forEach((renderTask) => renderTask.cancel?.());
             loadingTask?.destroy?.();
+            if (pagesContainer) pagesContainer.innerHTML = '';
         };
-    }, [preview.url]);
+    }, [isExpanded, preview.url]);
 
     if (error) {
         return <span style={{ color: '#b91c1c' }}>{error}</span>;
     }
 
     return (
-        <canvas
-            ref={canvasRef}
-            aria-label={`Previsualizacion de ${preview.filename}`}
+        <div
             style={{
-                width: 'min(420px, 100%)',
-                maxHeight: '360px',
-                objectFit: 'contain',
-                borderRadius: '8px',
-                border: '1px solid #d7eeee',
-                backgroundColor: '#ffffff',
+                ...(isExpanded
+                    ? {
+                        position: 'fixed',
+                        inset: '24px',
+                        zIndex: 1800,
+                        width: 'auto',
+                        maxHeight: 'calc(100vh - 48px)',
+                        padding: '16px',
+                        borderRadius: '14px',
+                        border: '1px solid #d7eeee',
+                        backgroundColor: '#ffffff',
+                        boxShadow: '0 24px 70px rgba(15, 23, 42, 0.28)',
+                    }
+                    : {
+                        width: 'min(440px, 100%)',
+                    }),
+                boxSizing: 'border-box',
             }}
-        />
+        >
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 700 }}>
+                    {isRendering ? 'Cargando PDF...' : 'Previsualizacion PDF'}
+                </span>
+                <button
+                    type="button"
+                    onClick={() => setIsExpanded((current) => !current)}
+                    style={{
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '8px 12px',
+                        backgroundColor: '#008080',
+                        color: '#ffffff',
+                        cursor: 'pointer',
+                        fontWeight: 800,
+                    }}
+                >
+                    {isExpanded ? 'Contraer' : 'Expandir'}
+                </button>
+            </div>
+            <div
+                ref={pagesRef}
+                aria-label={`Previsualizacion de ${preview.filename}`}
+                style={{
+                    width: '100%',
+                    maxHeight: isExpanded ? 'calc(100vh - 138px)' : '360px',
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    border: '1px solid #d7eeee',
+                    backgroundColor: '#f8fafc',
+                    boxSizing: 'border-box',
+                }}
+            />
+        </div>
     );
 }
 
