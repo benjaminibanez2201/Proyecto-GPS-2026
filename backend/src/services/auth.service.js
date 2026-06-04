@@ -79,6 +79,7 @@ function hasRequiredArrendadorFiles(files = {}) {
   return Boolean(
     files.documentoResidencia?.[0]
     && files.documentoVerificacion?.[0]
+    && files.documentoVerificacionReverso?.[0]
     && files.fotoPerfil?.[0],
   );
 }
@@ -105,7 +106,7 @@ export async function registerService(user, uploadedFiles = {}) {
     if (rol === "arrendador" && !hasRequiredArrendadorFiles(uploadedFiles)) {
       return [null, createErrorMessage(
         "documentoVerificacion",
-        "Debes adjuntar la foto de perfil, el carnet de identidad y el comprobante de residencia.",
+        "Debes adjuntar la foto de perfil, el carnet de identidad por ambos lados y el comprobante de residencia.",
       )];
     }
 
@@ -151,6 +152,7 @@ export async function registerService(user, uploadedFiles = {}) {
       rol === "arrendador"
       || uploadedFiles.documentoResidencia?.[0]
       || uploadedFiles.documentoVerificacion?.[0]
+      || uploadedFiles.documentoVerificacionReverso?.[0]
       || uploadedFiles.fotoPerfil?.[0]
     ) {
       const { stored, storedPaths } = await commitVerificationUploads(newUser.id, uploadedFiles);
@@ -163,6 +165,10 @@ export async function registerService(user, uploadedFiles = {}) {
 
       if (stored.documentoVerificacion) {
         newUser.documentoVerificacion = stored.documentoVerificacion;
+      }
+
+      if (stored.documentoVerificacionReverso) {
+        newUser.documentoVerificacionReverso = stored.documentoVerificacionReverso;
       }
 
       if (stored.fotoPerfil) {

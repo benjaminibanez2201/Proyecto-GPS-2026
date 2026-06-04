@@ -67,6 +67,7 @@ export async function register(data) {
                 ['documentoResidencia', data.documentoResidencia?.[0]],
                 ['fotoPerfil', data.fotoPerfil?.[0]],
                 ['documentoVerificacion', data.documentoVerificacion?.[0]],
+                ['documentoVerificacionReverso', data.documentoVerificacionReverso?.[0]],
             );
         } else if (data.documentoVerificacion?.[0]) {
             filesToUpload.push(['documentoVerificacion', data.documentoVerificacion[0]]);
