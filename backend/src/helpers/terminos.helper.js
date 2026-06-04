@@ -1,6 +1,6 @@
 "use strict";
 
-export const TERMINOS_VERSION = "1.1";
+export const TERMINOS_VERSION = "1.2";
 
 export const TERMINOS_TEXTO = `
 Terminos y condiciones de ArriendU.
@@ -17,4 +17,8 @@ confidencialidad, integridad y uso proporcional de la informacion entregada.
 Los arrendadores autorizan la revision de antecedentes de identidad y residencia,
 como carnet de identidad, boletas o facturas de servicios, certificados de residencia,
 contratos u otros documentos equivalentes, con el unico fin de validar su cuenta.
+
+Los estudiantes autorizan la revision de su certificado de alumno regular y de
+su carnet de identidad por ambos lados, con el unico fin de validar identidad,
+rol academico y acceso a la plataforma.
 `;
