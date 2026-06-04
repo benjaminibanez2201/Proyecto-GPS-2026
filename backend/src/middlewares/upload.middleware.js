@@ -46,6 +46,8 @@ const registerUpload = multer({
   { maxCount: 1, name: "fotoPerfil" },
   { maxCount: 1, name: "documentoVerificacion" },
   { maxCount: 1, name: "documentoVerificacionReverso" },
+  { maxCount: 1, name: "carnetIdentidadFrontal" },
+  { maxCount: 1, name: "carnetIdentidadReverso" },
   { maxCount: 1, name: "documentoResidencia" },
 ]);
 

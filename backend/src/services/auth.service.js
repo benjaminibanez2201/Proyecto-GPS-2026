@@ -84,6 +84,14 @@ function hasRequiredArrendadorFiles(files = {}) {
   );
 }
 
+function hasRequiredEstudianteFiles(files = {}) {
+  return Boolean(
+    files.documentoVerificacion?.[0]
+    && files.carnetIdentidadFrontal?.[0]
+    && files.carnetIdentidadReverso?.[0],
+  );
+}
+
 export async function registerService(user, uploadedFiles = {}) {
   let uploadsCommitted = false;
   let storedFilePaths = [];
@@ -107,6 +115,13 @@ export async function registerService(user, uploadedFiles = {}) {
       return [null, createErrorMessage(
         "documentoVerificacion",
         "Debes adjuntar la foto de perfil, el carnet de identidad por ambos lados y el comprobante de residencia.",
+      )];
+    }
+
+    if (rol === "estudiante" && !hasRequiredEstudianteFiles(uploadedFiles)) {
+      return [null, createErrorMessage(
+        "documentoVerificacion",
+        "Debes adjuntar el certificado de alumno regular y el carnet de identidad por ambos lados.",
       )];
     }
 
@@ -153,6 +168,8 @@ export async function registerService(user, uploadedFiles = {}) {
       || uploadedFiles.documentoResidencia?.[0]
       || uploadedFiles.documentoVerificacion?.[0]
       || uploadedFiles.documentoVerificacionReverso?.[0]
+      || uploadedFiles.carnetIdentidadFrontal?.[0]
+      || uploadedFiles.carnetIdentidadReverso?.[0]
       || uploadedFiles.fotoPerfil?.[0]
     ) {
       const { stored, storedPaths } = await commitVerificationUploads(newUser.id, uploadedFiles);
@@ -169,6 +186,14 @@ export async function registerService(user, uploadedFiles = {}) {
 
       if (stored.documentoVerificacionReverso) {
         newUser.documentoVerificacionReverso = stored.documentoVerificacionReverso;
+      }
+
+      if (stored.carnetIdentidadFrontal) {
+        newUser.carnetIdentidadFrontal = stored.carnetIdentidadFrontal;
+      }
+
+      if (stored.carnetIdentidadReverso) {
+        newUser.carnetIdentidadReverso = stored.carnetIdentidadReverso;
       }
 
       if (stored.fotoPerfil) {
