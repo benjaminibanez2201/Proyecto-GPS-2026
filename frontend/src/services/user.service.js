@@ -29,6 +29,15 @@ export async function updateUser(data, rut) {
     }
 }
 
+export async function updateUserVerificationStatus(rut, estadoVerificacion) {
+    try {
+        const response = await axios.patch(`/user/detail/verification?rut=${rut}`, { estadoVerificacion });
+        return response.data.data;
+    } catch (error) {
+        return error.response?.data || { message: 'Error al actualizar estado de verificacion' };
+    }
+}
+
 export async function deleteUser(rut) {
     try {
         const response = await axios.delete(`/user/detail/?rut=${rut}`);

@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { updateUser } from '@services/user.service.js';
+import { updateUser, updateUserVerificationStatus } from '@services/user.service.js';
 import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
 import { formatPostUpdate } from '@helpers/formatData.js';
+
+const normalize = (value) => (value ?? '').toString().trim();
+const normalizeLower = (value) => normalize(value).toLowerCase();
 
 const useEditUser = (setUsers) => {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -16,7 +19,38 @@ const useEditUser = (setUsers) => {
     const handleUpdate = async (updatedUserData) => {
         if (updatedUserData) {
             try {
-            const updatedUser = await updateUser(updatedUserData, dataUser[0].rut);
+            const originalUser = dataUser[0];
+            const { estadoVerificacion, ...editableUserData } = updatedUserData;
+            const requestedStatus = normalizeLower(estadoVerificacion || originalUser.estadoVerificacion || 'pendiente');
+            const currentStatus = normalizeLower(originalUser.estadoVerificacion || 'pendiente');
+            const hasEditableChanges = (
+                normalize(editableUserData.nombreCompleto) !== normalize(originalUser.nombreCompleto) ||
+                normalizeLower(editableUserData.email) !== normalizeLower(originalUser.email) ||
+                normalizeLower(editableUserData.rut) !== normalizeLower(originalUser.rut) ||
+                normalizeLower(editableUserData.rol) !== normalizeLower(originalUser.rol) ||
+                normalize(editableUserData.newPassword) !== ''
+            );
+
+            let updatedUser = originalUser;
+
+            if (hasEditableChanges) {
+                updatedUser = await updateUser(editableUserData, originalUser.rut);
+
+                if (!updatedUser?.id) {
+                    throw new Error(updatedUser?.message || 'No se pudo actualizar el usuario');
+                }
+            }
+
+            if (requestedStatus && requestedStatus !== currentStatus) {
+                updatedUser = await updateUserVerificationStatus(
+                    updatedUser?.rut || editableUserData.rut || originalUser.rut,
+                    requestedStatus,
+                );
+
+                if (!updatedUser?.id) {
+                    throw new Error(updatedUser?.message || 'No se pudo actualizar el estado');
+                }
+            }
             showSuccessAlert('¡Actualizado!','El usuario ha sido actualizado correctamente.');
             setIsPopupOpen(false);
             const formattedUser = formatPostUpdate(updatedUser);
