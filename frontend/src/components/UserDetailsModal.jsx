@@ -264,18 +264,20 @@ function VerificationFilePreview({ value }) {
                 <PdfFilePreview preview={preview} />
             )}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <a
-                    href={preview.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                        color: '#008080',
-                        fontWeight: 800,
-                        textDecoration: 'none',
-                    }}
-                >
-                    Abrir archivo
-                </a>
+                {!isPdf && (
+                    <a
+                        href={preview.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                            color: '#008080',
+                            fontWeight: 800,
+                            textDecoration: 'none',
+                        }}
+                    >
+                        Abrir archivo
+                    </a>
+                )}
                 <span style={{ color: '#64748b', fontSize: '13px' }}>
                     {getVerificationFilename(value)}
                 </span>
