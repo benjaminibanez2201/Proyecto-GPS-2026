@@ -81,6 +81,7 @@ Payload usado para registrar a `sebastian.acua@gmail.com`:
 Resultado: `201 Created`  
 Mensaje: `Usuario registrado con exito`  
 Estado creado: `pendiente`
+Correo: se envia un email de registro recibido al correo del usuario.
 
 Nota RF7: el flujo actual envia JSON y guarda metadata simple del archivo. No almacena el binario del archivo porque el proyecto no tiene middleware de `multipart/form-data` ni almacenamiento de uploads.
 
@@ -171,4 +172,6 @@ El registro acepta `sebastian.acua@gmail.com`, pero la consulta `GET /api/user/d
 
 ## Nota sobre correo
 
-En el estado actual del backend, el endpoint `POST /api/auth/register` no invoca directamente el servicio de envio de correo, por lo que no existe un `curl` de registro que dispare envio de email. El registro si deja los datos listos para el flujo de verificacion y para usar correos cuando el flujo correspondiente los invoque.
+El endpoint `POST /api/auth/register` usa el servicio de correo para enviar el aviso de registro recibido. Si Gmail o las variables `EMAIL_USER` / `EMAIL_PASS` fallan, el backend devuelve error y elimina el usuario recien creado para evitar una cuenta pendiente sin correo de aviso.
+
+Las credenciales de correo se mantienen solo en `backend/.env` y no se documentan.
