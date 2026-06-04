@@ -109,7 +109,7 @@ export default function UserDetailsModal({ show, setShow, user }) {
                                             width: '56px',
                                             height: '56px',
                                             borderRadius: '18px',
-                                            backgroundColor: 'rgba(255,255,255,0.14)',
+                                            backgroundColor: statusColors[normalizedStatus] || 'rgba(255,255,255,0.14)',
                                             color: '#ffffff',
                                             display: 'flex',
                                             alignItems: 'center',

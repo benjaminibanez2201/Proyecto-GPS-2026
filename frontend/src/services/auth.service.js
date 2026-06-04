@@ -1,60 +1,94 @@
 import axios from './root.service.js';
 import cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 
-function decodeJwt(token) {
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        return JSON.parse(jsonPayload);
-    } catch (e) {
-        return {};
-    }
+function getFileMetadata(fileList) {
+    const file = fileList?.[0];
+
+    if (!file) return null;
+
+    return {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+    };
 }
-import { convertirMinusculas } from '@helpers/formatData.js';
 
 export async function login(dataUser) {
     try {
         const response = await axios.post('/auth/login', {
-            email: dataUser.email, 
-            password: dataUser.password
+            email: dataUser.email,
+            password: dataUser.password,
         });
         const { status, data } = response;
+
         if (status === 200) {
-            const { id, nombreCompleto, email, rut, rol } = decodeJwt(data.data.token);
-            const userData = { id, nombreCompleto, email, rut, rol };
+            const {
+                email,
+                estadoVerificacion,
+                id,
+                nombreCompleto,
+                rol,
+                rut,
+            } = jwtDecode(data.data.token);
+            const userData = { email, estadoVerificacion, id, nombreCompleto, rol, rut };
+
             sessionStorage.setItem('usuario', JSON.stringify(userData));
             axios.defaults.headers.common['Authorization'] = `Bearer ${data.data.token}`;
-            cookies.set('jwt-auth', data.data.token, {path:'/'});
-            return response.data
+            cookies.set('jwt-auth', data.data.token, { path: '/' });
+            return response.data;
         }
     } catch (error) {
         if (error.response?.data) {
             return error.response.data;
         }
+
         return {
-            status: "Server error",
-            message: "Error al conectar con el servidor",
-            details: null
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
         };
     }
 }
 
 export async function register(data) {
     try {
-        const dataRegister = convertirMinusculas(data);
-        const { nombreCompleto, email, rut, password } = dataRegister
+        const rol = data.rol || 'estudiante';
+        const basePayload = {
+            nombreCompleto: data.nombreCompleto.trim(),
+            email: data.email.trim().toLowerCase(),
+            rut: data.rut.trim(),
+            password: data.password,
+            rol,
+            terminosAceptados: Boolean(data.terminosAceptados),
+        };
+
+        const rolePayload = rol === 'estudiante'
+            ? {
+                universidad: data.universidad.trim(),
+                carrera: data.carrera.trim(),
+            }
+            : {
+                telefono: data.telefono.trim(),
+                fotoPerfil: getFileMetadata(data.fotoPerfil),
+                documentoVerificacion: getFileMetadata(data.documentoVerificacion),
+            };
+
         const response = await axios.post('/auth/register', {
-            nombreCompleto,
-            email,
-            rut,
-            password
+            ...basePayload,
+            ...rolePayload,
         });
         return response.data;
     } catch (error) {
-        return error.response.data;
+        if (error.response?.data) {
+            return error.response.data;
+        }
+
+        return {
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
+        };
     }
 }
 
@@ -65,7 +99,7 @@ export async function logout() {
         cookies.remove('jwt');
         cookies.remove('jwt-auth');
     } catch (error) {
-        console.error('Error al cerrar sesión:', error);
+        console.error('Error al cerrar sesion:', error);
     }
 }
 
@@ -74,7 +108,11 @@ export async function forgotPassword(email) {
         const response = await axios.post('/auth/forgot-password', { email });
         return response.data;
     } catch (error) {
-        return error.response.data;
+        return error.response?.data || {
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
+        };
     }
 }
 
@@ -83,6 +121,10 @@ export async function resetPassword(token, newPassword) {
         const response = await axios.post(`/auth/reset-password/${token}`, { newPassword });
         return response.data;
     } catch (error) {
-        return error.response.data;
+        return error.response?.data || {
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
+        };
     }
 }

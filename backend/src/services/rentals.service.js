@@ -48,7 +48,10 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
 
-    const arriendo = await repositorioArriendo.findOne({ where: { id: arriendoId }, relations: { arrendador: true, estudiante: true } });
+    const arriendo = await repositorioArriendo.findOne({
+      where: { id: arriendoId },
+      relations: { arrendador: true, estudiante: true },
+    });
     if (!arriendo) return [null, "Arriendo no encontrado"];
 
     const esArrendador = arriendo.arrendadorId === Number(userId);
@@ -66,11 +69,17 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
 
     await repositorioArriendo.update({ id: arriendo.id }, actualizacion);
 
-    const actualizado = await repositorioArriendo.findOne({ where: { id: arriendoId }, relations: { arrendador: true, estudiante: true } });
+    const actualizado = await repositorioArriendo.findOne({
+      where: { id: arriendoId },
+      relations: { arrendador: true, estudiante: true },
+    });
 
     if (actualizado.confirmedByArrendador && actualizado.confirmedByEstudiante) {
       await repositorioArriendo.update({ id: arriendo.id }, { status: "COMPLETED", completedAt: new Date() });
-      const final = await repositorioArriendo.findOne({ where: { id: arriendoId }, relations: { arrendador: true, estudiante: true } });
+      const final = await repositorioArriendo.findOne({
+        where: { id: arriendoId },
+        relations: { arrendador: true, estudiante: true },
+      });
 
       // Crear notificaciones para arrendador y estudiante
       try {
@@ -78,7 +87,7 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
           await createNotificacionService({
             userId: final.arrendador.id,
             tipo: "RENTAL_COMPLETED",
-            mensaje: `El arriendo ha sido confirmado por ambas partes`,
+            mensaje: "El arriendo ha sido confirmado por ambas partes",
             targetType: "rental",
             targetId: final.id,
           });
@@ -88,7 +97,7 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
           await createNotificacionService({
             userId: final.estudiante.id,
             tipo: "RENTAL_COMPLETED",
-            mensaje: `El arriendo ha sido confirmado por ambas partes`,
+            mensaje: "El arriendo ha sido confirmado por ambas partes",
             targetType: "rental",
             targetId: final.id,
           });
@@ -117,7 +126,7 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
 export async function listarArriendosServicio(userId) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
-    
+
     const arriendos = await repositorioArriendo.find({
       where: [
         { arrendadorId: Number(userId) },
@@ -128,10 +137,10 @@ export async function listarArriendosServicio(userId) {
         estudiante: true,
       },
       order: {
-        createdAt: "DESC" 
+        createdAt: "DESC"
       }
     });
-    
+
     return [arriendos, null];
   } catch (error) {
     console.error("Error listarArriendosServicio:", error);

@@ -3,7 +3,6 @@ import User from "../entity/user.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
 
-//LA OCUPO PARA VER UN PERFIL, REVISAR SUS RESEÑAS Y CALIFICACIÓN.
 export async function getUserService(query) {
   try {
     const { rut, id, email } = query;
@@ -23,6 +22,14 @@ export async function getUserService(query) {
         avgRating: true,
         reviewsCount: true,
         fotoPerfil: true,
+        telefono: true,
+        universidad: true,
+        carrera: true,
+        documentoVerificacion: true,
+        terminosAceptadosEn: true,
+        terminosVersion: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -62,6 +69,14 @@ export async function updateUserService(query, body) {
 
     const userFound = await userRepository.findOne({
       where: [{ id: id }, { rut: rut }, { email: email }],
+      select: {
+        id: true,
+        nombreCompleto: true,
+        rut: true,
+        email: true,
+        rol: true,
+        password: true,
+      },
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];
@@ -80,7 +95,7 @@ export async function updateUserService(query, body) {
         userFound.password,
       );
 
-      if (!matchPassword) return [null, "La contraseña no coincide"];
+      if (!matchPassword) return [null, "La contrasena no coincide"];
     }
 
     const dataUserUpdate = {
@@ -102,7 +117,7 @@ export async function updateUserService(query, body) {
     });
 
     if (!userData) {
-      return [null, "Usuario no encontrado después de actualizar"];
+      return [null, "Usuario no encontrado despues de actualizar"];
     }
 
     const { password, ...userUpdated } = userData;
@@ -126,7 +141,7 @@ export async function deleteUserService(query) {
 
     if (!userFound) return [null, "Usuario no encontrado"];
 
-    if (userFound.rol === "administrador") {
+    if (userFound.rol === "admin") {
       return [null, "No se puede eliminar un usuario con rol de administrador"];
     }
 
@@ -162,7 +177,7 @@ export async function updateProfileService(id, body) {
 
     const userData = await userRepository.findOne({ where: { id: userFound.id } });
 
-    if (!userData) return [null, "Usuario no encontrado después de actualizar"];
+    if (!userData) return [null, "Usuario no encontrado despues de actualizar"];
 
     const { password, ...userUpdated } = userData;
 
@@ -200,8 +215,9 @@ export async function updateArrendadorProfileService(id, body) {
 
     if (body.email) {
       const existingEmail = await userRepository.findOne({ where: { email: body.email } });
+
       if (existingEmail && existingEmail.id !== userFound.id) {
-        return [null, "El correo ya está en uso por otro usuario"];
+        return [null, "El correo ya esta en uso por otro usuario"];
       }
     }
 
@@ -217,7 +233,7 @@ export async function updateArrendadorProfileService(id, body) {
 
     const userData = await userRepository.findOne({ where: { id: userFound.id } });
 
-    if (!userData) return [null, "Usuario no encontrado después de actualizar"];
+    if (!userData) return [null, "Usuario no encontrado despues de actualizar"];
 
     const { password, ...userUpdated } = userData;
 

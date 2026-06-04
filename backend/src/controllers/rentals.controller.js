@@ -1,6 +1,13 @@
 "use strict";
-import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/responseHandlers.js";
-import { crearArriendoServicio, obtenerArriendoPorIdServicio, confirmarArriendoServicio, listarArriendosServicio, actualizarArriendoServicio, eliminarArriendoServicio } from "../services/rentals.service.js";
+import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
+import {
+  actualizarArriendoServicio,
+  confirmarArriendoServicio,
+  crearArriendoServicio,
+  eliminarArriendoServicio,
+  listarArriendosServicio,
+  obtenerArriendoPorIdServicio,
+} from "../services/rentals.service.js";
 
 export async function crearArriendo(req, res) {
   try {

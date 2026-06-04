@@ -3,13 +3,13 @@ import {
   deleteUserService,
   getUserService,
   getUsersService,
-  updateUserService,
   updateProfileService,
+  updateUserService,
 } from "../services/user.service.js";
 import {
+  profileBodyValidation,
   userBodyValidation,
   userQueryValidation,
-  profileBodyValidation,
 } from "../validations/user.validation.js";
 import {
   handleErrorClient,
@@ -156,7 +156,7 @@ export async function getPublicProfile(req, res) {
   try {
     const { id } = req.params;
 
-    if (!id) return handleErrorClient(res, 400, 'Se requiere id de usuario');
+    if (!id) return handleErrorClient(res, 400, "Se requiere id de usuario");
 
     const [user, errorUser] = await getUserService({ id });
 
@@ -172,7 +172,7 @@ export async function getPublicProfile(req, res) {
       reviewsCount: user.reviewsCount || 0,
     };
 
-    handleSuccess(res, 200, 'Perfil público encontrado', publicProfile);
+    handleSuccess(res, 200, "Perfil público encontrado", publicProfile);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -182,7 +182,7 @@ import { getProfileService } from "../services/user.service.js";
 
 export async function getProfile(req, res) {
   try {
-    const { id } = req.user; 
+    const { id } = req.user;
 
     const [user, userError] = await getProfileService(id);
 

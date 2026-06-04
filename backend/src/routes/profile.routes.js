@@ -1,7 +1,7 @@
 "use strict";
 import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
-import { updateProfile, getProfile, updateArrendadorProfile } from "../controllers/user.controller.js";
+import { getProfile, updateArrendadorProfile, updateProfile } from "../controllers/user.controller.js";
 
 const router = Router();
 
