@@ -17,6 +17,10 @@ export const uploadFieldConfig = {
     allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
     label: "El documento de verificacion",
   },
+  documentoResidencia: {
+    allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
+    label: "El comprobante de residencia",
+  },
   fotoPerfil: {
     allowedTypes: ["image/jpeg", "image/png"],
     label: "La foto de perfil",

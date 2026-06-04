@@ -76,7 +76,11 @@ export async function loginService(user) {
 }
 
 function hasRequiredArrendadorFiles(files = {}) {
-  return Boolean(files.fotoPerfil?.[0] && files.documentoVerificacion?.[0]);
+  return Boolean(
+    files.documentoResidencia?.[0]
+    && files.documentoVerificacion?.[0]
+    && files.fotoPerfil?.[0],
+  );
 }
 
 export async function registerService(user, uploadedFiles = {}) {
@@ -101,7 +105,7 @@ export async function registerService(user, uploadedFiles = {}) {
     if (rol === "arrendador" && !hasRequiredArrendadorFiles(uploadedFiles)) {
       return [null, createErrorMessage(
         "documentoVerificacion",
-        "Debes adjuntar la foto de perfil y el documento de verificacion.",
+        "Debes adjuntar la foto de perfil, el carnet de identidad y el comprobante de residencia.",
       )];
     }
 
@@ -143,10 +147,19 @@ export async function registerService(user, uploadedFiles = {}) {
 
     await userRepository.save(newUser);
 
-    if (rol === "arrendador" || uploadedFiles.documentoVerificacion?.[0] || uploadedFiles.fotoPerfil?.[0]) {
+    if (
+      rol === "arrendador"
+      || uploadedFiles.documentoResidencia?.[0]
+      || uploadedFiles.documentoVerificacion?.[0]
+      || uploadedFiles.fotoPerfil?.[0]
+    ) {
       const { stored, storedPaths } = await commitVerificationUploads(newUser.id, uploadedFiles);
       uploadsCommitted = true;
       storedFilePaths = storedPaths;
+
+      if (stored.documentoResidencia) {
+        newUser.documentoResidencia = stored.documentoResidencia;
+      }
 
       if (stored.documentoVerificacion) {
         newUser.documentoVerificacion = stored.documentoVerificacion;
