@@ -175,6 +175,21 @@ const Register = () => {
                                 minLength: 2,
                                 maxLength: 255,
                             },
+                            {
+                                label: 'Certificado de alumno regular',
+                                name: 'documentoVerificacion',
+                                fieldType: 'input',
+                                type: 'file',
+                                accept: '.pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf',
+                                required: true,
+                                validate: {
+                                    validFile: validateFile(
+                                        VERIFICATION_DOCUMENT_TYPES,
+                                        MAX_VERIFICATION_DOCUMENT_SIZE,
+                                        'El certificado debe ser PDF, JPG o PNG',
+                                    ),
+                                },
+                            },
                         ]
                         : [
                             {
