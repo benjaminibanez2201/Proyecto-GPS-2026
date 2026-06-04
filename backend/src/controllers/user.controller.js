@@ -5,6 +5,7 @@ import {
   getUsersService,
   updateProfileService,
   updateUserService,
+  updateUserVerificationStatusService,
 } from "../services/user.service.js";
 import {
   profileBodyValidation,
@@ -88,6 +89,48 @@ export async function updateUser(req, res) {
     if (userError) return handleErrorClient(res, 400, "Error modificando al usuario", userError);
 
     handleSuccess(res, 200, "Usuario modificado correctamente", user);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function updateUserVerificationStatus(req, res) {
+  try {
+    const { rut, id, email } = req.query;
+    const estadoVerificacion = String(req.body?.estadoVerificacion || "").toLowerCase();
+
+    const { error: queryError } = userQueryValidation.validate({
+      rut,
+      id,
+      email,
+    });
+
+    if (queryError) {
+      return handleErrorClient(
+        res,
+        400,
+        "Error de validacion en la consulta",
+        queryError.message,
+      );
+    }
+
+    if (!["pendiente", "aprobado", "rechazado"].includes(estadoVerificacion)) {
+      return handleErrorClient(
+        res,
+        400,
+        "Error de validacion en los datos enviados",
+        "El estado de verificacion debe ser pendiente, aprobado o rechazado.",
+      );
+    }
+
+    const [user, userError] = await updateUserVerificationStatusService(
+      { rut, id, email },
+      estadoVerificacion,
+    );
+
+    if (userError) return handleErrorClient(res, 400, "Error modificando estado del usuario", userError);
+
+    handleSuccess(res, 200, "Estado de verificacion actualizado correctamente", user);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

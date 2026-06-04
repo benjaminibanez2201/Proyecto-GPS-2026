@@ -5,6 +5,8 @@ import QuestionIcon from '@assets/QuestionCircleIcon.svg';
 
 export default function Popup({ show, setShow, data, action }) {
     const userData = data && data.length > 0 ? data[0] : {};
+    const roleValue = (userData.rol || '').toString().toLowerCase();
+    const verificationStatus = (userData.estadoVerificacion || 'pendiente').toString().toLowerCase();
 
     const handleSubmit = (formData) => {
         action(formData);
@@ -64,11 +66,24 @@ export default function Popup({ show, setShow, data, action }) {
                                 name: "rol",
                                 fieldType: 'select',
                                 options: [
-                                    { value: 'administrador', label: 'Administrador' },
-                                    { value: 'usuario', label: 'Usuario' },
+                                    { value: 'admin', label: 'Administrador' },
+                                    { value: 'estudiante', label: 'Estudiante' },
+                                    { value: 'arrendador', label: 'Arrendador' },
                                 ],
                                 required: true,
-                                defaultValue: userData.rol || "",
+                                defaultValue: roleValue,
+                            },
+                            {
+                                label: "Estado de verificacion",
+                                name: "estadoVerificacion",
+                                fieldType: 'select',
+                                options: [
+                                    { value: 'pendiente', label: 'Pendiente' },
+                                    { value: 'aprobado', label: 'Aprobado' },
+                                    { value: 'rechazado', label: 'Rechazado' },
+                                ],
+                                required: true,
+                                defaultValue: verificationStatus,
                             },
                             {
                                 label: (

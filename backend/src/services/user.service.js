@@ -130,6 +130,43 @@ export async function updateUserService(query, body) {
   }
 }
 
+export async function updateUserVerificationStatusService(query, estadoVerificacion) {
+  try {
+    const { id, rut, email } = query;
+
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({
+      where: [{ id: id }, { rut: rut }, { email: email }],
+    });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+
+    await userRepository.update(
+      { id: userFound.id },
+      {
+        estadoVerificacion,
+        updatedAt: new Date(),
+      },
+    );
+
+    const userData = await userRepository.findOne({
+      where: { id: userFound.id },
+    });
+
+    if (!userData) {
+      return [null, "Usuario no encontrado despues de actualizar"];
+    }
+
+    const { password, ...userUpdated } = userData;
+
+    return [userUpdated, null];
+  } catch (error) {
+    console.error("Error al actualizar estado de verificacion:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
 export async function deleteUserService(query) {
   try {
     const { id, rut, email } = query;
