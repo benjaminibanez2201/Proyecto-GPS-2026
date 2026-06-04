@@ -14,6 +14,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const bannerPath = path.resolve(__dirname, "../../../frontend/public/BannerArriendU.png");
 const bannerCid = "arriendu-banner";
+const logoPath = path.resolve(__dirname, "../../../frontend/src/assets/miLogo.png");
+const logoCid = "arriendu-logo";
 
 function createTransporter() {
   if (!EMAIL_USER || !EMAIL_PASS) {
@@ -39,6 +41,11 @@ function getBrandAttachments() {
       filename: "BannerArriendU.png",
       path: bannerPath,
       cid: bannerCid,
+    },
+    {
+      filename: "miLogo.png",
+      path: logoPath,
+      cid: logoCid,
     },
   ];
 }
