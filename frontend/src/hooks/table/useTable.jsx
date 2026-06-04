@@ -14,17 +14,17 @@ function useTable({ data, columns, filter, filters, dataToFilter, initialSortNam
             tableRef.current.style.minWidth = '0';
 
             const updatedColumns = [
-                { 
-                    formatter: "rowSelection", 
-                    titleFormatter: false, 
-                    hozAlign: "center", 
-                    headerSort: false, 
+                {
+                    formatter: "rowSelection",
+                    titleFormatter: false,
+                    hozAlign: "center",
+                    headerSort: false,
                     width: 48,
                     minWidth: 48,
                     maxWidth: 48,
                     cellClick: function (e, cell) {
                         cell.getRow().toggleSelect();
-                    } 
+                    }
                 },
                 ...columns
             ];

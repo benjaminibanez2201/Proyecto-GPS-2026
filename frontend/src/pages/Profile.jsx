@@ -31,7 +31,7 @@ const Profile = () => {
 
   const onSubmit = async (data) => {
     const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([_, v]) => v !== '')
+      Object.entries(data).filter(([, value]) => value !== '')
     );
     const response = await updateProfile(filteredData);
     if (response) {

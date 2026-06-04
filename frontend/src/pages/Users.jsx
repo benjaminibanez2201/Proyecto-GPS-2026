@@ -64,10 +64,6 @@ const Users = () => {
     });
   }, []);
 
-  const activeFiltersCount = useMemo(() => (
-    Object.values(advancedFilters).filter((value) => String(value || '').trim() !== '').length
-  ), [advancedFilters]);
-
   const tableFilters = useMemo(() => ({
     enabled: advancedFiltersEnabled,
     ...advancedFilters,

@@ -1,4 +1,4 @@
-import axios from './root.service.js'; 
+import axios from './root.service.js';
 
 // Listar arriendos
 export async function listarArriendos() {

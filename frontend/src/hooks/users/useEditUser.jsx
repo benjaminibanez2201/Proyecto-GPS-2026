@@ -6,7 +6,7 @@ import { formatPostUpdate } from '@helpers/formatData.js';
 const useEditUser = (setUsers) => {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [dataUser, setDataUser] = useState([]);
-    
+
     const handleClickUpdate = () => {
         if (dataUser.length > 0) {
             setIsPopupOpen(true);
@@ -24,7 +24,7 @@ const useEditUser = (setUsers) => {
             setUsers(prevUsers => prevUsers.map(user => {
                 return user.id === formattedUser.id ? formattedUser : user;
             }));
-            
+
 
             setDataUser([]);
             } catch (error) {

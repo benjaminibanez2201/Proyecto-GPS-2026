@@ -50,14 +50,14 @@ export default function HistorialArriendos() {
   const handleConfirmar = async (id) => {
     try {
       setLoadingConfirmId(id);
-      const [data, err] = await confirmarArriendo(id);
+      const [, err] = await confirmarArriendo(id);
       if (err) {
         showErrorAlert('Error', err);
       } else {
         await showSuccessConfirm('¡Felicitaciones!', 'Se ha confirmado el arriendo.', 'OK');
         cargarDatos();
       }
-    } catch (e) {
+    } catch {
       showErrorAlert('Error', 'Ocurrió un error al confirmar el arriendo');
     } finally {
       setLoadingConfirmId(null);
@@ -83,7 +83,7 @@ export default function HistorialArriendos() {
       comment
     };
 
-    const [data, err] = await crearResena(payload);
+    const [, err] = await crearResena(payload);
     if (err) alert(err);
     else {
       alert('Calificacion enviada exitosamente');

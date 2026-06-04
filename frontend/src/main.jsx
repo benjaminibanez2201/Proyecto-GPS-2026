@@ -4,7 +4,6 @@ import Login from '@pages/Login';
 import ForgotPassword from '@pages/ForgotPassword';
 import ResetPassword from '@pages/ResetPassword';
 import Home from '@pages/Home';
-import Users from '@pages/Users';
 import AdminUsers from '@pages/AdminUsers';
 import Register from '@pages/Register';
 import Error404 from '@pages/Error404';

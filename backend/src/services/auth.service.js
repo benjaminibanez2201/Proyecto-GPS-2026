@@ -1,33 +1,32 @@
 "use strict";
 import User from "../entity/user.entity.js";
 import jwt from "jsonwebtoken";
+import { ACCESS_TOKEN_SECRET } from "../config/configEnv.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
-import { ACCESS_TOKEN_SECRET } from "../config/configEnv.js";
-import { sendRecoveryEmail } from "./email.service.js";
+import { TERMINOS_VERSION } from "../helpers/terminos.helper.js";
+import {
+  sendRecoveryEmail,
+  sendRegistrationReceivedEmail,
+} from "./email.service.js";
+
+function createErrorMessage(dataInfo, message) {
+  return {
+    dataInfo,
+    message,
+  };
+}
 
 export async function loginService(user) {
   try {
     const userRepository = AppDataSource.getRepository(User);
     const { email, password } = user;
 
-    const createErrorMessage = (dataInfo, message) => ({
-      dataInfo,
-      message
-    });
-
-    const userFound = await userRepository.findOne({
-      where: { email },
-      select: {
-        id: true,
-        nombreCompleto: true,
-        rut: true,
-        email: true,
-        rol: true,
-        estadoVerificacion: true,
-        password: true,
-      },
-    });
+    const userFound = await userRepository
+      .createQueryBuilder("user")
+      .addSelect("user.password")
+      .where("user.email = :email", { email })
+      .getOne();
 
     if (!userFound) {
       return [null, createErrorMessage("auth", "Credenciales incorrectas")];
@@ -40,16 +39,22 @@ export async function loginService(user) {
     }
 
     if (userFound.estadoVerificacion === "pendiente") {
-      return [null, createErrorMessage("estadoVerificacion", "Tu cuenta está pendiente de verificación. Por favor, espera a que sea aprobada.")];
+      return [null, createErrorMessage(
+        "estadoVerificacion",
+        "Tu cuenta esta pendiente de verificacion. Por favor, espera a que sea aprobada.",
+      )];
     } else if (userFound.estadoVerificacion === "rechazado") {
-      return [null, createErrorMessage("estadoVerificacion", "Tu cuenta ha sido rechazada. Por favor, contacta al soporte para más información.")];
+      return [null, createErrorMessage(
+        "estadoVerificacion",
+        "Tu cuenta ha sido rechazada. Por favor, contacta al soporte para mas informacion.",
+      )];
     }
 
-    // quien eres y que permisos tienes
-    const payload = { 
+    const payload = {
       id: userFound.id,
       nombreCompleto: userFound.nombreCompleto,
       email: userFound.email,
+      rut: userFound.rut,
       rol: userFound.rol,
       estadoVerificacion: userFound.estadoVerificacion,
     };
@@ -60,30 +65,38 @@ export async function loginService(user) {
 
     return [accessToken, null];
   } catch (error) {
-    console.error("Error al iniciar sesión:", error);
+    console.error("Error al iniciar sesion:", error);
     return [null, "Error interno del servidor"];
   }
 }
-
 
 export async function registerService(user) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
-    const { nombreCompleto, rut, email } = user;
-
-    const createErrorMessage = (dataInfo, message) => ({
-      dataInfo,
-      message
-    });
+    const {
+      carrera,
+      documentoVerificacion,
+      email,
+      fotoPerfil,
+      nombreCompleto,
+      password,
+      rol = "estudiante",
+      rut,
+      telefono,
+      terminosAceptados,
+      universidad,
+    } = user;
 
     const existingEmailUser = await userRepository.findOne({
       where: {
         email,
       },
     });
-    
-    if (existingEmailUser) return [null, createErrorMessage("email", "Correo electrónico en uso")];
+
+    if (existingEmailUser) {
+      return [null, createErrorMessage("email", "Correo electronico en uso")];
+    }
 
     const existingRutUser = await userRepository.findOne({
       where: {
@@ -91,19 +104,43 @@ export async function registerService(user) {
       },
     });
 
-    if (existingRutUser) return [null, createErrorMessage("rut", "Rut ya asociado a una cuenta")];
+    if (existingRutUser) {
+      return [null, createErrorMessage("rut", "Rut ya asociado a una cuenta")];
+    }
 
     const newUser = userRepository.create({
-      nombreCompleto,
+      carrera,
+      documentoVerificacion: documentoVerificacion?.name,
       email,
+      estadoVerificacion: "pendiente",
+      fotoPerfil: fotoPerfil?.name,
+      nombreCompleto,
+      password: await encryptPassword(password),
+      rol,
       rut,
-      password: await encryptPassword(user.password),
-      rol: "usuario",
+      telefono,
+      universidad,
+      ...(terminosAceptados === true && {
+        terminosAceptadosEn: new Date(),
+        terminosVersion: TERMINOS_VERSION,
+      }),
     });
 
     await userRepository.save(newUser);
 
-    const { password, ...dataUser } = newUser;
+    try {
+      await sendRegistrationReceivedEmail(newUser);
+    } catch (emailError) {
+      await userRepository.delete({ id: newUser.id });
+      console.error("Error al enviar correo de registro:", emailError);
+
+      return [null, createErrorMessage(
+        "email",
+        "No se pudo enviar el correo de registro. Intenta nuevamente.",
+      )];
+    }
+
+    const { password: _password, ...dataUser } = newUser;
 
     return [dataUser, null];
   } catch (error) {
@@ -111,35 +148,32 @@ export async function registerService(user) {
     return [null, "Error interno del servidor"];
   }
 }
-// funcion para solicitar la recuperacion de contraseña
+
 export async function forgotPasswordService(email) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
     const userFound = await userRepository.findOne({
-      where: { email }
+      where: { email },
     });
 
-    if (!userFound) {
-      return [null, "Se envió un correo electrónico a la dirección proporcionada si existe una cuenta asociada. Si no recibes un correo, por favor verifica tu dirección de correo electrónico o contacta al soporte. Gracias por tu comprensión."];
-    }
+    const fallbackMessage = "Se enviaron instrucciones de recuperacion si existe una cuenta asociada a ese correo.";
 
-    // generar el token de restablecimiento de contraseña
+    if (!userFound) {
+      return [fallbackMessage, null];
+    }
 
     const resetToken = jwt.sign({ id: userFound.id }, ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
 
-    // Guardar en usuario
     userFound.resetPasswordToken = resetToken;
-    userFound.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hora
+    userFound.resetPasswordExpires = new Date(Date.now() + 3600000);
 
     await userRepository.save(userFound);
-
-    // enviar el correo con el token de restablecimiento 
     await sendRecoveryEmail(userFound.email, resetToken);
 
-    return ["Instrucciones para restablecer la contraseña han sido enviadas a tu correo electrónico", null];
+    return ["Instrucciones para restablecer la contrasena han sido enviadas a tu correo electronico", null];
   } catch (error) {
-    console.error("Error al solicitar restablecimiento de contraseña:", error);
+    console.error("Error al solicitar restablecimiento de contrasena:", error);
     return [null, "Error interno del servidor"];
   }
 }
@@ -148,11 +182,10 @@ export async function resetPasswordService(token, newPassword) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
-    let decoded;
     try {
-      decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+      jwt.verify(token, ACCESS_TOKEN_SECRET);
     } catch {
-      return [null, "El enlace de restablecimiento es inválido o ha expirado"];
+      return [null, "El enlace de restablecimiento es invalido o ha expirado"];
     }
 
     const userFound = await userRepository.findOne({
@@ -167,17 +200,15 @@ export async function resetPasswordService(token, newPassword) {
       return [null, "El enlace de restablecimiento ha expirado"];
     }
 
-    const hashedPassword = await encryptPassword(newPassword);
-
-    userFound.password = hashedPassword;
+    userFound.password = await encryptPassword(newPassword);
     userFound.resetPasswordToken = null;
     userFound.resetPasswordExpires = null;
 
     await userRepository.save(userFound);
 
-    return ["Contraseña restablecida exitosamente", null];
+    return ["Contrasena restablecida exitosamente", null];
   } catch (error) {
-    console.error("Error al restablecer la contraseña:", error);
+    console.error("Error al restablecer la contrasena:", error);
     return [null, "Error interno del servidor"];
   }
 }
