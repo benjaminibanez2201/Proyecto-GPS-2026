@@ -1,4 +1,10 @@
+import { useEffect, useState } from 'react';
 import '@styles/popup.css';
+import {
+    getProtectedFilePreview,
+    getVerificationFilename,
+    isVerificationFileUrl,
+} from '@services/upload.service.js';
 
 const fieldLabels = {
     id: 'ID',
@@ -29,6 +35,89 @@ function formatValue(value) {
     }
 
     return value;
+}
+
+function VerificationFilePreview({ value }) {
+    const [preview, setPreview] = useState(null);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        let objectUrl = null;
+        let cancelled = false;
+
+        setPreview(null);
+        setError('');
+
+        if (!isVerificationFileUrl(value)) return undefined;
+
+        getProtectedFilePreview(value)
+            .then((filePreview) => {
+                if (cancelled) {
+                    URL.revokeObjectURL(filePreview.url);
+                    return;
+                }
+
+                objectUrl = filePreview.url;
+                setPreview(filePreview);
+            })
+            .catch(() => {
+                if (!cancelled) setError('No se pudo cargar el archivo.');
+            });
+
+        return () => {
+            cancelled = true;
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [value]);
+
+    if (!isVerificationFileUrl(value)) {
+        return <span>{formatValue(value)}</span>;
+    }
+
+    if (error) {
+        return <span style={{ color: '#b91c1c' }}>{error}</span>;
+    }
+
+    if (!preview) {
+        return <span>Cargando archivo...</span>;
+    }
+
+    const isImage = preview.contentType?.startsWith('image/');
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
+            {isImage && (
+                <img
+                    src={preview.url}
+                    alt={preview.filename}
+                    style={{
+                        width: 'min(240px, 100%)',
+                        maxHeight: '180px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '1px solid #d7eeee',
+                    }}
+                />
+            )}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <a
+                    href={preview.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                        color: '#008080',
+                        fontWeight: 800,
+                        textDecoration: 'none',
+                    }}
+                >
+                    Abrir archivo
+                </a>
+                <span style={{ color: '#64748b', fontSize: '13px' }}>
+                    {getVerificationFilename(value)}
+                </span>
+            </div>
+        </div>
+    );
 }
 
 export default function UserDetailsModal({ show, setShow, user }) {
@@ -159,7 +248,9 @@ export default function UserDetailsModal({ show, setShow, user }) {
                                             {fieldLabels[field] || field}
                                         </span>
                                         <span style={{ fontSize: '14px', lineHeight: 1.5, color: '#0f172a', wordBreak: 'break-word' }}>
-                                            {formatValue(user?.[field])}
+                                            {field === 'documentoVerificacion' || field === 'fotoPerfil'
+                                                ? <VerificationFilePreview value={user?.[field]} />
+                                                : formatValue(user?.[field])}
                                         </span>
                                     </div>
                                 ))}

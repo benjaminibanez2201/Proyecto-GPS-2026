@@ -2,18 +2,6 @@ import axios from './root.service.js';
 import cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
-function getFileMetadata(fileList) {
-    const file = fileList?.[0];
-
-    if (!file) return null;
-
-    return {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-    };
-}
-
 export async function login(dataUser) {
     try {
         const response = await axios.post('/auth/login', {
@@ -70,9 +58,24 @@ export async function register(data) {
             }
             : {
                 telefono: data.telefono.trim(),
-                fotoPerfil: getFileMetadata(data.fotoPerfil),
-                documentoVerificacion: getFileMetadata(data.documentoVerificacion),
             };
+
+        if (rol === 'arrendador') {
+            const formData = new FormData();
+            const payload = {
+                ...basePayload,
+                ...rolePayload,
+            };
+
+            Object.entries(payload).forEach(([key, value]) => {
+                formData.append(key, String(value));
+            });
+            formData.append('fotoPerfil', data.fotoPerfil[0]);
+            formData.append('documentoVerificacion', data.documentoVerificacion[0]);
+
+            const response = await axios.post('/auth/register', formData);
+            return response.data;
+        }
 
         const response = await axios.post('/auth/register', {
             ...basePayload,

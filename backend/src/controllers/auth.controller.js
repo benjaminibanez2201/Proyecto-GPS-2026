@@ -17,6 +17,23 @@ import {
   handleErrorServer,
   handleSuccess,
 } from "../handlers/responseHandlers.js";
+import {
+  removeUploadedTempFiles,
+  toUploadedFileMetadata,
+} from "../helpers/upload.helper.js";
+
+function attachRegisterFileMetadata(req) {
+  const fotoPerfil = req.files?.fotoPerfil?.[0];
+  const documentoVerificacion = req.files?.documentoVerificacion?.[0];
+
+  if (fotoPerfil) {
+    req.body.fotoPerfil = toUploadedFileMetadata(fotoPerfil);
+  }
+
+  if (documentoVerificacion) {
+    req.body.documentoVerificacion = toUploadedFileMetadata(documentoVerificacion);
+  }
+}
 
 function getRegisterValidation(body) {
   if (!body.rol) {
@@ -65,20 +82,24 @@ export async function login(req, res) {
 
 export async function register(req, res) {
   try {
+    attachRegisterFileMetadata(req);
+
     const { body } = req;
     const validation = getRegisterValidation(body);
 
     if (!validation) {
+      await removeUploadedTempFiles(req.files);
       return handleErrorClient(res, 400, "Error de validacion", "Rol invalido");
     }
 
     const { error } = validation.validate(body);
 
     if (error) {
+      await removeUploadedTempFiles(req.files);
       return handleErrorClient(res, 400, "Error de validacion", error.message);
     }
 
-    const [newUser, errorNewUser] = await registerService(body);
+    const [newUser, errorNewUser] = await registerService(body, req.files);
 
     if (errorNewUser) return handleErrorClient(res, 400, "Error registrando al usuario", errorNewUser);
 

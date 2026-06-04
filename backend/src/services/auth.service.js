@@ -9,6 +9,11 @@ import {
   sendRecoveryEmail,
   sendRegistrationReceivedEmail,
 } from "./email.service.js";
+import {
+  commitVerificationUploads,
+  removeStoredFiles,
+  removeUploadedTempFiles,
+} from "../helpers/upload.helper.js";
 
 function createErrorMessage(dataInfo, message) {
   return {
@@ -70,15 +75,20 @@ export async function loginService(user) {
   }
 }
 
-export async function registerService(user) {
+function hasRequiredArrendadorFiles(files = {}) {
+  return Boolean(files.fotoPerfil?.[0] && files.documentoVerificacion?.[0]);
+}
+
+export async function registerService(user, uploadedFiles = {}) {
+  let uploadsCommitted = false;
+  let storedFilePaths = [];
+
   try {
     const userRepository = AppDataSource.getRepository(User);
 
     const {
       carrera,
-      documentoVerificacion,
       email,
-      fotoPerfil,
       nombreCompleto,
       password,
       rol = "estudiante",
@@ -87,6 +97,13 @@ export async function registerService(user) {
       terminosAceptados,
       universidad,
     } = user;
+
+    if (rol === "arrendador" && !hasRequiredArrendadorFiles(uploadedFiles)) {
+      return [null, createErrorMessage(
+        "documentoVerificacion",
+        "Debes adjuntar la foto de perfil y el documento de verificacion.",
+      )];
+    }
 
     const existingEmailUser = await userRepository.findOne({
       where: {
@@ -110,10 +127,8 @@ export async function registerService(user) {
 
     const newUser = userRepository.create({
       carrera,
-      documentoVerificacion: documentoVerificacion?.name,
       email,
       estadoVerificacion: "pendiente",
-      fotoPerfil: fotoPerfil?.name,
       nombreCompleto,
       password: await encryptPassword(password),
       rol,
@@ -128,10 +143,21 @@ export async function registerService(user) {
 
     await userRepository.save(newUser);
 
+    if (rol === "arrendador") {
+      const { stored, storedPaths } = await commitVerificationUploads(newUser.id, uploadedFiles);
+      uploadsCommitted = true;
+      storedFilePaths = storedPaths;
+
+      newUser.documentoVerificacion = stored.documentoVerificacion;
+      newUser.fotoPerfil = stored.fotoPerfil;
+      await userRepository.save(newUser);
+    }
+
     try {
       await sendRegistrationReceivedEmail(newUser);
     } catch (emailError) {
       await userRepository.delete({ id: newUser.id });
+      await removeStoredFiles(storedFilePaths);
       console.error("Error al enviar correo de registro:", emailError);
 
       return [null, createErrorMessage(
@@ -144,8 +170,13 @@ export async function registerService(user) {
 
     return [dataUser, null];
   } catch (error) {
+    await removeStoredFiles(storedFilePaths);
     console.error("Error al registrar un usuario", error);
     return [null, "Error interno del servidor"];
+  } finally {
+    if (!uploadsCommitted) {
+      await removeUploadedTempFiles(uploadedFiles);
+    }
   }
 }
 

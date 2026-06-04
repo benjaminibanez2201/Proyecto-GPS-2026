@@ -54,28 +54,25 @@ Mensaje: `Inicio de sesion exitoso`
 
 Endpoint: `POST /auth/register`
 
-Payload usado para registrar a `sebastian.acua@gmail.com`:
+Ejemplo usando `multipart/form-data` para registrar a `sebastian.acua@gmail.com`:
 
-```json
-{
-  "nombreCompleto": "Sebastian Acuna Soto",
-  "email": "sebastian.acua@gmail.com",
-  "rut": "12.345.678-9",
-  "password": "Arrendador123.",
-  "rol": "arrendador",
-  "telefono": "+56 9 1234 5678",
-  "fotoPerfil": {
-    "name": "foto-perfil.png",
-    "type": "image/png",
-    "size": 204800
-  },
-  "documentoVerificacion": {
-    "name": "carnet-identidad.jpg",
-    "type": "image/jpeg",
-    "size": 512000
-  },
-  "terminosAceptados": true
-}
+```powershell
+curl.exe -sS -X POST http://localhost:3000/api/auth/register `
+  -F "nombreCompleto=Sebastian Acuna Soto" `
+  -F "email=sebastian.acua@gmail.com" `
+  -F "rut=12.345.678-9" `
+  -F "password=Arrendador123." `
+  -F "rol=arrendador" `
+  -F "telefono=+56 9 1234 5678" `
+  -F "terminosAceptados=true" `
+  -F "fotoPerfil=@C:\ruta\foto-perfil.png;type=image/png" `
+  -F "documentoVerificacion=@C:\ruta\carnet-identidad.jpg;type=image/jpeg"
+```
+
+Archivos permitidos:
+
+- Foto de perfil: JPG o PNG, maximo 8 MB.
+- Documento de verificacion: JPG, PNG o PDF, maximo 8 MB.
 ```
 
 Resultado: `201 Created`  
@@ -83,7 +80,7 @@ Mensaje: `Usuario registrado con exito`
 Estado creado: `pendiente`
 Correo: se envia un email de registro recibido al correo del usuario con estilos de ArriendU.
 
-Nota RF7: el flujo actual envia JSON y guarda metadata simple del archivo. No almacena el binario del archivo porque el proyecto no tiene middleware de `multipart/form-data` ni almacenamiento de uploads.
+Nota RF7: el registro de arrendador guarda los archivos localmente en el servidor bajo `backend/uploads/verifications/<id>/`. En la base de datos se almacena la ruta protegida `/api/uploads/verifications/<id>/<archivo>`, para que el administrador pueda ver la foto y el documento desde la ficha del usuario.
 
 ### Registro duplicado
 
@@ -95,7 +92,7 @@ Detalle: `Correo electronico en uso`
 
 ### Registro de arrendador con formato invalido
 
-Payload con `fotoPerfil.type: "image/gif"` y `documentoVerificacion.type: "application/x-msdownload"`.
+Archivo `fotoPerfil` con `image/gif` o `documentoVerificacion` con tipo no permitido.
 
 Resultado: `400 Bad Request`  
 Mensaje: `Error de validacion`  
@@ -103,7 +100,7 @@ Detalle observado: `El documento de verificacion tiene un formato no permitido.`
 
 ### Registro de arrendador sin documento
 
-Payload sin `documentoVerificacion`.
+Solicitud sin `documentoVerificacion`.
 
 Resultado: `400 Bad Request`  
 Mensaje: `Error de validacion`  
@@ -161,8 +158,8 @@ Datos verificados para `sebastian.acua@gmail.com`:
 - `id`: `6`
 - `rol`: `arrendador`
 - `estadoVerificacion`: `pendiente`
-- `fotoPerfil`: `foto-perfil.png`
-- `documentoVerificacion`: `carnet-identidad.jpg`
+- `fotoPerfil`: `/api/uploads/verifications/<id>/<archivo>`
+- `documentoVerificacion`: `/api/uploads/verifications/<id>/<archivo>`
 - `terminosAceptadosEn`: presente
 - `password`: no se expone en la respuesta
 

@@ -10,8 +10,8 @@ const patternRut = /^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d
 const patternPassword = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/;
 const patternNombre = /^[a-zA-Z\u00C0-\u017F\s]+$/;
 const patternTelefono = /^[0-9+\-\s()]+$/;
-const MAX_PROFILE_PHOTO_SIZE = 5 * 1024 * 1024;
-const MAX_VERIFICATION_DOCUMENT_SIZE = 10 * 1024 * 1024;
+const MAX_PROFILE_PHOTO_SIZE = 8 * 1024 * 1024;
+const MAX_VERIFICATION_DOCUMENT_SIZE = 8 * 1024 * 1024;
 const PROFILE_PHOTO_TYPES = ['image/jpeg', 'image/png'];
 const VERIFICATION_DOCUMENT_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
 
