@@ -198,6 +198,188 @@ function PdfFilePreview({ preview }) {
     );
 }
 
+function ImageFilePreview({ preview }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [zoom, setZoom] = useState(1);
+
+    const closePreview = () => {
+        setIsExpanded(false);
+        setZoom(1);
+    };
+
+    const decreaseZoom = () => {
+        setZoom((current) => Math.max(0.75, Number((current - 0.25).toFixed(2))));
+    };
+
+    const increaseZoom = () => {
+        setZoom((current) => Math.min(3, Number((current + 0.25).toFixed(2))));
+    };
+
+    const resetZoom = () => {
+        setZoom(1);
+    };
+
+    useEffect(() => {
+        if (!isExpanded) return undefined;
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') closePreview();
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isExpanded]);
+
+    return (
+        <>
+            <button
+                type="button"
+                onClick={() => setIsExpanded(true)}
+                aria-label={`Ampliar ${preview.filename}`}
+                title="Ampliar imagen"
+                style={{
+                    border: 'none',
+                    padding: 0,
+                    backgroundColor: 'transparent',
+                    cursor: 'zoom-in',
+                    textAlign: 'left',
+                }}
+            >
+                <img
+                    src={preview.url}
+                    alt={preview.filename}
+                    style={{
+                        width: 'min(240px, 100%)',
+                        maxHeight: '180px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '1px solid #d7eeee',
+                        display: 'block',
+                    }}
+                />
+            </button>
+
+            {isExpanded && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        inset: '24px',
+                        zIndex: 1900,
+                        padding: '16px',
+                        borderRadius: '14px',
+                        border: '1px solid #d7eeee',
+                        backgroundColor: '#ffffff',
+                        boxShadow: '0 24px 70px rgba(15, 23, 42, 0.28)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px',
+                    }}
+                    onClick={(event) => event.stopPropagation()}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 700, wordBreak: 'break-word' }}>
+                            {preview.filename}
+                        </span>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button
+                                type="button"
+                                onClick={decreaseZoom}
+                                aria-label="Reducir zoom"
+                                style={{
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#e2f4f4',
+                                    color: '#005f5f',
+                                    cursor: 'pointer',
+                                    fontWeight: 800,
+                                }}
+                            >
+                                -
+                            </button>
+                            <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: 800, minWidth: '48px', textAlign: 'center' }}>
+                                {Math.round(zoom * 100)}%
+                            </span>
+                            <button
+                                type="button"
+                                onClick={increaseZoom}
+                                aria-label="Aumentar zoom"
+                                style={{
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#e2f4f4',
+                                    color: '#005f5f',
+                                    cursor: 'pointer',
+                                    fontWeight: 800,
+                                }}
+                            >
+                                +
+                            </button>
+                            <button
+                                type="button"
+                                onClick={resetZoom}
+                                style={{
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#edf2f7',
+                                    color: '#334155',
+                                    cursor: 'pointer',
+                                    fontWeight: 800,
+                                }}
+                            >
+                                Restablecer
+                            </button>
+                            <button
+                                type="button"
+                                onClick={closePreview}
+                                style={{
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#008080',
+                                    color: '#ffffff',
+                                    cursor: 'pointer',
+                                    fontWeight: 800,
+                                }}
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                    <div
+                        style={{
+                            minHeight: 0,
+                            flex: 1,
+                            overflow: 'auto',
+                            padding: '12px',
+                            borderRadius: '10px',
+                            border: '1px solid #d7eeee',
+                            backgroundColor: '#f8fafc',
+                            textAlign: 'center',
+                        }}
+                    >
+                        <img
+                            src={preview.url}
+                            alt={preview.filename}
+                            style={{
+                                width: zoom === 1 ? 'min(900px, 100%)' : `${Math.round(900 * zoom)}px`,
+                                maxWidth: zoom === 1 ? '100%' : 'none',
+                                height: 'auto',
+                                borderRadius: '10px',
+                                border: '1px solid #d7eeee',
+                                backgroundColor: '#ffffff',
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
 function VerificationFilePreview({ value }) {
     const [preview, setPreview] = useState(null);
     const [error, setError] = useState('');
@@ -249,17 +431,7 @@ function VerificationFilePreview({ value }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
             {isImage && (
-                <img
-                    src={preview.url}
-                    alt={preview.filename}
-                    style={{
-                        width: 'min(240px, 100%)',
-                        maxHeight: '180px',
-                        objectFit: 'cover',
-                        borderRadius: '8px',
-                        border: '1px solid #d7eeee',
-                    }}
-                />
+                <ImageFilePreview preview={preview} />
             )}
             {isPdf && (
                 <PdfFilePreview preview={preview} />
