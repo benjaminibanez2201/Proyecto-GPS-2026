@@ -60,7 +60,18 @@ export async function register(data) {
                 telefono: data.telefono.trim(),
             };
 
+        const filesToUpload = [];
+
         if (rol === 'arrendador') {
+            filesToUpload.push(
+                ['fotoPerfil', data.fotoPerfil?.[0]],
+                ['documentoVerificacion', data.documentoVerificacion?.[0]],
+            );
+        } else if (data.documentoVerificacion?.[0]) {
+            filesToUpload.push(['documentoVerificacion', data.documentoVerificacion[0]]);
+        }
+
+        if (filesToUpload.length > 0) {
             const formData = new FormData();
             const payload = {
                 ...basePayload,
@@ -70,8 +81,9 @@ export async function register(data) {
             Object.entries(payload).forEach(([key, value]) => {
                 formData.append(key, String(value));
             });
-            formData.append('fotoPerfil', data.fotoPerfil[0]);
-            formData.append('documentoVerificacion', data.documentoVerificacion[0]);
+            filesToUpload.forEach(([key, file]) => {
+                if (file) formData.append(key, file);
+            });
 
             const response = await axios.post('/auth/register', formData);
             return response.data;

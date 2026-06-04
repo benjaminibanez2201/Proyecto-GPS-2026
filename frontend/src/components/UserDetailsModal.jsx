@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import '@styles/popup.css';
 import {
     getProtectedFilePreview,
@@ -35,6 +36,73 @@ function formatValue(value) {
     }
 
     return value;
+}
+
+function PdfFilePreview({ preview }) {
+    const canvasRef = useRef(null);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        let cancelled = false;
+        let loadingTask = null;
+
+        setError('');
+
+        async function renderPdf() {
+            try {
+                const response = await fetch(preview.url);
+                const data = new Uint8Array(await response.arrayBuffer());
+                const { GlobalWorkerOptions, getDocument } = await import('pdfjs-dist');
+
+                GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+                loadingTask = getDocument({ data });
+                const pdf = await loadingTask.promise;
+                const page = await pdf.getPage(1);
+                const baseViewport = page.getViewport({ scale: 1 });
+                const scale = Math.min(1.35, 420 / baseViewport.width);
+                const viewport = page.getViewport({ scale });
+                const canvas = canvasRef.current;
+
+                if (!canvas || cancelled) return;
+
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                await page.render({
+                    canvasContext: canvas.getContext('2d'),
+                    viewport,
+                }).promise;
+            } catch {
+                if (!cancelled) setError('No se pudo previsualizar el PDF.');
+            }
+        }
+
+        renderPdf();
+
+        return () => {
+            cancelled = true;
+            loadingTask?.destroy?.();
+        };
+    }, [preview.url]);
+
+    if (error) {
+        return <span style={{ color: '#b91c1c' }}>{error}</span>;
+    }
+
+    return (
+        <canvas
+            ref={canvasRef}
+            aria-label={`Previsualizacion de ${preview.filename}`}
+            style={{
+                width: 'min(420px, 100%)',
+                maxHeight: '360px',
+                objectFit: 'contain',
+                borderRadius: '8px',
+                border: '1px solid #d7eeee',
+                backgroundColor: '#ffffff',
+            }}
+        />
+    );
 }
 
 function VerificationFilePreview({ value }) {
@@ -83,6 +151,7 @@ function VerificationFilePreview({ value }) {
     }
 
     const isImage = preview.contentType?.startsWith('image/');
+    const isPdf = preview.contentType === 'application/pdf';
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
@@ -98,6 +167,9 @@ function VerificationFilePreview({ value }) {
                         border: '1px solid #d7eeee',
                     }}
                 />
+            )}
+            {isPdf && (
+                <PdfFilePreview preview={preview} />
             )}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <a
@@ -124,6 +196,10 @@ export default function UserDetailsModal({ show, setShow, user }) {
     if (!show) return null;
 
     const normalizedStatus = (user?.estadoVerificacion || 'pendiente').toString().toLowerCase();
+    const normalizedRole = (user?.rol || '').toString().toLowerCase();
+    const documentFieldLabel = normalizedRole === 'estudiante'
+        ? 'Certificado de alumno regular'
+        : fieldLabels.documentoVerificacion;
     const initials = (user?.nombreCompleto || 'Usuario')
         .split(' ')
         .filter(Boolean)
@@ -245,7 +321,9 @@ export default function UserDetailsModal({ show, setShow, user }) {
                                         }}
                                     >
                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f766e' }}>
-                                            {fieldLabels[field] || field}
+                                            {field === 'documentoVerificacion'
+                                                ? documentFieldLabel
+                                                : fieldLabels[field] || field}
                                         </span>
                                         <span style={{ fontSize: '14px', lineHeight: 1.5, color: '#0f172a', wordBreak: 'break-word' }}>
                                             {field === 'documentoVerificacion' || field === 'fotoPerfil'

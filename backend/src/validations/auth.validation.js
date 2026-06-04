@@ -113,6 +113,11 @@ export const registerEstudianteValidation = Joi.object({
     "any.required": "La carrera es obligatoria.",
     "string.empty": "La carrera no puede estar vacia.",
   }),
+  documentoVerificacion: fileMetadataSchema({
+    allowedTypes: verificationDocumentTypes,
+    label: "El certificado de alumno regular",
+    maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
+  }).optional(),
   rol: Joi.string().valid("estudiante").required(),
   terminosAceptados: Joi.boolean().valid(true).required().messages({
     "any.only": "Debes aceptar los terminos y condiciones",

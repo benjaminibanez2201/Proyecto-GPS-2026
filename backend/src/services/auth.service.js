@@ -143,13 +143,19 @@ export async function registerService(user, uploadedFiles = {}) {
 
     await userRepository.save(newUser);
 
-    if (rol === "arrendador") {
+    if (rol === "arrendador" || uploadedFiles.documentoVerificacion?.[0] || uploadedFiles.fotoPerfil?.[0]) {
       const { stored, storedPaths } = await commitVerificationUploads(newUser.id, uploadedFiles);
       uploadsCommitted = true;
       storedFilePaths = storedPaths;
 
-      newUser.documentoVerificacion = stored.documentoVerificacion;
-      newUser.fotoPerfil = stored.fotoPerfil;
+      if (stored.documentoVerificacion) {
+        newUser.documentoVerificacion = stored.documentoVerificacion;
+      }
+
+      if (stored.fotoPerfil) {
+        newUser.fotoPerfil = stored.fotoPerfil;
+      }
+
       await userRepository.save(newUser);
     }
 
