@@ -129,21 +129,42 @@ cp .env.example .env   # si existe; si no, créalo de cero
 nano .env
 ```
 
-Contenido mínimo (ajustar según lo que use tu código):
+Contenido mínimo (ajustar según las credenciales reales del laboratorio):
 
 ```
 PORT=3000
 HOST=127.0.0.1
-DB_HOST=146.83.198.35
-DB_PORT=3306
-DB_USER=macuna
-DB_PASSWORD=<la del PDF del lab>
-DB_NAME=arriendu_db
+FRONTEND_URL=http://146.83.198.35:1207
+DB_USERNAME=<usuario_postgres>
+PASSWORD=<password_postgres>
+DATABASE=<base_postgres>
+DB_PORT=5432
 JWT_SECRET=<generar uno con: openssl rand -hex 32>
-SESSION_SECRET=<otro distinto, idem>
+COOKIE_KEY=<generar otro secreto>
+EMAIL_USER=soporte.arriendu@gmail.com
+EMAIL_PASS=<app_password_gmail>
+EMAIL_FROM=ArriendU <soporte.arriendu@gmail.com>
 ```
 
-> Nota: tu backend tiene `pg` (PostgreSQL) en `package.json`, pero el lab te dio MySQL. Cambia a `mysql2` + el driver de TypeORM correspondiente, o pídele al lab credenciales de PostgreSQL (`pgsqltrans.face.ubiobio.cl`).
+> Nota: el backend usa PostgreSQL (`pg` + TypeORM). No uses nombres como `DB_HOST`,
+> `DB_USER`, `DB_PASSWORD` o `DB_NAME` porque el código actual lee `HOST`,
+> `DB_USERNAME`, `PASSWORD`, `DATABASE` y `DB_PORT`.
+
+### 4.1 Configurar `frontend/.env`
+
+Este archivo se lee al construir el frontend. Sin esta variable, el build puede quedar
+apuntando a la API local del computador donde se construyó.
+
+```bash
+cd /srv/arriendu/frontend
+nano .env
+```
+
+Contenido:
+
+```
+VITE_BASE_URL=http://146.83.198.35:1207/api
+```
 
 ### 5. Configurar Apache vhost
 
