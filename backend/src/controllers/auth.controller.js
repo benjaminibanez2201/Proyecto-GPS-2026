@@ -27,6 +27,8 @@ function attachRegisterFileMetadata(req) {
   const fotoPerfil = req.files?.fotoPerfil?.[0];
   const documentoVerificacion = req.files?.documentoVerificacion?.[0];
   const documentoVerificacionReverso = req.files?.documentoVerificacionReverso?.[0];
+  const carnetIdentidadFrontal = req.files?.carnetIdentidadFrontal?.[0];
+  const carnetIdentidadReverso = req.files?.carnetIdentidadReverso?.[0];
 
   if (documentoResidencia) {
     req.body.documentoResidencia = toUploadedFileMetadata(documentoResidencia);
@@ -42,6 +44,14 @@ function attachRegisterFileMetadata(req) {
 
   if (documentoVerificacionReverso) {
     req.body.documentoVerificacionReverso = toUploadedFileMetadata(documentoVerificacionReverso);
+  }
+
+  if (carnetIdentidadFrontal) {
+    req.body.carnetIdentidadFrontal = toUploadedFileMetadata(carnetIdentidadFrontal);
+  }
+
+  if (carnetIdentidadReverso) {
+    req.body.carnetIdentidadReverso = toUploadedFileMetadata(carnetIdentidadReverso);
   }
 }
 

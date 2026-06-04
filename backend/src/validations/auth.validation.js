@@ -117,7 +117,17 @@ export const registerEstudianteValidation = Joi.object({
     allowedTypes: verificationDocumentTypes,
     label: "El certificado de alumno regular",
     maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
-  }).optional(),
+  }),
+  carnetIdentidadFrontal: fileMetadataSchema({
+    allowedTypes: verificationDocumentTypes,
+    label: "El frente del carnet de identidad",
+    maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
+  }),
+  carnetIdentidadReverso: fileMetadataSchema({
+    allowedTypes: verificationDocumentTypes,
+    label: "El reverso del carnet de identidad",
+    maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
+  }),
   rol: Joi.string().valid("estudiante").required(),
   terminosAceptados: Joi.boolean().valid(true).required().messages({
     "any.only": "Debes aceptar los terminos y condiciones",

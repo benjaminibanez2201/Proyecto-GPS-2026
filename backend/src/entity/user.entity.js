@@ -74,6 +74,16 @@ const UserSchema = new EntitySchema({
       length: 255,
       nullable: true,
     },
+    carnetIdentidadFrontal: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    carnetIdentidadReverso: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
     documentoResidencia: {
       type: "varchar",
       length: 255,

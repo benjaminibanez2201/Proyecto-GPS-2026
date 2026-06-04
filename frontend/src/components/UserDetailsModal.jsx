@@ -24,6 +24,8 @@ const fieldLabels = {
     documentoResidencia: 'Comprobante de residencia',
     documentoVerificacion: 'Documento de verificación',
     documentoVerificacionReverso: 'Documento de verificación posterior',
+    carnetIdentidadFrontal: 'Carnet de identidad (frontal)',
+    carnetIdentidadReverso: 'Carnet de identidad (posterior)',
 };
 
 const statusColors = {
@@ -472,6 +474,8 @@ export default function UserDetailsModal({ show, setShow, user }) {
         documentoResidencia: fieldLabels.documentoResidencia,
         documentoVerificacion: verificationDocumentLabel,
         documentoVerificacionReverso: 'Carnet de identidad (posterior)',
+        carnetIdentidadFrontal: fieldLabels.carnetIdentidadFrontal,
+        carnetIdentidadReverso: fieldLabels.carnetIdentidadReverso,
     };
     const initials = (user?.nombreCompleto || 'Usuario')
         .split(' ')
@@ -493,6 +497,7 @@ export default function UserDetailsModal({ show, setShow, user }) {
         'updatedAt',
         'ultimoLogin',
         'documentoVerificacion',
+        ...(normalizedRole === 'estudiante' ? ['carnetIdentidadFrontal', 'carnetIdentidadReverso'] : []),
         ...(normalizedRole === 'arrendador' ? ['documentoVerificacionReverso'] : []),
         'documentoResidencia',
         'fotoPerfil',
@@ -601,7 +606,7 @@ export default function UserDetailsModal({ show, setShow, user }) {
                                                 : fieldLabels[field] || field}
                                         </span>
                                         <span style={{ fontSize: '14px', lineHeight: 1.5, color: '#0f172a', wordBreak: 'break-word' }}>
-                                            {field === 'documentoResidencia' || field === 'documentoVerificacion' || field === 'documentoVerificacionReverso' || field === 'fotoPerfil'
+                                            {field === 'documentoResidencia' || field === 'documentoVerificacion' || field === 'documentoVerificacionReverso' || field === 'carnetIdentidadFrontal' || field === 'carnetIdentidadReverso' || field === 'fotoPerfil'
                                                 ? <VerificationFilePreview value={user?.[field]} />
                                                 : formatValue(user?.[field])}
                                         </span>
