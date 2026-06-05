@@ -66,6 +66,15 @@ const quickRejectionReasons = [
     },
 ];
 
+function getQuickReasonDocumentLabel(label) {
+    const normalizedLabel = String(label || '').toLowerCase();
+
+    if (normalizedLabel.includes('frontal') || normalizedLabel.includes('frente')) return 'Frontal';
+    if (normalizedLabel.includes('posterior') || normalizedLabel.includes('reverso')) return 'Posterior';
+
+    return label;
+}
+
 function formatValue(value) {
     if (value === null || value === undefined || value === '') {
         return 'No registrado';
@@ -721,6 +730,82 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                         background: rgba(15, 118, 110, 0.72);
                         background-clip: padding-box;
                     }
+
+                    .rf13-quick-reasons {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                        margin: 0 0 14px;
+                        padding: 10px 0 12px;
+                        border-top: 1px solid #e2e8f0;
+                        border-bottom: 1px solid #e2e8f0;
+                    }
+
+                    .rf13-quick-reasons__title {
+                        color: #64748b;
+                        font-size: 12px;
+                        font-weight: 800;
+                    }
+
+                    .rf13-quick-reasons__row {
+                        display: grid;
+                        grid-template-columns: 82px minmax(0, 1fr);
+                        align-items: center;
+                        gap: 10px;
+                    }
+
+                    .rf13-quick-reasons__doc {
+                        color: #0f766e;
+                        font-size: 12px;
+                        font-weight: 800;
+                        line-height: 1.2;
+                    }
+
+                    .rf13-quick-reasons__actions {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 6px;
+                    }
+
+                    .rf13-quick-reasons__chip {
+                        min-height: 28px;
+                        border: 1px solid #dbe6e8;
+                        border-radius: 8px;
+                        padding: 5px 9px;
+                        background: #ffffff;
+                        color: #334155;
+                        cursor: pointer;
+                        font-size: 12px;
+                        font-weight: 750;
+                        transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
+                    }
+
+                    .rf13-quick-reasons__chip:hover {
+                        border-color: #b7d9d6;
+                        background: #f8fcfb;
+                        color: #0f766e;
+                        transform: translateY(-1px);
+                    }
+
+                    .rf13-quick-reasons__chip--other {
+                        border-color: transparent;
+                        background: transparent;
+                        color: #0f766e;
+                        padding-inline: 4px;
+                    }
+
+                    .rf13-quick-reasons__chip--other:hover {
+                        border-color: transparent;
+                        background: transparent;
+                        color: #0b5f5b;
+                    }
+
+                    @media (max-width: 640px) {
+                        .rf13-quick-reasons__row {
+                            grid-template-columns: 1fr;
+                            gap: 6px;
+                        }
+                    }
                 `}
             </style>
             <div
@@ -860,50 +945,34 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                     </div>
 
                                     {!isApprovedReview && quickReasonDocuments.length > 0 && (
-                                        <div style={{ marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                            <span style={{ color: '#334155', fontSize: '13px', fontWeight: 800 }}>
-                                                Motivos rápidos para documentos adjuntos
+                                        <div className="rf13-quick-reasons">
+                                            <span className="rf13-quick-reasons__title">
+                                                Motivos sugeridos
                                             </span>
                                             {quickReasonDocuments.map((document) => (
-                                                <div key={`quick-${document.field}`} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                    <span style={{ minWidth: '150px', color: '#0f766e', fontSize: '12px', fontWeight: 800 }}>
-                                                        {document.label}
+                                                <div key={`quick-${document.field}`} className="rf13-quick-reasons__row">
+                                                    <span className="rf13-quick-reasons__doc">
+                                                        {getQuickReasonDocumentLabel(document.label)}
                                                     </span>
-                                                    {quickRejectionReasons.map((reason) => (
+                                                    <div className="rf13-quick-reasons__actions">
+                                                        {quickRejectionReasons.map((reason) => (
+                                                            <button
+                                                                key={`${document.field}-${reason.label}`}
+                                                                type="button"
+                                                                className="rf13-quick-reasons__chip"
+                                                                onClick={() => applyQuickReason(reason.buildComment(document))}
+                                                            >
+                                                                {reason.label}
+                                                            </button>
+                                                        ))}
                                                         <button
-                                                            key={`${document.field}-${reason.label}`}
                                                             type="button"
-                                                            onClick={() => applyQuickReason(reason.buildComment(document))}
-                                                            style={{
-                                                                border: '1px solid #c8d9dd',
-                                                                borderRadius: '999px',
-                                                                padding: '7px 10px',
-                                                                backgroundColor: '#ffffff',
-                                                                color: '#334155',
-                                                                cursor: 'pointer',
-                                                                fontSize: '12px',
-                                                                fontWeight: 800,
-                                                            }}
+                                                            className="rf13-quick-reasons__chip rf13-quick-reasons__chip--other"
+                                                            onClick={() => applyQuickReason(`${document.label}: `, true)}
                                                         >
-                                                            {reason.label}
+                                                            Otro
                                                         </button>
-                                                    ))}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => applyQuickReason(`${document.label}: `, true)}
-                                                        style={{
-                                                            border: '1px dashed #0f766e',
-                                                            borderRadius: '999px',
-                                                            padding: '7px 10px',
-                                                            backgroundColor: '#eef8f6',
-                                                            color: '#0f766e',
-                                                            cursor: 'pointer',
-                                                            fontSize: '12px',
-                                                            fontWeight: 800,
-                                                        }}
-                                                    >
-                                                        Otro / justificar
-                                                    </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
