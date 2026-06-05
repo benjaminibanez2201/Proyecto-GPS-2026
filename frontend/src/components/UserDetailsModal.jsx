@@ -33,12 +33,6 @@ const fieldLabels = {
     carnetIdentidadReverso: 'Carnet de identidad (posterior)',
 };
 
-const statusColors = {
-    aprobado: '#0f766e',
-    pendiente: '#b45309',
-    rechazado: '#b91c1c',
-};
-
 const requiredVerificationFields = {
     estudiante: ['documentoVerificacion', 'carnetIdentidadFrontal', 'carnetIdentidadReverso'],
     arrendador: ['documentoVerificacion', 'documentoVerificacionReverso', 'documentoResidencia'],
@@ -668,12 +662,6 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
             setIsSubmittingReview(false);
         }
     };
-    const initials = (user?.nombreCompleto || 'Usuario')
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part.charAt(0).toUpperCase())
-        .join('');
     const modalScrollClassName = 'user-details-modal-scroll';
 
     const detailFields = [
@@ -887,7 +875,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                     <div style={{ padding: '0' }}>
                         <section style={{ background: 'linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%)', color: '#ffffff', padding: '28px 32px 26px', borderTopLeftRadius: '22px', borderTopRightRadius: '22px' }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
-                                <div style={{ maxWidth: 'calc(100% - 90px)' }}>
+                                <div style={{ maxWidth: 'calc(100% - 120px)' }}>
                                     <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: 0.9 }}>
                                         Vista detallada
                                     </p>
@@ -899,25 +887,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                     </p>
                                 </div>
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-                                    <div
-                                        style={{
-                                            width: '56px',
-                                            height: '56px',
-                                            borderRadius: '18px',
-                                            backgroundColor: statusColors[normalizedStatus] || 'rgba(255,255,255,0.14)',
-                                            color: '#ffffff',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            fontWeight: 800,
-                                            fontSize: '18px',
-                                            border: '1px solid rgba(255,255,255,0.16)',
-                                        }}
-                                    >
-                                        {initials || 'U'}
-                                    </div>
-
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, paddingRight: '44px' }}>
                                     <span
                                         style={{
                                             display: 'inline-flex',
