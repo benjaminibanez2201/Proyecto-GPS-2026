@@ -540,6 +540,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
     const [reviewComment, setReviewComment] = useState('');
     const [reviewError, setReviewError] = useState('');
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [selectedQuickReasonField, setSelectedQuickReasonField] = useState('');
     const reviewCommentRef = useRef(null);
 
     useEffect(() => {
@@ -548,6 +549,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
         setReviewComment('');
         setReviewError('');
         setIsSubmittingReview(false);
+        setSelectedQuickReasonField('');
     }, [show, user?.id]);
 
     if (!show) return null;
@@ -580,6 +582,9 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
 
         return identityDocumentFields.includes(document.field);
     });
+    const selectedQuickReasonDocument = quickReasonDocuments.find((document) => (
+        document.field === selectedQuickReasonField
+    )) || quickReasonDocuments[0];
     const applyQuickReason = (comment, shouldFocus = false) => {
         setReviewComment(comment);
         setReviewError('');
@@ -734,11 +739,19 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                     .rf13-quick-reasons {
                         display: flex;
                         flex-direction: column;
-                        gap: 8px;
+                        gap: 10px;
                         margin: 0 0 14px;
-                        padding: 10px 0 12px;
-                        border-top: 1px solid #e2e8f0;
-                        border-bottom: 1px solid #e2e8f0;
+                        padding: 10px 12px;
+                        border: 1px solid #e5eef0;
+                        border-radius: 12px;
+                        background: rgba(255, 255, 255, 0.62);
+                    }
+
+                    .rf13-quick-reasons__header {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 10px;
                     }
 
                     .rf13-quick-reasons__title {
@@ -747,18 +760,34 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                         font-weight: 800;
                     }
 
-                    .rf13-quick-reasons__row {
-                        display: grid;
-                        grid-template-columns: 82px minmax(0, 1fr);
+                    .rf13-quick-reasons__switch {
+                        display: inline-flex;
                         align-items: center;
-                        gap: 10px;
+                        gap: 2px;
+                        padding: 2px;
+                        border: 1px solid #dbe8e8;
+                        border-radius: 10px;
+                        background: #f4f8f8;
+                        flex-shrink: 0;
                     }
 
-                    .rf13-quick-reasons__doc {
-                        color: #0f766e;
+                    .rf13-quick-reasons__doc-tab {
+                        min-height: 26px;
+                        border: 0;
+                        border-radius: 8px;
+                        padding: 5px 10px;
+                        background: transparent;
+                        color: #64748b;
+                        cursor: pointer;
                         font-size: 12px;
                         font-weight: 800;
                         line-height: 1.2;
+                    }
+
+                    .rf13-quick-reasons__doc-tab[data-selected="true"] {
+                        background: #ffffff;
+                        color: #0f766e;
+                        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
                     }
 
                     .rf13-quick-reasons__actions {
@@ -769,10 +798,10 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
 
                     .rf13-quick-reasons__chip {
                         min-height: 28px;
-                        border: 1px solid #dbe6e8;
+                        border: 1px solid transparent;
                         border-radius: 8px;
                         padding: 5px 9px;
-                        background: #ffffff;
+                        background: #f7fafb;
                         color: #334155;
                         cursor: pointer;
                         font-size: 12px;
@@ -782,7 +811,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
 
                     .rf13-quick-reasons__chip:hover {
                         border-color: #b7d9d6;
-                        background: #f8fcfb;
+                        background: #ffffff;
                         color: #0f766e;
                         transform: translateY(-1px);
                     }
@@ -801,9 +830,9 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                     }
 
                     @media (max-width: 640px) {
-                        .rf13-quick-reasons__row {
-                            grid-template-columns: 1fr;
-                            gap: 6px;
+                        .rf13-quick-reasons__header {
+                            align-items: flex-start;
+                            flex-direction: column;
                         }
                     }
                 `}
@@ -946,35 +975,48 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
 
                                     {!isApprovedReview && quickReasonDocuments.length > 0 && (
                                         <div className="rf13-quick-reasons">
-                                            <span className="rf13-quick-reasons__title">
-                                                Motivos sugeridos
-                                            </span>
-                                            {quickReasonDocuments.map((document) => (
-                                                <div key={`quick-${document.field}`} className="rf13-quick-reasons__row">
-                                                    <span className="rf13-quick-reasons__doc">
-                                                        {getQuickReasonDocumentLabel(document.label)}
-                                                    </span>
-                                                    <div className="rf13-quick-reasons__actions">
-                                                        {quickRejectionReasons.map((reason) => (
+                                            <div className="rf13-quick-reasons__header">
+                                                <span className="rf13-quick-reasons__title">
+                                                    Motivo sugerido
+                                                </span>
+                                                {quickReasonDocuments.length > 1 && (
+                                                    <div className="rf13-quick-reasons__switch" aria-label="Documento observado">
+                                                        {quickReasonDocuments.map((document) => (
                                                             <button
-                                                                key={`${document.field}-${reason.label}`}
+                                                                key={`select-${document.field}`}
                                                                 type="button"
-                                                                className="rf13-quick-reasons__chip"
-                                                                onClick={() => applyQuickReason(reason.buildComment(document))}
+                                                                className="rf13-quick-reasons__doc-tab"
+                                                                data-selected={document.field === selectedQuickReasonDocument?.field ? 'true' : 'false'}
+                                                                onClick={() => setSelectedQuickReasonField(document.field)}
                                                             >
-                                                                {reason.label}
+                                                                {getQuickReasonDocumentLabel(document.label)}
                                                             </button>
                                                         ))}
-                                                        <button
-                                                            type="button"
-                                                            className="rf13-quick-reasons__chip rf13-quick-reasons__chip--other"
-                                                            onClick={() => applyQuickReason(`${document.label}: `, true)}
-                                                        >
-                                                            Otro
-                                                        </button>
                                                     </div>
+                                                )}
+                                            </div>
+
+                                            {selectedQuickReasonDocument && (
+                                                <div className="rf13-quick-reasons__actions">
+                                                    {quickRejectionReasons.map((reason) => (
+                                                        <button
+                                                            key={`${selectedQuickReasonDocument.field}-${reason.label}`}
+                                                            type="button"
+                                                            className="rf13-quick-reasons__chip"
+                                                            onClick={() => applyQuickReason(reason.buildComment(selectedQuickReasonDocument))}
+                                                        >
+                                                            {reason.label}
+                                                        </button>
+                                                    ))}
+                                                    <button
+                                                        type="button"
+                                                        className="rf13-quick-reasons__chip rf13-quick-reasons__chip--other"
+                                                        onClick={() => applyQuickReason(`${selectedQuickReasonDocument.label}: `, true)}
+                                                    >
+                                                        Otro
+                                                    </button>
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     )}
 
