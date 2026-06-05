@@ -32,10 +32,11 @@ function useTable({ data, columns, filter, filters, dataToFilter, initialSortNam
                 data: [],
                 columns: updatedColumns,
                 layout: "fitColumns",
-                responsiveLayout: "collapse",
+                responsiveLayout: "hide",
                 width: "100%",
                 pagination: true,
                 paginationSize: 6,
+                paginationButtonCount: 3,
                 selectableRows: "highlight",
                 rowHeight: 46,
                 langs: {

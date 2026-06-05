@@ -29,9 +29,12 @@ export async function updateUser(data, rut) {
     }
 }
 
-export async function updateUserVerificationStatus(rut, estadoVerificacion) {
+export async function updateUserVerificationStatus(rut, reviewPayload) {
     try {
-        const response = await axios.patch(`/user/detail/verification?rut=${rut}`, { estadoVerificacion });
+        const payload = typeof reviewPayload === 'string'
+            ? { estadoVerificacion: reviewPayload }
+            : reviewPayload;
+        const response = await axios.patch(`/user/detail/verification?rut=${encodeURIComponent(rut)}`, payload);
         return response.data.data;
     } catch (error) {
         return error.response?.data || { message: 'Error al actualizar estado de verificacion' };

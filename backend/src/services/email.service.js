@@ -101,6 +101,19 @@ export async function sendAccountRejectedEmail(user, motivoRechazo = "") {
   });
 }
 
+export async function sendVerificationInfoRequestEmail(user, solicitudAntecedentes = "") {
+  return sendTemplateEmail({
+    to: user.email,
+    subject: "Necesitamos nuevos antecedentes para revisar tu cuenta",
+    template: "verification-info-request",
+    data: {
+      nombreCompleto: user.nombreCompleto,
+      solicitudAntecedentes: solicitudAntecedentes
+        || "El administrador solicito nuevos antecedentes para completar la revision.",
+    },
+  });
+}
+
 export async function sendRecoveryEmail(email, resetToken) {
   const resetUrl = `${normalizeBaseUrl(FRONTEND_URL)}/reset-password/${encodeURIComponent(resetToken)}`;
 
