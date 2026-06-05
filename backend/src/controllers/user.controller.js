@@ -125,7 +125,11 @@ export async function updateUserVerificationStatus(req, res) {
 
     const [user, userError] = await updateUserVerificationStatusService(
       { rut, id, email },
-      estadoVerificacion,
+      {
+        ...req.body,
+        estadoVerificacion,
+      },
+      req.user?.id || null,
     );
 
     if (userError) return handleErrorClient(res, 400, "Error modificando estado del usuario", userError);

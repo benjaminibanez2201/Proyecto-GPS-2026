@@ -44,6 +44,29 @@ const UserSchema = new EntitySchema({
       default: "pendiente",
       nullable: false,
     },
+    comentarioVerificacion: {
+      type: "varchar",
+      length: 1000,
+      nullable: true,
+    },
+    motivoRechazo: {
+      type: "varchar",
+      length: 1000,
+      nullable: true,
+    },
+    solicitudAntecedentes: {
+      type: "varchar",
+      length: 1000,
+      nullable: true,
+    },
+    verificacionRevisadaEn: {
+      type: "timestamp with time zone",
+      nullable: true,
+    },
+    verificacionRevisadaPorId: {
+      type: "int",
+      nullable: true,
+    },
     fotoPerfil: {
       type: "varchar",
       length: 255,

@@ -44,14 +44,25 @@ export async function loginService(user) {
     }
 
     if (userFound.estadoVerificacion === "pendiente") {
+      const pendingMessage = userFound.solicitudAntecedentes
+        ? [
+          "El administrador solicito antecedentes adicionales para revisar tu cuenta.",
+          "Revisa tu correo y envia la informacion solicitada.",
+        ].join(" ")
+        : "Tu cuenta esta pendiente de verificacion. Por favor, espera a que sea aprobada.";
+
       return [null, createErrorMessage(
         "estadoVerificacion",
-        "Tu cuenta esta pendiente de verificacion. Por favor, espera a que sea aprobada.",
+        pendingMessage,
       )];
     } else if (userFound.estadoVerificacion === "rechazado") {
+      const rejectedMessage = userFound.motivoRechazo
+        ? `Tu cuenta fue rechazada. Motivo: ${userFound.motivoRechazo}`
+        : "Tu cuenta ha sido rechazada. Por favor, contacta al soporte para mas informacion.";
+
       return [null, createErrorMessage(
         "estadoVerificacion",
-        "Tu cuenta ha sido rechazada. Por favor, contacta al soporte para mas informacion.",
+        rejectedMessage,
       )];
     }
 
