@@ -51,7 +51,7 @@ const identityDocumentFields = [
     'carnetIdentidadReverso',
 ];
 
-const quickRejectionReasons = [
+const identityQuickRejectionReasons = [
     {
         label: 'Foto poco visible',
         buildComment: (document) => `${document.label}: foto poco visible.`,
@@ -66,14 +66,20 @@ const quickRejectionReasons = [
     },
 ];
 
-function getQuickReasonDocumentLabel(label) {
-    const normalizedLabel = String(label || '').toLowerCase();
-
-    if (normalizedLabel.includes('frontal') || normalizedLabel.includes('frente')) return 'Frontal';
-    if (normalizedLabel.includes('posterior') || normalizedLabel.includes('reverso')) return 'Posterior';
-
-    return label;
-}
+const generalQuickRejectionReasons = [
+    {
+        label: 'Poco legible',
+        buildComment: (document) => `${document.label}: documento poco legible.`,
+    },
+    {
+        label: 'No vigente',
+        buildComment: (document) => `${document.label}: documento no vigente.`,
+    },
+    {
+        label: 'No corresponde',
+        buildComment: (document) => `${document.label}: el archivo no corresponde al antecedente solicitado.`,
+    },
+];
 
 function formatValue(value) {
     if (value === null || value === undefined || value === '') {
@@ -540,7 +546,6 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
     const [reviewComment, setReviewComment] = useState('');
     const [reviewError, setReviewError] = useState('');
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-    const [selectedQuickReasonField, setSelectedQuickReasonField] = useState('');
     const reviewCommentRef = useRef(null);
 
     useEffect(() => {
@@ -549,7 +554,6 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
         setReviewComment('');
         setReviewError('');
         setIsSubmittingReview(false);
-        setSelectedQuickReasonField('');
     }, [show, user?.id]);
 
     if (!show) return null;
@@ -574,17 +578,17 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
     const hasMissingRequiredDocs = requiredDocuments.some((document) => !document.isPresent);
     const canReview = Boolean(onVerificationAction) && ['estudiante', 'arrendador'].includes(normalizedRole);
     const isApprovedReview = normalizedStatus === 'aprobado';
-    const quickReasonDocuments = requiredDocuments.filter((document) => {
-        if (!document.isPresent) return false;
+    const quickReasonDocuments = requiredDocuments.filter((document) => document.isPresent);
+    const isIdentityDocument = (document) => {
         if (normalizedRole === 'estudiante') {
             return ['carnetIdentidadFrontal', 'carnetIdentidadReverso'].includes(document.field);
         }
 
         return identityDocumentFields.includes(document.field);
-    });
-    const selectedQuickReasonDocument = quickReasonDocuments.find((document) => (
-        document.field === selectedQuickReasonField
-    )) || quickReasonDocuments[0];
+    };
+    const getQuickReasonsForDocument = (document) => (
+        isIdentityDocument(document) ? identityQuickRejectionReasons : generalQuickRejectionReasons
+    );
     const applyQuickReason = (comment, shouldFocus = false) => {
         setReviewComment(comment);
         setReviewError('');
@@ -739,69 +743,63 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                     .rf13-quick-reasons {
                         display: flex;
                         flex-direction: column;
-                        gap: 10px;
+                        gap: 2px;
                         margin: 0 0 14px;
-                        padding: 10px 12px;
-                        border: 1px solid #e5eef0;
-                        border-radius: 12px;
-                        background: rgba(255, 255, 255, 0.62);
-                    }
-
-                    .rf13-quick-reasons__header {
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        gap: 10px;
+                        padding: 9px 0 10px;
+                        border-top: 1px solid #e2e8f0;
+                        border-bottom: 1px solid #e2e8f0;
                     }
 
                     .rf13-quick-reasons__title {
                         color: #64748b;
                         font-size: 12px;
                         font-weight: 800;
+                        margin-bottom: 5px;
                     }
 
-                    .rf13-quick-reasons__switch {
+                    .rf13-quick-reasons__row {
+                        display: grid;
+                        grid-template-columns: minmax(170px, 0.72fr) minmax(0, 1.4fr);
+                        align-items: center;
+                        gap: 10px;
+                        min-height: 34px;
+                        padding: 4px 0;
+                    }
+
+                    .rf13-quick-reasons__doc {
                         display: inline-flex;
                         align-items: center;
-                        gap: 2px;
-                        padding: 2px;
-                        border: 1px solid #dbe8e8;
-                        border-radius: 10px;
-                        background: #f4f8f8;
-                        flex-shrink: 0;
-                    }
-
-                    .rf13-quick-reasons__doc-tab {
-                        min-height: 26px;
-                        border: 0;
-                        border-radius: 8px;
-                        padding: 5px 10px;
-                        background: transparent;
-                        color: #64748b;
-                        cursor: pointer;
+                        gap: 7px;
+                        color: #475569;
                         font-size: 12px;
                         font-weight: 800;
-                        line-height: 1.2;
+                        line-height: 1.25;
+                        min-width: 0;
                     }
 
-                    .rf13-quick-reasons__doc-tab[data-selected="true"] {
-                        background: #ffffff;
-                        color: #0f766e;
-                        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+                    .rf13-quick-reasons__doc::before {
+                        content: "";
+                        width: 6px;
+                        height: 6px;
+                        border-radius: 999px;
+                        background: #0f766e;
+                        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+                        flex: 0 0 6px;
                     }
 
                     .rf13-quick-reasons__actions {
                         display: flex;
                         flex-wrap: wrap;
                         gap: 6px;
+                        min-width: 0;
                     }
 
                     .rf13-quick-reasons__chip {
-                        min-height: 28px;
-                        border: 1px solid transparent;
+                        min-height: 26px;
+                        border: 1px solid #e2e8f0;
                         border-radius: 8px;
-                        padding: 5px 9px;
-                        background: #f7fafb;
+                        padding: 4px 8px;
+                        background: #ffffff;
                         color: #334155;
                         cursor: pointer;
                         font-size: 12px;
@@ -809,9 +807,15 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                         transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
                     }
 
+                    .rf13-quick-reasons__chip:focus-visible {
+                        outline: 2px solid rgba(15, 118, 110, 0.18);
+                        outline-offset: 2px;
+                        border-color: #8fc7c2;
+                    }
+
                     .rf13-quick-reasons__chip:hover {
                         border-color: #b7d9d6;
-                        background: #ffffff;
+                        background: #f8fcfb;
                         color: #0f766e;
                         transform: translateY(-1px);
                     }
@@ -820,7 +824,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                         border-color: transparent;
                         background: transparent;
                         color: #0f766e;
-                        padding-inline: 4px;
+                        padding-inline: 3px;
                     }
 
                     .rf13-quick-reasons__chip--other:hover {
@@ -830,9 +834,9 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                     }
 
                     @media (max-width: 640px) {
-                        .rf13-quick-reasons__header {
-                            align-items: flex-start;
-                            flex-direction: column;
+                        .rf13-quick-reasons__row {
+                            grid-template-columns: 1fr;
+                            gap: 6px;
                         }
                     }
                 `}
@@ -975,48 +979,35 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
 
                                     {!isApprovedReview && quickReasonDocuments.length > 0 && (
                                         <div className="rf13-quick-reasons">
-                                            <div className="rf13-quick-reasons__header">
-                                                <span className="rf13-quick-reasons__title">
-                                                    Motivo sugerido
-                                                </span>
-                                                {quickReasonDocuments.length > 1 && (
-                                                    <div className="rf13-quick-reasons__switch" aria-label="Documento observado">
-                                                        {quickReasonDocuments.map((document) => (
+                                            <span className="rf13-quick-reasons__title">
+                                                Motivos sugeridos
+                                            </span>
+                                            {quickReasonDocuments.map((document) => (
+                                                <div key={`quick-${document.field}`} className="rf13-quick-reasons__row">
+                                                    <span className="rf13-quick-reasons__doc">
+                                                        {document.label}
+                                                    </span>
+                                                    <div className="rf13-quick-reasons__actions">
+                                                        {getQuickReasonsForDocument(document).map((reason) => (
                                                             <button
-                                                                key={`select-${document.field}`}
+                                                                key={`${document.field}-${reason.label}`}
                                                                 type="button"
-                                                                className="rf13-quick-reasons__doc-tab"
-                                                                data-selected={document.field === selectedQuickReasonDocument?.field ? 'true' : 'false'}
-                                                                onClick={() => setSelectedQuickReasonField(document.field)}
+                                                                className="rf13-quick-reasons__chip"
+                                                                onClick={() => applyQuickReason(reason.buildComment(document))}
                                                             >
-                                                                {getQuickReasonDocumentLabel(document.label)}
+                                                                {reason.label}
                                                             </button>
                                                         ))}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {selectedQuickReasonDocument && (
-                                                <div className="rf13-quick-reasons__actions">
-                                                    {quickRejectionReasons.map((reason) => (
                                                         <button
-                                                            key={`${selectedQuickReasonDocument.field}-${reason.label}`}
                                                             type="button"
-                                                            className="rf13-quick-reasons__chip"
-                                                            onClick={() => applyQuickReason(reason.buildComment(selectedQuickReasonDocument))}
+                                                            className="rf13-quick-reasons__chip rf13-quick-reasons__chip--other"
+                                                            onClick={() => applyQuickReason(`${document.label}: `, true)}
                                                         >
-                                                            {reason.label}
+                                                            Otro
                                                         </button>
-                                                    ))}
-                                                    <button
-                                                        type="button"
-                                                        className="rf13-quick-reasons__chip rf13-quick-reasons__chip--other"
-                                                        onClick={() => applyQuickReason(`${selectedQuickReasonDocument.label}: `, true)}
-                                                    >
-                                                        Otro
-                                                    </button>
+                                                    </div>
                                                 </div>
-                                            )}
+                                            ))}
                                         </div>
                                     )}
 
