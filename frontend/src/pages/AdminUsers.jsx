@@ -1,17 +1,70 @@
-import { useCallback, useMemo, useState } from 'react';
-import { BadgeCheck, ClipboardList, Search as SearchIcon, ShieldCheck, Users as UsersIcon } from 'lucide-react';
-import Table from '@components/Table';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+    CalendarDays,
+    ClipboardList,
+    Eye,
+    Mail,
+    Pencil,
+    ShieldCheck,
+    SlidersHorizontal,
+    Trash2,
+    UserRound,
+} from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import Popup from '@components/Popup';
 import UserDetailsModal from '@components/UserDetailsModal';
 import useUsers from '@hooks/users/useGetUsers.jsx';
 import useEditUser from '@hooks/users/useEditUser';
 import useDeleteUser from '@hooks/users/useDeleteUser';
-import { useAuth } from '@context/AuthContext';
+import { updateUserVerificationStatus } from '@services/user.service.js';
+import { formatPostUpdate } from '@helpers/formatData.js';
+import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
 import '@styles/users.css';
 
+const verificationStatusOptions = ['todos', 'pendiente', 'aprobado', 'rechazado'];
+const verifiableRoles = ['estudiante', 'arrendador'];
+const usersPerPage = 6;
+
+const normalize = (value) => (value ?? '').toString().trim().toLowerCase();
+const titleCase = (value) => {
+    const text = String(value || '').trim();
+    return text ? text.charAt(0).toUpperCase() + text.slice(1).toLowerCase() : 'Pendiente';
+};
+
+const getStatusTone = (status) => {
+    const normalized = normalize(status || 'pendiente');
+    const tones = {
+        aprobado: {
+            backgroundColor: '#e7f6f2',
+            borderColor: '#b7d9d6',
+            color: '#0f766e',
+        },
+        pendiente: {
+            backgroundColor: '#fff4e8',
+            borderColor: '#f6d5ac',
+            color: '#b45309',
+        },
+        rechazado: {
+            backgroundColor: '#fdecec',
+            borderColor: '#f7c7c7',
+            color: '#b91c1c',
+        },
+    };
+
+    return tones[normalized] || {
+        backgroundColor: '#eef2f6',
+        borderColor: '#d8e4e7',
+        color: '#475569',
+    };
+};
+
 const AdminUsers = () => {
-    const { user } = useAuth();
     const { users, fetchUsers, setUsers } = useUsers();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [verificationFilter, setVerificationFilter] = useState(() => {
+        const statusFromUrl = normalize(searchParams.get('estado'));
+        return verificationStatusOptions.includes(statusFromUrl) ? statusFromUrl : 'pendiente';
+    });
     const [advancedFiltersEnabled, setAdvancedFiltersEnabled] = useState(false);
     const [advancedFilters, setAdvancedFilters] = useState({
         nombreCompleto: '',
@@ -23,6 +76,7 @@ const AdminUsers = () => {
     });
     const [selectedUser, setSelectedUser] = useState(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const {
         handleClickUpdate,
@@ -35,14 +89,57 @@ const AdminUsers = () => {
 
     const { handleDelete } = useDeleteUser(fetchUsers, setDataUser);
 
-    const handleSelectionChange = useCallback((selectedUsers) => {
-        setDataUser(selectedUsers);
-    }, [setDataUser]);
-
     const handleViewUser = useCallback((userData) => {
         setSelectedUser(userData);
         setIsDetailsOpen(true);
     }, []);
+
+    useEffect(() => {
+        const statusFromUrl = normalize(searchParams.get('estado'));
+
+        if (verificationStatusOptions.includes(statusFromUrl)) {
+            setVerificationFilter(statusFromUrl);
+        }
+    }, [searchParams]);
+
+    const handleVerificationFilterChange = useCallback((status) => {
+        setVerificationFilter(status);
+        setSearchParams({ estado: status });
+        setDataUser([]);
+        setCurrentPage(1);
+    }, [setDataUser, setSearchParams]);
+
+    const handleVerificationAction = useCallback(async (targetUser, payload) => {
+        const updatedUser = await updateUserVerificationStatus(targetUser.rut, payload);
+
+        if (!updatedUser?.id) {
+            const errorMessage = updatedUser?.details || updatedUser?.message || 'No se pudo actualizar la revision';
+            showErrorAlert('Revision no actualizada', errorMessage);
+            throw new Error(errorMessage);
+        }
+
+        const formattedUser = formatPostUpdate(updatedUser);
+        setUsers((prevUsers) => prevUsers.map((currentUser) => (
+            currentUser.id === formattedUser.id ? formattedUser : currentUser
+        )));
+        setSelectedUser(formattedUser);
+
+        const requiresEmail = payload.estadoVerificacion !== 'pendiente' || Boolean(payload.solicitudAntecedentes);
+        let actionMessage = 'La revision fue guardada correctamente.';
+
+        if (requiresEmail && updatedUser.avisoCorreoEnviado === false) {
+            actionMessage = 'La revision se guardo, pero no se pudo enviar el correo automaticamente.';
+        } else if (payload.estadoVerificacion === 'aprobado') {
+            actionMessage = 'La cuenta fue aprobada y se aviso al usuario.';
+        } else if (payload.estadoVerificacion === 'rechazado') {
+            actionMessage = 'La cuenta fue rechazada con comentario y se aviso al usuario.';
+        } else if (payload.solicitudAntecedentes) {
+            actionMessage = 'Se solicito antecedentes adicionales por correo.';
+        }
+
+        showSuccessAlert('Revision actualizada', actionMessage);
+        return formattedUser;
+    }, [setUsers]);
 
     const handleAdvancedFilterChange = useCallback((field) => (event) => {
         const { value } = event.target;
@@ -67,47 +164,134 @@ const AdminUsers = () => {
         Object.values(advancedFilters).filter((value) => String(value || '').trim() !== '').length
     ), [advancedFilters]);
 
-    const tableFilters = useMemo(() => ({
-        enabled: advancedFiltersEnabled,
-        ...advancedFilters,
-    }), [advancedFiltersEnabled, advancedFilters]);
+    const verificationCounts = useMemo(() => {
+        const initialCounts = {
+            todos: users.length,
+            pendiente: 0,
+            aprobado: 0,
+            rechazado: 0,
+        };
 
-    const columns = useMemo(() => ([
-        { title: 'Nombre', field: 'nombreCompleto', minWidth: 240, widthGrow: 3, responsive: 0 },
-        { title: 'Correo electrónico', field: 'email', minWidth: 240, widthGrow: 3, responsive: 3 },
-        { title: 'Rut', field: 'rut', minWidth: 130, widthGrow: 1.2, responsive: 2 },
-        { title: 'Rol', field: 'rol', minWidth: 130, widthGrow: 1, responsive: 2 },
-        {
-            title: 'Estado',
-            field: 'estadoVerificacion',
-            minWidth: 150,
-            widthGrow: 1.2,
-            responsive: 1,
-            formatter: (cell) => {
-                const value = cell.getValue();
-                const normalized = (value || '').toString().toLowerCase();
-                const colors = {
-                    aprobado: '#0f766e',
-                    pendiente: '#b45309',
-                    rechazado: '#b91c1c',
-                };
+        return users.reduce((counts, currentUser) => {
+            const role = normalize(currentUser.rol);
+            const status = normalize(currentUser.estadoVerificacion || 'pendiente');
 
-                return `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:${colors[normalized] || '#334155'}1a;color:${colors[normalized] || '#334155'};font-weight:700;font-size:12px;">${value || 'Pendiente'}</span>`;
-            },
-        },
-        { title: 'Creado', field: 'createdAt', minWidth: 120, widthGrow: 1, responsive: 2 },
-        {
-            title: 'Ver',
-            headerSort: false,
-            hozAlign: 'center',
-            width: 80,
-            minWidth: 80,
-            maxWidth: 80,
-            responsive: 0,
-            formatter: () => '<button type="button" class="table-view-button">Ver</button>',
-            cellClick: (e, cell) => handleViewUser(cell.getRow().getData()),
-        },
-    ]), []);
+            if (verifiableRoles.includes(role) && counts[status] !== undefined) {
+                counts[status] += 1;
+            }
+
+            return counts;
+        }, initialCounts);
+    }, [users]);
+
+    const visibleUsers = useMemo(() => {
+        if (verificationFilter === 'todos') return users;
+
+        return users.filter((currentUser) => (
+            verifiableRoles.includes(normalize(currentUser.rol))
+            && normalize(currentUser.estadoVerificacion || 'pendiente') === verificationFilter
+        ));
+    }, [users, verificationFilter]);
+
+    const filteredUsers = useMemo(() => {
+        if (!advancedFiltersEnabled || activeFiltersCount === 0) return visibleUsers;
+
+        const matchesText = (value, query) => !normalize(query) || normalize(value).includes(normalize(query));
+        const matchesSelect = (value, expected) => !normalize(expected) || normalize(value) === normalize(expected);
+        const parseDate = (value) => {
+            if (!value) return null;
+            const parsed = new Date(value);
+            if (!Number.isNaN(parsed.getTime())) return parsed;
+
+            const parts = String(value).split('-');
+            if (parts.length === 3) {
+                const fallback = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`);
+                return Number.isNaN(fallback.getTime()) ? null : fallback;
+            }
+
+            return null;
+        };
+
+        const createdFrom = advancedFilters.fechaDesde ? new Date(`${advancedFilters.fechaDesde}T00:00:00`) : null;
+        const createdTo = advancedFilters.fechaHasta ? new Date(`${advancedFilters.fechaHasta}T23:59:59.999`) : null;
+
+        return visibleUsers.filter((currentUser) => {
+            const rowDate = parseDate(currentUser.createdAtRaw || currentUser.createdAt);
+            const matchesFrom = !createdFrom || (rowDate ? rowDate >= createdFrom : false);
+            const matchesTo = !createdTo || (rowDate ? rowDate <= createdTo : false);
+
+            return (
+                matchesText(currentUser.nombreCompleto, advancedFilters.nombreCompleto)
+                && matchesText(currentUser.rut, advancedFilters.rut)
+                && matchesSelect(currentUser.rol, advancedFilters.rol)
+                && matchesSelect(currentUser.estadoVerificacion, advancedFilters.estadoVerificacion)
+                && matchesFrom
+                && matchesTo
+            );
+        });
+    }, [activeFiltersCount, advancedFilters, advancedFiltersEnabled, visibleUsers]);
+
+    const sortedUsers = useMemo(() => {
+        const parseTime = (value) => {
+            const parsed = new Date(value);
+            return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+        };
+
+        return [...filteredUsers].sort((firstUser, secondUser) => {
+            const dateDiff = parseTime(secondUser.createdAtRaw) - parseTime(firstUser.createdAtRaw);
+            if (dateDiff !== 0) return dateDiff;
+
+            return String(firstUser.nombreCompleto || '').localeCompare(String(secondUser.nombreCompleto || ''), 'es');
+        });
+    }, [filteredUsers]);
+
+    const pageCount = Math.max(1, Math.ceil(sortedUsers.length / usersPerPage));
+    const paginatedUsers = useMemo(() => {
+        const start = (currentPage - 1) * usersPerPage;
+        return sortedUsers.slice(start, start + usersPerPage);
+    }, [currentPage, sortedUsers]);
+
+    const selectedUserIds = useMemo(() => new Set(dataUser.map((currentUser) => currentUser.id)), [dataUser]);
+    const areAllPageUsersSelected = paginatedUsers.length > 0 && paginatedUsers.every((currentUser) => selectedUserIds.has(currentUser.id));
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [advancedFilters, advancedFiltersEnabled, verificationFilter]);
+
+    useEffect(() => {
+        setCurrentPage((page) => Math.min(page, pageCount));
+    }, [pageCount]);
+
+    const handleToggleUserSelection = useCallback((userData) => {
+        setDataUser((currentSelection) => {
+            const isSelected = currentSelection.some((currentUser) => currentUser.id === userData.id);
+            if (isSelected) {
+                return currentSelection.filter((currentUser) => currentUser.id !== userData.id);
+            }
+
+            return [...currentSelection, userData];
+        });
+    }, [setDataUser]);
+
+    const handleTogglePageSelection = useCallback((event) => {
+        const shouldSelect = event.target.checked;
+        const pageUserIds = new Set(paginatedUsers.map((currentUser) => currentUser.id));
+
+        setDataUser((currentSelection) => {
+            if (!shouldSelect) {
+                return currentSelection.filter((currentUser) => !pageUserIds.has(currentUser.id));
+            }
+
+            const existingIds = new Set(currentSelection.map((currentUser) => currentUser.id));
+            const usersToAdd = paginatedUsers.filter((currentUser) => !existingIds.has(currentUser.id));
+
+            return [...currentSelection, ...usersToAdd];
+        });
+    }, [paginatedUsers, setDataUser]);
+
+    const paginationPages = useMemo(() => (
+        Array.from({ length: pageCount }, (_, index) => index + 1)
+    ), [pageCount]);
 
     const colores = {
         principal: '#008080',
@@ -117,74 +301,91 @@ const AdminUsers = () => {
         grisSuave: '#f4f6f6',
     };
 
-    const stats = [
-        { label: 'Usuarios cargados', value: users.length, icon: UsersIcon },
-        { label: 'Seleccionados', value: dataUser.length, icon: ShieldCheck },
-        { label: 'Filtro activo', value: activeFiltersCount > 0 ? 'Sí' : 'No', icon: SearchIcon },
-    ];
-
     return (
         <div style={styles.page}>
-            <section style={{ ...styles.hero, background: 'linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%)' }}>
-                <div style={styles.heroContent}>
-                    <h1 style={styles.title}>Gestión de Usuarios</h1>
-                    <p style={styles.subtitle}>
-                        Lista, filtra, selecciona y administra usuarios desde un panel visual coherente con el resto del proyecto.
-                    </p>
-                </div>
-                <div style={styles.heroBadge}>
-                    <BadgeCheck size={18} strokeWidth={2.2} />
-                    <span>{user?.rol || 'admin'}</span>
-                </div>
-            </section>
-
-            <section style={styles.gridStats}>
-                {stats.map((stat) => {
-                    const Icon = stat.icon;
-                    return (
-                        <article key={stat.label} style={styles.statCard}>
-                            <div style={styles.statIconWrap}>
-                                <Icon size={20} strokeWidth={2.1} />
-                            </div>
-                            <div>
-                                <p style={styles.statLabel}>{stat.label}</p>
-                                <h2 style={styles.statValue}>{stat.value}</h2>
-                            </div>
-                        </article>
-                    );
-                })}
-            </section>
-
             <section style={styles.contentCard}>
                 <header style={styles.cardHeader}>
                     <div>
                         <p style={{ ...styles.cardEyebrow, color: colores.principal }}>Administración</p>
                         <h3 style={styles.cardTitle}>Listado de usuarios</h3>
                         <p style={styles.cardSubtitle}>
-                            Usa el filtro por RUT para buscar usuarios y selecciona filas para editar o eliminar.
+                            Revisa verificaciones, selecciona usuarios y aplica acciones cuando sea necesario.
                         </p>
                     </div>
 
-                    <div style={styles.cardIcon}>
+                    <div style={styles.cardIcon} aria-hidden="true">
                         <ClipboardList size={18} strokeWidth={2.1} />
                     </div>
                 </header>
 
+                <div style={styles.verificationTabs}>
+                    {verificationStatusOptions.map((status) => {
+                        const isActive = verificationFilter === status;
+                        const label = status === 'todos' ? 'Todos' : status.charAt(0).toUpperCase() + status.slice(1);
+                        const count = verificationCounts[status] ?? 0;
+
+                        return (
+                            <button
+                                key={status}
+                                type="button"
+                                onClick={() => handleVerificationFilterChange(status)}
+                                style={{
+                                    ...styles.verificationTab,
+                                    ...(isActive ? styles.verificationTabActive : {}),
+                                }}
+                            >
+                                <span>{label}</span>
+                                <strong
+                                    style={{
+                                        ...styles.verificationCount,
+                                        ...(isActive ? styles.verificationCountActive : {}),
+                                    }}
+                                >
+                                    {count}
+                                </strong>
+                            </button>
+                        );
+                    })}
+                </div>
+
                 <div style={styles.toolbar}>
+                    <div style={styles.toolbarStatus}>
+                        <span style={styles.toolbarDot} />
+                        <span>{filteredUsers.length} visibles</span>
+                        <span style={styles.toolbarDivider} />
+                        <span>{dataUser.length} seleccionados</span>
+                    </div>
+
                     <div style={styles.actionButtons}>
                         <button type="button" onClick={() => setAdvancedFiltersEnabled((current) => !current)} style={styles.actionButton}>
-                            {advancedFiltersEnabled ? 'Ocultar filtros avanzados' : 'Mostrar filtros avanzados'}
+                            <SlidersHorizontal size={15} strokeWidth={2.2} />
+                            <span>{advancedFiltersEnabled ? 'Ocultar filtros' : 'Filtros avanzados'}</span>
+                            {activeFiltersCount > 0 && <strong style={styles.actionBadge}>{activeFiltersCount}</strong>}
                         </button>
-                        <button type="button" onClick={handleClickUpdate} disabled={dataUser.length === 0} style={styles.actionButton}>
-                            Editar selección
+                        <button
+                            type="button"
+                            onClick={handleClickUpdate}
+                            disabled={dataUser.length === 0}
+                            style={{
+                                ...styles.actionButton,
+                                ...(dataUser.length === 0 ? styles.actionButtonDisabled : {}),
+                            }}
+                        >
+                            <Pencil size={15} strokeWidth={2.2} />
+                            <span>Editar</span>
                         </button>
                         <button
                             type="button"
                             onClick={() => handleDelete(dataUser)}
                             disabled={dataUser.length === 0}
-                            style={{ ...styles.actionButton, ...styles.deleteButton }}
+                            style={{
+                                ...styles.actionButton,
+                                ...styles.deleteButton,
+                                ...(dataUser.length === 0 ? styles.actionButtonDisabled : {}),
+                            }}
                         >
-                            Eliminar selección
+                            <Trash2 size={15} strokeWidth={2.2} />
+                            <span>Eliminar</span>
                         </button>
                     </div>
                 </div>
@@ -275,19 +476,151 @@ const AdminUsers = () => {
                     </section>
                 )}
 
-                <div style={styles.tableWrap}>
-                    <Table
-                        data={users}
-                        columns={columns}
-                        filters={tableFilters}
-                        initialSortName={'nombreCompleto'}
-                        onSelectionChange={handleSelectionChange}
-                    />
-                </div>
+                <section style={styles.userListShell}>
+                    <header style={styles.userListHeader}>
+                        <label style={styles.selectPageControl}>
+                            <input
+                                type="checkbox"
+                                checked={areAllPageUsersSelected}
+                                disabled={paginatedUsers.length === 0}
+                                onChange={handleTogglePageSelection}
+                                style={styles.checkboxInput}
+                            />
+                            <span>Seleccionar página</span>
+                        </label>
+                        <span style={styles.listRange}>
+                            {filteredUsers.length === 0
+                                ? 'Sin usuarios'
+                                : `${((currentPage - 1) * usersPerPage) + 1}-${Math.min(currentPage * usersPerPage, filteredUsers.length)} de ${filteredUsers.length}`}
+                        </span>
+                    </header>
+
+                    <div style={styles.userList}>
+                        {paginatedUsers.length === 0 ? (
+                            <div style={styles.emptyList}>
+                                <ShieldCheck size={22} strokeWidth={2} />
+                                <span>No hay usuarios que coincidan con este filtro.</span>
+                            </div>
+                        ) : paginatedUsers.map((currentUser) => {
+                            const isSelected = selectedUserIds.has(currentUser.id);
+                            const statusTone = getStatusTone(currentUser.estadoVerificacion);
+                            const initials = String(currentUser.nombreCompleto || 'U')
+                                .trim()
+                                .split(/\s+/)
+                                .slice(0, 2)
+                                .map((part) => part.charAt(0).toUpperCase())
+                                .join('') || 'U';
+
+                            return (
+                                <article
+                                    key={currentUser.id}
+                                    style={{
+                                        ...styles.userListRow,
+                                        ...(isSelected ? styles.userListRowSelected : {}),
+                                    }}
+                                >
+                                    <label style={styles.rowSelection}>
+                                        <input
+                                            type="checkbox"
+                                            checked={isSelected}
+                                            onChange={() => handleToggleUserSelection(currentUser)}
+                                            style={styles.checkboxInput}
+                                            aria-label={`Seleccionar ${currentUser.nombreCompleto}`}
+                                        />
+                                    </label>
+
+                                    <div style={styles.userAvatar} aria-hidden="true">{initials}</div>
+
+                                    <div style={styles.userMain}>
+                                        <strong style={styles.userName}>{currentUser.nombreCompleto || 'Sin nombre'}</strong>
+                                        <span style={styles.userEmail}>
+                                            <Mail size={14} strokeWidth={2} />
+                                            {currentUser.email || 'Sin correo registrado'}
+                                        </span>
+                                    </div>
+
+                                    <div style={styles.userMeta}>
+                                        <span style={styles.metaChip}>
+                                            <UserRound size={13} strokeWidth={2} />
+                                            {currentUser.rol || 'Sin rol'}
+                                        </span>
+                                        <span style={styles.metaChip}>{currentUser.rut || 'Sin RUT'}</span>
+                                        <span style={styles.metaChip}>
+                                            <CalendarDays size={13} strokeWidth={2} />
+                                            {currentUser.createdAt || 'Sin fecha'}
+                                        </span>
+                                    </div>
+
+                                    <span style={{ ...styles.statusPill, ...statusTone }}>
+                                        {titleCase(currentUser.estadoVerificacion)}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => handleViewUser(currentUser)}
+                                        style={styles.reviewButton}
+                                    >
+                                        <Eye size={15} strokeWidth={2.2} />
+                                        <span>Ver</span>
+                                    </button>
+                                </article>
+                            );
+                        })}
+                    </div>
+
+                    {filteredUsers.length > usersPerPage && (
+                        <footer style={styles.paginationBar}>
+                            <button
+                                type="button"
+                                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                                disabled={currentPage === 1}
+                                style={{
+                                    ...styles.paginationButton,
+                                    ...(currentPage === 1 ? styles.paginationButtonDisabled : {}),
+                                }}
+                            >
+                                Anterior
+                            </button>
+
+                            <div style={styles.paginationPages}>
+                                {paginationPages.map((page) => (
+                                    <button
+                                        key={page}
+                                        type="button"
+                                        onClick={() => setCurrentPage(page)}
+                                        style={{
+                                            ...styles.paginationNumber,
+                                            ...(currentPage === page ? styles.paginationNumberActive : {}),
+                                        }}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}
+                                disabled={currentPage === pageCount}
+                                style={{
+                                    ...styles.paginationButton,
+                                    ...(currentPage === pageCount ? styles.paginationButtonDisabled : {}),
+                                }}
+                            >
+                                Siguiente
+                            </button>
+                        </footer>
+                    )}
+                </section>
             </section>
 
             <Popup show={isPopupOpen} setShow={setIsPopupOpen} data={dataUser} action={handleUpdate} />
-            <UserDetailsModal show={isDetailsOpen} setShow={setIsDetailsOpen} user={selectedUser} />
+            <UserDetailsModal
+                show={isDetailsOpen}
+                setShow={setIsDetailsOpen}
+                user={selectedUser}
+                onVerificationAction={handleVerificationAction}
+            />
         </div>
     );
 };
@@ -301,88 +634,13 @@ const styles = {
         width: '100%',
         minWidth: 0,
     },
-    hero: {
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        gap: '16px',
-        borderRadius: '24px',
-        padding: '28px',
-        color: '#ffffff',
-        boxShadow: '0 20px 40px rgba(11, 34, 45, 0.18)',
-        overflow: 'hidden',
-    },
-    heroContent: {
-        maxWidth: '720px',
-    },
-    title: {
-        margin: '0 0 10px',
-        fontSize: 'clamp(28px, 4vw, 42px)',
-        lineHeight: 1.05,
-    },
-    subtitle: {
-        margin: 0,
-        maxWidth: '62ch',
-        fontSize: '15px',
-        lineHeight: 1.6,
-        color: 'rgba(255,255,255,0.88)',
-    },
-    heroBadge: {
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '8px',
-        borderRadius: '999px',
-        padding: '10px 14px',
-        backgroundColor: 'rgba(255,255,255,0.12)',
-        border: '1px solid rgba(255,255,255,0.14)',
-        whiteSpace: 'nowrap',
-        marginTop: '4px',
-        textTransform: 'capitalize',
-    },
-    gridStats: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '16px',
-    },
-    statCard: {
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: '14px',
-        borderRadius: '20px',
-        padding: '18px',
-        backgroundColor: '#ffffff',
-        boxShadow: '0 10px 26px rgba(15, 23, 42, 0.08)',
-        border: '1px solid rgba(15, 23, 42, 0.06)',
-    },
-    statIconWrap: {
-        width: '42px',
-        height: '42px',
-        borderRadius: '14px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#0f766e',
-        backgroundColor: '#e6f4f1',
-        flexShrink: 0,
-    },
-    statLabel: {
-        margin: '0 0 4px',
-        fontSize: '13px',
-        color: '#64748b',
-    },
-    statValue: {
-        margin: 0,
-        fontSize: '28px',
-        lineHeight: 1.1,
-        color: '#0f172a',
-    },
     contentCard: {
-        borderRadius: '22px',
-        padding: '22px',
-        backgroundColor: '#ffffff',
-        border: '1px solid rgba(15, 23, 42, 0.06)',
-        boxShadow: '0 12px 30px rgba(15, 23, 42, 0.07)',
-        width: 'calc(100% - 12px)',
+        borderRadius: '16px',
+        padding: '20px',
+        backgroundColor: '#fbfdfd',
+        border: '1px solid #d8e4e7',
+        boxShadow: 'none',
+        width: '100%',
         minWidth: 0,
         boxSizing: 'border-box',
     },
@@ -391,17 +649,17 @@ const styles = {
         alignItems: 'flex-start',
         justifyContent: 'space-between',
         gap: '12px',
-        marginBottom: '16px',
+        marginBottom: '14px',
     },
     cardEyebrow: {
         margin: '0 0 6px',
         fontSize: '12px',
         fontWeight: '700',
         textTransform: 'uppercase',
-        letterSpacing: '0.04em',
+        letterSpacing: 0,
     },
     cardTitle: {
-        margin: '0 0 6px',
+        margin: '0 0 5px',
         fontSize: '20px',
         lineHeight: 1.2,
         color: '#0f172a',
@@ -409,55 +667,122 @@ const styles = {
     cardSubtitle: {
         margin: 0,
         fontSize: '14px',
-        lineHeight: 1.55,
+        lineHeight: 1.5,
         color: '#64748b',
+        maxWidth: '58ch',
     },
     cardIcon: {
-        width: '42px',
-        height: '42px',
-        borderRadius: '14px',
+        width: '38px',
+        height: '38px',
+        borderRadius: '12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
-        backgroundColor: '#e6f4f1',
+        backgroundColor: '#eef7f5',
         color: '#008080',
     },
     toolbar: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '16px',
+        gap: '12px',
         flexWrap: 'wrap',
-        marginBottom: '18px',
-        padding: '14px',
-        borderRadius: '18px',
-        backgroundColor: '#f8fafc',
-        border: '1px solid #e2e8f0',
+        marginBottom: '16px',
+        padding: '2px 0 0',
+    },
+    toolbarStatus: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '9px',
+        color: '#64748b',
+        fontSize: '13px',
+        fontWeight: '600',
+        minHeight: '36px',
+    },
+    toolbarDot: {
+        width: '7px',
+        height: '7px',
+        borderRadius: '999px',
+        backgroundColor: '#0f766e',
+    },
+    toolbarDivider: {
+        width: '1px',
+        height: '16px',
+        backgroundColor: '#d8e4e7',
+    },
+    verificationTabs: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: '8px',
+        paddingBottom: '12px',
+        marginBottom: '12px',
+        borderBottom: '1px solid #e4ecef',
+    },
+    verificationTab: {
+        minHeight: '34px',
+        border: '1px solid transparent',
+        borderRadius: '999px',
+        padding: '7px 10px 7px 12px',
+        backgroundColor: 'transparent',
+        color: '#475569',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
+        cursor: 'pointer',
+        fontWeight: '700',
+        lineHeight: 1,
+    },
+    verificationTabActive: {
+        borderColor: '#b7d9d6',
+        backgroundColor: '#eef8f6',
+        color: '#0f766e',
+        boxShadow: 'none',
+    },
+    verificationCount: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: '22px',
+        height: '20px',
+        borderRadius: '999px',
+        padding: '0 6px',
+        backgroundColor: '#eef2f6',
+        color: '#475569',
+        fontSize: '12px',
+        fontWeight: '800',
+        lineHeight: 1,
+    },
+    verificationCountActive: {
+        backgroundColor: '#ffffff',
+        color: '#0f766e',
     },
     actionButtons: {
         display: 'flex',
-        gap: '10px',
+        gap: '8px',
         flexWrap: 'wrap',
+        marginLeft: 'auto',
     },
     advancedFiltersPanel: {
-        marginBottom: '18px',
-        padding: '18px',
-        borderRadius: '18px',
-        backgroundColor: '#f8fafc',
-        border: '1px solid #e2e8f0',
+        marginBottom: '16px',
+        padding: '16px',
+        borderRadius: '14px',
+        backgroundColor: '#ffffff',
+        border: '1px solid #d8e4e7',
     },
     advancedFiltersHeader: {
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'space-between',
         gap: '12px',
-        marginBottom: '14px',
+        marginBottom: '12px',
     },
     advancedFiltersGrid: {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '12px',
+        gap: '10px',
     },
     filterField: {
         display: 'flex',
@@ -467,45 +792,275 @@ const styles = {
     filterLabel: {
         fontSize: '12px',
         fontWeight: '700',
-        color: '#334155',
+        color: '#475569',
     },
     filterInput: {
         width: '100%',
         boxSizing: 'border-box',
-        borderRadius: '12px',
-        border: '1px solid #cbd5e1',
-        padding: '10px 12px',
+        borderRadius: '10px',
+        border: '1px solid #d1dde1',
+        padding: '9px 11px',
         backgroundColor: '#ffffff',
         color: '#0f172a',
         outline: 'none',
     },
     clearFiltersButton: {
-        border: '1px solid #cbd5e1',
-        borderRadius: '10px',
-        padding: '10px 14px',
+        border: '1px solid #d1dde1',
+        borderRadius: '999px',
+        padding: '8px 12px',
         backgroundColor: '#ffffff',
-        color: '#0f172a',
+        color: '#0f766e',
         fontWeight: '700',
     },
     actionButton: {
-        border: 'none',
-        borderRadius: '10px',
-        padding: '10px 14px',
-        backgroundColor: '#008080',
-        color: '#ffffff',
+        minHeight: '36px',
+        border: '1px solid #c8d9dd',
+        borderRadius: '999px',
+        padding: '8px 12px',
+        backgroundColor: '#ffffff',
+        color: '#0f766e',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '7px',
         fontWeight: '700',
         cursor: 'pointer',
-        boxShadow: '0 10px 18px rgba(0, 128, 128, 0.18)',
+        lineHeight: 1,
+        boxShadow: 'none',
+    },
+    actionBadge: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: '19px',
+        height: '19px',
+        borderRadius: '999px',
+        padding: '0 5px',
+        backgroundColor: '#0f766e',
+        color: '#ffffff',
+        fontSize: '11px',
+        lineHeight: 1,
+    },
+    actionButtonDisabled: {
+        opacity: 0.46,
+        cursor: 'not-allowed',
+        filter: 'grayscale(0.15)',
     },
     deleteButton: {
+        borderColor: '#f2c8c8',
+        backgroundColor: '#fffafa',
+        color: '#b42323',
+    },
+    userListShell: {
+        borderRadius: '14px',
+        border: '1px solid #d8e4e7',
+        backgroundColor: '#ffffff',
+        overflow: 'hidden',
+    },
+    userListHeader: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '12px',
+        padding: '12px 14px',
+        borderBottom: '1px solid #e5edf0',
+        backgroundColor: '#f8fbfb',
+    },
+    selectPageControl: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '9px',
+        color: '#334155',
+        fontSize: '13px',
+        fontWeight: '700',
+        cursor: 'pointer',
+    },
+    checkboxInput: {
+        width: '15px',
+        height: '15px',
+        accentColor: '#0f766e',
+        cursor: 'pointer',
+    },
+    listRange: {
+        color: '#64748b',
+        fontSize: '12px',
+        fontWeight: '700',
+    },
+    userList: {
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    emptyList: {
+        minHeight: '150px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        color: '#64748b',
+        fontSize: '14px',
+        fontWeight: '700',
+        textAlign: 'center',
+        padding: '24px',
+    },
+    userListRow: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '13px 14px',
+        borderBottom: '1px solid #e8eff2',
+        backgroundColor: '#ffffff',
+    },
+    userListRowSelected: {
+        backgroundColor: '#f1faf8',
+    },
+    rowSelection: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    userAvatar: {
+        width: '36px',
+        height: '36px',
+        borderRadius: '999px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#eef7f5',
+        color: '#0f766e',
+        fontSize: '12px',
+        fontWeight: '800',
+        border: '1px solid #d8e4e7',
+    },
+    userMain: {
+        minWidth: 0,
+        flex: '1 1 210px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '5px',
+    },
+    userName: {
+        minWidth: 0,
+        color: '#0f172a',
+        fontSize: '14px',
+        lineHeight: 1.25,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+    },
+    userEmail: {
+        minWidth: 0,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '5px',
+        color: '#64748b',
+        fontSize: '12px',
+        lineHeight: 1.25,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+    },
+    userMeta: {
+        minWidth: 0,
+        flex: '1 1 220px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        flexWrap: 'wrap',
+    },
+    metaChip: {
+        minHeight: '24px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '5px',
+        borderRadius: '999px',
+        padding: '4px 8px',
+        backgroundColor: '#f4f7f8',
+        color: '#475569',
+        fontSize: '12px',
+        fontWeight: '700',
+        lineHeight: 1,
+    },
+    statusPill: {
+        minHeight: '26px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1px solid',
+        borderRadius: '999px',
+        padding: '5px 10px',
+        fontSize: '12px',
+        fontWeight: '800',
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+    },
+    reviewButton: {
+        minHeight: '34px',
+        marginLeft: 'auto',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '6px',
+        border: '1px solid #b7d9d6',
+        borderRadius: '999px',
+        padding: '7px 11px',
+        backgroundColor: '#eef8f6',
+        color: '#0f766e',
+        fontSize: '13px',
+        fontWeight: '800',
+        cursor: 'pointer',
+    },
+    paginationBar: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
+        flexWrap: 'wrap',
+        padding: '12px 14px',
+        borderTop: '1px solid #e5edf0',
+        backgroundColor: '#ffffff',
+    },
+    paginationPages: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '5px',
+    },
+    paginationButton: {
+        minHeight: '32px',
+        border: '1px solid #d8e4e7',
+        borderRadius: '999px',
+        padding: '7px 12px',
+        backgroundColor: '#ffffff',
+        color: '#475569',
+        fontWeight: '700',
+        cursor: 'pointer',
+    },
+    paginationButtonDisabled: {
+        opacity: 0.42,
+        cursor: 'not-allowed',
+    },
+    paginationNumber: {
+        width: '32px',
+        height: '32px',
+        border: '1px solid #d8e4e7',
+        borderRadius: '999px',
+        backgroundColor: '#ffffff',
+        color: '#475569',
+        fontWeight: '800',
+        cursor: 'pointer',
+    },
+    paginationNumberActive: {
         backgroundColor: '#0f766e',
+        borderColor: '#0f766e',
+        color: '#ffffff',
     },
     tableWrap: {
         overflowX: 'auto',
         overflowY: 'hidden',
-        borderRadius: '18px',
-        border: '1px solid #e2e8f0',
-        backgroundColor: '#ffffff',
+        borderRadius: '14px',
+        border: 'none',
+        backgroundColor: 'transparent',
         width: '100%',
         minWidth: 0,
         boxSizing: 'border-box',

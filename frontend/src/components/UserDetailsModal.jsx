@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import '@styles/popup.css';
 import {
@@ -8,18 +10,21 @@ import {
 } from '@services/upload.service.js';
 
 const fieldLabels = {
-    id: 'ID',
     nombreCompleto: 'Nombre completo',
     rut: 'RUT',
     email: 'Correo electrónico',
     rol: 'Rol',
     estadoVerificacion: 'Estado de verificación',
+    comentarioVerificacion: 'Comentario de revision',
+    motivoRechazo: 'Motivo de rechazo',
+    solicitudAntecedentes: 'Antecedentes solicitados',
+    verificacionRevisadaEn: 'Fecha de revision',
+    verificacionRevisadaPorId: 'Revisado por',
     telefono: 'Teléfono',
     universidad: 'Universidad',
     carrera: 'Carrera',
     createdAt: 'Creado',
     updatedAt: 'Actualizado',
-    ultimoLogin: 'Último acceso',
     fotoPerfil: 'Foto de perfil',
     documentoResidencia: 'Comprobante de residencia',
     documentoVerificacion: 'Documento de verificación',
@@ -32,6 +37,11 @@ const statusColors = {
     aprobado: '#0f766e',
     pendiente: '#b45309',
     rechazado: '#b91c1c',
+};
+
+const requiredVerificationFields = {
+    estudiante: ['documentoVerificacion', 'carnetIdentidadFrontal', 'carnetIdentidadReverso'],
+    arrendador: ['documentoVerificacion', 'documentoVerificacionReverso', 'documentoResidencia', 'fotoPerfil'],
 };
 
 function formatValue(value) {
@@ -136,31 +146,35 @@ function PdfFilePreview({ preview }) {
         };
     }, [isExpanded, preview.url]);
 
+    useEffect(() => {
+        if (!isExpanded) return undefined;
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') setIsExpanded(false);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isExpanded]);
+
     if (error) {
         return <span style={{ color: '#b91c1c' }}>{error}</span>;
     }
 
-    return (
+    const previewPanel = (
         <div
             style={{
-                ...(isExpanded
-                    ? {
-                        position: 'fixed',
-                        inset: '24px',
-                        zIndex: 1800,
-                        width: 'auto',
-                        maxHeight: 'calc(100vh - 48px)',
-                        padding: '16px',
-                        borderRadius: '14px',
-                        border: '1px solid #d7eeee',
-                        backgroundColor: '#ffffff',
-                        boxShadow: '0 24px 70px rgba(15, 23, 42, 0.28)',
-                    }
-                    : {
-                        width: 'min(440px, 100%)',
-                    }),
+                width: isExpanded ? 'min(960px, calc(100vw - 48px))' : 'min(440px, 100%)',
+                maxHeight: isExpanded ? 'calc(100vh - 48px)' : 'none',
+                padding: isExpanded ? '16px' : 0,
+                borderRadius: isExpanded ? '14px' : 0,
+                border: isExpanded ? '1px solid #d7eeee' : 'none',
+                backgroundColor: isExpanded ? '#ffffff' : 'transparent',
+                boxShadow: isExpanded ? '0 24px 70px rgba(15, 23, 42, 0.32)' : 'none',
                 boxSizing: 'border-box',
             }}
+            onClick={(event) => event.stopPropagation()}
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '10px' }}>
                 <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 700 }}>
@@ -179,7 +193,7 @@ function PdfFilePreview({ preview }) {
                         fontWeight: 800,
                     }}
                 >
-                    {isExpanded ? 'Contraer' : 'Expandir'}
+                    {isExpanded ? 'Cerrar' : 'Expandir'}
                 </button>
             </div>
             <div
@@ -198,6 +212,30 @@ function PdfFilePreview({ preview }) {
                 }}
             />
         </div>
+    );
+
+    if (!isExpanded) {
+        return previewPanel;
+    }
+
+    return createPortal(
+        <div
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 2200,
+                padding: '24px',
+                backgroundColor: 'rgba(15, 23, 42, 0.64)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxSizing: 'border-box',
+            }}
+            onClick={() => setIsExpanded(false)}
+        >
+            {previewPanel}
+        </div>,
+        document.body,
     );
 }
 
@@ -263,121 +301,137 @@ function ImageFilePreview({ preview }) {
                 />
             </button>
 
-            {isExpanded && (
+            {isExpanded && createPortal(
                 <div
                     style={{
                         position: 'fixed',
-                        inset: '24px',
-                        zIndex: 1900,
-                        padding: '16px',
-                        borderRadius: '14px',
-                        border: '1px solid #d7eeee',
-                        backgroundColor: '#ffffff',
-                        boxShadow: '0 24px 70px rgba(15, 23, 42, 0.28)',
+                        inset: 0,
+                        zIndex: 2300,
+                        padding: '24px',
+                        backgroundColor: 'rgba(15, 23, 42, 0.64)',
                         display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxSizing: 'border-box',
                     }}
-                    onClick={(event) => event.stopPropagation()}
+                    onClick={closePreview}
                 >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 700, wordBreak: 'break-word' }}>
-                            {preview.filename}
-                        </span>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <button
-                                type="button"
-                                onClick={decreaseZoom}
-                                aria-label="Reducir zoom"
-                                style={{
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '8px 12px',
-                                    backgroundColor: '#e2f4f4',
-                                    color: '#005f5f',
-                                    cursor: 'pointer',
-                                    fontWeight: 800,
-                                }}
-                            >
-                                -
-                            </button>
-                            <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: 800, minWidth: '48px', textAlign: 'center' }}>
-                                {Math.round(zoom * 100)}%
-                            </span>
-                            <button
-                                type="button"
-                                onClick={increaseZoom}
-                                aria-label="Aumentar zoom"
-                                style={{
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '8px 12px',
-                                    backgroundColor: '#e2f4f4',
-                                    color: '#005f5f',
-                                    cursor: 'pointer',
-                                    fontWeight: 800,
-                                }}
-                            >
-                                +
-                            </button>
-                            <button
-                                type="button"
-                                onClick={resetZoom}
-                                style={{
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '8px 12px',
-                                    backgroundColor: '#edf2f7',
-                                    color: '#334155',
-                                    cursor: 'pointer',
-                                    fontWeight: 800,
-                                }}
-                            >
-                                Restablecer
-                            </button>
-                            <button
-                                type="button"
-                                onClick={closePreview}
-                                style={{
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '8px 12px',
-                                    backgroundColor: '#008080',
-                                    color: '#ffffff',
-                                    cursor: 'pointer',
-                                    fontWeight: 800,
-                                }}
-                            >
-                                Cerrar
-                            </button>
-                        </div>
-                    </div>
                     <div
                         style={{
-                            minHeight: 0,
-                            flex: 1,
-                            overflow: 'auto',
-                            padding: '12px',
-                            borderRadius: '10px',
+                            width: 'min(1040px, calc(100vw - 48px))',
+                            maxHeight: 'calc(100vh - 48px)',
+                            padding: '16px',
+                            borderRadius: '14px',
                             border: '1px solid #d7eeee',
-                            backgroundColor: '#f8fafc',
-                            textAlign: 'center',
+                            backgroundColor: '#ffffff',
+                            boxShadow: '0 24px 70px rgba(15, 23, 42, 0.32)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            boxSizing: 'border-box',
                         }}
+                        onClick={(event) => event.stopPropagation()}
                     >
-                        <img
-                            src={preview.url}
-                            alt={preview.filename}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 700, wordBreak: 'break-word' }}>
+                                {preview.filename}
+                            </span>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <button
+                                    type="button"
+                                    onClick={decreaseZoom}
+                                    aria-label="Reducir zoom"
+                                    style={{
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        padding: '8px 12px',
+                                        backgroundColor: '#e2f4f4',
+                                        color: '#005f5f',
+                                        cursor: 'pointer',
+                                        fontWeight: 800,
+                                    }}
+                                >
+                                    -
+                                </button>
+                                <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: 800, minWidth: '48px', textAlign: 'center' }}>
+                                    {Math.round(zoom * 100)}%
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={increaseZoom}
+                                    aria-label="Aumentar zoom"
+                                    style={{
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        padding: '8px 12px',
+                                        backgroundColor: '#e2f4f4',
+                                        color: '#005f5f',
+                                        cursor: 'pointer',
+                                        fontWeight: 800,
+                                    }}
+                                >
+                                    +
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={resetZoom}
+                                    style={{
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        padding: '8px 12px',
+                                        backgroundColor: '#edf2f7',
+                                        color: '#334155',
+                                        cursor: 'pointer',
+                                        fontWeight: 800,
+                                    }}
+                                >
+                                    Restablecer
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={closePreview}
+                                    style={{
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        padding: '8px 12px',
+                                        backgroundColor: '#008080',
+                                        color: '#ffffff',
+                                        cursor: 'pointer',
+                                        fontWeight: 800,
+                                    }}
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                        <div
                             style={{
-                                width: zoom === 1 ? 'min(900px, 100%)' : `${Math.round(900 * zoom)}px`,
-                                maxWidth: zoom === 1 ? '100%' : 'none',
-                                height: 'auto',
+                                minHeight: 0,
+                                flex: 1,
+                                overflow: 'auto',
+                                padding: '12px',
                                 borderRadius: '10px',
                                 border: '1px solid #d7eeee',
-                                backgroundColor: '#ffffff',
+                                backgroundColor: '#f8fafc',
+                                textAlign: 'center',
                             }}
-                        />
+                        >
+                            <img
+                                src={preview.url}
+                                alt={preview.filename}
+                                style={{
+                                    width: zoom === 1 ? 'min(900px, 100%)' : `${Math.round(900 * zoom)}px`,
+                                    maxWidth: zoom === 1 ? '100%' : 'none',
+                                    height: 'auto',
+                                    borderRadius: '10px',
+                                    border: '1px solid #d7eeee',
+                                    backgroundColor: '#ffffff',
+                                }}
+                            />
+                        </div>
                     </div>
-                </div>
+                </div>,
+                document.body,
             )}
         </>
     );
@@ -439,22 +493,11 @@ function VerificationFilePreview({ value }) {
             {isPdf && (
                 <PdfFilePreview preview={preview} />
             )}
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {!isPdf && (
-                    <a
-                        href={preview.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{
-                            color: '#008080',
-                            fontWeight: 800,
-                            textDecoration: 'none',
-                        }}
-                    >
-                        Abrir archivo
-                    </a>
-                )}
-                <span style={{ color: '#64748b', fontSize: '13px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '100%' }}>
+                <span style={{ color: '#0f766e', fontSize: '12px', fontWeight: 800 }}>
+                    Nombre del archivo
+                </span>
+                <span style={{ color: '#64748b', fontSize: '13px', wordBreak: 'break-word' }}>
                     {getVerificationFilename(value)}
                 </span>
             </div>
@@ -462,7 +505,19 @@ function VerificationFilePreview({ value }) {
     );
 }
 
-export default function UserDetailsModal({ show, setShow, user }) {
+export default function UserDetailsModal({ show, setShow, user, onVerificationAction }) {
+    const [reviewComment, setReviewComment] = useState('');
+    const [reviewError, setReviewError] = useState('');
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+    useEffect(() => {
+        if (!show) return;
+
+        setReviewComment('');
+        setReviewError('');
+        setIsSubmittingReview(false);
+    }, [show, user?.id]);
+
     if (!show) return null;
 
     const normalizedStatus = (user?.estadoVerificacion || 'pendiente').toString().toLowerCase();
@@ -477,30 +532,93 @@ export default function UserDetailsModal({ show, setShow, user }) {
         carnetIdentidadFrontal: fieldLabels.carnetIdentidadFrontal,
         carnetIdentidadReverso: fieldLabels.carnetIdentidadReverso,
     };
+    const requiredDocuments = (requiredVerificationFields[normalizedRole] || []).map((field) => ({
+        field,
+        isPresent: Boolean(user?.[field]),
+        label: documentFieldLabels[field] || fieldLabels[field] || field,
+    }));
+    const hasMissingRequiredDocs = requiredDocuments.some((document) => !document.isPresent);
+    const canReview = Boolean(onVerificationAction) && ['estudiante', 'arrendador'].includes(normalizedRole);
+    const submitVerificationAction = async (actionType) => {
+        if (!canReview) return;
+
+        const trimmedComment = reviewComment.trim();
+        let payload = null;
+
+        if (actionType === 'approve') {
+            if (hasMissingRequiredDocs) {
+                setReviewError('No puedes aprobar una cuenta con antecedentes obligatorios faltantes.');
+                return;
+            }
+
+            payload = {
+                estadoVerificacion: 'aprobado',
+                comentarioRevision: trimmedComment || 'Documentos verificados correctamente.',
+            };
+        }
+
+        if (actionType === 'reject') {
+            if (!trimmedComment) {
+                setReviewError('Ingresa un comentario para rechazar la solicitud.');
+                return;
+            }
+
+            payload = {
+                estadoVerificacion: 'rechazado',
+                motivoRechazo: trimmedComment,
+            };
+        }
+
+        if (actionType === 'request-info') {
+            if (!trimmedComment) {
+                setReviewError('Indica que antecedentes adicionales debe enviar el usuario.');
+                return;
+            }
+
+            payload = {
+                estadoVerificacion: 'pendiente',
+                solicitudAntecedentes: trimmedComment,
+            };
+        }
+
+        if (!payload) return;
+
+        setReviewError('');
+        setIsSubmittingReview(true);
+
+        try {
+            await onVerificationAction(user, payload);
+            setReviewComment('');
+        } catch (error) {
+            setReviewError(error?.message || 'No se pudo completar la revision.');
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
     const initials = (user?.nombreCompleto || 'Usuario')
         .split(' ')
         .filter(Boolean)
         .slice(0, 2)
         .map((part) => part.charAt(0).toUpperCase())
         .join('');
+    const modalScrollClassName = 'user-details-modal-scroll';
 
     const detailFields = [
-        'id',
         'rut',
         'email',
         'rol',
-        'estadoVerificacion',
+        ...(user?.comentarioVerificacion ? ['comentarioVerificacion'] : []),
+        ...(user?.motivoRechazo ? ['motivoRechazo'] : []),
+        ...(user?.solicitudAntecedentes ? ['solicitudAntecedentes'] : []),
+        ...(user?.verificacionRevisadaEn ? ['verificacionRevisadaEn'] : []),
+        ...(user?.verificacionRevisadaPorId ? ['verificacionRevisadaPorId'] : []),
         'telefono',
-        'universidad',
-        'carrera',
+        ...(normalizedRole === 'estudiante' ? ['universidad', 'carrera'] : []),
         'createdAt',
         'updatedAt',
-        'ultimoLogin',
         'documentoVerificacion',
         ...(normalizedRole === 'estudiante' ? ['carnetIdentidadFrontal', 'carnetIdentidadReverso'] : []),
-        ...(normalizedRole === 'arrendador' ? ['documentoVerificacionReverso'] : []),
-        'documentoResidencia',
-        'fotoPerfil',
+        ...(normalizedRole === 'arrendador' ? ['documentoVerificacionReverso', 'documentoResidencia', 'fotoPerfil'] : []),
     ];
 
     return (
@@ -509,8 +627,36 @@ export default function UserDetailsModal({ show, setShow, user }) {
             style={{ position: 'fixed', inset: 0, zIndex: 1200, alignItems: 'center', justifyContent: 'center', padding: '24px 16px 56px' }}
             onClick={() => setShow(false)}
         >
+            <style>
+                {`
+                    .${modalScrollClassName} {
+                        scrollbar-width: thin;
+                        scrollbar-color: rgba(15, 118, 110, 0.55) transparent;
+                    }
+
+                    .${modalScrollClassName}::-webkit-scrollbar {
+                        width: 8px;
+                    }
+
+                    .${modalScrollClassName}::-webkit-scrollbar-track {
+                        background: transparent;
+                    }
+
+                    .${modalScrollClassName}::-webkit-scrollbar-thumb {
+                        background: rgba(15, 118, 110, 0.46);
+                        border-radius: 999px;
+                        border: 2px solid transparent;
+                        background-clip: padding-box;
+                    }
+
+                    .${modalScrollClassName}::-webkit-scrollbar-thumb:hover {
+                        background: rgba(15, 118, 110, 0.72);
+                        background-clip: padding-box;
+                    }
+                `}
+            </style>
             <div
-                className="popup"
+                className={`popup ${modalScrollClassName}`}
                 style={{
                     width: 'min(760px, calc(100vw - 32px))',
                     height: 'auto',
@@ -525,11 +671,30 @@ export default function UserDetailsModal({ show, setShow, user }) {
             >
                 <div style={{ position: 'relative' }}>
                     <button
-                        className="close"
+                        type="button"
                         onClick={() => setShow(false)}
                         aria-label="Cerrar"
-                        style={{ zIndex: 2 }}
+                        title="Cerrar"
+                        style={{
+                            position: 'absolute',
+                            top: '16px',
+                            right: '16px',
+                            zIndex: 3,
+                            width: '34px',
+                            height: '34px',
+                            border: '1px solid rgba(255, 255, 255, 0.22)',
+                            borderRadius: '10px',
+                            backgroundColor: 'rgba(15, 23, 42, 0.22)',
+                            color: '#ffffff',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            backdropFilter: 'blur(6px)',
+                            fontSize: 0,
+                        }}
                     >
+                        <X size={18} strokeWidth={2.4} />
                         ×
                     </button>
 
@@ -588,6 +753,131 @@ export default function UserDetailsModal({ show, setShow, user }) {
                         </section>
 
                         <section style={{ padding: '24px 32px 56px', backgroundColor: '#ffffff', borderBottomLeftRadius: '22px', borderBottomRightRadius: '22px' }}>
+                            {canReview && (
+                                <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '14px', border: '1px solid #d7eeee', backgroundColor: '#f8fafc' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '12px' }}>
+                                        <div>
+                                            <p style={{ margin: '0 0 6px', color: '#0f766e', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                                Revision RF13
+                                            </p>
+                                            <h3 style={{ margin: 0, color: '#0f172a', fontSize: '18px', lineHeight: 1.25 }}>
+                                                Documentos de {normalizedRole}
+                                            </h3>
+                                        </div>
+                                        <span style={{ padding: '6px 10px', borderRadius: '999px', backgroundColor: hasMissingRequiredDocs ? '#fef2f2' : '#ecfdf5', color: hasMissingRequiredDocs ? '#b91c1c' : '#0f766e', fontSize: '12px', fontWeight: 800 }}>
+                                            {hasMissingRequiredDocs ? 'Incompleto' : 'Completo'}
+                                        </span>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px 18px', marginBottom: '14px' }}>
+                                        {requiredDocuments.map((document) => (
+                                            <div key={document.field} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', minHeight: '24px' }}>
+                                                <span
+                                                    style={{
+                                                        width: '8px',
+                                                        height: '8px',
+                                                        borderRadius: '999px',
+                                                        backgroundColor: document.isPresent ? '#0f766e' : '#b91c1c',
+                                                        boxShadow: document.isPresent
+                                                            ? '0 0 0 3px rgba(15, 118, 110, 0.12)'
+                                                            : '0 0 0 3px rgba(185, 28, 28, 0.12)',
+                                                        flexShrink: 0,
+                                                    }}
+                                                />
+                                                <span style={{ color: '#334155', fontSize: '13px', lineHeight: 1.35, maxWidth: '220px' }}>
+                                                    {document.label}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <label style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginBottom: '12px' }}>
+                                        <span style={{ color: '#334155', fontSize: '13px', fontWeight: 800 }}>
+                                            Comentario para rechazo o solicitud de antecedentes
+                                        </span>
+                                        <textarea
+                                            value={reviewComment}
+                                            onChange={(event) => setReviewComment(event.target.value)}
+                                            rows={4}
+                                            maxLength={1000}
+                                            placeholder="Ej: El documento esta borroso; por favor envia una imagen legible del reverso del carnet."
+                                            style={{
+                                                width: '100%',
+                                                resize: 'vertical',
+                                                boxSizing: 'border-box',
+                                                borderRadius: '10px',
+                                                border: '1px solid #cbd5e1',
+                                                padding: '10px 12px',
+                                                color: '#0f172a',
+                                                backgroundColor: '#ffffff',
+                                                outline: 'none',
+                                                lineHeight: 1.5,
+                                            }}
+                                        />
+                                    </label>
+
+                                    {reviewError && (
+                                        <p style={{ margin: '0 0 12px', color: '#b91c1c', fontSize: '13px', fontWeight: 700 }}>
+                                            {reviewError}
+                                        </p>
+                                    )}
+
+                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => submitVerificationAction('approve')}
+                                            disabled={isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado'}
+                                            style={{
+                                                border: 'none',
+                                                borderRadius: '10px',
+                                                padding: '10px 14px',
+                                                backgroundColor: '#0f766e',
+                                                color: '#ffffff',
+                                                cursor: isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado' ? 'not-allowed' : 'pointer',
+                                                opacity: isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado' ? 0.55 : 1,
+                                                fontWeight: 800,
+                                            }}
+                                        >
+                                            Aprobar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => submitVerificationAction('reject')}
+                                            disabled={isSubmittingReview}
+                                            style={{
+                                                border: 'none',
+                                                borderRadius: '10px',
+                                                padding: '10px 14px',
+                                                backgroundColor: '#b91c1c',
+                                                color: '#ffffff',
+                                                cursor: isSubmittingReview ? 'not-allowed' : 'pointer',
+                                                opacity: isSubmittingReview ? 0.55 : 1,
+                                                fontWeight: 800,
+                                            }}
+                                        >
+                                            Rechazar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => submitVerificationAction('request-info')}
+                                            disabled={isSubmittingReview || normalizedStatus === 'aprobado'}
+                                            style={{
+                                                border: '1px solid #0f766e',
+                                                borderRadius: '10px',
+                                                padding: '10px 14px',
+                                                backgroundColor: '#ffffff',
+                                                color: '#0f766e',
+                                                cursor: isSubmittingReview || normalizedStatus === 'aprobado' ? 'not-allowed' : 'pointer',
+                                                opacity: isSubmittingReview || normalizedStatus === 'aprobado' ? 0.55 : 1,
+                                                fontWeight: 800,
+                                            }}
+                                        >
+                                            Solicitar antecedentes
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {detailFields.map((field, index) => (
                                     <div
