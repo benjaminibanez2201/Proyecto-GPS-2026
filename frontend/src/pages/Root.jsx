@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   User,
@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useAuth, AuthProvider } from '@context/AuthContext';
+import { obtenerCantidadNotificacionesNoLeidas } from '@services/notificacion.service.js';
 import slidebaar from '../assets/slidebaar.png';
 import miLogo from '../assets/miLogo.png';
 
@@ -28,12 +29,14 @@ function Root() {
 
 function PageRoot() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const userRole = (user?.rol || '').toString().toLowerCase();
   const normalizedRole = userRole === 'admin' ? 'administrador' : userRole;
   const userId = user?.id;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const colores = {
     principal: '#008080',
@@ -141,6 +144,17 @@ function PageRoot() {
     navigate('/auth');
   };
 
+  const refreshUnreadCount = useCallback(async () => {
+    const [count, errorCount] = await obtenerCantidadNotificacionesNoLeidas();
+    if (!errorCount) {
+      setUnreadCount(Number(count) || 0);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshUnreadCount();
+  }, [refreshUnreadCount, location.pathname]);
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: 'sans-serif' }}>
       <aside
@@ -226,16 +240,43 @@ function PageRoot() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button
-            type="button"
-            title="Centro de notificaciones próximamente"
+          <NavLink
+            to="/notificaciones"
             onMouseEnter={() => setHoveredItem('notificaciones')}
             onMouseLeave={() => setHoveredItem(null)}
-            style={getSidebarItemStyle({ hovered: hoveredItem === 'notificaciones', disabled: true })}
+            style={({ isActive }) => getSidebarItemStyle({ active: isActive, hovered: hoveredItem === 'notificaciones' })}
+            end
           >
-            <Bell size={20} strokeWidth={2} />
+            <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Bell size={20} strokeWidth={2} />
+              {unreadCount > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '-9px',
+                    right: '-12px',
+                    minWidth: '18px',
+                    height: '18px',
+                    padding: '0 5px',
+                    borderRadius: '999px',
+                    backgroundColor: '#ef4444',
+                    color: '#ffffff',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px solid rgba(0, 128, 128, 0.95)',
+                    lineHeight: 1,
+                  }}
+                  aria-label={`Notificaciones no leídas: ${unreadCount}`}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </span>
             {!isSidebarCollapsed && <span>Centro de Notificaciones</span>}
-          </button>
+          </NavLink>
 
           <button
             onClick={handleLogout}

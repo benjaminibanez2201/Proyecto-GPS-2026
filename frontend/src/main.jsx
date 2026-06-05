@@ -15,6 +15,7 @@ import AdminPanel from '@pages/AdminPanel';
 import '@styles/styles.css';
 import HistorialArriendos from './pages/HistorialArriendos.jsx';
 import PerfilUsuario from './pages/PerfilUsuario.jsx';
+import Notificaciones from '@pages/Notificaciones';
 
 const router = createBrowserRouter([
   {
@@ -62,6 +63,14 @@ const router = createBrowserRouter([
       {
         path: 'historial',
         element: <HistorialArriendos />
+      },
+      {
+        path: 'notificaciones',
+        element: (
+          <ProtectedRoute>
+            <Notificaciones />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'perfil/:id',
