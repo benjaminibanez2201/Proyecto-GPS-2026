@@ -41,7 +41,7 @@ const statusColors = {
 
 const requiredVerificationFields = {
     estudiante: ['documentoVerificacion', 'carnetIdentidadFrontal', 'carnetIdentidadReverso'],
-    arrendador: ['documentoVerificacion', 'documentoVerificacionReverso', 'documentoResidencia', 'fotoPerfil'],
+    arrendador: ['documentoVerificacion', 'documentoVerificacionReverso', 'documentoResidencia'],
 };
 
 function formatValue(value) {
@@ -539,6 +539,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
     }));
     const hasMissingRequiredDocs = requiredDocuments.some((document) => !document.isPresent);
     const canReview = Boolean(onVerificationAction) && ['estudiante', 'arrendador'].includes(normalizedRole);
+    const isApprovedReview = normalizedStatus === 'aprobado';
     const submitVerificationAction = async (actionType) => {
         if (!canReview) return;
 
@@ -581,6 +582,19 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
             };
         }
 
+        if (actionType === 'rectify') {
+            if (!trimmedComment) {
+                setReviewError('Indica que se debe rectificar de la revision aprobada.');
+                return;
+            }
+
+            payload = {
+                estadoVerificacion: 'pendiente',
+                solicitudAntecedentes: trimmedComment,
+                comentarioRevision: trimmedComment,
+            };
+        }
+
         if (!payload) return;
 
         setReviewError('');
@@ -618,8 +632,21 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
         'updatedAt',
         'documentoVerificacion',
         ...(normalizedRole === 'estudiante' ? ['carnetIdentidadFrontal', 'carnetIdentidadReverso'] : []),
-        ...(normalizedRole === 'arrendador' ? ['documentoVerificacionReverso', 'documentoResidencia', 'fotoPerfil'] : []),
+        ...(normalizedRole === 'arrendador' ? ['documentoVerificacionReverso', 'documentoResidencia'] : []),
     ];
+    const reviewCommentLabel = isApprovedReview
+        ? 'Comentario para rectificar la revision'
+        : 'Comentario para rechazo o solicitud de antecedentes';
+    const reviewCommentPlaceholder = isApprovedReview
+        ? 'Ej: La cuenta fue aprobada por error; por favor envia el antecedente corregido para una nueva revision.'
+        : 'Ej: El documento esta borroso; por favor envia una imagen legible del reverso del carnet.';
+    const formatDetailValue = (field, value) => {
+        if (field === 'verificacionRevisadaPorId') {
+            return value ? 'Administrador' : 'No registrado';
+        }
+
+        return formatValue(value);
+    };
 
     return (
         <div
@@ -793,14 +820,14 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
 
                                     <label style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginBottom: '12px' }}>
                                         <span style={{ color: '#334155', fontSize: '13px', fontWeight: 800 }}>
-                                            Comentario para rechazo o solicitud de antecedentes
+                                            {reviewCommentLabel}
                                         </span>
                                         <textarea
                                             value={reviewComment}
                                             onChange={(event) => setReviewComment(event.target.value)}
                                             rows={4}
                                             maxLength={1000}
-                                            placeholder="Ej: El documento esta borroso; por favor envia una imagen legible del reverso del carnet."
+                                            placeholder={reviewCommentPlaceholder}
                                             style={{
                                                 width: '100%',
                                                 resize: 'vertical',
@@ -823,57 +850,79 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                     )}
 
                                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => submitVerificationAction('approve')}
-                                            disabled={isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado'}
-                                            style={{
-                                                border: 'none',
-                                                borderRadius: '10px',
-                                                padding: '10px 14px',
-                                                backgroundColor: '#0f766e',
-                                                color: '#ffffff',
-                                                cursor: isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado' ? 'not-allowed' : 'pointer',
-                                                opacity: isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado' ? 0.55 : 1,
-                                                fontWeight: 800,
-                                            }}
-                                        >
-                                            Aprobar
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => submitVerificationAction('reject')}
-                                            disabled={isSubmittingReview}
-                                            style={{
-                                                border: 'none',
-                                                borderRadius: '10px',
-                                                padding: '10px 14px',
-                                                backgroundColor: '#b91c1c',
-                                                color: '#ffffff',
-                                                cursor: isSubmittingReview ? 'not-allowed' : 'pointer',
-                                                opacity: isSubmittingReview ? 0.55 : 1,
-                                                fontWeight: 800,
-                                            }}
-                                        >
-                                            Rechazar
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => submitVerificationAction('request-info')}
-                                            disabled={isSubmittingReview || normalizedStatus === 'aprobado'}
-                                            style={{
-                                                border: '1px solid #0f766e',
-                                                borderRadius: '10px',
-                                                padding: '10px 14px',
-                                                backgroundColor: '#ffffff',
-                                                color: '#0f766e',
-                                                cursor: isSubmittingReview || normalizedStatus === 'aprobado' ? 'not-allowed' : 'pointer',
-                                                opacity: isSubmittingReview || normalizedStatus === 'aprobado' ? 0.55 : 1,
-                                                fontWeight: 800,
-                                            }}
-                                        >
-                                            Solicitar antecedentes
-                                        </button>
+                                        {isApprovedReview ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => submitVerificationAction('rectify')}
+                                                disabled={isSubmittingReview}
+                                                style={{
+                                                    border: '1px solid #0f766e',
+                                                    borderRadius: '10px',
+                                                    padding: '10px 14px',
+                                                    backgroundColor: '#ffffff',
+                                                    color: '#0f766e',
+                                                    cursor: isSubmittingReview ? 'not-allowed' : 'pointer',
+                                                    opacity: isSubmittingReview ? 0.55 : 1,
+                                                    fontWeight: 800,
+                                                }}
+                                            >
+                                                Rectificar
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => submitVerificationAction('approve')}
+                                                    disabled={isSubmittingReview || hasMissingRequiredDocs}
+                                                    style={{
+                                                        border: 'none',
+                                                        borderRadius: '10px',
+                                                        padding: '10px 14px',
+                                                        backgroundColor: '#0f766e',
+                                                        color: '#ffffff',
+                                                        cursor: isSubmittingReview || hasMissingRequiredDocs ? 'not-allowed' : 'pointer',
+                                                        opacity: isSubmittingReview || hasMissingRequiredDocs ? 0.55 : 1,
+                                                        fontWeight: 800,
+                                                    }}
+                                                >
+                                                    Aprobar
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => submitVerificationAction('reject')}
+                                                    disabled={isSubmittingReview}
+                                                    style={{
+                                                        border: 'none',
+                                                        borderRadius: '10px',
+                                                        padding: '10px 14px',
+                                                        backgroundColor: '#b91c1c',
+                                                        color: '#ffffff',
+                                                        cursor: isSubmittingReview ? 'not-allowed' : 'pointer',
+                                                        opacity: isSubmittingReview ? 0.55 : 1,
+                                                        fontWeight: 800,
+                                                    }}
+                                                >
+                                                    Rechazar
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => submitVerificationAction('request-info')}
+                                                    disabled={isSubmittingReview}
+                                                    style={{
+                                                        border: '1px solid #0f766e',
+                                                        borderRadius: '10px',
+                                                        padding: '10px 14px',
+                                                        backgroundColor: '#ffffff',
+                                                        color: '#0f766e',
+                                                        cursor: isSubmittingReview ? 'not-allowed' : 'pointer',
+                                                        opacity: isSubmittingReview ? 0.55 : 1,
+                                                        fontWeight: 800,
+                                                    }}
+                                                >
+                                                    Solicitar antecedentes
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -898,7 +947,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                         <span style={{ fontSize: '14px', lineHeight: 1.5, color: '#0f172a', wordBreak: 'break-word' }}>
                                             {field === 'documentoResidencia' || field === 'documentoVerificacion' || field === 'documentoVerificacionReverso' || field === 'carnetIdentidadFrontal' || field === 'carnetIdentidadReverso' || field === 'fotoPerfil'
                                                 ? <VerificationFilePreview value={user?.[field]} />
-                                                : formatValue(user?.[field])}
+                                                : formatDetailValue(field, user?.[field])}
                                         </span>
                                     </div>
                                 ))}

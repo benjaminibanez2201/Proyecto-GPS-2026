@@ -89,6 +89,26 @@ export async function sendRegistrationReceivedEmail(user) {
   });
 }
 
+export async function sendEmailVerificationEmail(user, emailVerificationToken) {
+  const emailVerificationUrl = [
+    normalizeBaseUrl(FRONTEND_URL),
+    "verify-email",
+    encodeURIComponent(emailVerificationToken),
+  ].join("/");
+
+  return sendTemplateEmail({
+    to: user.email,
+    subject: "Confirma tu correo en ArriendU",
+    template: "email-verification",
+    attachments: getBrandAttachments(),
+    data: {
+      emailVerificationUrl,
+      nombreCompleto: user.nombreCompleto,
+      rol: user.rol,
+    },
+  });
+}
+
 export async function sendAccountRejectedEmail(user, motivoRechazo = "") {
   return sendTemplateEmail({
     to: user.email,

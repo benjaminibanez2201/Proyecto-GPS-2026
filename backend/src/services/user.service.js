@@ -22,7 +22,6 @@ const REQUIRED_VERIFICATION_FILES = {
     ["documentoVerificacion", "frente del carnet de identidad"],
     ["documentoVerificacionReverso", "reverso del carnet de identidad"],
     ["documentoResidencia", "comprobante de residencia"],
-    ["fotoPerfil", "foto de perfil"],
   ],
 };
 
@@ -98,6 +97,8 @@ export async function getUserService(query) {
         nombreCompleto: true,
         rut: true,
         email: true,
+        emailVerificado: true,
+        emailVerificadoEn: true,
         rol: true,
         estadoVerificacion: true,
         comentarioVerificacion: true,

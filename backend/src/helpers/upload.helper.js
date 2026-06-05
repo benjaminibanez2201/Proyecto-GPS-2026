@@ -11,30 +11,32 @@ export const uploadRoot = path.resolve(__dirname, "../../uploads");
 export const tmpUploadDir = path.join(uploadRoot, "tmp");
 export const verificationUploadDir = path.join(uploadRoot, "verifications");
 export const MAX_VERIFICATION_FILE_SIZE = 8 * 1024 * 1024;
+const verificationDocumentTypes = ["image/jpeg", "image/png", "application/pdf"];
+const identityDocumentTypes = ["image/jpeg", "image/png"];
 
 export const uploadFieldConfig = {
   documentoVerificacion: {
-    allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
+    allowedTypes: verificationDocumentTypes,
     label: "El documento de verificacion",
   },
   documentoVerificacionReverso: {
-    allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
+    allowedTypes: identityDocumentTypes,
     label: "El reverso del carnet de identidad",
   },
   carnetIdentidadFrontal: {
-    allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
+    allowedTypes: identityDocumentTypes,
     label: "El frente del carnet de identidad",
   },
   carnetIdentidadReverso: {
-    allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
+    allowedTypes: identityDocumentTypes,
     label: "El reverso del carnet de identidad",
   },
   documentoResidencia: {
-    allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
+    allowedTypes: verificationDocumentTypes,
     label: "El comprobante de residencia",
   },
   fotoPerfil: {
-    allowedTypes: ["image/jpeg", "image/png"],
+    allowedTypes: identityDocumentTypes,
     label: "La foto de perfil",
   },
 };

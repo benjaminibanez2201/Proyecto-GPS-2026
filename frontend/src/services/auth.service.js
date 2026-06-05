@@ -13,13 +13,14 @@ export async function login(dataUser) {
         if (status === 200) {
             const {
                 email,
+                emailVerificado,
                 estadoVerificacion,
                 id,
                 nombreCompleto,
                 rol,
                 rut,
             } = jwtDecode(data.data.token);
-            const userData = { email, estadoVerificacion, id, nombreCompleto, rol, rut };
+            const userData = { email, emailVerificado, estadoVerificacion, id, nombreCompleto, rol, rut };
 
             sessionStorage.setItem('usuario', JSON.stringify(userData));
             axios.defaults.headers.common['Authorization'] = `Bearer ${data.data.token}`;
@@ -42,8 +43,13 @@ export async function login(dataUser) {
 export async function register(data) {
     try {
         const rol = data.rol || 'estudiante';
+        const nombreCompleto = [data.nombres, data.apellidos]
+            .map((value) => String(value || '').trim())
+            .filter(Boolean)
+            .join(' ');
+
         const basePayload = {
-            nombreCompleto: data.nombreCompleto.trim(),
+            nombreCompleto,
             email: data.email.trim().toLowerCase(),
             rut: data.rut.trim(),
             password: data.password,
@@ -65,7 +71,6 @@ export async function register(data) {
         if (rol === 'arrendador') {
             filesToUpload.push(
                 ['documentoResidencia', data.documentoResidencia?.[0]],
-                ['fotoPerfil', data.fotoPerfil?.[0]],
                 ['documentoVerificacion', data.documentoVerificacion?.[0]],
                 ['documentoVerificacionReverso', data.documentoVerificacionReverso?.[0]],
             );
@@ -121,6 +126,32 @@ export async function logout() {
         cookies.remove('jwt-auth');
     } catch (error) {
         console.error('Error al cerrar sesion:', error);
+    }
+}
+
+export async function verifyEmail(token) {
+    try {
+        const response = await axios.post(`/auth/verify-email/${encodeURIComponent(token)}`);
+        return response.data;
+    } catch (error) {
+        return error.response?.data || {
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
+        };
+    }
+}
+
+export async function resendEmailVerification(email) {
+    try {
+        const response = await axios.post('/auth/verify-email/resend', { email });
+        return response.data;
+    } catch (error) {
+        return error.response?.data || {
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
+        };
     }
 }
 

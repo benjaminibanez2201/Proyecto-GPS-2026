@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    CalendarDays,
     ClipboardList,
     Eye,
-    Mail,
     Pencil,
     ShieldCheck,
     SlidersHorizontal,
     Trash2,
-    UserRound,
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import Popup from '@components/Popup';
@@ -326,6 +323,7 @@ const AdminUsers = () => {
 
                         return (
                             <button
+                                className="admin-filter-tab"
                                 key={status}
                                 type="button"
                                 onClick={() => handleVerificationFilterChange(status)}
@@ -357,12 +355,13 @@ const AdminUsers = () => {
                     </div>
 
                     <div style={styles.actionButtons}>
-                        <button type="button" onClick={() => setAdvancedFiltersEnabled((current) => !current)} style={styles.actionButton}>
+                        <button className="admin-toolbar-button" type="button" onClick={() => setAdvancedFiltersEnabled((current) => !current)} style={styles.actionButton}>
                             <SlidersHorizontal size={15} strokeWidth={2.2} />
                             <span>{advancedFiltersEnabled ? 'Ocultar filtros' : 'Filtros avanzados'}</span>
                             {activeFiltersCount > 0 && <strong style={styles.actionBadge}>{activeFiltersCount}</strong>}
                         </button>
                         <button
+                            className="admin-toolbar-button"
                             type="button"
                             onClick={handleClickUpdate}
                             disabled={dataUser.length === 0}
@@ -375,6 +374,7 @@ const AdminUsers = () => {
                             <span>Editar</span>
                         </button>
                         <button
+                            className="admin-toolbar-button"
                             type="button"
                             onClick={() => handleDelete(dataUser)}
                             disabled={dataUser.length === 0}
@@ -476,16 +476,25 @@ const AdminUsers = () => {
                     </section>
                 )}
 
-                <section style={styles.userListShell}>
-                    <header style={styles.userListHeader}>
-                        <label style={styles.selectPageControl}>
+                <section className="admin-user-list-shell" style={styles.userListShell}>
+                    <header className="admin-user-list-header" style={styles.userListHeader}>
+                        <label
+                            className="admin-page-select"
+                            data-selected={areAllPageUsersSelected ? 'true' : 'false'}
+                            data-disabled={paginatedUsers.length === 0 ? 'true' : 'false'}
+                            style={styles.selectPageControl}
+                        >
                             <input
+                                className="admin-native-checkbox"
                                 type="checkbox"
                                 checked={areAllPageUsersSelected}
                                 disabled={paginatedUsers.length === 0}
                                 onChange={handleTogglePageSelection}
                                 style={styles.checkboxInput}
                             />
+                            <span className="admin-select-mark admin-select-mark-page" aria-hidden="true">
+                                <span className="admin-select-tick" aria-hidden="true" />
+                            </span>
                             <span>Seleccionar página</span>
                         </label>
                         <span style={styles.listRange}>
@@ -501,68 +510,83 @@ const AdminUsers = () => {
                                 <ShieldCheck size={22} strokeWidth={2} />
                                 <span>No hay usuarios que coincidan con este filtro.</span>
                             </div>
-                        ) : paginatedUsers.map((currentUser) => {
+                        ) : paginatedUsers.map((currentUser, index) => {
                             const isSelected = selectedUserIds.has(currentUser.id);
+                            const normalizedStatus = normalize(currentUser.estadoVerificacion || 'pendiente');
                             const statusTone = getStatusTone(currentUser.estadoVerificacion);
-                            const initials = String(currentUser.nombreCompleto || 'U')
-                                .trim()
-                                .split(/\s+/)
-                                .slice(0, 2)
-                                .map((part) => part.charAt(0).toUpperCase())
-                                .join('') || 'U';
 
                             return (
                                 <article
                                     key={currentUser.id}
+                                    className="admin-user-row"
+                                    data-selected={isSelected ? 'true' : 'false'}
+                                    data-status={normalizedStatus}
+                                    onClick={(event) => {
+                                        if (event.target?.closest?.('button, a, input, textarea, select')) return;
+                                        handleToggleUserSelection(currentUser);
+                                    }}
                                     style={{
                                         ...styles.userListRow,
                                         ...(isSelected ? styles.userListRowSelected : {}),
+                                        '--row-index': index,
                                     }}
                                 >
-                                    <label style={styles.rowSelection}>
+                                    <label
+                                        className="admin-row-select-zone"
+                                        style={styles.rowSelection}
+                                        title={`Seleccionar ${currentUser.nombreCompleto || 'usuario'}`}
+                                        onClick={(event) => event.stopPropagation()}
+                                    >
                                         <input
+                                            className="admin-native-checkbox"
                                             type="checkbox"
                                             checked={isSelected}
                                             onChange={() => handleToggleUserSelection(currentUser)}
                                             style={styles.checkboxInput}
                                             aria-label={`Seleccionar ${currentUser.nombreCompleto}`}
                                         />
+                                        <span className="admin-select-mark" aria-hidden="true">
+                                            <span className="admin-select-tick" aria-hidden="true" />
+                                        </span>
                                     </label>
 
-                                    <div style={styles.userAvatar} aria-hidden="true">{initials}</div>
+                                    <span className="admin-status-rail" style={styles.statusRail} aria-hidden="true" />
 
-                                    <div style={styles.userMain}>
-                                        <strong style={styles.userName}>{currentUser.nombreCompleto || 'Sin nombre'}</strong>
-                                        <span style={styles.userEmail}>
-                                            <Mail size={14} strokeWidth={2} />
-                                            {currentUser.email || 'Sin correo registrado'}
-                                        </span>
+                                    <div className="admin-user-content" style={styles.userContent}>
+                                        <div className="admin-user-top-line" style={styles.userTopLine}>
+                                            <div style={styles.userMain}>
+                                                <strong style={styles.userName}>{currentUser.nombreCompleto || 'Sin nombre'}</strong>
+                                                <span style={styles.userEmail} title={currentUser.email || 'Sin correo registrado'}>
+                                                    {currentUser.email || 'Sin correo registrado'}
+                                                </span>
+                                            </div>
+
+                                            <button
+                                                className="admin-user-controls admin-user-open-zone"
+                                                type="button"
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    handleViewUser(currentUser);
+                                                }}
+                                                style={styles.userControls}
+                                                title={`Ver documentos de ${currentUser.nombreCompleto || 'usuario'}`}
+                                                aria-label={`Ver documentos de ${currentUser.nombreCompleto || 'usuario'}`}
+                                            >
+                                                <span className="admin-status-pill" style={{ ...styles.statusPill, ...statusTone }}>
+                                                    {titleCase(currentUser.estadoVerificacion)}
+                                                </span>
+                                                <span className="admin-row-action-button" style={{ ...styles.rowActionButton, ...styles.rowActionButtonView }} aria-hidden="true">
+                                                    <Eye size={14} strokeWidth={2.3} />
+                                                </span>
+                                            </button>
+                                        </div>
+
+                                        <div className="admin-user-meta" style={styles.userMeta}>
+                                            <span className="admin-meta-chip" style={styles.metaChip}>{titleCase(currentUser.rol || 'Sin rol')}</span>
+                                            <span className="admin-meta-chip" style={styles.metaChip}>{currentUser.rut || 'Sin RUT'}</span>
+                                            <span className="admin-meta-chip" style={styles.metaChip}>{currentUser.createdAt || 'Sin fecha'}</span>
+                                        </div>
                                     </div>
-
-                                    <div style={styles.userMeta}>
-                                        <span style={styles.metaChip}>
-                                            <UserRound size={13} strokeWidth={2} />
-                                            {currentUser.rol || 'Sin rol'}
-                                        </span>
-                                        <span style={styles.metaChip}>{currentUser.rut || 'Sin RUT'}</span>
-                                        <span style={styles.metaChip}>
-                                            <CalendarDays size={13} strokeWidth={2} />
-                                            {currentUser.createdAt || 'Sin fecha'}
-                                        </span>
-                                    </div>
-
-                                    <span style={{ ...styles.statusPill, ...statusTone }}>
-                                        {titleCase(currentUser.estadoVerificacion)}
-                                    </span>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => handleViewUser(currentUser)}
-                                        style={styles.reviewButton}
-                                    >
-                                        <Eye size={15} strokeWidth={2.2} />
-                                        <span>Ver</span>
-                                    </button>
                                 </article>
                             );
                         })}
@@ -571,6 +595,7 @@ const AdminUsers = () => {
                     {filteredUsers.length > usersPerPage && (
                         <footer style={styles.paginationBar}>
                             <button
+                                className="admin-pagination-button"
                                 type="button"
                                 onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                                 disabled={currentPage === 1}
@@ -585,6 +610,7 @@ const AdminUsers = () => {
                             <div style={styles.paginationPages}>
                                 {paginationPages.map((page) => (
                                     <button
+                                        className="admin-pagination-number"
                                         key={page}
                                         type="button"
                                         onClick={() => setCurrentPage(page)}
@@ -599,6 +625,7 @@ const AdminUsers = () => {
                             </div>
 
                             <button
+                                className="admin-pagination-button"
                                 type="button"
                                 onClick={() => setCurrentPage((page) => Math.min(pageCount, page + 1))}
                                 disabled={currentPage === pageCount}
@@ -723,6 +750,7 @@ const styles = {
     verificationTab: {
         minHeight: '34px',
         border: '1px solid transparent',
+        borderColor: 'transparent',
         borderRadius: '999px',
         padding: '7px 10px 7px 12px',
         backgroundColor: 'transparent',
@@ -853,7 +881,7 @@ const styles = {
     },
     userListShell: {
         borderRadius: '14px',
-        border: '1px solid #d8e4e7',
+        border: '1px solid #e1eaed',
         backgroundColor: '#ffffff',
         overflow: 'hidden',
     },
@@ -862,11 +890,14 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '12px',
-        padding: '12px 14px',
-        borderBottom: '1px solid #e5edf0',
-        backgroundColor: '#f8fbfb',
+        padding: '9px 14px',
+        marginBottom: 0,
+        border: 0,
+        borderRadius: 0,
+        backgroundColor: '#ffffff',
     },
     selectPageControl: {
+        position: 'relative',
         display: 'inline-flex',
         alignItems: 'center',
         gap: '9px',
@@ -876,9 +907,12 @@ const styles = {
         cursor: 'pointer',
     },
     checkboxInput: {
-        width: '15px',
-        height: '15px',
-        accentColor: '#0f766e',
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        margin: 0,
+        opacity: 0,
         cursor: 'pointer',
     },
     listRange: {
@@ -889,6 +923,7 @@ const styles = {
     userList: {
         display: 'flex',
         flexDirection: 'column',
+        gap: 0,
     },
     emptyList: {
         minHeight: '150px',
@@ -904,46 +939,66 @@ const styles = {
         padding: '24px',
     },
     userListRow: {
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '13px 14px',
-        borderBottom: '1px solid #e8eff2',
+        minHeight: '56px',
+        display: 'grid',
+        gridTemplateColumns: '20px 4px minmax(0, 1fr)',
+        alignItems: 'start',
+        columnGap: '10px',
+        rowGap: 0,
+        padding: '8px 12px 8px 8px',
+        border: 0,
+        borderRadius: 0,
         backgroundColor: '#ffffff',
+        boxShadow: 'none',
+        cursor: 'pointer',
     },
     userListRowSelected: {
-        backgroundColor: '#f1faf8',
+        backgroundColor: '#f7fcfb',
     },
     rowSelection: {
+        position: 'relative',
+        alignSelf: 'stretch',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        minHeight: '40px',
+        borderRadius: '999px',
+        cursor: 'pointer',
+        overflow: 'hidden',
     },
-    userAvatar: {
-        width: '36px',
+    statusRail: {
+        width: '4px',
         height: '36px',
         borderRadius: '999px',
+        justifySelf: 'center',
+        marginTop: '2px',
+    },
+    userContent: {
+        position: 'relative',
+        minWidth: 0,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#eef7f5',
-        color: '#0f766e',
-        fontSize: '12px',
-        fontWeight: '800',
-        border: '1px solid #d8e4e7',
+        flexDirection: 'column',
+        gap: '6px',
+        paddingRight: '92px',
+    },
+    userTopLine: {
+        minWidth: 0,
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+        gap: 0,
     },
     userMain: {
         minWidth: 0,
-        flex: '1 1 210px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '5px',
+        gap: '3px',
     },
     userName: {
         minWidth: 0,
         color: '#0f172a',
         fontSize: '14px',
+        fontWeight: '800',
         lineHeight: 1.25,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -953,7 +1008,6 @@ const styles = {
         minWidth: 0,
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '5px',
         color: '#64748b',
         fontSize: '12px',
         lineHeight: 1.25,
@@ -961,53 +1015,80 @@ const styles = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
     },
+    userControls: {
+        position: 'absolute',
+        top: '0',
+        right: '0',
+        flex: '0 0 auto',
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: '6px',
+        minWidth: '86px',
+        border: 0,
+        padding: 0,
+        backgroundColor: 'transparent',
+        cursor: 'pointer',
+    },
+    rowActionButton: {
+        width: '27px',
+        height: '27px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1px solid #d8e4e7',
+        borderRadius: '999px',
+        backgroundColor: '#ffffff',
+        color: '#0f766e',
+        cursor: 'pointer',
+    },
+    rowActionButtonView: {
+        borderColor: '#c8d9dd',
+        color: '#0f766e',
+    },
     userMeta: {
         minWidth: 0,
-        flex: '1 1 220px',
         display: 'flex',
         alignItems: 'center',
-        gap: '6px',
+        gap: '8px',
         flexWrap: 'wrap',
     },
     metaChip: {
-        minHeight: '24px',
+        minHeight: '20px',
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '5px',
-        borderRadius: '999px',
-        padding: '4px 8px',
-        backgroundColor: '#f4f7f8',
+        padding: 0,
+        backgroundColor: 'transparent',
         color: '#475569',
         fontSize: '12px',
         fontWeight: '700',
-        lineHeight: 1,
+        lineHeight: 1.2,
     },
     statusPill: {
-        minHeight: '26px',
+        minHeight: '22px',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         border: '1px solid',
         borderRadius: '999px',
-        padding: '5px 10px',
-        fontSize: '12px',
+        padding: '4px 8px',
+        fontSize: '11px',
         fontWeight: '800',
         lineHeight: 1,
         whiteSpace: 'nowrap',
     },
     reviewButton: {
-        minHeight: '34px',
-        marginLeft: 'auto',
+        minHeight: '26px',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '6px',
-        border: '1px solid #b7d9d6',
+        gap: '5px',
+        border: '1px solid #c8d9dd',
         borderRadius: '999px',
-        padding: '7px 11px',
-        backgroundColor: '#eef8f6',
+        padding: '5px 9px',
+        backgroundColor: '#ffffff',
         color: '#0f766e',
-        fontSize: '13px',
+        fontSize: '12px',
         fontWeight: '800',
         cursor: 'pointer',
     },

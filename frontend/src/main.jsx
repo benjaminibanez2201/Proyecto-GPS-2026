@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import Login from '@pages/Login';
 import ForgotPassword from '@pages/ForgotPassword';
 import ResetPassword from '@pages/ResetPassword';
+import VerifyEmail from '@pages/VerifyEmail';
 import Home from '@pages/Home';
 import AdminUsers from '@pages/AdminUsers';
 import Register from '@pages/Register';
@@ -30,6 +31,7 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/profile\/?$/, title: `Mi perfil - ${APP_NAME}` },
     { pattern: /^\/historial\/?$/, title: `Historial de arriendos - ${APP_NAME}` },
     { pattern: /^\/perfil\/[^/]+\/?$/, title: `Perfil de usuario - ${APP_NAME}` },
+    { pattern: /^\/verify-email\/[^/]+\/?$/, title: `Verificar correo - ${APP_NAME}` },
   ];
 
   const matchedRule = titleRules.find((rule) => rule.pattern.test(pathname));
@@ -100,6 +102,10 @@ const router = createBrowserRouter([
   {
     path: '/reset-password/:token',
     element: <ResetPassword/>
+  },
+  {
+    path: '/verify-email/:token',
+    element: <VerifyEmail/>
   },
   {
     path: '/register',

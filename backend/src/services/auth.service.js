@@ -1,13 +1,14 @@
 "use strict";
 import User from "../entity/user.entity.js";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { ACCESS_TOKEN_SECRET } from "../config/configEnv.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
 import { TERMINOS_VERSION } from "../helpers/terminos.helper.js";
 import {
+  sendEmailVerificationEmail,
   sendRecoveryEmail,
-  sendRegistrationReceivedEmail,
 } from "./email.service.js";
 import {
   commitVerificationUploads,
@@ -20,6 +21,21 @@ function createErrorMessage(dataInfo, message) {
     dataInfo,
     message,
   };
+}
+
+const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+
+function createEmailVerificationToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function applyEmailVerificationToken(user) {
+  const token = createEmailVerificationToken();
+
+  user.emailVerificationToken = token;
+  user.emailVerificationExpires = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS);
+
+  return token;
 }
 
 export async function loginService(user) {
@@ -41,6 +57,13 @@ export async function loginService(user) {
 
     if (!isMatch) {
       return [null, createErrorMessage("auth", "Credenciales incorrectas")];
+    }
+
+    if (userFound.rol !== "admin" && userFound.emailVerificado === false) {
+      return [null, createErrorMessage(
+        "emailVerificado",
+        "Debes verificar tu correo electronico antes de iniciar sesion. Revisa tu bandeja de entrada.",
+      )];
     }
 
     if (userFound.estadoVerificacion === "pendiente") {
@@ -70,6 +93,7 @@ export async function loginService(user) {
       id: userFound.id,
       nombreCompleto: userFound.nombreCompleto,
       email: userFound.email,
+      emailVerificado: userFound.emailVerificado,
       rut: userFound.rut,
       rol: userFound.rol,
       estadoVerificacion: userFound.estadoVerificacion,
@@ -90,8 +114,7 @@ function hasRequiredArrendadorFiles(files = {}) {
   return Boolean(
     files.documentoResidencia?.[0]
     && files.documentoVerificacion?.[0]
-    && files.documentoVerificacionReverso?.[0]
-    && files.fotoPerfil?.[0],
+    && files.documentoVerificacionReverso?.[0],
   );
 }
 
@@ -125,7 +148,7 @@ export async function registerService(user, uploadedFiles = {}) {
     if (rol === "arrendador" && !hasRequiredArrendadorFiles(uploadedFiles)) {
       return [null, createErrorMessage(
         "documentoVerificacion",
-        "Debes adjuntar la foto de perfil, el carnet de identidad por ambos lados y el comprobante de residencia.",
+        "Debes adjuntar el carnet de identidad por ambos lados y el comprobante de residencia.",
       )];
     }
 
@@ -172,7 +195,19 @@ export async function registerService(user, uploadedFiles = {}) {
       }),
     });
 
+    const emailVerificationToken = applyEmailVerificationToken(newUser);
+    newUser.emailVerificado = false;
+    newUser.emailVerificadoEn = null;
+
     await userRepository.save(newUser);
+
+    const registerVerificationUploads = {
+      carnetIdentidadFrontal: uploadedFiles.carnetIdentidadFrontal,
+      carnetIdentidadReverso: uploadedFiles.carnetIdentidadReverso,
+      documentoResidencia: uploadedFiles.documentoResidencia,
+      documentoVerificacion: uploadedFiles.documentoVerificacion,
+      documentoVerificacionReverso: uploadedFiles.documentoVerificacionReverso,
+    };
 
     if (
       rol === "arrendador"
@@ -181,9 +216,8 @@ export async function registerService(user, uploadedFiles = {}) {
       || uploadedFiles.documentoVerificacionReverso?.[0]
       || uploadedFiles.carnetIdentidadFrontal?.[0]
       || uploadedFiles.carnetIdentidadReverso?.[0]
-      || uploadedFiles.fotoPerfil?.[0]
     ) {
-      const { stored, storedPaths } = await commitVerificationUploads(newUser.id, uploadedFiles);
+      const { stored, storedPaths } = await commitVerificationUploads(newUser.id, registerVerificationUploads);
       uploadsCommitted = true;
       storedFilePaths = storedPaths;
 
@@ -207,15 +241,11 @@ export async function registerService(user, uploadedFiles = {}) {
         newUser.carnetIdentidadReverso = stored.carnetIdentidadReverso;
       }
 
-      if (stored.fotoPerfil) {
-        newUser.fotoPerfil = stored.fotoPerfil;
-      }
-
       await userRepository.save(newUser);
     }
 
     try {
-      await sendRegistrationReceivedEmail(newUser);
+      await sendEmailVerificationEmail(newUser, emailVerificationToken);
     } catch (emailError) {
       await userRepository.delete({ id: newUser.id });
       await removeStoredFiles(storedFilePaths);
@@ -227,7 +257,12 @@ export async function registerService(user, uploadedFiles = {}) {
       )];
     }
 
-    const { password: _password, ...dataUser } = newUser;
+    const {
+      emailVerificationExpires: _emailVerificationExpires,
+      emailVerificationToken: _emailVerificationToken,
+      password: _password,
+      ...dataUser
+    } = newUser;
 
     return [dataUser, null];
   } catch (error) {
@@ -238,6 +273,78 @@ export async function registerService(user, uploadedFiles = {}) {
     if (!uploadsCommitted) {
       await removeUploadedTempFiles(uploadedFiles);
     }
+  }
+}
+
+export async function verifyEmailService(token) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    if (!token) {
+      return [null, "El enlace de verificacion es invalido"];
+    }
+
+    const userFound = await userRepository
+      .createQueryBuilder("user")
+      .addSelect([
+        "user.emailVerificationExpires",
+        "user.emailVerificationToken",
+      ])
+      .where("user.emailVerificationToken = :token", { token })
+      .getOne();
+
+    if (!userFound) {
+      return [null, "El enlace de verificacion es invalido o ya fue utilizado"];
+    }
+
+    if (!userFound.emailVerificationExpires || userFound.emailVerificationExpires < new Date()) {
+      return [null, "El enlace de verificacion ha expirado. Solicita un nuevo correo de verificacion."];
+    }
+
+    userFound.emailVerificado = true;
+    userFound.emailVerificadoEn = new Date();
+    userFound.emailVerificationToken = null;
+    userFound.emailVerificationExpires = null;
+
+    await userRepository.save(userFound);
+
+    return ["Correo electronico verificado correctamente", null];
+  } catch (error) {
+    console.error("Error al verificar correo electronico:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function resendEmailVerificationService(email) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository
+      .createQueryBuilder("user")
+      .addSelect([
+        "user.emailVerificationExpires",
+        "user.emailVerificationToken",
+      ])
+      .where("user.email = :email", { email })
+      .getOne();
+
+    if (!userFound) {
+      return ["Si existe una cuenta pendiente, enviaremos un nuevo correo de verificacion.", null];
+    }
+
+    if (userFound.emailVerificado) {
+      return ["Este correo ya se encuentra verificado.", null];
+    }
+
+    const emailVerificationToken = applyEmailVerificationToken(userFound);
+
+    await userRepository.save(userFound);
+    await sendEmailVerificationEmail(userFound, emailVerificationToken);
+
+    return ["Enviamos un nuevo correo de verificacion.", null];
+  } catch (error) {
+    console.error("Error al reenviar correo de verificacion:", error);
+    return [null, "No se pudo enviar el correo de verificacion. Intenta nuevamente."];
   }
 }
 

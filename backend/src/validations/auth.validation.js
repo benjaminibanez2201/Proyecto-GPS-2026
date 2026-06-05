@@ -4,10 +4,9 @@ import Joi from "joi";
 const namePattern = /^[a-zA-Z\u00C0-\u017F\s]+$/;
 const passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/;
 const rutPattern = /^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/;
-const MAX_PROFILE_PHOTO_SIZE = 8 * 1024 * 1024;
 const MAX_VERIFICATION_DOCUMENT_SIZE = 8 * 1024 * 1024;
-const profilePhotoTypes = ["image/jpeg", "image/png"];
 const verificationDocumentTypes = ["image/jpeg", "image/png", "application/pdf"];
+const identityDocumentTypes = ["image/jpeg", "image/png"];
 
 const emailSchema = Joi.string()
   .min(5)
@@ -38,7 +37,7 @@ const passwordSchema = Joi.string()
   });
 
 const nombreCompletoSchema = Joi.string()
-  .min(15)
+  .min(5)
   .max(50)
   .pattern(namePattern)
   .required()
@@ -46,7 +45,7 @@ const nombreCompletoSchema = Joi.string()
     "string.empty": "El nombre completo no puede estar vacio.",
     "any.required": "El nombre completo es obligatorio.",
     "string.base": "El nombre completo debe ser de tipo texto.",
-    "string.min": "El nombre completo debe tener al menos 15 caracteres.",
+    "string.min": "El nombre completo debe tener al menos 5 caracteres.",
     "string.max": "El nombre completo debe tener como maximo 50 caracteres.",
     "string.pattern.base": "El nombre completo solo puede contener letras y espacios.",
   });
@@ -103,6 +102,10 @@ export const authValidation = Joi.object({
   password: passwordSchema,
 }).unknown(false).messages(strictMessages);
 
+export const emailVerificationRequestValidation = Joi.object({
+  email: emailSchema,
+}).unknown(false).messages(strictMessages);
+
 export const registerValidation = Joi.object(baseRegisterFields)
   .unknown(false)
   .messages(strictMessages);
@@ -119,12 +122,12 @@ export const registerEstudianteValidation = Joi.object({
     maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
   }),
   carnetIdentidadFrontal: fileMetadataSchema({
-    allowedTypes: verificationDocumentTypes,
+    allowedTypes: identityDocumentTypes,
     label: "El frente del carnet de identidad",
     maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
   }),
   carnetIdentidadReverso: fileMetadataSchema({
-    allowedTypes: verificationDocumentTypes,
+    allowedTypes: identityDocumentTypes,
     label: "El reverso del carnet de identidad",
     maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
   }),
@@ -149,19 +152,14 @@ export const registerArrendadorValidation = Joi.object({
     maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
   }),
   documentoVerificacion: fileMetadataSchema({
-    allowedTypes: verificationDocumentTypes,
+    allowedTypes: identityDocumentTypes,
     label: "El frente del carnet de identidad",
     maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
   }),
   documentoVerificacionReverso: fileMetadataSchema({
-    allowedTypes: verificationDocumentTypes,
+    allowedTypes: identityDocumentTypes,
     label: "El reverso del carnet de identidad",
     maxSize: MAX_VERIFICATION_DOCUMENT_SIZE,
-  }),
-  fotoPerfil: fileMetadataSchema({
-    allowedTypes: profilePhotoTypes,
-    label: "La foto de perfil",
-    maxSize: MAX_PROFILE_PHOTO_SIZE,
   }),
   rol: Joi.string().valid("arrendador").required(),
   telefono: Joi.string().min(8).max(20).required().messages({

@@ -18,6 +18,8 @@ const useLogin = () => {
             setErrorPassword(dataMessage.message);
         } else if (dataMessage.dataInfo === 'auth') {
             showErrorAlert('Credenciales incorrectas', dataMessage.message);
+        } else if (dataMessage.dataInfo === 'emailVerificado') {
+            showErrorAlert('Correo sin verificar', dataMessage.message);
         } else if (dataMessage.dataInfo === 'estadoVerificacion') {
             showErrorAlert('Cuenta no disponible', dataMessage.message);
         }

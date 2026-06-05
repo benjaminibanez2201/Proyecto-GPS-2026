@@ -3,10 +3,13 @@ import {
   forgotPasswordService,
   loginService,
   registerService,
+  resendEmailVerificationService,
   resetPasswordService,
+  verifyEmailService,
 } from "../services/auth.service.js";
 import {
   authValidation,
+  emailVerificationRequestValidation,
   newPasswordValidation,
   registerArrendadorValidation,
   registerEstudianteValidation,
@@ -133,6 +136,38 @@ export async function logout(req, res) {
   try {
     res.clearCookie("jwt", { httpOnly: true });
     handleSuccess(res, 200, "Sesion cerrada exitosamente");
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function verifyEmail(req, res) {
+  try {
+    const { token } = req.params;
+    const [message, error] = await verifyEmailService(token);
+
+    if (error) return handleErrorClient(res, 400, "Error verificando correo", error);
+
+    handleSuccess(res, 200, message);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function resendEmailVerification(req, res) {
+  try {
+    const { body } = req;
+    const { error, value } = emailVerificationRequestValidation.validate(body);
+
+    if (error) {
+      return handleErrorClient(res, 400, "Error de validacion", error.message);
+    }
+
+    const [message, serviceError] = await resendEmailVerificationService(value.email);
+
+    if (serviceError) return handleErrorClient(res, 400, "Error enviando verificacion", serviceError);
+
+    handleSuccess(res, 200, message);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

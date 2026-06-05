@@ -339,7 +339,8 @@ input[name='rut'] {
 	background-image: url('../assets/IdentityCardIcon.svg');
 }
 
-input[name='nombreCompleto'] {
+input[name='nombres'],
+input[name='apellidos'] {
 	background-image: url('../assets/PersonIcon.svg');
 }
 
@@ -465,7 +466,7 @@ input {
 	border: 0;
 	border-radius: 0;
 	background: transparent;
-	color: #003366;
+	color: #0f766e;
 	font-size: inherit;
 	font-weight: bold;
 	line-height: inherit;
@@ -477,7 +478,7 @@ input {
 .form .checkbox-label-button:hover {
 	border: 0;
 	background: transparent;
-	color: #006edf;
+	color: #005f5f;
 }
 
 .form .checkbox-field input {
@@ -492,6 +493,273 @@ input {
 
 .form .field-extra-content {
 	margin: 0 0 8px;
+}
+
+.form .file-upload-field {
+	position: relative;
+	display: block;
+	width: 100%;
+	margin: 0 0 0.8vh;
+}
+
+.form .file-input-native {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	overflow: hidden;
+	pointer-events: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.form .file-upload-control {
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	width: 100%;
+	min-height: 48px;
+	margin: 0;
+	padding: 10px 12px;
+	box-sizing: border-box;
+	border: 2px dashed #9ccfcc;
+	border-radius: 12px;
+	background: #f8fbfb;
+	color: #0f766e;
+	cursor: pointer;
+	overflow: hidden;
+}
+
+.form .file-upload-control.has-file-icon {
+	justify-content: flex-start;
+	min-height: 58px;
+	border-style: solid;
+	border-color: #c8dedc;
+	background: #fbfefe;
+}
+
+.form .file-upload-control.file-upload-identity-card {
+	align-items: center;
+	justify-content: center;
+	min-height: 76px;
+	border-style: dashed;
+	border-color: #9ccfcc;
+	background: #f8fbfb;
+	text-align: center;
+}
+
+.form .file-upload-control.file-upload-identity-card::before {
+	content: "";
+	position: absolute;
+	right: 10px;
+	bottom: -8px;
+	width: 72px;
+	height: 72px;
+	background-image: url('../assets/IdentityCardIcon.svg');
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: contain;
+	opacity: 0.07;
+	pointer-events: none;
+	transform: rotate(-5deg);
+}
+
+.form .file-upload-control.file-upload-identity-card > * {
+	position: relative;
+	z-index: 1;
+}
+
+.form .file-upload-control.is-dragging {
+	border-color: #0f766e;
+	background: #eef8f6;
+	box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.18);
+}
+
+.form .file-upload-control.is-uploading {
+	cursor: progress;
+}
+
+.form .file-upload-control:hover,
+.form .file-input-native:focus-visible + .file-upload-control {
+	border-color: #0f766e;
+	background: #eef8f6;
+}
+
+.form .file-upload-action {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 0;
+	border-radius: 0;
+	padding: 0;
+	background: transparent;
+	color: #0f766e;
+	font-size: 13px;
+	font-weight: 800;
+	line-height: 1;
+}
+
+.form .file-upload-control.has-file-icon .file-upload-action {
+	min-height: 0;
+	padding: 0;
+	border-radius: 0;
+	background: transparent;
+	font-size: 14px;
+	line-height: 1.15;
+}
+
+.form .file-upload-control.file-upload-identity-card .file-upload-action {
+	min-height: 0;
+	padding: 0;
+	border-radius: 0;
+	background: transparent;
+	font-size: 15px;
+	line-height: 1.15;
+}
+
+.form .file-upload-copy {
+	min-width: 0;
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.form .file-upload-control:not(.file-upload-identity-card) .file-upload-copy {
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	width: 100%;
+}
+
+.form .file-upload-control.file-upload-identity-card .file-upload-copy {
+	align-items: center;
+	width: 100%;
+}
+
+.form .file-upload-icon-wrap {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	flex: 0 0 34px;
+	border-radius: 10px;
+	background: #e7f6f2;
+}
+
+.form .file-upload-icon {
+	display: block;
+	width: 21px;
+	height: 21px;
+}
+
+.form .file-upload-name {
+	min-width: 0;
+	color: #64748b;
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.25;
+	text-align: right;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.form .file-upload-control.has-file-icon .file-upload-name {
+	text-align: left;
+}
+
+.form .file-upload-control.file-upload-identity-card .file-upload-name {
+	max-width: 100%;
+	text-align: center;
+}
+
+.form .file-upload-name.has-file {
+	color: #0f172a;
+}
+
+.form .file-upload-progress {
+	display: block;
+	width: min(150px, 100%);
+	height: 5px;
+	margin-top: 4px;
+	border-radius: 999px;
+	background: #d9ece9;
+	overflow: hidden;
+}
+
+.form .file-upload-progress span {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: #0f766e;
+	transition: width 0.12s ease;
+}
+
+.form .form-field-group {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-bottom: 5px;
+}
+
+.form .form-field-group-header {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 8px;
+	color: #008080;
+	font-weight: 800;
+}
+
+.form .form-field-group-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	flex: 0 0 22px;
+}
+
+.form .form-field-group-icon img {
+	display: block;
+	width: 20px;
+	height: 20px;
+}
+
+.form .form-field-group-title {
+	line-height: 1.2;
+}
+
+.form .form-field-group-items {
+	width: 100%;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.form .form-field-group .container_inputs {
+	min-width: 0;
+	margin-bottom: 0;
+}
+
+.form .form-field-group .file-upload-field {
+	margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+	.form .form-field-group-items {
+		grid-template-columns: 1fr;
+	}
 }
 
 .terms-modal-backdrop {

@@ -21,6 +21,7 @@ async function createUsers() {
         password: "Admin1234.",
         rol: "admin",
         estadoVerificacion: "aprobado",
+        emailVerificado: true,
       },
       {
         nombreCompleto: "Usuario Estudiante",
@@ -29,6 +30,7 @@ async function createUsers() {
         password: "Estudiante1234.",
         rol: "estudiante",
         estadoVerificacion: "aprobado",
+        emailVerificado: true,
       },
       {
         nombreCompleto: "Usuario Arrendador",
@@ -37,6 +39,7 @@ async function createUsers() {
         password: "Arrendador1234.",
         rol: "arrendador",
         estadoVerificacion: "aprobado",
+        emailVerificado: true,
       },
     ];
 
@@ -51,6 +54,8 @@ async function createUsers() {
           password: await encryptPassword(u.password),
           rol: u.rol,
           estadoVerificacion: u.estadoVerificacion,
+          emailVerificado: u.emailVerificado,
+          emailVerificadoEn: new Date(),
         });
         await userRepository.save(newUser);
         created.push(u.email);

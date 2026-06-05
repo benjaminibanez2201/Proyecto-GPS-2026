@@ -1,0 +1,12 @@
+Hola {{ nombreCompleto }},
+
+Recibimos tu registro como {{ rol }} en ArriendU.
+
+Antes de usar tu cuenta, confirma que este correo te pertenece:
+{{ emailVerificationUrl }}
+
+Despues de confirmar el correo, tu cuenta seguira pendiente de revision por parte del administrador.
+
+Si no creaste esta cuenta, puedes ignorar este mensaje.
+
+Este es un mensaje automatico, por favor no respondas a este correo.

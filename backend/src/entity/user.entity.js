@@ -121,6 +121,26 @@ const UserSchema = new EntitySchema({
       length: 20,
       nullable: true,
     },
+    emailVerificado: {
+      type: "boolean",
+      default: true,
+      nullable: false,
+    },
+    emailVerificadoEn: {
+      type: "timestamp with time zone",
+      nullable: true,
+    },
+    emailVerificationToken: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+      select: false,
+    },
+    emailVerificationExpires: {
+      type: "timestamp with time zone",
+      nullable: true,
+      select: false,
+    },
     resetPasswordToken: {
       type: "varchar",
       length: 255,
