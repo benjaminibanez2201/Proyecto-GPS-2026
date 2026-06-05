@@ -6,6 +6,7 @@ import profileRoutes from "./profile.routes.js";
 import rentalsRoutes from "./rentals.routes.js";
 import reviewsRoutes from "./reviews.routes.js";
 import mensajeRoutes from "./mensaje.routes.js";
+import notificacionRoutes from "./notificacion.routes.js";
 
 
 const router = Router();
@@ -16,6 +17,7 @@ router
     .use("/profile", profileRoutes)
     .use("/rentals", rentalsRoutes)
     .use("/reviews", reviewsRoutes)
+    .use("/notificaciones", notificacionRoutes)
     .use("/mensajes", mensajeRoutes);
 
 export default router;
