@@ -44,6 +44,28 @@ const requiredVerificationFields = {
     arrendador: ['documentoVerificacion', 'documentoVerificacionReverso', 'documentoResidencia'],
 };
 
+const identityDocumentFields = [
+    'documentoVerificacion',
+    'documentoVerificacionReverso',
+    'carnetIdentidadFrontal',
+    'carnetIdentidadReverso',
+];
+
+const quickRejectionReasons = [
+    {
+        label: 'Foto poco visible',
+        buildComment: (document) => `${document.label}: foto poco visible.`,
+    },
+    {
+        label: 'Expirado',
+        buildComment: (document) => `${document.label}: documento expirado.`,
+    },
+    {
+        label: 'Persona no coincide',
+        buildComment: (document) => `${document.label}: la persona del documento no coincide con los datos de la cuenta.`,
+    },
+];
+
 function formatValue(value) {
     if (value === null || value === undefined || value === '') {
         return 'No registrado';
@@ -509,6 +531,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
     const [reviewComment, setReviewComment] = useState('');
     const [reviewError, setReviewError] = useState('');
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const reviewCommentRef = useRef(null);
 
     useEffect(() => {
         if (!show) return;
@@ -540,6 +563,24 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
     const hasMissingRequiredDocs = requiredDocuments.some((document) => !document.isPresent);
     const canReview = Boolean(onVerificationAction) && ['estudiante', 'arrendador'].includes(normalizedRole);
     const isApprovedReview = normalizedStatus === 'aprobado';
+    const quickReasonDocuments = requiredDocuments.filter((document) => {
+        if (!document.isPresent) return false;
+        if (normalizedRole === 'estudiante') {
+            return ['carnetIdentidadFrontal', 'carnetIdentidadReverso'].includes(document.field);
+        }
+
+        return identityDocumentFields.includes(document.field);
+    });
+    const applyQuickReason = (comment, shouldFocus = false) => {
+        setReviewComment(comment);
+        setReviewError('');
+
+        if (shouldFocus) {
+            window.requestAnimationFrame(() => {
+                reviewCommentRef.current?.focus();
+            });
+        }
+    };
     const submitVerificationAction = async (actionType) => {
         if (!canReview) return;
 
@@ -818,11 +859,62 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                         ))}
                                     </div>
 
+                                    {!isApprovedReview && quickReasonDocuments.length > 0 && (
+                                        <div style={{ marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <span style={{ color: '#334155', fontSize: '13px', fontWeight: 800 }}>
+                                                Motivos rápidos para documentos adjuntos
+                                            </span>
+                                            {quickReasonDocuments.map((document) => (
+                                                <div key={`quick-${document.field}`} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                    <span style={{ minWidth: '150px', color: '#0f766e', fontSize: '12px', fontWeight: 800 }}>
+                                                        {document.label}
+                                                    </span>
+                                                    {quickRejectionReasons.map((reason) => (
+                                                        <button
+                                                            key={`${document.field}-${reason.label}`}
+                                                            type="button"
+                                                            onClick={() => applyQuickReason(reason.buildComment(document))}
+                                                            style={{
+                                                                border: '1px solid #c8d9dd',
+                                                                borderRadius: '999px',
+                                                                padding: '7px 10px',
+                                                                backgroundColor: '#ffffff',
+                                                                color: '#334155',
+                                                                cursor: 'pointer',
+                                                                fontSize: '12px',
+                                                                fontWeight: 800,
+                                                            }}
+                                                        >
+                                                            {reason.label}
+                                                        </button>
+                                                    ))}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => applyQuickReason(`${document.label}: `, true)}
+                                                        style={{
+                                                            border: '1px dashed #0f766e',
+                                                            borderRadius: '999px',
+                                                            padding: '7px 10px',
+                                                            backgroundColor: '#eef8f6',
+                                                            color: '#0f766e',
+                                                            cursor: 'pointer',
+                                                            fontSize: '12px',
+                                                            fontWeight: 800,
+                                                        }}
+                                                    >
+                                                        Otro / justificar
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     <label style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginBottom: '12px' }}>
                                         <span style={{ color: '#334155', fontSize: '13px', fontWeight: 800 }}>
                                             {reviewCommentLabel}
                                         </span>
                                         <textarea
+                                            ref={reviewCommentRef}
                                             value={reviewComment}
                                             onChange={(event) => setReviewComment(event.target.value)}
                                             rows={4}
