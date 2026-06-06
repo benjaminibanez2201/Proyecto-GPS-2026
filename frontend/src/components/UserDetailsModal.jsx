@@ -911,16 +911,36 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                         <section style={{ padding: '24px 32px 56px', backgroundColor: '#ffffff', borderBottomLeftRadius: '22px', borderBottomRightRadius: '22px' }}>
                             {canReview && (
                                 <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '14px', border: '1px solid #d7eeee', backgroundColor: '#f8fafc' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '12px' }}>
-                                        <div>
-                                            <p style={{ margin: '0 0 6px', color: '#0f766e', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                                Revision RF13
-                                            </p>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
+                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', minWidth: 0 }}>
+                                            <span
+                                                aria-hidden="true"
+                                                style={{
+                                                    width: '8px',
+                                                    height: '8px',
+                                                    borderRadius: '999px',
+                                                    backgroundColor: '#0f766e',
+                                                    boxShadow: '0 0 0 3px rgba(15, 118, 110, 0.1)',
+                                                    flexShrink: 0,
+                                                }}
+                                            />
                                             <h3 style={{ margin: 0, color: '#0f172a', fontSize: '18px', lineHeight: 1.25 }}>
                                                 Documentos de {normalizedRole}
                                             </h3>
                                         </div>
-                                        <span style={{ padding: '6px 10px', borderRadius: '999px', backgroundColor: hasMissingRequiredDocs ? '#fef2f2' : '#ecfdf5', color: hasMissingRequiredDocs ? '#b91c1c' : '#0f766e', fontSize: '12px', fontWeight: 800 }}>
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', color: hasMissingRequiredDocs ? '#b91c1c' : '#0f766e', fontSize: '12px', fontWeight: 800 }}>
+                                            <span
+                                                aria-hidden="true"
+                                                style={{
+                                                    width: '7px',
+                                                    height: '7px',
+                                                    borderRadius: '999px',
+                                                    backgroundColor: hasMissingRequiredDocs ? '#b91c1c' : '#0f766e',
+                                                    boxShadow: hasMissingRequiredDocs
+                                                        ? '0 0 0 3px rgba(185, 28, 28, 0.1)'
+                                                        : '0 0 0 3px rgba(15, 118, 110, 0.1)',
+                                                }}
+                                            />
                                             {hasMissingRequiredDocs ? 'Incompleto' : 'Completo'}
                                         </span>
                                     </div>
