@@ -584,12 +584,21 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
         isIdentityDocument(document) ? identityQuickRejectionReasons : generalQuickRejectionReasons
     );
     const applyQuickReason = (comment, shouldFocus = false) => {
-        setReviewComment(comment);
+        setReviewComment((currentComment) => {
+            const existingComment = currentComment.trimEnd();
+
+            return existingComment ? `${existingComment}\n${comment}` : comment;
+        });
         setReviewError('');
 
         if (shouldFocus) {
             window.requestAnimationFrame(() => {
-                reviewCommentRef.current?.focus();
+                const textArea = reviewCommentRef.current;
+
+                if (!textArea) return;
+
+                textArea.focus();
+                textArea.setSelectionRange(textArea.value.length, textArea.value.length);
             });
         }
     };
