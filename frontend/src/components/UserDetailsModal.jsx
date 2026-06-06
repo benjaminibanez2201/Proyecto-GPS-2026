@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -731,9 +731,9 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                     .rf13-quick-reasons {
                         display: flex;
                         flex-direction: column;
-                        gap: 2px;
+                        gap: 0;
                         margin: 0 0 14px;
-                        padding: 9px 0 10px;
+                        padding: 10px 0 9px;
                         border-top: 1px solid #e2e8f0;
                         border-bottom: 1px solid #e2e8f0;
                     }
@@ -742,83 +742,76 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                         color: #64748b;
                         font-size: 12px;
                         font-weight: 800;
-                        margin-bottom: 5px;
+                        margin-bottom: 8px;
                     }
 
                     .rf13-quick-reasons__row {
                         display: grid;
-                        grid-template-columns: minmax(170px, 0.72fr) minmax(0, 1.4fr);
+                        grid-template-columns: minmax(190px, 0.78fr) minmax(0, 1.35fr);
                         align-items: center;
-                        gap: 10px;
-                        min-height: 34px;
-                        padding: 4px 0;
+                        gap: 12px;
+                        padding: 7px 0;
+                    }
+
+                    .rf13-quick-reasons__row + .rf13-quick-reasons__row {
+                        border-top: 1px solid rgba(226, 232, 240, 0.72);
                     }
 
                     .rf13-quick-reasons__doc {
                         display: inline-flex;
                         align-items: center;
-                        gap: 7px;
-                        color: #475569;
+                        color: #334155;
                         font-size: 12px;
                         font-weight: 800;
                         line-height: 1.25;
                         min-width: 0;
                     }
 
-                    .rf13-quick-reasons__doc::before {
-                        content: "";
-                        width: 6px;
-                        height: 6px;
-                        border-radius: 999px;
-                        background: #0f766e;
-                        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
-                        flex: 0 0 6px;
-                    }
-
                     .rf13-quick-reasons__actions {
                         display: flex;
                         flex-wrap: wrap;
-                        gap: 6px;
+                        gap: 2px 8px;
+                        align-items: center;
                         min-width: 0;
                     }
 
                     .rf13-quick-reasons__chip {
-                        min-height: 26px;
-                        border: 1px solid #e2e8f0;
-                        border-radius: 8px;
-                        padding: 4px 8px;
-                        background: #ffffff;
-                        color: #334155;
+                        min-height: 24px;
+                        border: 0;
+                        border-radius: 6px;
+                        padding: 3px 2px;
+                        background: transparent;
+                        color: #475569;
                         cursor: pointer;
                         font-size: 12px;
                         font-weight: 750;
-                        transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
+                        line-height: 1.2;
+                        transition: background-color 140ms ease, color 140ms ease;
                     }
 
                     .rf13-quick-reasons__chip:focus-visible {
-                        outline: 2px solid rgba(15, 118, 110, 0.18);
-                        outline-offset: 2px;
-                        border-color: #8fc7c2;
+                        outline: 2px solid rgba(15, 118, 110, 0.16);
+                        outline-offset: 1px;
                     }
 
                     .rf13-quick-reasons__chip:hover {
-                        border-color: #b7d9d6;
-                        background: #f8fcfb;
+                        background: transparent;
                         color: #0f766e;
-                        transform: translateY(-1px);
                     }
 
                     .rf13-quick-reasons__chip--other {
-                        border-color: transparent;
-                        background: transparent;
                         color: #0f766e;
-                        padding-inline: 3px;
+                        font-weight: 800;
                     }
 
                     .rf13-quick-reasons__chip--other:hover {
-                        border-color: transparent;
-                        background: transparent;
                         color: #0b5f5b;
+                    }
+
+                    .rf13-quick-reasons__separator {
+                        color: #cbd5e1;
+                        font-size: 12px;
+                        line-height: 1;
                     }
 
                     @media (max-width: 640px) {
@@ -912,18 +905,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                             {canReview && (
                                 <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '14px', border: '1px solid #d7eeee', backgroundColor: '#f8fafc' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
-                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', minWidth: 0 }}>
-                                            <span
-                                                aria-hidden="true"
-                                                style={{
-                                                    width: '8px',
-                                                    height: '8px',
-                                                    borderRadius: '999px',
-                                                    backgroundColor: '#0f766e',
-                                                    boxShadow: '0 0 0 3px rgba(15, 118, 110, 0.1)',
-                                                    flexShrink: 0,
-                                                }}
-                                            />
+                                        <div style={{ minWidth: 0 }}>
                                             <h3 style={{ margin: 0, color: '#0f172a', fontSize: '18px', lineHeight: 1.25 }}>
                                                 Documentos de {normalizedRole}
                                             </h3>
@@ -978,16 +960,25 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                                         {document.label}
                                                     </span>
                                                     <div className="rf13-quick-reasons__actions">
-                                                        {getQuickReasonsForDocument(document).map((reason) => (
-                                                            <button
-                                                                key={`${document.field}-${reason.label}`}
-                                                                type="button"
-                                                                className="rf13-quick-reasons__chip"
-                                                                onClick={() => applyQuickReason(reason.buildComment(document))}
-                                                            >
-                                                                {reason.label}
-                                                            </button>
+                                                        {getQuickReasonsForDocument(document).map((reason, index) => (
+                                                            <Fragment key={`${document.field}-${reason.label}`}>
+                                                                {index > 0 && (
+                                                                    <span className="rf13-quick-reasons__separator" aria-hidden="true">
+                                                                        /
+                                                                    </span>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    className="rf13-quick-reasons__chip"
+                                                                    onClick={() => applyQuickReason(reason.buildComment(document))}
+                                                                >
+                                                                    {reason.label}
+                                                                </button>
+                                                            </Fragment>
                                                         ))}
+                                                        <span className="rf13-quick-reasons__separator" aria-hidden="true">
+                                                            /
+                                                        </span>
                                                         <button
                                                             type="button"
                                                             className="rf13-quick-reasons__chip rf13-quick-reasons__chip--other"
