@@ -107,7 +107,7 @@ const AdminUsers = () => {
     }, [setDataUser, setSearchParams]);
 
     const handleVerificationAction = useCallback(async (targetUser, payload) => {
-        const updatedUser = await updateUserVerificationStatus(targetUser.rut, payload);
+        const updatedUser = await updateUserVerificationStatus(targetUser, payload);
 
         if (!updatedUser?.id) {
             const errorMessage = updatedUser?.details || updatedUser?.message || 'No se pudo actualizar la revision';

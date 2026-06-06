@@ -29,12 +29,21 @@ export async function updateUser(data, rut) {
     }
 }
 
-export async function updateUserVerificationStatus(rut, reviewPayload) {
+function buildUserVerificationQuery(userSelector) {
+    if (userSelector && typeof userSelector === 'object') {
+        if (userSelector.id) return `id=${encodeURIComponent(userSelector.id)}`;
+        if (userSelector.rut) return `rut=${encodeURIComponent(userSelector.rut)}`;
+    }
+
+    return `rut=${encodeURIComponent(userSelector)}`;
+}
+
+export async function updateUserVerificationStatus(userSelector, reviewPayload) {
     try {
         const payload = typeof reviewPayload === 'string'
             ? { estadoVerificacion: reviewPayload }
             : reviewPayload;
-        const response = await axios.patch(`/user/detail/verification?rut=${encodeURIComponent(rut)}`, payload);
+        const response = await axios.patch(`/user/detail/verification?${buildUserVerificationQuery(userSelector)}`, payload);
         return response.data.data;
     } catch (error) {
         return error.response?.data || { message: 'Error al actualizar estado de verificacion' };
