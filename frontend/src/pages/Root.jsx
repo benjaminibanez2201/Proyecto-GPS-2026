@@ -1,8 +1,6 @@
-<<<<<<< HEAD
+
 import { useCallback, useEffect, useState } from 'react';
-=======
-import { useState } from 'react';
->>>>>>> origin/Dev
+
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
