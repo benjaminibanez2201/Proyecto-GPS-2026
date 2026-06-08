@@ -2,7 +2,7 @@
 import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
 import { crearResena, obtenerResenasPorUsuario } from "../controllers/reviews.controller.js";
-import { obtenerResena, actualizarResena, eliminarResena } from "../controllers/reviews.controller.js";
+import { actualizarResena, eliminarResena, obtenerResena } from "../controllers/reviews.controller.js";
 
 const router = Router();
 

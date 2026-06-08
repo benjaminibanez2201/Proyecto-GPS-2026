@@ -14,17 +14,17 @@ function useTable({ data, columns, filter, filters, dataToFilter, initialSortNam
             tableRef.current.style.minWidth = '0';
 
             const updatedColumns = [
-                { 
-                    formatter: "rowSelection", 
-                    titleFormatter: false, 
-                    hozAlign: "center", 
-                    headerSort: false, 
+                {
+                    formatter: "rowSelection",
+                    titleFormatter: false,
+                    hozAlign: "center",
+                    headerSort: false,
                     width: 48,
                     minWidth: 48,
                     maxWidth: 48,
                     cellClick: function (e, cell) {
                         cell.getRow().toggleSelect();
-                    } 
+                    }
                 },
                 ...columns
             ];
@@ -32,10 +32,11 @@ function useTable({ data, columns, filter, filters, dataToFilter, initialSortNam
                 data: [],
                 columns: updatedColumns,
                 layout: "fitColumns",
-                responsiveLayout: "collapse",
+                responsiveLayout: "hide",
                 width: "100%",
                 pagination: true,
                 paginationSize: 6,
+                paginationButtonCount: 3,
                 selectableRows: "highlight",
                 rowHeight: 46,
                 langs: {

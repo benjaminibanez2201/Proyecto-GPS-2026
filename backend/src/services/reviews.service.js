@@ -16,7 +16,9 @@ export async function crearResenaServicio(body, authorId) {
     if (!arriendo) return [null, "Arriendo no encontrado"];
     if (arriendo.status !== "COMPLETED") return [null, "El arriendo no está confirmado por ambas partes"];
 
-    const esParticipante = Number(authorId) === Number(arriendo.arrendadorId) || Number(authorId) === Number(arriendo.estudianteId);
+    const esParticipante =
+      Number(authorId) === Number(arriendo.arrendadorId)
+      || Number(authorId) === Number(arriendo.estudianteId);
     if (!esParticipante) return [null, "No puedes calificar en este arriendo"];
 
     if (Number(authorId) === Number(targetUserId)) return [null, "No puedes calificarte a ti mismo"];
