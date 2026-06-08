@@ -32,7 +32,7 @@ function useTable({ data, columns, filter, filters, dataToFilter, initialSortNam
                 data: [],
                 columns: updatedColumns,
                 layout: "fitColumns",
-                responsiveLayout: "hide",
+                responsiveLayout: false,
                 width: "100%",
                 pagination: true,
                 paginationSize: 6,
