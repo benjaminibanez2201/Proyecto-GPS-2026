@@ -29,6 +29,18 @@ export async function updateUser(data, rut) {
     }
 }
 
+export async function updateUserVerificationStatus(rut, reviewPayload) {
+    try {
+        const payload = typeof reviewPayload === 'string'
+            ? { estadoVerificacion: reviewPayload }
+            : reviewPayload;
+        const response = await axios.patch(`/user/detail/verification?rut=${encodeURIComponent(rut)}`, payload);
+        return response.data.data;
+    } catch (error) {
+        return error.response?.data || { message: 'Error al actualizar estado de verificacion' };
+    }
+}
+
 export async function deleteUser(rut) {
     try {
         const response = await axios.delete(`/user/detail/?rut=${rut}`);
@@ -41,6 +53,15 @@ export async function deleteUser(rut) {
 export async function updateProfile(data) {
     try {
         const response = await axios.patch('/profile/', data);
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function getProfile() {
+    try {
+        const response = await axios.get('/profile/');
         return response.data.data;
     } catch (error) {
         return error.response.data;

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useCallback, useEffect, useState } from 'react';
+=======
+import { useState } from 'react';
+>>>>>>> origin/Dev
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -8,7 +12,6 @@ import {
   Heart,
   MessageCircle,
   Bell,
-  ShieldCheck,
   Users,
   FlagTriangleRight,
   ChevronLeft,
@@ -73,8 +76,7 @@ function PageRoot() {
       subtitle: 'Control y gestión de la plataforma.',
       items: [
         { label: 'Panel Administrador', icon: Home, to: '/admin' },
-        { label: 'Verificaciones Pendientes', icon: ShieldCheck, disabled: true },
-        { label: 'Gestión de Usuarios', icon: Users, to: '/admin/users' },
+        { label: 'Gestión de Usuarios', icon: Users, to: '/admin/users?estado=todos' },
         { label: 'Publicaciones Reportadas', icon: FlagTriangleRight, disabled: true },
       ],
     },
@@ -100,6 +102,14 @@ function PageRoot() {
       justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
       padding: isSidebarCollapsed ? '12px 10px' : '12px',
     };
+  };
+
+  const isSidebarItemActive = (item, routerIsActive) => {
+    if (item.to?.startsWith('/admin/users')) {
+      return location.pathname === '/admin/users';
+    }
+
+    return routerIsActive;
   };
 
   const renderMenuItem = (item) => {
@@ -130,7 +140,10 @@ function PageRoot() {
         to={item.to}
         onMouseEnter={() => setHoveredItem(hoverKey)}
         onMouseLeave={() => setHoveredItem(null)}
-        style={({ isActive }) => getSidebarItemStyle({ active: isActive, hovered: hoveredItem === hoverKey })}
+        style={({ isActive }) => getSidebarItemStyle({
+          active: isSidebarItemActive(item, isActive),
+          hovered: hoveredItem === hoverKey,
+        })}
         end
       >
         <Icon size={20} strokeWidth={2} />

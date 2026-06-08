@@ -1,0 +1,9 @@
+Hola {{ nombreCompleto }},
+
+Revisamos tu solicitud de cuenta y no pudo ser aprobada por ahora.
+
+Motivo: {{ motivoRechazo }}
+
+Si crees que esto fue un error, contacta al soporte de ArriendU.
+
+Este es un mensaje automatico, por favor no respondas a este correo.

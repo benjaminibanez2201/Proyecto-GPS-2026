@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, CheckCircle, Clock } from 'lucide-react';
 import { listarArriendos, confirmarArriendo, crearResena } from '../services/rentalsAndReviews.service.js';
+import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function HistorialArriendos() {
@@ -9,6 +10,7 @@ export default function HistorialArriendos() {
   const [error, setError] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [arriendoSeleccionado, setArriendoSeleccionado] = useState(null);
+  const [loadingConfirmId, setLoadingConfirmId] = useState(null);
 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
@@ -46,11 +48,19 @@ export default function HistorialArriendos() {
   }, [user?.id]);
 
   const handleConfirmar = async (id) => {
-    const [data, err] = await confirmarArriendo(id);
-    if (err) alert(err);
-    else {
-      alert('Confirmacion registrada con exito');
-      cargarDatos();
+    try {
+      setLoadingConfirmId(id);
+      const [, err] = await confirmarArriendo(id);
+      if (err) {
+        showErrorAlert('Error', err);
+      } else {
+        await showSuccessConfirm('¡Felicitaciones!', 'Se ha confirmado el arriendo.', 'OK');
+        cargarDatos();
+      }
+    } catch {
+      showErrorAlert('Error', 'Ocurrió un error al confirmar el arriendo');
+    } finally {
+      setLoadingConfirmId(null);
     }
   };
 
@@ -73,7 +83,7 @@ export default function HistorialArriendos() {
       comment
     };
 
-    const [data, err] = await crearResena(payload);
+    const [, err] = await crearResena(payload);
     if (err) alert(err);
     else {
       alert('Calificacion enviada exitosamente');
@@ -131,12 +141,13 @@ export default function HistorialArriendos() {
                     <span style={{ color: '#ffc107', display: 'flex', alignItems: 'center', gap: '5px' }}>
                       <Clock size={16} /> Esperando otra parte
                     </span>
-                  ) : (
+                    ) : (
                     <button
                       onClick={() => handleConfirmar(item.id)}
-                      style={{ backgroundColor: colores.principal, color: colores.blanco, border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
+                      className="confirm-btn"
+                      disabled={loadingConfirmId === item.id}
                     >
-                      Confirmar arriendo
+                      {loadingConfirmId === item.id ? 'Confirmando...' : 'Confirmar arriendo'}
                     </button>
                   )}
                 </td>

@@ -8,7 +8,6 @@ import { useRef } from 'react';
 
 const ForgotPassword = () => { // declaramos el componente ForgotPassword
     const { // y extraemos lo que nesesitamos del hook useForgotPassword
-        email,
         errorEmail,
         showHelp,
         loading,

@@ -44,6 +44,29 @@ const UserSchema = new EntitySchema({
       default: "pendiente",
       nullable: false,
     },
+    comentarioVerificacion: {
+      type: "varchar",
+      length: 1000,
+      nullable: true,
+    },
+    motivoRechazo: {
+      type: "varchar",
+      length: 1000,
+      nullable: true,
+    },
+    solicitudAntecedentes: {
+      type: "varchar",
+      length: 1000,
+      nullable: true,
+    },
+    verificacionRevisadaEn: {
+      type: "timestamp with time zone",
+      nullable: true,
+    },
+    verificacionRevisadaPorId: {
+      type: "int",
+      nullable: true,
+    },
     fotoPerfil: {
       type: "varchar",
       length: 255,
@@ -67,6 +90,35 @@ const UserSchema = new EntitySchema({
     documentoVerificacion: {
       type: "varchar",
       length: 255,
+      nullable: true,
+    },
+    documentoVerificacionReverso: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    carnetIdentidadFrontal: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    carnetIdentidadReverso: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    documentoResidencia: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    terminosAceptadosEn: {
+      type: "timestamp with time zone",
+      nullable: true,
+    },
+    terminosVersion: {
+      type: "varchar",
+      length: 20,
       nullable: true,
     },
     resetPasswordToken: {

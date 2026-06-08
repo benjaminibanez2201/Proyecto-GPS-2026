@@ -1,0 +1,8 @@
+Hola {{ nombreCompleto }},
+
+Tu cuenta fue aprobada. Ya puedes iniciar sesion y usar ArriendU.
+
+Inicia sesion aqui:
+{{ loginUrl }}
+
+Este es un mensaje automatico, por favor no respondas a este correo.
