@@ -1,0 +1,10 @@
+Hola {{ nombreCompleto }},
+
+Revisamos tu solicitud de cuenta y necesitamos nuevos antecedentes antes de aprobarla.
+
+Solicitud del administrador:
+{{ solicitudAntecedentes }}
+
+Responde este correo o contacta al soporte de ArriendU con la informacion solicitada.
+
+Tu cuenta seguira pendiente hasta que el administrador termine la revision.

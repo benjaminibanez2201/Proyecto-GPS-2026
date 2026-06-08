@@ -7,7 +7,9 @@ export async function createNotificacionService(data) {
         const notificacionRepository = AppDataSource.getRepository(Notificacion);
 
         if (data.tipo !== undefined && data.tipo !== null) data.tipo = String(data.tipo).trim().slice(0, 32);
-        if (data.mensaje !== undefined && data.mensaje !== null) data.mensaje = String(data.mensaje).trim().slice(0, 255);
+        if (data.mensaje !== undefined && data.mensaje !== null) {
+            data.mensaje = String(data.mensaje).trim().slice(0, 255);
+        }
 
         const notificacion = notificacionRepository.create(data);
         const result = await notificacionRepository.save(notificacion);
@@ -94,7 +96,7 @@ export async function marcarTodasNotificacionesLeidasService(userId) {
             .createQueryBuilder()
             .update()
             .set({ leida: true, readAt: () => "CURRENT_TIMESTAMP" })
-            .where('"userId" = :userId AND leida = false', { userId })
+            .where("\"userId\" = :userId AND leida = false", { userId })
             .execute();
 
         return [result, null];
@@ -119,4 +121,3 @@ export async function getNotificacionesNoLeidasCountService(userId) {
         return [null, "Error interno del servidor"];
     }
 }
-    

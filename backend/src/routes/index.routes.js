@@ -7,10 +7,11 @@ import rentalsRoutes from "./rentals.routes.js";
 import reviewsRoutes from "./reviews.routes.js";
 import mensajeRoutes from "./mensaje.routes.js";
 import notificacionRoutes from "./notificacion.routes.js";
+import publicacionRoutes from "./publicacion.routes.js";
+import uploadRoutes from "./upload.routes.js";
 
 
 const router = Router();
-
 router
     .use("/auth", authRoutes)
     .use("/user", userRoutes)
@@ -18,6 +19,8 @@ router
     .use("/rentals", rentalsRoutes)
     .use("/reviews", reviewsRoutes)
     .use("/notificaciones", notificacionRoutes)
-    .use("/mensajes", mensajeRoutes);
+    .use("/mensajes", mensajeRoutes)
+    .use("/publicacion", publicacionRoutes)
+    .use("/uploads", uploadRoutes);
 
 export default router;
