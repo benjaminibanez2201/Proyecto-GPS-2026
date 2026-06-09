@@ -5,11 +5,14 @@ import {
   getUsersService,
   updateUserService,
   updateProfileService,
+  getProfileService,
+  updateArrendadorProfileService,
 } from "../services/user.service.js";
 import {
   userBodyValidation,
   userQueryValidation,
   profileBodyValidation,
+  profileArrendadorBodyValidation,
 } from "../validations/user.validation.js";
 import {
   handleErrorClient,
@@ -178,8 +181,6 @@ export async function getPublicProfile(req, res) {
   }
 }
 
-import { getProfileService } from "../services/user.service.js";
-
 export async function getProfile(req, res) {
   try {
     const { id } = req.user; 
@@ -193,9 +194,6 @@ export async function getProfile(req, res) {
     handleErrorServer(res, 500, error.message);
   }
 }
-
-import { updateArrendadorProfileService } from "../services/user.service.js";
-import { profileArrendadorBodyValidation } from "../validations/user.validation.js";
 
 export async function updateArrendadorProfile(req, res) {
   try {
@@ -222,6 +220,22 @@ export async function updateArrendadorProfile(req, res) {
     if (userError) return handleErrorClient(res, 400, "Error actualizando perfil", userError);
 
     handleSuccess(res, 200, "Perfil actualizado correctamente", user);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function getPerfilPropio(req, res) {
+  try {
+    const { id, nombre, correo, rol, universidad, carrera, telefono, fotoPerfil, estadoVerificacion } = req.user;
+    
+    const datosPerfil = {
+      id, nombre, correo, rol, fotoPerfil,
+      ...(rol === "estudiante" && { universidad, carrera }),
+      ...(rol === "arrendador" && { telefono, estadoVerificacion })
+    };
+
+    handleSuccess(res, 200, "Perfil obtenido correctamente", datosPerfil);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
