@@ -7,6 +7,7 @@ import {
   getUser,
   getUsers,
   updateUser,
+  updateUserVerificationStatus,
 } from "../controllers/user.controller.js";
 
 const router = Router();
@@ -18,6 +19,7 @@ router
 router
   .get("/", getUsers)
   .get("/detail/", getUser)
+  .patch("/detail/verification", updateUserVerificationStatus)
   .patch("/detail/", updateUser)
   .delete("/detail/", deleteUser);
 

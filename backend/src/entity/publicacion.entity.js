@@ -1,5 +1,5 @@
 "use strict";
-import { EntitySchema, TreeLevelColumn } from "typeorm";
+import { EntitySchema } from "typeorm";
 
 const PublicacionSchema = new EntitySchema({
   name: "Publicacion",

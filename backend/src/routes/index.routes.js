@@ -8,16 +8,17 @@ import reviewsRoutes from "./reviews.routes.js";
 import mensajeRoutes from "./mensaje.routes.js";
 import publicacionRoutes from "./publicacion.routes.js";
 import uploadRoutes from "./upload.routes.js";
+import notificacionRoutes from "./notificacion.routes.js";
 import favoritoRoutes from "./favorito.route.js";
 
 const router = Router();
-
 router
     .use("/auth", authRoutes)
     .use("/user", userRoutes)
     .use("/profile", profileRoutes)
     .use("/rentals", rentalsRoutes)
     .use("/reviews", reviewsRoutes)
+    .use("/notificaciones", notificacionRoutes)
     .use("/mensajes", mensajeRoutes)
     .use("/publicacion", publicacionRoutes)
     .use("/uploads", uploadRoutes)
