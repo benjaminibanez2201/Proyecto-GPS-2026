@@ -1,6 +1,9 @@
 "use strict";
 import { createPublicacionService } from "../services/publicacion.service.js";
-import { publicacionBodyValidation } from "../validations/publicacion.validation.js";
+import { 
+  publicacionBodyValidation,
+  publicacionUpdateValidation,
+} from "../validations/publicacion.validation.js";
 import {
   handleErrorClient,
   handleErrorServer,
@@ -11,6 +14,7 @@ import {
   updatePublicacionService,
   deletePublicacionService 
 } from "../services/publicacion.service.js";
+
 
 export async function createPublicacion(req, res) {
   try {
@@ -68,8 +72,7 @@ export async function updatePublicacion(req, res) {
       return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden editar publicaciones");
     }
 
-    // Usamos tu misma validación de Joi
-    const { error: bodyError } = publicacionBodyValidation.validate(body);
+    const { error: bodyError } = publicacionUpdateValidation.validate(body);
     if (bodyError) return handleErrorClient(res, 400, "Error de validación", bodyError.message);
 
     const [publicacion, error] = await updatePublicacionService(publicacionId, arrendadorId, body);
@@ -83,7 +86,7 @@ export async function updatePublicacion(req, res) {
 
 export async function deletePublicacion(req, res) {
   try {
-    const { id: publicacionId } = params = req.params;
+    const { id: publicacionId } = req.params;
     const { id: arrendadorId, rol } = req.user;
 
     if (rol !== "arrendador") {
