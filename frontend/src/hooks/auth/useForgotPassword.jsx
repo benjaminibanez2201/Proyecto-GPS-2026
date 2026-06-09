@@ -5,7 +5,7 @@ import { forgotPassword } from '@services/auth.service.js';
 const useForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [errorEmail, setErrorEmail] = useState('');
-    const [responseMessage, setResponseMessage] = useState('');
+    const [showHelp, setShowHelp] = useState(false);
     const [loading, setLoading] = useState(false);
     const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
@@ -15,13 +15,13 @@ const useForgotPassword = () => {
         if (cooldownSeconds > 0 || loading) return;
         setLoading(true);
         setErrorEmail('');
-        setResponseMessage('');
+        setShowHelp(false);
         try {
             const payload = await forgotPassword(email);
             // backend returns { status, message, data }
             if (payload?.status === 'Success') {
                 const message = 'Instrucciones enviadas si el correo existe';
-                setResponseMessage(message);
+                setShowHelp(true);
                 setCooldownSeconds(60);
                 await showSuccessConfirm(
                     'Correo enviado',
@@ -55,7 +55,7 @@ const useForgotPassword = () => {
     return {
         email,
         errorEmail,
-        responseMessage,
+        showHelp,
         loading,
         cooldownSeconds,
         handleInputChange,

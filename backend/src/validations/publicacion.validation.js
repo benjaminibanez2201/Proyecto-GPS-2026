@@ -49,19 +49,6 @@ export const publicacionBodyValidation = Joi.object({
   serviciosIncluidos: Joi.array()
     .items(Joi.string())
     .optional(),
-  distanciaCampus: Joi.number()
-    .min(0)
-    .optional()
-    .messages({
-      "number.base": "La distancia al campus debe ser un número.",
-      "number.min": "La distancia no puede ser negativa.",
-    }),
-  accesibilidad: Joi.array()
-    .items(Joi.string())
-    .optional()
-    .messages({
-      "array.base": "La accesibilidad debe ser un listado (arreglo) de características.",
-    }),
   reglasConvivencia: Joi.string()
     .max(1000)
     .optional()
@@ -86,18 +73,6 @@ export const publicacionQueryValidation = Joi.object({
     .optional()
     .messages({
       "any.only": "El tipo de inmueble a buscar debe ser: departamento, casa, pieza o estudio."
-    }),
-  distanciaMax: Joi.number()
-    .min(0)
-    .optional()
-    .messages({
-      "number.base": "La distancia máxima debe ser un número.",
-      "number.min": "La distancia máxima no puede ser negativa."
-    }),
-  accesibilidad: Joi.string()
-    .optional()
-    .messages({
-      "string.base": "La accesibilidad debe ser texto."
     }),
   ordenarPor: Joi.string()
     .valid("precioMensual", "distanciaCampus")

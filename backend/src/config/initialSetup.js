@@ -5,6 +5,11 @@ import { encryptPassword } from "../helpers/bcrypt.helper.js";
 
 async function createUsers() {
   try {
+    if (!AppDataSource.isInitialized) {
+      console.log("DB no inicializada - omitiendo creación de usuarios de inicialización");
+      return;
+    }
+
     const userRepository = AppDataSource.getRepository(User);
 
     // Lista de usuarios que queremos asegurar en la base de datos
@@ -18,11 +23,19 @@ async function createUsers() {
         estadoVerificacion: "aprobado",
       },
       {
-        nombreCompleto: "Benjamín Ibáñez",
-        rut: "12.345.678-9",
-        email: "benjaminibanes2003@gmail.com",
-        password: "Benja2003.",
-        rol: "admin",
+        nombreCompleto: "Usuario Estudiante",
+        rut: "19.123.456-7",
+        email: "estudiante1@gmail.cl",
+        password: "Estudiante1234.",
+        rol: "estudiante",
+        estadoVerificacion: "aprobado",
+      },
+      {
+        nombreCompleto: "Usuario Arrendador",
+        rut: "20.111.222-3",
+        email: "arrendador1@gmail.cl",
+        password: "Arrendador1234.",
+        rol: "arrendador",
         estadoVerificacion: "aprobado",
       },
     ];
