@@ -4,12 +4,15 @@ import Publicacion from "../entity/publicacion.entity.js";
 import User from "../entity/user.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 
-export async function buscarConversacionPorPublicacionYEstudiante(id_publicacion, estudianteId) {
+export async function buscarConversacionPorPublicacionYEstudiante(id_publicacion, id_estudiante) {
   try {
     const repositorioConversacion = AppDataSource.getRepository(Conversacion);
 
     const conversacion = await repositorioConversacion.findOne({
-      where: { publicacion: { id: id_publicacion }, estudiante: { id: estudianteId } },
+      where: {
+        publicacion: { id_publicacion },
+        estudiante: { id: id_estudiante },
+      },
       relations: ["publicacion", "estudiante", "arrendador"],
     });
 
@@ -20,20 +23,20 @@ export async function buscarConversacionPorPublicacionYEstudiante(id_publicacion
   }
 }
 
-export async function crearConversacion(id_publicacion, estudianteId) {
+export async function crearConversacion(id_publicacion, id_estudiante) {
   try {
     const repositorioPublicacion = AppDataSource.getRepository(Publicacion);
     const repositorioUsuario = AppDataSource.getRepository(User);
     const repositorioConversacion = AppDataSource.getRepository(Conversacion);
 
     const publicacion = await repositorioPublicacion.findOne({
-      where: { id: id_publicacion },
+      where: { id_publicacion },
       relations: ["owner"],
     });
 
     if (!publicacion) return [null, "Publicación no encontrada"];
 
-    const estudiante = await repositorioUsuario.findOneBy({ id: estudianteId });
+    const estudiante = await repositorioUsuario.findOneBy({ id: id_estudiante });
 
     if (!estudiante) return [null, "Estudiante no encontrado"];
 
