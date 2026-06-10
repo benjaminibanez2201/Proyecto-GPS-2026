@@ -121,6 +121,7 @@ export async function sendRecoveryEmail(email, resetToken) {
     to: email,
     subject: "Restablecer contrasena",
     template: "password-recovery",
+    attachments: getBrandAttachments(),
     data: {
       resetUrl,
     },
