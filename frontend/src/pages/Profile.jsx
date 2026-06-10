@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { updateProfile, getProfile } from '@services/user.service.js';
+import { 
+      updateProfile, 
+      getProfile, 
+      getMisPublicaciones, 
+      updateArrendadorProfile, 
+      eliminarPublicacion,
+      editarPublicacion,
+     } from '@services/user.service.js';
 import { useAuth } from '@context/AuthContext';
 import { UserCircle2, Save, Pencil, X } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -26,14 +33,19 @@ const Profile = () => {
       setValue('carrera', data.carrera || '');
       setValue('telefono', data.telefono || '');
       setValue('fotoPerfil', data.fotoPerfil || '');
+      setValue("email", data.email || "");
     }
   };
 
-  const onSubmit = async (data) => {
+const onSubmit = async (data) => {
     const filteredData = Object.fromEntries(
       Object.entries(data).filter(([_, v]) => v !== '')
     );
-    const response = await updateProfile(filteredData);
+    
+    const response = profileData?.rol === 'arrendador' 
+      ? await updateArrendadorProfile(filteredData)
+      : await updateProfile(filteredData);
+      
     if (response) {
       Swal.fire({
         icon: 'success',
@@ -42,25 +54,103 @@ const Profile = () => {
         confirmButtonColor: accent,
       });
       setEditMode(false);
-      fetchProfile(); // refresca los datos sin recargar la página
+      fetchProfile();
     }
-  };
+};
 
   const fields = [
     { label: 'Nombre completo', field: 'nombreCompleto', placeholder: 'Tu nombre completo' },
-    { label: 'Universidad', field: 'universidad', placeholder: 'Tu universidad' },
-    { label: 'Carrera', field: 'carrera', placeholder: 'Tu carrera' },
-    { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678' },
     { label: 'Foto de perfil (URL)', field: 'fotoPerfil', placeholder: 'https://...' },
+    ...(profileData?.rol === 'estudiante' ? [
+      { label: 'Universidad', field: 'universidad', placeholder: 'Tu universidad' },
+      { label: 'Carrera', field: 'carrera', placeholder: 'Tu carrera' }
+    ] : []),
+    ...(profileData?.rol === 'arrendador' ? [
+      { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678' },
+      { label: "Correo", field: "email", placeholder: "tucorreo@gmail.com",
+      },
+    ] : [])
   ];
 
   const dataItems = [
     { label: 'Nombre completo', value: profileData?.nombreCompleto },
     { label: 'Correo', value: profileData?.email },
-    { label: 'Universidad', value: profileData?.universidad || 'No especificada' },
-    { label: 'Carrera', value: profileData?.carrera || 'No especificada' },
-    { label: 'Teléfono', value: profileData?.telefono || 'No especificado' },
+    ...(profileData?.rol === 'estudiante' ? [
+      { label: 'Universidad', value: profileData?.universidad || 'No especificada' },
+      { label: 'Carrera', value: profileData?.carrera || 'No especificada' }
+    ] : []),
+    ...(profileData?.rol === 'arrendador' ? [
+      { label: 'Teléfono', value: profileData?.telefono || 'No especificado' },
+      { 
+        label: 'Estado de Verificación', 
+        value: (profileData?.estadoVerificacion || 'pendiente').toUpperCase()
+      }
+    ] : [])
   ];
+
+  const [misPublicaciones, setMisPublicaciones] = useState([]);
+  const [publicacionEditando, setPublicacionEditando] = useState(null);
+
+useEffect(() => {
+    if (profileData?.rol === "arrendador") {
+        fetchPublicaciones();
+    }
+}, [profileData?.rol]);
+
+const fetchPublicaciones = async () => {
+    const data = await getMisPublicaciones();
+    if (Array.isArray(data)) setMisPublicaciones(data);
+};
+
+const handleEliminar = async (id) => {
+  const confirm = await Swal.fire({
+    title: '¿Eliminar publicación?',
+    text: 'Esta acción no se puede deshacer.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: accent,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+  });
+
+  if (confirm.isConfirmed) {
+    const response = await eliminarPublicacion(id);
+    if (response) {
+      Swal.fire({ icon: 'success', title: 'Publicación eliminada', confirmButtonColor: accent });
+      fetchPublicaciones();
+    }
+  }
+};
+
+const handleEditar = async (pub) => {
+  const { value: formValues } = await Swal.fire({
+    title: 'Editar publicación',
+    html: `
+      <input id="titulo" class="swal2-input" placeholder="Título" value="${pub.titulo}">
+      <input id="precioMensual" class="swal2-input" placeholder="Precio mensual" value="${pub.precioMensual}" type="number">
+      <input id="ubicacion" class="swal2-input" placeholder="Ubicación" value="${pub.ubicacion}">
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonColor: accent,
+    cancelButtonText: 'Cancelar',
+    confirmButtonText: 'Guardar',
+    preConfirm: () => ({
+      titulo: document.getElementById('titulo').value,
+      precioMensual: parseInt(document.getElementById('precioMensual').value),
+      ubicacion: document.getElementById('ubicacion').value,
+    }),
+  });
+
+  if (formValues) {
+    const response = await editarPublicacion(pub.id, formValues);
+    if (response) {
+      Swal.fire({ icon: 'success', title: 'Publicación actualizada', confirmButtonColor: accent });
+      fetchPublicaciones();
+    }
+  }
+};
 
   return (
     <div style={styles.page}>
@@ -133,6 +223,57 @@ const Profile = () => {
           </div>
         )}
       </section>
+      {profileData?.rol === 'arrendador' && !editMode && (
+        <section style={styles.card}>
+          <header style={{ ...styles.cardHeader, marginBottom: '16px' }}>
+            <div>
+              <p style={{ ...styles.eyebrow, color: accent }}>Mis Propiedades</p>
+              <h2 style={styles.cardTitle}>Listado de mis publicaciones</h2>
+              <p style={styles.cardSubtitle}>Gestiona los inmuebles que has subido a la plataforma.</p>
+            </div>
+            <button 
+              onClick={() => Swal.fire({ title: 'Próximamente', icon: 'info' })}
+              style={{ ...styles.button, alignSelf: 'center', padding: '10px 16px' }}
+            >
+              ➕ Publicar Inmueble
+            </button>
+          </header>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {misPublicaciones.map((pub) => (
+              <div key={pub.id} style={{ ...styles.dataItem, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: '700', color: '#0f172a' }}>{pub.titulo}</h4>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#64748b', textTransform: 'capitalize' }}>
+                    {pub.tipoInmueble} — ${pub.precioMensual.toLocaleString('es-CL')} / mes
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{
+                    fontSize: '11px', fontWeight: '700', padding: '4px 8px', borderRadius: '999px',
+                    backgroundColor: pub.estado === 'activa' ? '#e2f9df' : '#fee2e2',
+                    color: pub.estado === 'activa' ? '#15803d' : '#dc2626'
+                  }}>
+                    {pub.estado.toUpperCase()}
+                  </span>
+                  <button 
+                    onClick={() => handleEditar(pub)}
+                    style={{ border: 'none', background: 'none', cursor: 'pointer', color: accent, fontSize: '14px', fontWeight: '600' }}
+                  >
+                    Editar
+                  </button>
+                  <button 
+                    onClick={() => handleEliminar(pub.id)}
+                    style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '14px', fontWeight: '600' }}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };
