@@ -36,3 +36,12 @@ export async function crearPublicacion(publicacionData) {
     return [null, error.response?.data?.message || 'Error al crear la publicación'];
   }
 }
+
+export async function getMisPublicaciones() {
+  try {
+    const response = await axios.get('/publicacion/mis-publicaciones');
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || 'Error al obtener tus publicaciones'];
+  }
+}

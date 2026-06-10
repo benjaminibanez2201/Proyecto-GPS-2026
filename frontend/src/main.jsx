@@ -18,6 +18,7 @@ import Notificaciones from '@pages/Notificaciones';
 import BuscarArriendos from '@pages/BuscarArriendo.jsx';
 import DetallePublicacion from '@pages/DetallePublicacion.jsx';
 import Favoritos from '@pages/Favoritos.jsx';
+import MisPublicaciones from '@pages/MisPublicaciones.jsx';
 
 const APP_NAME = 'ArriendU';
 
@@ -111,7 +112,7 @@ const router = createBrowserRouter([
       {
         path: 'publicacion/:id', 
         element: (
-          <ProtectedRoute allowedRoles={['estudiante']}>
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
             <DetallePublicacion />
           </ProtectedRoute>
         )
@@ -121,6 +122,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['estudiante']}>
             <Favoritos />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'mis-publicaciones',
+        element: (
+          <ProtectedRoute allowedRoles={['arrendador']}>
+            <MisPublicaciones />
           </ProtectedRoute>
         )
       }

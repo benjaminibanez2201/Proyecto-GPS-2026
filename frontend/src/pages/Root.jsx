@@ -63,7 +63,7 @@ function PageRoot() {
       title: 'Menú',
       subtitle: 'Gestiona tus propiedades y responde interesados.',
       items: [
-        { label: 'Mis Publicaciones', icon: Home, to: '/publicacion' },
+        { label: 'Mis Publicaciones', icon: Home, to: '/mis-publicaciones' },
         { label: 'Mensajes', icon: MessageCircle, disabled: true },
         { label: 'Historial de Arriendos', icon: History, to: '/historial' },
         { label: 'Mi Perfil', icon: User, to: userId ? `/perfil/${userId}` : '/perfil/0' },

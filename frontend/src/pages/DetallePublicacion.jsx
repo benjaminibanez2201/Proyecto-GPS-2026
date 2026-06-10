@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getPublicacionPorId } from '../services/publicacion.service.js';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
+import { useAuth } from '../context/AuthContext';
 import '@styles/basePublicaciones.css';
 
 export default function DetallePublicacion() {
@@ -14,6 +15,8 @@ export default function DetallePublicacion() {
 
   const [esFavorito, setEsFavorito] = useState(false);
   const [procesando, setProcesando] = useState(false);
+  const { user } = useAuth(); 
+  const esArrendador = user?.rol === 'arrendador' || user?.rol === 'Arrendador';
 
   const idPublicacion = publicacion?.id || publicacion?._id;
 
@@ -171,29 +174,33 @@ export default function DetallePublicacion() {
                 <li>No se han especificado servicios</li>
               )}
             </ul>
+            {!esArrendador && (
+              <>
+                <button className="confirm-btn" style={{ width: '100%', marginTop: '30px' }}>
+                  Contactar al Propietario
+                </button>
 
-            <button className="confirm-btn" style={{ width: '100%', marginTop: '30px' }}>
-              Contactar al Propietario
-            </button>
+                <button 
+                  onClick={toggleFavorito}
+                  disabled={procesando}
+                  style={{ 
+                    width: '100%', 
+                    marginTop: '10px', 
+                    padding: '10px', 
+                    background: esFavorito ? '#ef4444' : 'white', 
+                    border: esFavorito ? '1px solid #ef4444' : '1px solid #008080', 
+                    color: esFavorito ? 'white' : '#008080', 
+                    borderRadius: '8px', 
+                    cursor: procesando ? 'wait' : 'pointer',
+                    opacity: procesando ? 0.7 : 1,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {esFavorito ? '❤️ Quitar de Favoritos' : '🤍 Guardar en Favoritos'}
+                </button>
+              </>
+            )}
 
-            <button 
-              onClick={toggleFavorito}
-              disabled={procesando}
-              style={{ 
-                width: '100%', 
-                marginTop: '10px', 
-                padding: '10px', 
-                background: esFavorito ? '#ef4444' : 'white', 
-                border: esFavorito ? '1px solid #ef4444' : '1px solid #008080', 
-                color: esFavorito ? 'white' : '#008080', 
-                borderRadius: '8px', 
-                cursor: procesando ? 'wait' : 'pointer',
-                opacity: procesando ? 0.7 : 1,
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {esFavorito ? '❤️ Quitar de Favoritos' : '🤍 Guardar en Favoritos'}
-            </button>
           </div>
           
         </div>
