@@ -46,7 +46,7 @@ const router = createBrowserRouter([
       {
         path: '/profile',
         element: (
-          <ProtectedRoute allowedRoles={['estudiante']}>
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
             <Profile />
           </ProtectedRoute>
         ),
