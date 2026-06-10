@@ -55,3 +55,39 @@ export async function getProfile() {
         return error.response.data;
     }
 }
+
+export async function getMisPublicaciones() {
+    try {
+        const response = await axios.get('/publicacion/mis-publicaciones');
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function updateArrendadorProfile(data) {
+    try {
+        const response = await axios.patch('/profile/arrendador', data);
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function eliminarPublicacion(id) {
+    try {
+        const response = await axios.delete(`/publicacion/${id}`);
+        return response.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function editarPublicacion(id, data) {
+    try {
+        const response = await axios.put(`/publicacion/${id}`, data);
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
