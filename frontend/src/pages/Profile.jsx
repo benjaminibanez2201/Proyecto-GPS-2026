@@ -1,24 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { 
       updateProfile, 
       getProfile, 
       getMisPublicaciones, 
       updateArrendadorProfile, 
-      eliminarPublicacion,
-      editarPublicacion,
      } from '@services/user.service.js';
 import { useAuth } from '@context/AuthContext';
-import { UserCircle2, Save, Pencil, X } from 'lucide-react';
+import { UserCircle2, Save, Pencil, X, Home } from 'lucide-react'; 
 import Swal from 'sweetalert2';
 
 const accent = '#0f766e';
 
 const Profile = () => {
   const { user } = useAuth();
+  const navigate = useNavigate(); 
   const [profileData, setProfileData] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const { register, handleSubmit, setValue } = useForm();
+  const [cantidadPublicaciones, setCantidadPublicaciones] = useState(0); 
 
   useEffect(() => {
     fetchProfile();
@@ -34,10 +35,17 @@ const Profile = () => {
       setValue('telefono', data.telefono || '');
       setValue('fotoPerfil', data.fotoPerfil || '');
       setValue("email", data.email || "");
+
+      if (data.rol === 'arrendador') {
+        const pubs = await getMisPublicaciones();
+        if (Array.isArray(pubs)) {
+          setCantidadPublicaciones(pubs.length);
+        }
+      }
     }
   };
 
-const onSubmit = async (data) => {
+  const onSubmit = async (data) => {
     const filteredData = Object.fromEntries(
       Object.entries(data).filter(([_, v]) => v !== '')
     );
@@ -56,7 +64,7 @@ const onSubmit = async (data) => {
       setEditMode(false);
       fetchProfile();
     }
-};
+  };
 
   const fields = [
     { label: 'Nombre completo', field: 'nombreCompleto', placeholder: 'Tu nombre completo' },
@@ -67,8 +75,7 @@ const onSubmit = async (data) => {
     ] : []),
     ...(profileData?.rol === 'arrendador' ? [
       { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678' },
-      { label: "Correo", field: "email", placeholder: "tucorreo@gmail.com",
-      },
+      { label: "Correo", field: "email", placeholder: "tucorreo@gmail.com" },
     ] : [])
   ];
 
@@ -87,70 +94,6 @@ const onSubmit = async (data) => {
       }
     ] : [])
   ];
-
-  const [misPublicaciones, setMisPublicaciones] = useState([]);
-  const [publicacionEditando, setPublicacionEditando] = useState(null);
-
-useEffect(() => {
-    if (profileData?.rol === "arrendador") {
-        fetchPublicaciones();
-    }
-}, [profileData?.rol]);
-
-const fetchPublicaciones = async () => {
-    const data = await getMisPublicaciones();
-    if (Array.isArray(data)) setMisPublicaciones(data);
-};
-
-const handleEliminar = async (id) => {
-  const confirm = await Swal.fire({
-    title: '¿Eliminar publicación?',
-    text: 'Esta acción no se puede deshacer.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#dc2626',
-    cancelButtonColor: accent,
-    confirmButtonText: 'Sí, eliminar',
-    cancelButtonText: 'Cancelar',
-  });
-
-  if (confirm.isConfirmed) {
-    const response = await eliminarPublicacion(id);
-    if (response) {
-      Swal.fire({ icon: 'success', title: 'Publicación eliminada', confirmButtonColor: accent });
-      fetchPublicaciones();
-    }
-  }
-};
-
-const handleEditar = async (pub) => {
-  const { value: formValues } = await Swal.fire({
-    title: 'Editar publicación',
-    html: `
-      <input id="titulo" class="swal2-input" placeholder="Título" value="${pub.titulo}">
-      <input id="precioMensual" class="swal2-input" placeholder="Precio mensual" value="${pub.precioMensual}" type="number">
-      <input id="ubicacion" class="swal2-input" placeholder="Ubicación" value="${pub.ubicacion}">
-    `,
-    focusConfirm: false,
-    showCancelButton: true,
-    confirmButtonColor: accent,
-    cancelButtonText: 'Cancelar',
-    confirmButtonText: 'Guardar',
-    preConfirm: () => ({
-      titulo: document.getElementById('titulo').value,
-      precioMensual: parseInt(document.getElementById('precioMensual').value),
-      ubicacion: document.getElementById('ubicacion').value,
-    }),
-  });
-
-  if (formValues) {
-    const response = await editarPublicacion(pub.id, formValues);
-    if (response) {
-      Swal.fire({ icon: 'success', title: 'Publicación actualizada', confirmButtonColor: accent });
-      fetchPublicaciones();
-    }
-  }
-};
 
   return (
     <div style={styles.page}>
@@ -171,7 +114,7 @@ const handleEditar = async (pub) => {
         <span style={styles.rolBadge}>{profileData?.rol || user?.rol}</span>
       </section>
 
-      {/* Card */}
+      {/* Card Datos Personales */}
       <section style={styles.card}>
         <header style={styles.cardHeader}>
           <div>
@@ -223,54 +166,27 @@ const handleEditar = async (pub) => {
           </div>
         )}
       </section>
+
       {profileData?.rol === 'arrendador' && !editMode && (
         <section style={styles.card}>
-          <header style={{ ...styles.cardHeader, marginBottom: '16px' }}>
-            <div>
-              <p style={{ ...styles.eyebrow, color: accent }}>Mis Propiedades</p>
-              <h2 style={styles.cardTitle}>Listado de mis publicaciones</h2>
-              <p style={styles.cardSubtitle}>Gestiona los inmuebles que has subido a la plataforma.</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ padding: '12px', borderRadius: '14px', backgroundColor: `${accent}15`, color: accent }}>
+                <Home size={24} />
+              </div>
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>Mis Propiedades</h3>
+                <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
+                  Tienes <strong>{cantidadPublicaciones}</strong> {cantidadPublicaciones === 1 ? 'publicación activa' : 'publicaciones activas'} en la plataforma.
+                </p>
+              </div>
             </div>
             <button 
-              onClick={() => Swal.fire({ title: 'Próximamente', icon: 'info' })}
-              style={{ ...styles.button, alignSelf: 'center', padding: '10px 16px' }}
+              onClick={() => navigate('/mis-publicaciones')} // 3. Redirige a la vista del Sidebar (ajusta la ruta según tus routes)
+              style={{ ...styles.button, padding: '12px 20px' }}
             >
-              ➕ Publicar Inmueble
+              Gestionar mis publicaciones
             </button>
-          </header>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {misPublicaciones.map((pub) => (
-              <div key={pub.id} style={{ ...styles.dataItem, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: '700', color: '#0f172a' }}>{pub.titulo}</h4>
-                  <p style={{ margin: 0, fontSize: '13px', color: '#64748b', textTransform: 'capitalize' }}>
-                    {pub.tipoInmueble} — ${pub.precioMensual.toLocaleString('es-CL')} / mes
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{
-                    fontSize: '11px', fontWeight: '700', padding: '4px 8px', borderRadius: '999px',
-                    backgroundColor: pub.estado === 'activa' ? '#e2f9df' : '#fee2e2',
-                    color: pub.estado === 'activa' ? '#15803d' : '#dc2626'
-                  }}>
-                    {pub.estado.toUpperCase()}
-                  </span>
-                  <button 
-                    onClick={() => handleEditar(pub)}
-                    style={{ border: 'none', background: 'none', cursor: 'pointer', color: accent, fontSize: '14px', fontWeight: '600' }}
-                  >
-                    Editar
-                  </button>
-                  <button 
-                    onClick={() => handleEliminar(pub.id)}
-                    style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '14px', fontWeight: '600' }}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
         </section>
       )}

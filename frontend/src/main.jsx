@@ -15,6 +15,7 @@ import AdminPanel from '@pages/AdminPanel';
 import '@styles/styles.css';
 import HistorialArriendos from './pages/HistorialArriendos.jsx';
 import PerfilUsuario from './pages/PerfilUsuario.jsx';
+import MisPublicaciones from '@pages/MisPublicaciones';
 
 const router = createBrowserRouter([
   {
@@ -66,7 +67,15 @@ const router = createBrowserRouter([
       {
         path: 'perfil/:id',
         element: <PerfilUsuario />
-      }
+      },
+      {
+      path: '/mis-publicaciones',
+      element: (
+        <ProtectedRoute allowedRoles={['arrendador']}>
+          <MisPublicaciones />
+        </ProtectedRoute>
+      ),
+    },
     ]
   },
   {
