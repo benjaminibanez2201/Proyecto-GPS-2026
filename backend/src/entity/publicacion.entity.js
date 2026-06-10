@@ -5,7 +5,7 @@ const PublicacionSchema = new EntitySchema({
   name: "Publicacion",
   tableName: "publicaciones",
   columns: {
-    id: {
+    id_publicacion: {
       type: "int",
       primary: true,
       generated: true,
@@ -18,6 +18,11 @@ const PublicacionSchema = new EntitySchema({
     descripcion: {
       type: "text",
       nullable: true,
+    },
+    activo: {
+      type: "boolean",
+      default: true,
+      nullable: false,
     },
     createdAt: {
       type: "timestamp with time zone",
