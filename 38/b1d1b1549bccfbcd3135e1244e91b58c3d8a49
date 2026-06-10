@@ -1,0 +1,21 @@
+backend/src/services/email.service.js
+  s_a9493c21237f1f::t_1eb62c112f80e8 124
+backend/src/templates/emails/password-recovery.html
+  s_a9493c21237f1f::t_1eb62c112f80e8 3-12,15,17-32,36-39,41-68,70-73,78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "38b1d1b1549bccfbcd3135e1244e91b58c3d8a49",
+  "prompts": {},
+  "sessions": {
+    "s_a9493c21237f1f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb323-a4f2-71a3-bfdb-10bbdbaaeba6",
+        "model": "gpt-5.5"
+      },
+      "human_author": "maacuna_meli <marco.acuna@mercadolibre.cl>"
+    }
+  }
+}
