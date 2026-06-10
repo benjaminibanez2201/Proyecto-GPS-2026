@@ -2,7 +2,8 @@
 import { 
   createPublicacionService,
   getPublicacionesService,
-  getPublicacionDetalleService
+  getPublicacionDetalleService,
+  getMisPublicacionesService
  } from "../services/publicacion.service.js";
 import { 
   publicacionBodyValidation,
@@ -74,10 +75,6 @@ export async function getPublicacionById(req, res) {
     const { id: publicacionId } = req.params;
     const { rol } = req.user;
 
-    if (rol !== "estudiante") {
-      return handleErrorClient(res, 403, "Acceso denegado", "Solo los estudiantes pueden ver el detalle");
-    }
-
     const { error: paramError, value: paramsValidados } = publicacionIdValidation.validate(req.params);
     if (paramError) {
       return handleErrorClient(res, 400, "ID inválido", paramError.message);
@@ -91,5 +88,21 @@ export async function getPublicacionById(req, res) {
     handleSuccess(res, 200, "Detalle de la publicación obtenido", publicacion);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function getMisPublicaciones(req, res) {
+  try {
+    const arrendadorId = req.user.id;
+    
+    const [publicaciones, error] = await getMisPublicacionesService(arrendadorId);
+
+    if (error) {
+      return res.status(500).json({ status: "Error", message: error });
+    }
+
+    return res.status(200).json({ status: "Success", data: publicaciones });
+  } catch (error) {
+    return res.status(500).json({ status: "Error", message: "Error interno del servidor" });
   }
 }
