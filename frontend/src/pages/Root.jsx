@@ -52,7 +52,7 @@ function PageRoot() {
         { label: 'Mis Favoritos', icon: Heart, disabled: true },
         { label: 'Mensajes', icon: MessageCircle, disabled: true },
         { label: 'Historial de Arriendos', icon: History, to: '/historial' },
-        { label: 'Mi Perfil', icon: User, to: '/profile' },
+        { label: 'Mi Perfil', icon: User, to: '/profile' }, 
       ],
     },
     arrendador: {
@@ -62,7 +62,7 @@ function PageRoot() {
         { label: 'Mis Publicaciones', icon: Home, disabled: true },
         { label: 'Mensajes', icon: MessageCircle, disabled: true },
         { label: 'Historial de Arriendos', icon: History, to: '/historial' },
-        { label: 'Mi Perfil', icon: User, to: userId ? `/perfil/${userId}` : '/perfil/0' },
+        { label: 'Mi Perfil', icon: User, to: '/profile' },
       ],
     },
     administrador: {
