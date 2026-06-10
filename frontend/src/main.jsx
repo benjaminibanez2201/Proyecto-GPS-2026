@@ -15,6 +15,9 @@ import '@styles/styles.css';
 import HistorialArriendos from './pages/HistorialArriendos.jsx';
 import PerfilUsuario from './pages/PerfilUsuario.jsx';
 import Notificaciones from '@pages/Notificaciones';
+import BuscarArriendos from '@pages/BuscarArriendo.jsx';
+import DetallePublicacion from '@pages/DetallePublicacion.jsx';
+import Favoritos from '@pages/Favoritos.jsx';
 
 const APP_NAME = 'ArriendU';
 
@@ -31,6 +34,7 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/profile\/?$/, title: `Mi perfil - ${APP_NAME}` },
     { pattern: /^\/historial\/?$/, title: `Historial de arriendos - ${APP_NAME}` },
     { pattern: /^\/perfil\/[^/]+\/?$/, title: `Perfil de usuario - ${APP_NAME}` },
+    { pattern: /^\/publicacion\/?$/, title: `Buscar arriendos - ${APP_NAME}` },
   ];
 
   const matchedRule = titleRules.find((rule) => rule.pattern.test(pathname));
@@ -95,6 +99,30 @@ const router = createBrowserRouter([
       {
         path: 'perfil/:id',
         element: <PerfilUsuario />
+      },
+      {
+        path: 'buscar',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante']}>
+            <BuscarArriendos />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'publicacion/:id', 
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante']}>
+            <DetallePublicacion />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'favoritos',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante']}>
+            <Favoritos />
+          </ProtectedRoute>
+        )
       }
     ]
   },

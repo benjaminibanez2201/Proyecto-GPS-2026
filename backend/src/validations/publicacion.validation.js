@@ -75,10 +75,10 @@ export const publicacionQueryValidation = Joi.object({
       "any.only": "El tipo de inmueble a buscar debe ser: departamento, casa, pieza o estudio."
     }),
   ordenarPor: Joi.string()
-    .valid("precioMensual", "distanciaCampus")
+    .valid("precioMensual")
     .optional()
     .messages({
-      "any.only": "Solo puedes ordenar por 'precioMensual' o 'distanciaCampus'."
+      "any.only": "Solo puedes ordenar por 'precioMensual'."
     }),
   direccionOrden: Joi.string()
     .valid("ASC", "DESC", "asc", "desc")
