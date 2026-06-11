@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Star, CheckCircle, Clock } from 'lucide-react';
+import { Star, CheckCircle, Clock, Inbox } from 'lucide-react';
 import { listarArriendos, confirmarArriendo, crearResena } from '../services/rentalsAndReviews.service.js';
 import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 export default function HistorialArriendos() {
   const [arriendos, setArriendos] = useState([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [arriendoSeleccionado, setArriendoSeleccionado] = useState(null);
   const [loadingConfirmId, setLoadingConfirmId] = useState(null);
@@ -26,11 +27,15 @@ export default function HistorialArriendos() {
   };
 
   const cargarDatos = async () => {
+    setLoading(true);
     const [data, err] = await listarArriendos();
     if (err) {
       setError(err);
+      setLoading(false);
       return;
     }
+
+    setError('');
 
     const enriched = data.map((r) => ({
       ...r,
@@ -40,6 +45,7 @@ export default function HistorialArriendos() {
     }));
 
     setArriendos(enriched);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -109,7 +115,27 @@ export default function HistorialArriendos() {
           </tr>
         </thead>
         <tbody>
-          {arriendos.map((item) => {
+          {loading ? (
+            <tr>
+              <td colSpan="3" style={{ padding: '28px 18px', textAlign: 'center', color: '#6c757d' }}>
+                Cargando historial de arriendos...
+              </td>
+            </tr>
+          ) : arriendos.length === 0 ? (
+            <tr>
+              <td colSpan="3" style={{ padding: '36px 18px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textAlign: 'center', color: colores.textoOscuro }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', backgroundColor: '#f3f5f7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colores.principal }}>
+                    <Inbox size={28} />
+                  </div>
+                  <strong>No hay arriendos todavía</strong>
+                  <span style={{ maxWidth: '460px', color: '#6c757d', lineHeight: 1.5 }}>
+                    Cuando concretes tu primer arriendo, aparecerá aquí con sus confirmaciones y opciones para calificar.
+                  </span>
+                </div>
+              </td>
+            </tr>
+          ) : arriendos.map((item) => {
             const yaConfirme = Number(user?.id) === item.arrendadorId
               ? item.confirmedByArrendador
               : item.confirmedByEstudiante;
