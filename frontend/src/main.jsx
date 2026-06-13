@@ -15,6 +15,7 @@ import AdminPanel from '@pages/AdminPanel';
 import '@styles/styles.css';
 import HistorialArriendos from './pages/HistorialArriendos.jsx';
 import PerfilUsuario from './pages/PerfilUsuario.jsx';
+import MisPublicaciones from '@pages/MisPublicaciones';
 
 const APP_NAME = 'ArriendU';
 
@@ -67,7 +68,7 @@ const router = createBrowserRouter([
       {
         path: '/profile',
         element: (
-          <ProtectedRoute allowedRoles={['estudiante']}>
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
             <Profile />
           </ProtectedRoute>
         ),
@@ -87,7 +88,15 @@ const router = createBrowserRouter([
       {
         path: 'perfil/:id',
         element: <PerfilUsuario />
-      }
+      },
+      {
+      path: '/mis-publicaciones',
+      element: (
+        <ProtectedRoute allowedRoles={['arrendador']}>
+          <MisPublicaciones />
+        </ProtectedRoute>
+      ),
+    },
     ]
   },
   {

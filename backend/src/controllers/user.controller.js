@@ -5,11 +5,14 @@ import {
   getUsersService,
   updateUserService,
   updateProfileService,
+  getProfileService,
+  updateArrendadorProfileService,
 } from "../services/user.service.js";
 import {
   userBodyValidation,
   userQueryValidation,
   profileBodyValidation,
+  profileArrendadorBodyValidation,
 } from "../validations/user.validation.js";
 import {
   handleErrorClient,
@@ -173,6 +176,66 @@ export async function getPublicProfile(req, res) {
     };
 
     handleSuccess(res, 200, 'Perfil público encontrado', publicProfile);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function getProfile(req, res) {
+  try {
+    const { id } = req.user; 
+
+    const [user, userError] = await getProfileService(id);
+
+    if (userError) return handleErrorClient(res, 404, "Error obteniendo perfil", userError);
+
+    handleSuccess(res, 200, "Perfil obtenido correctamente", user);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function updateArrendadorProfile(req, res) {
+  try {
+    const { body } = req;
+    const { id, rol } = req.user;
+
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden acceder a esta función");
+    }
+
+    const { error: bodyError } = profileArrendadorBodyValidation.validate(body);
+
+    if (bodyError) {
+      return handleErrorClient(
+        res,
+        400,
+        "Error de validación en los datos enviados",
+        bodyError.message,
+      );
+    }
+
+    const [user, userError] = await updateArrendadorProfileService(id, body);
+
+    if (userError) return handleErrorClient(res, 400, "Error actualizando perfil", userError);
+
+    handleSuccess(res, 200, "Perfil actualizado correctamente", user);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function getPerfilPropio(req, res) {
+  try {
+    const { id, nombre, correo, rol, universidad, carrera, telefono, fotoPerfil, estadoVerificacion } = req.user;
+    
+    const datosPerfil = {
+      id, nombre, correo, rol, fotoPerfil,
+      ...(rol === "estudiante" && { universidad, carrera }),
+      ...(rol === "arrendador" && { telefono, estadoVerificacion })
+    };
+
+    handleSuccess(res, 200, "Perfil obtenido correctamente", datosPerfil);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
