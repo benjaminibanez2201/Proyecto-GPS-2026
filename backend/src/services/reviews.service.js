@@ -3,6 +3,7 @@ import Review from "../entity/review.entity.js";
 import User from "../entity/user.entity.js";
 import Rental from "../entity/rental.entity.js";
 import { AppDataSource } from "../config/configDb.js";
+import { createNotificacionService } from "./notificacion.service.js";
 
 export async function crearResenaServicio(body, authorId) {
   try {
@@ -14,9 +15,12 @@ export async function crearResenaServicio(body, authorId) {
 
     const arriendo = await repositorioArriendo.findOne({ where: { id: rentalId } });
     if (!arriendo) return [null, "Arriendo no encontrado"];
-    if (arriendo.status !== "COMPLETED") return [null, "El arriendo no está confirmado por ambas partes"];
+    if (arriendo.status !== "COMPLETED") {
+      return [null, "El arriendo no está confirmado por ambas partes"];
+    }
 
-    const esParticipante = Number(authorId) === Number(arriendo.arrendadorId) || Number(authorId) === Number(arriendo.estudianteId);
+    const esParticipante = Number(authorId) === Number(arriendo.arrendadorId)
+      || Number(authorId) === Number(arriendo.estudianteId);
     if (!esParticipante) return [null, "No puedes calificar en este arriendo"];
 
     if (Number(authorId) === Number(targetUserId)) return [null, "No puedes calificarte a ti mismo"];
@@ -42,6 +46,18 @@ export async function crearResenaServicio(body, authorId) {
       const newAvg = (prevAvg * prevCount + Number(rating)) / newCount;
 
       await repositorioUsuario.update({ id: targetUserId }, { avgRating: newAvg, reviewsCount: newCount });
+    }
+
+    try {
+      await createNotificacionService({
+        userId: targetUserId,
+        tipo: "REVIEW_CREATED",
+        mensaje: `Recibiste una calificación de ${rating} estrella${Number(rating) === 1 ? "" : "s"} en un arriendo`,
+        targetType: "review",
+        targetId: guardada.id,
+      });
+    } catch (notifError) {
+      console.error("Error creando notificación de reseña:", notifError);
     }
 
     return [guardada, null];

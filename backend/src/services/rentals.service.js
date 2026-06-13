@@ -1,6 +1,8 @@
 "use strict";
 import Rental from "../entity/rental.entity.js";
+import Review from "../entity/review.entity.js";
 import { AppDataSource } from "../config/configDb.js";
+import { In } from "typeorm";
 import { sendRentalCompleteEmail } from "./email.service.js";
 import { createNotificacionService } from "./notificacion.service.js";
 
@@ -48,7 +50,10 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
 
-    const arriendo = await repositorioArriendo.findOne({ where: { id: arriendoId }, relations: { arrendador: true, estudiante: true } });
+    const arriendo = await repositorioArriendo.findOne({
+      where: { id: arriendoId },
+      relations: { arrendador: true, estudiante: true },
+    });
     if (!arriendo) return [null, "Arriendo no encontrado"];
 
     const esArrendador = arriendo.arrendadorId === Number(userId);
@@ -66,11 +71,17 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
 
     await repositorioArriendo.update({ id: arriendo.id }, actualizacion);
 
-    const actualizado = await repositorioArriendo.findOne({ where: { id: arriendoId }, relations: { arrendador: true, estudiante: true } });
+    const actualizado = await repositorioArriendo.findOne({
+      where: { id: arriendoId },
+      relations: { arrendador: true, estudiante: true },
+    });
 
     if (actualizado.confirmedByArrendador && actualizado.confirmedByEstudiante) {
       await repositorioArriendo.update({ id: arriendo.id }, { status: "COMPLETED", completedAt: new Date() });
-      const final = await repositorioArriendo.findOne({ where: { id: arriendoId }, relations: { arrendador: true, estudiante: true } });
+      const final = await repositorioArriendo.findOne({
+        where: { id: arriendoId },
+        relations: { arrendador: true, estudiante: true },
+      });
 
       // Crear notificaciones para arrendador y estudiante
       try {
@@ -78,7 +89,7 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
           await createNotificacionService({
             userId: final.arrendador.id,
             tipo: "RENTAL_COMPLETED",
-            mensaje: `El arriendo ha sido confirmado por ambas partes`,
+            mensaje: "El arriendo ha sido confirmado por ambas partes",
             targetType: "rental",
             targetId: final.id,
           });
@@ -88,7 +99,7 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
           await createNotificacionService({
             userId: final.estudiante.id,
             tipo: "RENTAL_COMPLETED",
-            mensaje: `El arriendo ha sido confirmado por ambas partes`,
+            mensaje: "El arriendo ha sido confirmado por ambas partes",
             targetType: "rental",
             targetId: final.id,
           });
@@ -117,6 +128,7 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
 export async function listarArriendosServicio(userId) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
+    const repositorioResena = AppDataSource.getRepository(Review);
     
     const arriendos = await repositorioArriendo.find({
       where: [
@@ -131,8 +143,30 @@ export async function listarArriendosServicio(userId) {
         createdAt: "DESC" 
       }
     });
+
+    const rentalIds = arriendos.map((arriendo) => arriendo.id);
+    const resenas = rentalIds.length > 0
+      ? await repositorioResena.find({
+          where: {
+            rentalId: In(rentalIds),
+            authorId: Number(userId),
+          },
+        })
+      : [];
+
+    const resenasPorArriendo = new Map(resenas.map((resena) => [Number(resena.rentalId), resena]));
+
+    const arriendosConResena = arriendos.map((arriendo) => {
+      const miResena = resenasPorArriendo.get(Number(arriendo.id)) || null;
+
+      return {
+        ...arriendo,
+        miResena,
+        puedeCalificar: arriendo.status === "COMPLETED" && !miResena,
+      };
+    });
     
-    return [arriendos, null];
+    return [arriendosConResena, null];
   } catch (error) {
     console.error("Error listarArriendosServicio:", error);
     return [null, "Error interno del servidor"];
