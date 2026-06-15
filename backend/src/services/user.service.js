@@ -227,3 +227,25 @@ export async function updateArrendadorProfileService(id, body) {
     return [null, "Error interno del servidor"];
   }
 }
+
+export async function verifyPasswordService(id, password) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({ 
+      where: { id },
+      select: ['id', 'password']
+    });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+
+    const isMatch = await comparePassword(password, userFound.password);
+
+    if (!isMatch) return [null, "Contraseña incorrecta"];
+
+    return [true, null];
+  } catch (error) {
+    console.error("Error al verificar contraseña:", error);
+    return [null, "Error interno del servidor"];
+  }
+}

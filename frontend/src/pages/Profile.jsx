@@ -6,6 +6,7 @@ import {
       getProfile, 
       getMisPublicaciones, 
       updateArrendadorProfile, 
+      verifyPassword,
      } from '@services/user.service.js';
 import { useAuth } from '@context/AuthContext';
 import { UserCircle2, Save, Pencil, X, Home } from 'lucide-react'; 
@@ -46,15 +47,49 @@ const Profile = () => {
   };
 
   const onSubmit = async (data) => {
-    const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([_, v]) => v !== '')
-    );
-    
-    const response = profileData?.rol === 'arrendador' 
-      ? await updateArrendadorProfile(filteredData)
-      : await updateProfile(filteredData);
-      
-    if (response) {
+  const filteredData = Object.fromEntries(
+    Object.entries(data).filter(([_, v]) => v !== '')
+  );
+
+  if (filteredData.email && filteredData.email !== profileData?.email) {
+    const { value: password } = await Swal.fire({
+      title: 'Confirma tu identidad',
+      text: 'Ingresa tu contraseña para cambiar el correo electrónico.',
+      input: 'password',
+      inputPlaceholder: 'Tu contraseña actual',
+      showCancelButton: true,
+      confirmButtonColor: accent,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Confirmar',
+      inputValidator: (value) => {
+        if (!value) return 'Debes ingresar tu contraseña';
+      }
+    });
+
+    if (!password) return; 
+
+    const verification = await verifyPassword(password);
+    if (verification?.status !== 'Success') {
+      Swal.fire({ icon: 'error', title: 'Contraseña incorrecta', text: 'No se pudo verificar tu identidad.', confirmButtonColor: accent });
+      return;
+    }
+  }
+
+  const response = profileData?.rol === 'arrendador'
+    ? await updateArrendadorProfile(filteredData)
+    : await updateProfile(filteredData);
+
+  if (response) {
+    if (filteredData.email && filteredData.email !== profileData?.email) {
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Correo actualizado!',
+        text: 'Tu correo fue cambiado. Debes iniciar sesión nuevamente.',
+        confirmButtonColor: accent,
+      });
+      sessionStorage.removeItem('usuario');
+      navigate('/auth');
+    } else {
       Swal.fire({
         icon: 'success',
         title: '¡Perfil actualizado!',
@@ -64,7 +99,8 @@ const Profile = () => {
       setEditMode(false);
       fetchProfile();
     }
-  };
+  }
+};
 
   const fields = [
     { label: 'Nombre completo', field: 'nombreCompleto', placeholder: 'Tu nombre completo' },

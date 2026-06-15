@@ -7,6 +7,7 @@ import {
   updateProfileService,
   getProfileService,
   updateArrendadorProfileService,
+  verifyPasswordService,
 } from "../services/user.service.js";
 import {
   userBodyValidation,
@@ -236,6 +237,25 @@ export async function getPerfilPropio(req, res) {
     };
 
     handleSuccess(res, 200, "Perfil obtenido correctamente", datosPerfil);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function verifyPassword(req, res) {
+  try {
+    const { id } = req.user;
+    const { password } = req.body;
+
+    if (!password) {
+      return handleErrorClient(res, 400, "La contraseña es obligatoria");
+    }
+
+    const [valid, error] = await verifyPasswordService(id, password);
+
+    if (error) return handleErrorClient(res, 400, "Error verificando contraseña", error);
+
+    handleSuccess(res, 200, "Contraseña verificada correctamente", { valid });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
