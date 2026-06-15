@@ -100,3 +100,12 @@ export async function crearPublicacion(data) {
         return error.response.data;
     }
 }
+
+export async function verifyPassword(password) {
+    try {
+        const response = await axios.post('/profile/verify-password', { password });
+        return response.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
