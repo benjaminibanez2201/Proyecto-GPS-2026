@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getMisPublicaciones, eliminarPublicacion, editarPublicacion } from '@services/user.service.js';
+import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion } from '@services/user.service.js';
 import { Building2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -67,6 +67,66 @@ const MisPublicaciones = () => {
     }
   };
 
+  const handleCrear = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: 'Nueva publicación',
+      html: `
+        <input id="titulo" class="swal2-input" placeholder="Título de la publicación">
+        <select id="tipoInmueble" class="swal2-input">
+          <option value="">Selecciona tipo de inmueble</option>
+          <option value="departamento">Departamento</option>
+          <option value="casa">Casa</option>
+          <option value="pieza">Pieza</option>
+          <option value="estudio">Estudio</option>
+        </select>
+        <input id="precioMensual" class="swal2-input" placeholder="Precio mensual" type="number">
+        <input id="ubicacion" class="swal2-input" placeholder="Ubicación">
+        <input id="fotos" class="swal2-input" placeholder="URL de foto principal">
+        <input id="servicios" class="swal2-input" placeholder="Servicios (agua, luz, internet...)">
+        <textarea id="reglas" class="swal2-textarea" placeholder="Reglas de convivencia"></textarea>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonColor: accent,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Publicar',
+      preConfirm: () => {
+        const titulo = document.getElementById('titulo').value;
+        const tipoInmueble = document.getElementById('tipoInmueble').value;
+        const precioMensual = parseInt(document.getElementById('precioMensual').value);
+        const ubicacion = document.getElementById('ubicacion').value;
+        const fotos = document.getElementById('fotos').value;
+        const servicios = document.getElementById('servicios').value;
+        const reglas = document.getElementById('reglas').value;
+
+        if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !fotos) {
+          Swal.showValidationMessage('Completa todos los campos obligatorios');
+          return false;
+        }
+
+        return {
+          titulo,
+          tipoInmueble,
+          precioMensual,
+          ubicacion,
+          fotos: [fotos],
+          serviciosIncluidos: servicios ? servicios.split(',').map(s => s.trim()) : [],
+          reglasConvivencia: reglas || null,
+        };
+      },
+    });
+
+    if (formValues) {
+      const response = await crearPublicacion(formValues);
+      if (response?.id) {
+        Swal.fire({ icon: 'success', title: '¡Publicación creada!', confirmButtonColor: accent });
+        fetchPublicaciones();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: response?.message || 'No se pudo crear la publicación', confirmButtonColor: accent });
+      }
+    }
+  };
+
   return (
     <div style={styles.page}>
       <section style={styles.hero}>
@@ -79,12 +139,9 @@ const MisPublicaciones = () => {
             <p style={styles.heroSubtitle}>Gestiona los inmuebles que has subido a la plataforma.</p>
           </div>
         </div>
-        <button
-          onClick={() => Swal.fire({ title: 'Próximamente', icon: 'info' })}
-          style={styles.button}
-        >
-          ➕ Publicar Inmueble
-        </button>
+        <button onClick={handleCrear} style={styles.button}>
+        ➕ Publicar Inmueble
+      </button>
       </section>
 
       <section style={styles.card}>
