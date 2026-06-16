@@ -18,7 +18,7 @@ import Notificaciones from '@pages/Notificaciones';
 import BuscarArriendos from '@pages/BuscarArriendo.jsx';
 import DetallePublicacion from '@pages/DetallePublicacion.jsx';
 import Favoritos from '@pages/Favoritos.jsx';
-import MisPublicaciones from '@pages/MisPublicaciones.jsx';
+import MisPublicaciones from '@pages/MisPublicaciones';
 
 const APP_NAME = 'ArriendU';
 
@@ -41,6 +41,7 @@ function getTitleFromPath(pathname) {
   const matchedRule = titleRules.find((rule) => rule.pattern.test(pathname));
   return matchedRule ? matchedRule.title : APP_NAME;
 }
+
 
 const router = createBrowserRouter([
   {
@@ -72,7 +73,7 @@ const router = createBrowserRouter([
       {
         path: '/profile',
         element: (
-          <ProtectedRoute allowedRoles={['estudiante']}>
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
             <Profile />
           </ProtectedRoute>
         ),
@@ -126,13 +127,13 @@ const router = createBrowserRouter([
         )
       },
       {
-        path: 'mis-publicaciones',
-        element: (
-          <ProtectedRoute allowedRoles={['arrendador']}>
-            <MisPublicaciones />
-          </ProtectedRoute>
-        )
-      }
+      path: '/mis-publicaciones',
+      element: (
+        <ProtectedRoute allowedRoles={['arrendador']}>
+          <MisPublicaciones />
+        </ProtectedRoute>
+      ),
+    },
     ]
   },
   {

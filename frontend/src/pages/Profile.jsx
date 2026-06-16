@@ -1,17 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { updateProfile, getProfile } from '@services/user.service.js';
+import { useNavigate } from 'react-router-dom';
+import { 
+      updateProfile, 
+      getProfile, 
+      getMisPublicaciones, 
+      updateArrendadorProfile, 
+     } from '@services/user.service.js';
 import { useAuth } from '@context/AuthContext';
-import { UserCircle2, Save, Pencil, X } from 'lucide-react';
+import { UserCircle2, Save, Pencil, X, Home } from 'lucide-react'; 
 import Swal from 'sweetalert2';
 
 const accent = '#0f766e';
 
 const Profile = () => {
   const { user } = useAuth();
+  const navigate = useNavigate(); 
   const [profileData, setProfileData] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const { register, handleSubmit, setValue } = useForm();
+  const [cantidadPublicaciones, setCantidadPublicaciones] = useState(0); 
 
   useEffect(() => {
     fetchProfile();
@@ -26,6 +34,14 @@ const Profile = () => {
       setValue('carrera', data.carrera || '');
       setValue('telefono', data.telefono || '');
       setValue('fotoPerfil', data.fotoPerfil || '');
+      setValue("email", data.email || "");
+
+      if (data.rol === 'arrendador') {
+        const pubs = await getMisPublicaciones();
+        if (Array.isArray(pubs)) {
+          setCantidadPublicaciones(pubs.length);
+        }
+      }
     }
   };
 
@@ -33,7 +49,11 @@ const Profile = () => {
     const filteredData = Object.fromEntries(
       Object.entries(data).filter(([, value]) => value !== '')
     );
-    const response = await updateProfile(filteredData);
+    
+    const response = profileData?.rol === 'arrendador' 
+      ? await updateArrendadorProfile(filteredData)
+      : await updateProfile(filteredData);
+      
     if (response) {
       Swal.fire({
         icon: 'success',
@@ -42,24 +62,37 @@ const Profile = () => {
         confirmButtonColor: accent,
       });
       setEditMode(false);
-      fetchProfile(); // refresca los datos sin recargar la página
+      fetchProfile();
     }
   };
 
   const fields = [
     { label: 'Nombre completo', field: 'nombreCompleto', placeholder: 'Tu nombre completo' },
-    { label: 'Universidad', field: 'universidad', placeholder: 'Tu universidad' },
-    { label: 'Carrera', field: 'carrera', placeholder: 'Tu carrera' },
-    { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678' },
     { label: 'Foto de perfil (URL)', field: 'fotoPerfil', placeholder: 'https://...' },
+    ...(profileData?.rol === 'estudiante' ? [
+      { label: 'Universidad', field: 'universidad', placeholder: 'Tu universidad' },
+      { label: 'Carrera', field: 'carrera', placeholder: 'Tu carrera' }
+    ] : []),
+    ...(profileData?.rol === 'arrendador' ? [
+      { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678' },
+      { label: "Correo", field: "email", placeholder: "tucorreo@gmail.com" },
+    ] : [])
   ];
 
   const dataItems = [
     { label: 'Nombre completo', value: profileData?.nombreCompleto },
     { label: 'Correo', value: profileData?.email },
-    { label: 'Universidad', value: profileData?.universidad || 'No especificada' },
-    { label: 'Carrera', value: profileData?.carrera || 'No especificada' },
-    { label: 'Teléfono', value: profileData?.telefono || 'No especificado' },
+    ...(profileData?.rol === 'estudiante' ? [
+      { label: 'Universidad', value: profileData?.universidad || 'No especificada' },
+      { label: 'Carrera', value: profileData?.carrera || 'No especificada' }
+    ] : []),
+    ...(profileData?.rol === 'arrendador' ? [
+      { label: 'Teléfono', value: profileData?.telefono || 'No especificado' },
+      { 
+        label: 'Estado de Verificación', 
+        value: (profileData?.estadoVerificacion || 'pendiente').toUpperCase()
+      }
+    ] : [])
   ];
 
   return (
@@ -81,7 +114,7 @@ const Profile = () => {
         <span style={styles.rolBadge}>{profileData?.rol || user?.rol}</span>
       </section>
 
-      {/* Card */}
+      {/* Card Datos Personales */}
       <section style={styles.card}>
         <header style={styles.cardHeader}>
           <div>
@@ -133,6 +166,30 @@ const Profile = () => {
           </div>
         )}
       </section>
+
+      {profileData?.rol === 'arrendador' && !editMode && (
+        <section style={styles.card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ padding: '12px', borderRadius: '14px', backgroundColor: `${accent}15`, color: accent }}>
+                <Home size={24} />
+              </div>
+              <div>
+                <h3 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>Mis Propiedades</h3>
+                <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
+                  Tienes <strong>{cantidadPublicaciones}</strong> {cantidadPublicaciones === 1 ? 'publicación activa' : 'publicaciones activas'} en la plataforma.
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => navigate('/mis-publicaciones')} // 3. Redirige a la vista del Sidebar (ajusta la ruta según tus routes)
+              style={{ ...styles.button, padding: '12px 20px' }}
+            >
+              Gestionar mis publicaciones
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 };
