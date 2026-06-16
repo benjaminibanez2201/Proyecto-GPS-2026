@@ -111,3 +111,35 @@ export const publicacionIdValidation = Joi.object({
 }).unknown(false).messages({
   "object.unknown": "No se permiten parámetros adicionales en la URL."
 });
+
+export const publicacionUpdateValidation = Joi.object({
+  titulo: Joi.string().min(5).max(255).messages({
+    "string.min": "El título debe tener como mínimo 5 caracteres.",
+    "string.max": "El título debe tener como máximo 255 caracteres.",
+  }),
+  tipoInmueble: Joi.string()
+    .valid("departamento", "casa", "pieza", "estudio")
+    .messages({
+      "any.only": "El tipo de inmueble debe ser: departamento, casa, pieza o estudio.",
+    }),
+  precioMensual: Joi.number().integer().positive().messages({
+    "number.base": "El precio mensual debe ser un número.",
+    "number.positive": "El precio mensual debe ser positivo.",
+  }),
+  ubicacion: Joi.string().min(5).max(255).messages({
+    "string.min": "La ubicación debe tener como mínimo 5 caracteres.",
+    "string.max": "La ubicación debe tener como máximo 255 caracteres.",
+  }),
+  fotos: Joi.array().items(Joi.string().uri()),
+  serviciosIncluidos: Joi.array().items(Joi.string()),
+  reglasConvivencia: Joi.string().max(1000).messages({
+    "string.max": "Las reglas no pueden superar los 1000 caracteres.",
+  }),
+  estado: Joi.string().valid("activa", "inactiva"),
+})
+  .or("titulo", "tipoInmueble", "precioMensual", "ubicacion", "fotos", "serviciosIncluidos", "reglasConvivencia", "estado")
+  .unknown(false)
+  .messages({
+    "object.unknown": "No se permiten propiedades adicionales.",
+    "object.missing": "Debes proporcionar al menos un campo para actualizar.",
+  });
