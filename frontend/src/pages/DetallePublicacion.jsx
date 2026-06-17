@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { Heart, ArrowLeft } from 'lucide-react';
 import { getPublicacionPorId } from '../services/publicacion.service.js';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import { useAuth } from '../context/AuthContext';
@@ -55,8 +57,25 @@ export default function DetallePublicacion() {
     
     if (procesando || !idPublicacion) return;
 
-    setProcesando(true);
     const estadoAnterior = esFavorito;
+
+    // Si ya está guardado, pedir confirmación para quitar
+    if (estadoAnterior) {
+      const confirmacion = await Swal.fire({
+        title: '¿Seguro que quieres eliminarlo de tus favoritos?',
+        text: 'La publicación seguirá disponible para volver a guardarla más adelante.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#008080',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+      });
+
+      if (!confirmacion.isConfirmed) return;
+    }
+
+    setProcesando(true);
     setEsFavorito(!estadoAnterior);
 
     try {
@@ -83,8 +102,12 @@ export default function DetallePublicacion() {
   if (error || !publicacion) {
     return (
       <div className="home-container">
-        <button className="confirm-btn" onClick={() => navigate(-1)} style={{ width: 'fit-content', marginBottom: '20px', backgroundColor: '#64748b' }}>
-          ⬅ Volver
+        <button 
+          className="confirm-btn" 
+          onClick={() => navigate(-1)} 
+          style={{ width: 'fit-content', marginBottom: '20px', backgroundColor: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <ArrowLeft size={18} /> Volver
         </button>
         <p className="error-text"> {error || 'No se encontró esta publicación.'}</p>
       </div>
@@ -105,9 +128,9 @@ export default function DetallePublicacion() {
       <button 
         className="confirm-btn" 
         onClick={() => navigate(-1)} 
-        style={{ width: 'fit-content', marginBottom: '20px', backgroundColor: '#64748b' }}
+        style={{ width: 'fit-content', marginBottom: '20px', backgroundColor: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}
       >
-        ⬅ Volver 
+        <ArrowLeft size={18} /> Volver 
       </button>
 
       <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
@@ -181,22 +204,29 @@ export default function DetallePublicacion() {
                 </button>
 
                 <button 
+                  type="button"
                   onClick={toggleFavorito}
                   disabled={procesando}
                   style={{ 
-                    width: '100%', 
-                    marginTop: '10px', 
-                    padding: '10px', 
-                    background: esFavorito ? '#ef4444' : 'white', 
-                    border: esFavorito ? '1px solid #ef4444' : '1px solid #008080', 
-                    color: esFavorito ? 'white' : '#008080', 
-                    borderRadius: '8px', 
+                    marginTop: '30px', 
+                    padding: '12px',
+                    background: 'none', 
+                    border: 'none', 
                     cursor: procesando ? 'wait' : 'pointer',
                     opacity: procesando ? 0.7 : 1,
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '30px auto 0'
                   }}
+                  title={esFavorito ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
                 >
-                  {esFavorito ? '❤️ Quitar de Favoritos' : '🤍 Guardar en Favoritos'}
+                  {esFavorito ? (
+                    <Heart size={40} fill="#dc2626" color="#dc2626" />
+                  ) : (
+                    <Heart size={40} color="#64748b" />
+                  )}
                 </button>
               </>
             )}

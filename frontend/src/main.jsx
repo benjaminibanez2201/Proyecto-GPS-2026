@@ -17,7 +17,6 @@ import PerfilUsuario from './pages/PerfilUsuario.jsx';
 import Notificaciones from '@pages/Notificaciones';
 import BuscarArriendos from '@pages/BuscarArriendo.jsx';
 import DetallePublicacion from '@pages/DetallePublicacion.jsx';
-import Favoritos from '@pages/Favoritos.jsx';
 import MisPublicaciones from '@pages/MisPublicaciones';
 import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
 import MisFavoritos from '@pages/MisFavoritos';
@@ -134,7 +133,7 @@ const router = createBrowserRouter([
         path: 'favoritos',
         element: (
           <ProtectedRoute allowedRoles={['estudiante']}>
-            <Favoritos />
+            <MisFavoritos />
           </ProtectedRoute>
         )
       },
@@ -146,14 +145,6 @@ const router = createBrowserRouter([
         </ProtectedRoute>
       ),
     },
-      {
-        path: '/favoritos',
-        element: (
-          <ProtectedRoute>
-            <MisFavoritos />
-          </ProtectedRoute>
-        ),
-      },
     ]
   },
   {
