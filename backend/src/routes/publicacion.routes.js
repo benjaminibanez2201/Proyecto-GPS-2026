@@ -2,13 +2,13 @@
 import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
 import { 
-  createPublicacion, 
-  getPublicacionesPropias,
-  updatePublicacion,
+  addFavorito, 
+  createPublicacion,
   deletePublicacion,
   getFavoritos,
-  addFavorito,
+  getPublicacionesPropias,
   removeFavorito,
+  updatePublicacion,
 } from "../controllers/publicacion.controller.js";
 
 const router = Router();
