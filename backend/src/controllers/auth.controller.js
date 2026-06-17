@@ -78,7 +78,10 @@ export async function login(req, res) {
     const { error } = authValidation.validate(body);
 
     if (error) {
-      return handleErrorClient(res, 400, "Error de validacion", error.message);
+      return handleErrorClient(res, 400, "Error iniciando sesion", {
+        dataInfo: "auth",
+        message: "Credenciales incorrectas",
+      });
     }
 
     const [accessToken, errorToken] = await loginService(body);
