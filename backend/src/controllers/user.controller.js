@@ -12,7 +12,6 @@ import {
   profileBodyValidation,
   userBodyValidation,
   userQueryValidation,
-  profileBodyValidation,
   profileArrendadorBodyValidation,
 } from "../validations/user.validation.js";
 import {
