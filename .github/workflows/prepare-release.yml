@@ -1,0 +1,420 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Prepare Release
+#
+#  Se dispara en cada push a `main`. Calcula la próxima versión SemVer a partir
+#  de los conventional commits desde el último tag, genera un changelog breve
+#  con GitHub Models (actions/ai-inference) y abre/actualiza un PR desde una
+#  rama `release/vX.Y.Z` hacia la rama `production`.
+#
+#  Al mergear ese PR a `production`, el workflow `deploy.yml` hace el deploy
+#  real al VPS y crea el tag.
+# ─────────────────────────────────────────────────────────────────────────────
+name: Prepare Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write       # commitear bump de versión + CHANGELOG en la rama release/*
+  pull-requests: write  # crear/actualizar el PR a production
+  models: read          # llamar a GitHub Models para el resumen IA
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  prepare-release:
+    name: Calcular versión y abrir PR a production
+    runs-on: ubuntu-latest
+
+    # Evita loops: no corre si el push fue hecho por el bot del workflow
+    if: github.actor != 'github-actions[bot]'
+
+    steps:
+      # ───── 1. Checkout completo (necesario para ver tags e historial) ─────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar identidad de git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # ───── 2. Calcular próxima versión SemVer ─────
+      # ───── 2. Calcular próxima versión a partir de los PREFIJOS DE RAMA ─────
+      #   feature/...   → bump MINOR  (v0.X.0)
+      #   fix/...       → bump PATCH  (v0.0.X)
+      #   migration/... → no bumpea, se incluye en el próximo release
+      #   (otros)       → cuentan como patch (fallback seguro)
+      #
+      #   Si los PRs mergeados desde el último tag son SOLO migration/ (o nada),
+      #   el workflow termina sin abrir release (no hay deploy).
+      - name: Calcular próxima versión (según prefijos de rama)
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # ── Último tag vX.Y.Z (si no existe → v0.0.0) ──
+          LAST_TAG=$(git tag -l 'v*.*.*' --sort=-v:refname | head -n 1 || true)
+          if [ -z "$LAST_TAG" ]; then
+            LAST_TAG="v0.0.0"
+            LAST_TAG_DATE=$(git log --reverse --pretty=format:'%aI' | head -n 1)
+            COMMIT_RANGE="HEAD"
+          else
+            LAST_TAG_DATE=$(git log -1 --pretty=format:'%aI' "$LAST_TAG")
+            COMMIT_RANGE="${LAST_TAG}..HEAD"
+          fi
+          echo "Último tag:        $LAST_TAG"
+          echo "Fecha último tag:  $LAST_TAG_DATE"
+
+          # ── Listar PRs mergeados a main desde el último tag ──
+          # Filtramos por fecha de merge (>=). Ordenado por número desc.
+          PR_JSON=$(gh pr list \
+            --base main \
+            --state merged \
+            --search "merged:>=${LAST_TAG_DATE}" \
+            --json number,headRefName,title,mergedAt,author \
+            --limit 200)
+
+          echo "PRs encontrados:"
+          echo "$PR_JSON" | jq -r '.[] | "  #\(.number) \(.headRefName) — \(.title)"' || true
+
+          # ── Contar prefijos ──
+          FEATURE_COUNT=$(echo "$PR_JSON" | jq '[.[] | select(.headRefName | startswith("feature/"))] | length')
+          FIX_COUNT=$(echo "$PR_JSON"     | jq '[.[] | select(.headRefName | startswith("fix/"))] | length')
+          MIGRATION_COUNT=$(echo "$PR_JSON" | jq '[.[] | select(.headRefName | startswith("migration/"))] | length')
+          OTHER_COUNT=$(echo "$PR_JSON" | jq '[.[] | select((.headRefName | startswith("feature/") | not) and (.headRefName | startswith("fix/") | not) and (.headRefName | startswith("migration/") | not))] | length')
+          TOTAL=$(echo "$PR_JSON" | jq 'length')
+
+          echo "feature=$FEATURE_COUNT  fix=$FIX_COUNT  migration=$MIGRATION_COUNT  otros=$OTHER_COUNT  total=$TOTAL"
+
+          # ── Decidir bump ──
+          BUMP=""
+          SKIP="false"
+          if [ "$FEATURE_COUNT" -gt 0 ]; then
+            BUMP="minor"
+          elif [ "$FIX_COUNT" -gt 0 ] || [ "$OTHER_COUNT" -gt 0 ]; then
+            BUMP="patch"
+          elif [ "$MIGRATION_COUNT" -gt 0 ]; then
+            echo "::notice::Solo se mergearon ramas migration/, no se genera release nuevo (las migraciones quedan acumuladas para el próximo feature/fix)."
+            SKIP="true"
+            BUMP="none"
+          else
+            echo "::notice::No hay PRs mergeados desde el último tag, no se genera release."
+            SKIP="true"
+            BUMP="none"
+          fi
+          echo "Bump elegido: $BUMP"
+
+          # ── Calcular nueva versión ──
+          VERSION="${LAST_TAG#v}"
+          MAJOR="${VERSION%%.*}"
+          REST="${VERSION#*.}"
+          MINOR="${REST%%.*}"
+          PATCH="${REST##*.}"
+
+          case "$BUMP" in
+            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH+1)) ;;
+            none)  : ;;
+          esac
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          NEW_TAG="v${NEW_VERSION}"
+
+          # ── Listas separadas para el changelog ──
+          FEATURES_MD=$(echo "$PR_JSON" | jq -r '[.[] | select(.headRefName | startswith("feature/"))] | .[] | "- \(.title) (#\(.number)) por @\(.author.login) — `\(.headRefName)`"')
+          FIXES_MD=$(echo "$PR_JSON"    | jq -r '[.[] | select(.headRefName | startswith("fix/"))]     | .[] | "- \(.title) (#\(.number)) por @\(.author.login) — `\(.headRefName)`"')
+          MIGRATIONS_MD=$(echo "$PR_JSON" | jq -r '[.[] | select(.headRefName | startswith("migration/"))] | .[] | "- \(.title) (#\(.number)) por @\(.author.login) — `\(.headRefName)`"')
+          OTHERS_MD=$(echo "$PR_JSON"   | jq -r '[.[] | select((.headRefName | startswith("feature/") | not) and (.headRefName | startswith("fix/") | not) and (.headRefName | startswith("migration/") | not))] | .[] | "- \(.title) (#\(.number)) por @\(.author.login) — `\(.headRefName)`"')
+
+          # ── Outputs ──
+          {
+            echo "last_tag=$LAST_TAG"
+            echo "new_version=$NEW_VERSION"
+            echo "new_tag=$NEW_TAG"
+            echo "bump=$BUMP"
+            echo "skip=$SKIP"
+            echo "feature_count=$FEATURE_COUNT"
+            echo "fix_count=$FIX_COUNT"
+            echo "migration_count=$MIGRATION_COUNT"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "features<<EOF"; echo "$FEATURES_MD"; echo "EOF"
+            echo "fixes<<EOF";    echo "$FIXES_MD";    echo "EOF"
+            echo "migrations<<EOF"; echo "$MIGRATIONS_MD"; echo "EOF"
+            echo "others<<EOF";   echo "$OTHERS_MD";   echo "EOF"
+            echo "commits<<EOF"
+            printf '%s\n' "$FEATURES_MD" "$FIXES_MD" "$MIGRATIONS_MD" "$OTHERS_MD" | grep -v '^$' || true
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "─────────────────────────"
+          echo "Versión nueva: $NEW_TAG (bump=$BUMP, skip=$SKIP)"
+          echo "─────────────────────────"
+
+      # ───── 3. Generar resumen con GitHub Models ─────
+      - name: Generar resumen IA del changelog
+        id: ai_summary
+        if: steps.version.outputs.skip != 'true'
+        uses: actions/ai-inference@v1
+        with:
+          model: openai/gpt-4o-mini
+          system-prompt: |
+            Eres un asistente que redacta changelogs concisos en español para un
+            proyecto académico (ArriendU, plataforma de arriendo estudiantil).
+            Recibes 3 secciones de PRs mergeados: Features, Fixes y Migrations.
+            Devuelve un resumen agrupado con esta estructura exacta (omitiendo
+            la sección si está vacía):
+
+              **Features**
+              - viñeta corta
+
+              **Fixes**
+              - viñeta corta
+
+              **Migrations**
+              - viñeta corta
+
+            Máximo 3 viñetas por sección, lenguaje neutro, sin emojis, sin
+            marketing. Si un PR menciona un RF (RF1, RF7, RF13, RF17),
+            inclúyelo entre paréntesis.
+          prompt: |
+            Versión a publicar: ${{ steps.version.outputs.new_tag }}
+            Versión anterior:   ${{ steps.version.outputs.last_tag }}
+            Tipo de bump:       ${{ steps.version.outputs.bump }}
+
+            ### Features (ramas feature/*)
+            ${{ steps.version.outputs.features }}
+
+            ### Fixes (ramas fix/*)
+            ${{ steps.version.outputs.fixes }}
+
+            ### Migrations (ramas migration/*)
+            ${{ steps.version.outputs.migrations }}
+
+            ### Otros
+            ${{ steps.version.outputs.others }}
+
+            Devuelve solo el bloque agrupado (sin título principal).
+          max-tokens: 500
+
+      # ───── 4. Bump de versión en package.json (backend + frontend) ─────
+      - name: Bump de versión en package.json
+        if: steps.version.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          NEW_VERSION="${{ steps.version.outputs.new_version }}"
+
+          for pkg in backend/package.json frontend/package.json; do
+            if [ -f "$pkg" ]; then
+              node -e "
+                const fs = require('fs');
+                const path = '$pkg';
+                const json = JSON.parse(fs.readFileSync(path, 'utf8'));
+                json.version = '$NEW_VERSION';
+                fs.writeFileSync(path, JSON.stringify(json, null, 2) + '\n');
+                console.log('Actualizado', path, '→', json.version);
+              "
+            fi
+          done
+
+      # ───── 5. Construir / actualizar CHANGELOG.md ─────
+      - name: Actualizar CHANGELOG.md
+        if: steps.version.outputs.skip != 'true'
+        shell: bash
+        env:
+          AI_SUMMARY: ${{ steps.ai_summary.outputs.response }}
+          COMMITS: ${{ steps.version.outputs.commits }}
+          NEW_TAG: ${{ steps.version.outputs.new_tag }}
+          LAST_TAG: ${{ steps.version.outputs.last_tag }}
+        run: |
+          set -euo pipefail
+          DATE=$(date -u +'%Y-%m-%d')
+
+          ENTRY=$(cat <<EOF
+          ## ${NEW_TAG} — ${DATE}
+
+          ### Resumen
+          ${AI_SUMMARY}
+
+          ### Commits incluidos
+          ${COMMITS}
+
+          EOF
+          )
+
+          if [ ! -f CHANGELOG.md ]; then
+            printf '# Changelog\n\nProyecto ArriendU — historial de releases.\n\n' > CHANGELOG.md
+          fi
+
+          # Inserta el bloque nuevo justo después del encabezado (línea 4 en adelante)
+          HEADER=$(head -n 3 CHANGELOG.md)
+          BODY=$(tail -n +4 CHANGELOG.md || true)
+
+          {
+            echo "$HEADER"
+            echo
+            echo "$ENTRY"
+            echo "$BODY"
+          } > CHANGELOG.md.new
+          mv CHANGELOG.md.new CHANGELOG.md
+
+      # ───── 6. Commitear en la rama release/vX.Y.Z ─────
+      - name: Crear/actualizar rama release/vX.Y.Z
+        id: branch
+        if: steps.version.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH="release/${{ steps.version.outputs.new_tag }}"
+
+          # Si la rama ya existe en remote la borramos para reescribirla con el estado actual de main
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "La rama $BRANCH existía, se sobrescribe."
+            git push origin --delete "$BRANCH" || true
+          fi
+
+          git checkout -b "$BRANCH"
+          git add CHANGELOG.md backend/package.json frontend/package.json
+          if git diff --cached --quiet; then
+            echo "No hay cambios para commitear (¿no había bump?)."
+          else
+            git commit -m "chore(release): ${{ steps.version.outputs.new_tag }}
+
+          Bump automático generado por prepare-release.yml.
+
+          Ver CHANGELOG.md para detalle."
+          fi
+
+          git push origin "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      # ───── 7. Crear o actualizar PR hacia production ─────
+      - name: Asegurar que la rama production existe
+        if: steps.version.outputs.skip != 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if ! git ls-remote --exit-code --heads origin production >/dev/null 2>&1; then
+            echo "Creando rama production desde el primer commit de main..."
+            FIRST=$(git rev-list --max-parents=0 origin/main | tail -n 1)
+            git push origin "${FIRST}:refs/heads/production"
+          fi
+
+      - name: Crear o actualizar PR release → production
+        id: pr
+        if: steps.version.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+          TAG: ${{ steps.version.outputs.new_tag }}
+          LAST_TAG: ${{ steps.version.outputs.last_tag }}
+          BUMP: ${{ steps.version.outputs.bump }}
+          AI_SUMMARY: ${{ steps.ai_summary.outputs.response }}
+          COMMITS: ${{ steps.version.outputs.commits }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Armamos el body del PR en un archivo (más seguro que pasarlo inline)
+          {
+            echo "## Release ${TAG}"
+            echo
+            echo "Este PR fue generado automáticamente por \`prepare-release.yml\`."
+            echo "Al mergearlo a \`production\`, el workflow \`deploy.yml\` hará el deploy al VPS,"
+            echo "creará el tag y publicará el GitHub Release con el changelog."
+            echo
+            echo "### Resumen"
+            echo "${AI_SUMMARY}"
+            echo
+            echo "### Commits incluidos"
+            echo "${COMMITS}"
+            echo
+            echo "---"
+            echo "_Tipo de bump aplicado:_ **${BUMP}**"
+            echo "_Versión anterior:_ \`${LAST_TAG}\`"
+          } > /tmp/pr-body.md
+
+          # ¿Existe ya un PR abierto desde esta rama hacia production?
+          EXISTING=$(gh pr list --head "$BRANCH" --base production --state open --json number --jq '.[0].number' || true)
+
+          if [ -n "$EXISTING" ]; then
+            echo "Actualizando PR #$EXISTING"
+            gh pr edit "$EXISTING" --title "Release ${TAG}" --body-file /tmp/pr-body.md
+            PR_NUMBER="$EXISTING"
+          else
+            echo "Creando PR nuevo"
+            # La etiqueta 'release' se crea on-the-fly si no existe
+            gh label create release --color "0E8A16" --description "PR de release automático" 2>/dev/null || true
+            gh pr create \
+              --base production \
+              --head "$BRANCH" \
+              --title "Release ${TAG}" \
+              --body-file /tmp/pr-body.md \
+              --label "release"
+            PR_NUMBER=$(gh pr list --head "$BRANCH" --base production --state open --json number --jq '.[0].number')
+          fi
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+
+      # ───── 8. Auto-merge del PR para disparar deploy.yml ─────
+      - name: Auto-merge del PR a production
+        if: steps.version.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          TAG: ${{ steps.version.outputs.new_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${PR_NUMBER:-}" ]; then
+            echo "No hay PR_NUMBER (¿no había cambios?) — saltando merge."
+            exit 0
+          fi
+          echo "Auto-mergeando PR #$PR_NUMBER (release ${TAG}) a production..."
+          # --merge = merge commit (deja historial visible)
+          # --auto  = espera a que pasen los checks requeridos antes de mergear
+          # Si no hay checks requeridos en production, mergea de inmediato.
+          gh pr merge "$PR_NUMBER" --merge --auto --delete-branch || \
+            gh pr merge "$PR_NUMBER" --merge --delete-branch
+
+      # ───── 9. Resumen final en el Summary del run ─────
+      - name: Resumen del run
+        if: always()
+        shell: bash
+        env:
+          SKIP: ${{ steps.version.outputs.skip }}
+          BUMP: ${{ steps.version.outputs.bump }}
+          NEW_TAG: ${{ steps.version.outputs.new_tag }}
+          LAST_TAG: ${{ steps.version.outputs.last_tag }}
+          FEAT_COUNT: ${{ steps.version.outputs.feature_count }}
+          FIX_COUNT: ${{ steps.version.outputs.fix_count }}
+          MIG_COUNT: ${{ steps.version.outputs.migration_count }}
+        run: |
+          {
+            echo "## Prepare Release — resultado"
+            if [ "$SKIP" = "true" ]; then
+              echo
+              echo ":information_source: **No se generó release nuevo.**"
+              echo
+              echo "Los PRs mergeados desde \`${LAST_TAG}\` fueron solo de tipo \`migration/\` (o no hubo PRs)."
+              echo "Las migraciones quedan acumuladas y se incluirán en el próximo release que sí bumpea (feature/ o fix/)."
+            else
+              echo
+              echo "- Versión anterior: \`${LAST_TAG}\`"
+              echo "- Versión nueva:    \`${NEW_TAG}\` (bump=${BUMP})"
+              echo "- PRs por tipo:     feature=${FEAT_COUNT}, fix=${FIX_COUNT}, migration=${MIG_COUNT}"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
