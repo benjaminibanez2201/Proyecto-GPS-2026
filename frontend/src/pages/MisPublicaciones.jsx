@@ -69,52 +69,96 @@ const MisPublicaciones = () => {
 
   const handleCrear = async () => {
     const { value: formValues } = await Swal.fire({
-      title: 'Nueva publicación',
-      html: `
-        <input id="titulo" class="swal2-input" placeholder="Título de la publicación">
-        <select id="tipoInmueble" class="swal2-input">
-          <option value="">Selecciona tipo de inmueble</option>
+  title: 'Nueva publicación',
+  html: `
+    <div style="display: flex; flex-direction: column; gap: 14px; text-align: left; padding: 10px 20px; font-family: Arial, sans-serif;">
+      
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Título de la publicación *</label>
+        <input id="swal-titulo" placeholder="Ej: Pieza Universitaria" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none;">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Tipo de inmueble *</label>
+        <select id="swal-tipo" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; width: 100%;">
+          <option value="" disabled selected>Selecciona tipo de inmueble</option>
+          <option value="pieza">Pieza</option>
           <option value="departamento">Departamento</option>
           <option value="casa">Casa</option>
-          <option value="pieza">Pieza</option>
           <option value="estudio">Estudio</option>
         </select>
-        <input id="precioMensual" class="swal2-input" placeholder="Precio mensual" type="number">
-        <input id="ubicacion" class="swal2-input" placeholder="Ubicación">
-        <input id="fotos" class="swal2-input" placeholder="URL de foto principal">
-        <input id="servicios" class="swal2-input" placeholder="Servicios (agua, luz, internet...)">
-        <textarea id="reglas" class="swal2-textarea" placeholder="Reglas de convivencia"></textarea>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonColor: accent,
-      cancelButtonText: 'Cancelar',
-      confirmButtonText: 'Publicar',
-      preConfirm: () => {
-        const titulo = document.getElementById('titulo').value;
-        const tipoInmueble = document.getElementById('tipoInmueble').value;
-        const precioMensual = parseInt(document.getElementById('precioMensual').value);
-        const ubicacion = document.getElementById('ubicacion').value;
-        const fotos = document.getElementById('fotos').value;
-        const servicios = document.getElementById('servicios').value;
-        const reglas = document.getElementById('reglas').value;
+      </div>
 
-        if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !fotos) {
-          Swal.showValidationMessage('Completa todos los campos obligatorios');
-          return false;
-        }
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Precio mensual ($) *</label>
+        <input id="swal-precio" type="number" placeholder="Ej: 180000" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none;">
+      </div>
 
-        return {
-          titulo,
-          tipoInmueble,
-          precioMensual,
-          ubicacion,
-          fotos: [fotos],
-          serviciosIncluidos: servicios ? servicios.split(',').map(s => s.trim()) : [],
-          reglasConvivencia: reglas || null,
-        };
-      },
-    });
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Ubicación *</label>
+        <input id="swal-ubicacion" placeholder="Dirección exacta del inmueble" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none;">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">URL de foto principal *</label>
+        <input id="swal-foto" placeholder="https://ejemplo.com/imagen.jpg" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none;">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Servicios incluidos (separados por coma)</label>
+        <input id="swal-servicios" placeholder="Wifi, Luz, Agua, Lavandería" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none;">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Reglas de convivencia</label>
+        <textarea id="swal-reglas" placeholder="Reglas del hogar o ambiente de estudio..." rows="3" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; resize: vertical; font-family: Arial, sans-serif;"></textarea>
+      </div>
+
+    </div>
+  `,
+  focusConfirm: false,
+  showCancelButton: true,
+  confirmButtonColor: accent,
+  cancelButtonColor: '#64748b',
+  confirmButtonText: 'Publicar Inmueble',
+  cancelButtonText: 'Cancelar',
+  customClass: {
+    popup: 'my-swal-popup-radius' 
+  },
+  preConfirm: () => {
+    const titulo = document.getElementById('swal-titulo').value;
+    const tipoInmueble = document.getElementById('swal-tipo').value;
+    const precioMensual = document.getElementById('swal-precio').value;
+    const ubicacion = document.getElementById('swal-ubicacion').value;
+    const fotos = document.getElementById('swal-foto').value;
+    const serviciosRaw = document.getElementById('swal-servicios').value;
+    const reglasConvivencia = document.getElementById('swal-reglas').value;
+
+    if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !fotos) {
+      Swal.showValidationMessage('Por favor completa todos los campos obligatorios (*)');
+      return false;
+    }
+
+    const serviciosIncluidos = serviciosRaw ? serviciosRaw.split(',').map(s => s.trim()) : [];
+
+    return { 
+      titulo, 
+      tipoInmueble, 
+      precioMensual: parseInt(precioMensual), 
+      ubicacion, 
+      fotos: [fotos], 
+      serviciosIncluidos, 
+      reglasConvivencia 
+    };
+  }
+})
 
     if (formValues) {
       const response = await crearPublicacion(formValues);
