@@ -9,7 +9,7 @@ import {
       verifyPassword,
      } from '@services/user.service.js';
 import { useAuth } from '@context/AuthContext';
-import { UserCircle2, Save, Pencil, X, Home } from 'lucide-react'; 
+import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight } from 'lucide-react'; 
 import Swal from 'sweetalert2';
 
 const accent = '#0f766e';
@@ -48,7 +48,7 @@ const Profile = () => {
 
   const onSubmit = async (data) => {
   const filteredData = Object.fromEntries(
-    Object.entries(data).filter(([_, v]) => v !== '')
+    Object.entries(data).filter(([, v]) => v !== '')
   );
 
   const cambiaEmail = filteredData.email && filteredData.email !== profileData?.email;
@@ -233,6 +233,26 @@ const Profile = () => {
           </div>
         </section>
       )}
+
+      {!editMode && (
+        <section style={styles.card}>
+          <div style={styles.reviewsCard}>
+            <div style={styles.reviewsIconWrap}>
+              <Star size={24} strokeWidth={2.1} />
+            </div>
+            <div style={styles.reviewsCopy}>
+              <h3 style={styles.reviewsTitle}>Calificaciones recibidas</h3>
+              <p style={styles.reviewsText}>
+                Revisa tu reputación completa con puntaje, comentario, fecha y el perfil de quien te calificó.
+              </p>
+            </div>
+            <button type="button" onClick={() => navigate('/profile/calificaciones')} style={styles.reviewsButton}>
+              Ver calificaciones
+              <ChevronRight size={16} strokeWidth={2.4} />
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 };
@@ -291,6 +311,60 @@ const styles = {
     alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px',
     padding: '12px 24px', borderRadius: '12px', backgroundColor: accent,
     color: '#fff', fontWeight: '700', fontSize: '14px', border: 'none', cursor: 'pointer',
+  },
+  reviewsCard: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '16px',
+    flexWrap: 'wrap',
+  },
+  reviewsIconWrap: {
+    width: '58px',
+    height: '58px',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff4d6',
+    color: '#b08900',
+    flexShrink: 0,
+  },
+  reviewsCopy: {
+    flex: 1,
+    minWidth: '220px',
+  },
+  reviewsEyebrow: {
+    margin: '0 0 4px',
+    fontSize: '12px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    fontWeight: '700',
+    color: '#b08900',
+  },
+  reviewsTitle: {
+    margin: '0 0 6px',
+    fontSize: '18px',
+    color: '#0f172a',
+  },
+  reviewsText: {
+    margin: 0,
+    fontSize: '14px',
+    color: '#64748b',
+    lineHeight: 1.55,
+  },
+  reviewsButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 18px',
+    borderRadius: '12px',
+    backgroundColor: '#0f766e',
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: '14px',
+    border: 'none',
+    cursor: 'pointer',
   },
 };
 
