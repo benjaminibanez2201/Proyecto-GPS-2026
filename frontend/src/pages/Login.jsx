@@ -68,7 +68,7 @@ const Login = () => {
                     }}
                 >
                     <img
-                        src="/BannerArriendU.png"
+                        src="/slidebaar.png"
                         alt="Banner ArriendU"
                         style={{ width: '100%', maxWidth: '330px', height: 'auto' }}
                     />
