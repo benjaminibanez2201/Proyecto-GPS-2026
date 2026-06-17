@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { usePublicaciones } from '../hooks/publicaciones/usePublicacion';
+import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import PublicacionCard from '../components/PublicacionCard';
 import '@styles/basePublicaciones.css';
 
 export default function BuscarArriendos() {
   const { publicaciones, cargando, error, cargarPublicaciones } = usePublicaciones();
+  const { favoritos, handleAgregarFavorito, handleEliminarFavorito } = useFavoritos();
   
   const [filtros, setFiltros] = useState({
     tipoInmueble: "",
@@ -114,7 +116,10 @@ export default function BuscarArriendos() {
             publicaciones.map((pub) => (
               <PublicacionCard 
                 key={pub.id} 
-                publicacion={pub} 
+                publicacion={pub}
+                favoritos={favoritos}
+                handleAgregarFavorito={handleAgregarFavorito}
+                handleEliminarFavorito={handleEliminarFavorito}
               />
             ))
           ) : (

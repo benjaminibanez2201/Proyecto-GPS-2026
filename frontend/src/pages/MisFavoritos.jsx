@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Heart, House, MapPin, Trash2 } from 'lucide-react';
+import { Heart, House, MapPin } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { eliminarFavorito, getMisFavoritos } from '@services/user.service.js';
 
@@ -32,13 +32,13 @@ const MisFavoritos = () => {
 
   const handleEliminarFavorito = async (publicacionId) => {
     const confirm = await Swal.fire({
-      title: '¿Quitar de favoritos?',
+      title: '¿Seguro que quieres eliminarlo de tus favoritos?',
       text: 'La publicación seguirá disponible para buscarla nuevamente.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       cancelButtonColor: accent,
-      confirmButtonText: 'Sí, quitar',
+      confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
     });
 
@@ -127,10 +127,21 @@ const MisFavoritos = () => {
                   <button
                     type="button"
                     onClick={() => handleEliminarFavorito(publicacionId)}
-                    style={styles.removeButton}
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      cursor: 'pointer',
+                      padding: '8px',
+                      transition: 'all 0.2s ease',
+                      marginTop: '8px',
+                      alignSelf: 'flex-start',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    title='Eliminar de favoritos'
                   >
-                    <Trash2 size={16} strokeWidth={2.1} />
-                    Quitar de favoritos
+                    <Heart size={28} fill="#dc2626" color="#dc2626" />
                   </button>
                 </article>
               );

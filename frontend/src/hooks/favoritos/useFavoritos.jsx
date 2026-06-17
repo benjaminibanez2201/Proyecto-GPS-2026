@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
-import { 
-  obtenerMisFavoritos, 
-  agregarFavorito, 
-  eliminarFavorito 
-} from '@services/favoritos.service.js';
+import {
+  getMisFavoritos,
+  agregarFavorito,
+  eliminarFavorito,
+} from '@services/user.service.js';
 
 export function useFavoritos() {
   const [favoritos, setFavoritos] = useState([]);
@@ -13,14 +13,16 @@ export function useFavoritos() {
   const cargarFavoritos = useCallback(async () => {
     setCargando(true);
     setError(null);
-    const [data, errorRespuesta] = await obtenerMisFavoritos();
 
-    if (errorRespuesta) {
-      setError(errorRespuesta);
-      setFavoritos([]);
+    const data = await getMisFavoritos();
+
+    if (Array.isArray(data)) {
+      setFavoritos(data);
     } else {
-      setFavoritos(data || []);
+      setError(data?.message || 'Error al cargar tus favoritos');
+      setFavoritos([]);
     }
+
     setCargando(false);
   }, []);
 
@@ -31,29 +33,33 @@ export function useFavoritos() {
   const handleAgregarFavorito = async (publicacionId) => {
     setCargando(true);
     setError(null);
-    const [data, errorRespuesta] = await agregarFavorito(publicacionId);
 
-    if (errorRespuesta) {
-      setError(errorRespuesta);
+    const response = await agregarFavorito(publicacionId);
+
+    if (response?.status === 'Client error' || response?.message?.toLowerCase?.()?.includes('error')) {
+      setError(response?.details || response?.message || 'Error al guardar favorito');
     } else {
       await cargarFavoritos();
     }
+
     setCargando(false);
-    return errorRespuesta === null; 
+    return !(response?.status === 'Client error' || response?.message?.toLowerCase?.()?.includes('error'));
   };
 
   const handleEliminarFavorito = async (publicacionId) => {
     setCargando(true);
     setError(null);
-    const [data, errorRespuesta] = await eliminarFavorito(publicacionId);
 
-    if (errorRespuesta) {
-      setError(errorRespuesta);
+    const response = await eliminarFavorito(publicacionId);
+
+    if (response?.status === 'Client error' || response?.message?.toLowerCase?.()?.includes('error')) {
+      setError(response?.details || response?.message || 'Error al eliminar favorito');
     } else {
       await cargarFavoritos();
     }
+
     setCargando(false);
-    return errorRespuesta === null;
+    return !(response?.status === 'Client error' || response?.message?.toLowerCase?.()?.includes('error'));
   };
 
   return {
