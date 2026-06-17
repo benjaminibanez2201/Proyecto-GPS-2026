@@ -59,6 +59,7 @@ export const publicacionBodyValidation = Joi.object({
   "object.unknown": "No se permiten propiedades adicionales.",
 });
 
+
 export const publicacionQueryValidation = Joi.object({
   precioMax: Joi.number()
     .integer()

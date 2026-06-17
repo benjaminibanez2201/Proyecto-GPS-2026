@@ -6,9 +6,10 @@ import {
       getProfile, 
       getMisPublicaciones, 
       updateArrendadorProfile, 
+      verifyPassword,
      } from '@services/user.service.js';
 import { useAuth } from '@context/AuthContext';
-import { UserCircle2, Save, Pencil, X, Home } from 'lucide-react'; 
+import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight } from 'lucide-react'; 
 import Swal from 'sweetalert2';
 
 const accent = '#0f766e';
@@ -46,15 +47,56 @@ const Profile = () => {
   };
 
   const onSubmit = async (data) => {
-    const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([, value]) => value !== '')
-    );
-    
-    const response = profileData?.rol === 'arrendador' 
-      ? await updateArrendadorProfile(filteredData)
-      : await updateProfile(filteredData);
-      
-    if (response) {
+  const filteredData = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== '')
+  );
+
+  const cambiaEmail = filteredData.email && filteredData.email !== profileData?.email;
+
+  if (cambiaEmail) {
+    const { value: passwordActual } = await Swal.fire({
+      title: 'Confirmación de Seguridad',
+      text: 'Por seguridad, ingresa tu contraseña actual para confirmar el cambio de correo.',
+      input: 'password',
+      inputPlaceholder: 'Tu contraseña actual',
+      showCancelButton: true,
+      confirmButtonColor: accent,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Confirmar',
+      inputValidator: (value) => {
+        if (!value) return 'Debes ingresar tu contraseña para continuar';
+      }
+    });
+
+    if (!passwordActual) return;
+
+    const verification = await verifyPassword(passwordActual);
+    if (verification?.status !== 'Success') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Contraseña incorrecta',
+        text: 'No se pudo verificar tu identidad. Los cambios no fueron guardados.',
+        confirmButtonColor: accent
+      });
+      return;
+    }
+  }
+
+  const response = profileData?.rol === 'arrendador'
+    ? await updateArrendadorProfile(filteredData)
+    : await updateProfile(filteredData);
+
+  if (response) {
+    if (cambiaEmail) {
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Correo actualizado!',
+        text: 'Tu correo fue cambiado. Debes iniciar sesión nuevamente.',
+        confirmButtonColor: accent,
+      });
+      sessionStorage.removeItem('usuario');
+      navigate('/auth');
+    } else {
       Swal.fire({
         icon: 'success',
         title: '¡Perfil actualizado!',
@@ -64,7 +106,8 @@ const Profile = () => {
       setEditMode(false);
       fetchProfile();
     }
-  };
+  }
+}; 
 
   const fields = [
     { label: 'Nombre completo', field: 'nombreCompleto', placeholder: 'Tu nombre completo' },
@@ -182,10 +225,30 @@ const Profile = () => {
               </div>
             </div>
             <button 
-              onClick={() => navigate('/mis-publicaciones')} // 3. Redirige a la vista del Sidebar (ajusta la ruta según tus routes)
+              onClick={() => navigate('/mis-publicaciones')} 
               style={{ ...styles.button, padding: '12px 20px' }}
             >
               Gestionar mis publicaciones
+            </button>
+          </div>
+        </section>
+      )}
+
+      {!editMode && (
+        <section style={styles.card}>
+          <div style={styles.reviewsCard}>
+            <div style={styles.reviewsIconWrap}>
+              <Star size={24} strokeWidth={2.1} />
+            </div>
+            <div style={styles.reviewsCopy}>
+              <h3 style={styles.reviewsTitle}>Calificaciones recibidas</h3>
+              <p style={styles.reviewsText}>
+                Revisa tu reputación completa con puntaje, comentario, fecha y el perfil de quien te calificó.
+              </p>
+            </div>
+            <button type="button" onClick={() => navigate('/profile/calificaciones')} style={styles.reviewsButton}>
+              Ver calificaciones
+              <ChevronRight size={16} strokeWidth={2.4} />
             </button>
           </div>
         </section>
@@ -248,6 +311,60 @@ const styles = {
     alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px',
     padding: '12px 24px', borderRadius: '12px', backgroundColor: accent,
     color: '#fff', fontWeight: '700', fontSize: '14px', border: 'none', cursor: 'pointer',
+  },
+  reviewsCard: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '16px',
+    flexWrap: 'wrap',
+  },
+  reviewsIconWrap: {
+    width: '58px',
+    height: '58px',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff4d6',
+    color: '#b08900',
+    flexShrink: 0,
+  },
+  reviewsCopy: {
+    flex: 1,
+    minWidth: '220px',
+  },
+  reviewsEyebrow: {
+    margin: '0 0 4px',
+    fontSize: '12px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    fontWeight: '700',
+    color: '#b08900',
+  },
+  reviewsTitle: {
+    margin: '0 0 6px',
+    fontSize: '18px',
+    color: '#0f172a',
+  },
+  reviewsText: {
+    margin: 0,
+    fontSize: '14px',
+    color: '#64748b',
+    lineHeight: 1.55,
+  },
+  reviewsButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 18px',
+    borderRadius: '12px',
+    backgroundColor: '#0f766e',
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: '14px',
+    border: 'none',
+    cursor: 'pointer',
   },
 };
 

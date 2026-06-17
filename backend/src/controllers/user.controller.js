@@ -1,19 +1,20 @@
 "use strict";
 import {
   deleteUserService,
+  getProfileService,
   getUserService,
   getUsersService,
   updateProfileService,
   updateUserService,
   updateUserVerificationStatusService,
-  getProfileService,
   updateArrendadorProfileService,
+  verifyPasswordService,
 } from "../services/user.service.js";
 import {
+  profileArrendadorBodyValidation,
   profileBodyValidation,
   userBodyValidation,
   userQueryValidation,
-  profileArrendadorBodyValidation,
 } from "../validations/user.validation.js";
 import {
   handleErrorClient,
@@ -242,6 +243,20 @@ export async function getProfile(req, res) {
   }
 }
 
+export async function getProfileById(req, res) {
+  try {
+    const { id } = req.params;
+
+    const [user, userError] = await getProfileService(Number(id));
+
+    if (userError) return handleErrorClient(res, 404, "Error obteniendo perfil", userError);
+
+    handleSuccess(res, 200, "Perfil obtenido correctamente", user);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
 export async function updateArrendadorProfile(req, res) {
   try {
     const { body } = req;
@@ -283,6 +298,25 @@ export async function getPerfilPropio(req, res) {
     };
 
     handleSuccess(res, 200, "Perfil obtenido correctamente", datosPerfil);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function verifyPassword(req, res) {
+  try {
+    const { id } = req.user;
+    const { password } = req.body;
+
+    if (!password) {
+      return handleErrorClient(res, 400, "La contraseña es obligatoria");
+    }
+
+    const [valid, error] = await verifyPasswordService(id, password);
+
+    if (error) return handleErrorClient(res, 400, "Error verificando contraseña", error);
+
+    handleSuccess(res, 200, "Contraseña verificada correctamente", { valid });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

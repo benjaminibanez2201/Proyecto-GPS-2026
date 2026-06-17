@@ -9,6 +9,7 @@ import {
   sendVerificationInfoRequestEmail,
 } from "./email.service.js";
 import { createNotificacionService } from "./notificacion.service.js";
+import { sendCredentialChangedEmail } from "./email.service.js";
 
 const VERIFICATION_STATUSES = ["pendiente", "aprobado", "rechazado"];
 const VERIFIABLE_ROLES = ["estudiante", "arrendador"];
@@ -401,7 +402,10 @@ export async function updateArrendadorProfileService(id, body) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
-    const userFound = await userRepository.findOne({ where: { id } });
+    const userFound = await userRepository.findOne({ 
+      where: { id },
+      select: ['id', 'nombreCompleto', 'email', 'telefono', 'fotoPerfil', 'rol', 'estadoVerificacion']
+    });
 
     if (!userFound) return [null, "Usuario no encontrado"];
 
@@ -429,9 +433,46 @@ export async function updateArrendadorProfileService(id, body) {
 
     const { password, ...userUpdated } = userData;
 
+    console.log("body.email:", body.email);
+    console.log("userFound.email:", userFound.email);
+    if (body.email && body.email !== userFound.email) {
+      try {
+        console.log("Enviando correo de aviso a:", userFound.email);
+        await sendCredentialChangedEmail(
+          { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
+          ['email'],
+          console.log("correo enviado a", userFound.email)
+        );
+      } catch (emailError) {
+        console.error("Error al enviar correo de aviso:", emailError);
+      }
+    }
+
     return [userUpdated, null];
   } catch (error) {
     console.error("Error al actualizar perfil del arrendador:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function verifyPasswordService(id, password) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({ 
+      where: { id },
+      select: ['id', 'password']
+    });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+
+    const isMatch = await comparePassword(password, userFound.password);
+
+    if (!isMatch) return [null, "Contraseña incorrecta"];
+
+    return [true, null];
+  } catch (error) {
+    console.error("Error al verificar contraseña:", error);
     return [null, "Error interno del servidor"];
   }
 }

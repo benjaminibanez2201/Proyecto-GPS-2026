@@ -103,3 +103,21 @@ export async function editarPublicacion(id, data) {
         return error.response.data;
     }
 }
+
+export async function crearPublicacion(data) {
+    try {
+        const response = await axios.post('/publicacion/', data);
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function verifyPassword(password) {
+    try {
+        const response = await axios.post('/profile/verify-password', { password });
+        return response.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}

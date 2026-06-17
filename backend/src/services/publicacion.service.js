@@ -26,6 +26,7 @@ export async function createPublicacionService(arrendadorId, body) {
   }
 }
 
+
 export async function getPublicacionesService(filtros) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
@@ -157,3 +158,4 @@ export async function deletePublicacionService(publicacionId, arrendadorId) {
     return [null, "Error interno del servidor al eliminar"];
   }
 }
+
