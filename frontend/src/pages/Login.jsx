@@ -8,8 +8,6 @@ import '@styles/login.css';
 const Login = () => {
     const navigate = useNavigate();
     const {
-        errorEmail,
-        errorPassword,
         errorData,
         handleInputChange
     } = useLogin();
@@ -109,7 +107,6 @@ const Login = () => {
                                     required: true,
                                     minLength: 5,
                                     maxLength: 100,
-                                    errorMessageData: errorEmail,
                                     onChange: (e) => handleInputChange('email', e.target.value),
                                 },
                                 {
@@ -119,7 +116,6 @@ const Login = () => {
                                     fieldType: 'input',
                                     type: "password",
                                     required: true,
-                                    errorMessageData: errorPassword,
                                     onChange: (e) => handleInputChange('password', e.target.value)
                                 },
                             ]}
