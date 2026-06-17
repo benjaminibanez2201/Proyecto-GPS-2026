@@ -4,8 +4,10 @@ import {
   getProfileService,
   getUserService,
   getUsersService,
-  updateArrendadorProfileService,
   updateProfileService,
+  updateUserService,
+  updateUserVerificationStatusService,
+  updateArrendadorProfileService,
   verifyPasswordService,
 } from "../services/user.service.js";
 import {

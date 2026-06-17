@@ -5,7 +5,7 @@ const PublicacionSchema = new EntitySchema({
   name: "Publicacion",
   tableName: "publicaciones",
   columns: {
-    id_publicacion: {
+    id: {
       type: "int",
       primary: true,
       generated: true,

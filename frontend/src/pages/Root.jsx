@@ -51,7 +51,8 @@ function PageRoot() {
       title: 'Menú',
       subtitle: 'Buscar, conversar y gestionar tus arriendos.',
       items: [
-        { label: 'Buscar Arriendos', icon: Home, disabled: true },
+        { label: 'Buscar Arriendos', icon: Home, to: '/buscar' },
+        { label: 'Mis Favoritos', icon: Heart, to: '/favoritos' },
         { label: 'Mensajes', icon: MessageCircle, disabled: true },
         { label: 'Mis Favoritos', icon: Heart, to: '/favoritos' },
         { label: 'Historial de Arriendos', icon: History, to: '/historial' },

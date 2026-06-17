@@ -3,11 +3,11 @@ import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
 
 import {
+    eliminarNotificacion,
     getNotificacionesByUserId,
     getNotificacionesNoLeidasCount,
     marcarNotificacionLeida,
     marcarTodasNotificacionesLeidas,
-    eliminarNotificacion,
 } from "../controllers/notificacion.controller.js";
 const router = Router();
 
