@@ -51,10 +51,12 @@ const Profile = () => {
     Object.entries(data).filter(([_, v]) => v !== '')
   );
 
-  if (filteredData.email && filteredData.email !== profileData?.email) {
-    const { value: password } = await Swal.fire({
-      title: 'Confirma tu identidad',
-      text: 'Ingresa tu contraseña para cambiar el correo electrónico.',
+  const cambiaEmail = filteredData.email && filteredData.email !== profileData?.email;
+
+  if (cambiaEmail) {
+    const { value: passwordActual } = await Swal.fire({
+      title: 'Confirmación de Seguridad',
+      text: 'Por seguridad, ingresa tu contraseña actual para confirmar el cambio de correo.',
       input: 'password',
       inputPlaceholder: 'Tu contraseña actual',
       showCancelButton: true,
@@ -62,15 +64,20 @@ const Profile = () => {
       cancelButtonText: 'Cancelar',
       confirmButtonText: 'Confirmar',
       inputValidator: (value) => {
-        if (!value) return 'Debes ingresar tu contraseña';
+        if (!value) return 'Debes ingresar tu contraseña para continuar';
       }
     });
 
-    if (!password) return; 
+    if (!passwordActual) return;
 
-    const verification = await verifyPassword(password);
+    const verification = await verifyPassword(passwordActual);
     if (verification?.status !== 'Success') {
-      Swal.fire({ icon: 'error', title: 'Contraseña incorrecta', text: 'No se pudo verificar tu identidad.', confirmButtonColor: accent });
+      Swal.fire({
+        icon: 'error',
+        title: 'Contraseña incorrecta',
+        text: 'No se pudo verificar tu identidad. Los cambios no fueron guardados.',
+        confirmButtonColor: accent
+      });
       return;
     }
   }
@@ -80,7 +87,7 @@ const Profile = () => {
     : await updateProfile(filteredData);
 
   if (response) {
-    if (filteredData.email && filteredData.email !== profileData?.email) {
+    if (cambiaEmail) {
       await Swal.fire({
         icon: 'success',
         title: '¡Correo actualizado!',
@@ -100,7 +107,7 @@ const Profile = () => {
       fetchProfile();
     }
   }
-};
+}; 
 
   const fields = [
     { label: 'Nombre completo', field: 'nombreCompleto', placeholder: 'Tu nombre completo' },
@@ -218,7 +225,7 @@ const Profile = () => {
               </div>
             </div>
             <button 
-              onClick={() => navigate('/mis-publicaciones')} // 3. Redirige a la vista del Sidebar (ajusta la ruta según tus routes)
+              onClick={() => navigate('/mis-publicaciones')} 
               style={{ ...styles.button, padding: '12px 20px' }}
             >
               Gestionar mis publicaciones

@@ -166,3 +166,21 @@ export async function sendRentalCompleteEmail(rental) {
     console.error("Error al enviar correo de arriendo completado:", error);
   }
 }
+
+export async function sendCredentialChangedEmail(user, tiposCambio = []) {
+  const descripcion = tiposCambio.includes('email')
+    ? 'tu correo electrónico de acceso'
+    : 'tu contraseña';
+
+  return sendTemplateEmail({
+    to: user.email, // se envía al correo anterior
+    subject: "Aviso de seguridad: cambio de credenciales en ArriendU",
+    template: "credenciales-cambio",
+    attachments: getBrandAttachments(),
+    data: {
+      nombreCompleto: user.nombreCompleto,
+      descripcion,
+      loginUrl: `${normalizeBaseUrl(FRONTEND_URL)}/auth`,
+    },
+  });
+}
