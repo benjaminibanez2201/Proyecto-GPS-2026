@@ -12,7 +12,7 @@ import { renderEmailTemplate } from "../helpers/emailTemplate.helper.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const bannerPath = path.resolve(__dirname, "../../../frontend/public/BannerArriendU.png");
+const bannerPath = path.resolve(__dirname, "../../../frontend/src/assets/slidebaar.png");
 const bannerCid = "arriendu-banner";
 const logoPath = path.resolve(__dirname, "../../../frontend/src/assets/miLogo.png");
 const logoCid = "arriendu-logo";
@@ -38,7 +38,7 @@ function normalizeBaseUrl(url = "http://localhost:5173") {
 function getBrandAttachments() {
   return [
     {
-      filename: "BannerArriendU.png",
+      filename: "slidebaar.png",
       path: bannerPath,
       cid: bannerCid,
     },
