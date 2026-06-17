@@ -10,7 +10,6 @@ import notificacionRoutes from "./notificacion.routes.js";
 import publicacionRoutes from "./publicacion.routes.js";
 import uploadRoutes from "./upload.routes.js";
 
-import publicacionRoutes from "./publicacion.routes.js";
 
 const router = Router();
 router
