@@ -24,6 +24,21 @@ const PublicacionSchema = new EntitySchema({
       default: true,
       nullable: false,
     },
+    contadorViews: {
+      type: "int",
+      default: 0,
+      nullable: false,
+    },
+    contadorFavoritos: {
+      type: "int",
+      default: 0,
+      nullable: false,
+    },
+    contadorConversaciones: {
+      type: "int",
+      default: 0,
+      nullable: false,
+    },
     createdAt: {
       type: "timestamp with time zone",
       default: () => "CURRENT_TIMESTAMP",
