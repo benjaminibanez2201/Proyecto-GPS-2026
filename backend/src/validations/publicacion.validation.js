@@ -59,6 +59,60 @@ export const publicacionBodyValidation = Joi.object({
   "object.unknown": "No se permiten propiedades adicionales.",
 });
 
+
+export const publicacionQueryValidation = Joi.object({
+  precioMax: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      "number.base": "El precio máximo debe ser un número.",
+      "number.positive": "El precio máximo debe ser positivo."
+    }),
+  tipoInmueble: Joi.string()
+    .valid("departamento", "casa", "pieza", "estudio")
+    .optional()
+    .messages({
+      "any.only": "El tipo de inmueble a buscar debe ser: departamento, casa, pieza o estudio."
+    }),
+  ordenarPor: Joi.string()
+    .valid("precioMensual")
+    .optional()
+    .messages({
+      "any.only": "Solo puedes ordenar por 'precioMensual'."
+    }),
+  direccionOrden: Joi.string()
+    .valid("ASC", "DESC", "asc", "desc")
+    .optional()
+    .messages({
+      "any.only": "La dirección de ordenamiento debe ser ASC o DESC."
+    }),
+  pagina: Joi.number()
+    .integer()
+    .min(1)
+    .optional()
+    .messages({
+      "number.base": "La página debe ser un número.",
+      "number.min": "La página debe ser mayor o igual a 1."
+    })
+}).unknown(false).messages({
+  "object.unknown": "No se permiten parámetros de búsqueda adicionales."
+});
+
+export const publicacionIdValidation = Joi.object({
+  id: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      "any.required": "El ID de la publicación es obligatorio.",
+      "number.base": "El ID debe ser un número válido.",
+      "number.positive": "El ID no puede ser negativo."
+    })
+}).unknown(false).messages({
+  "object.unknown": "No se permiten parámetros adicionales en la URL."
+});
+
 export const publicacionUpdateValidation = Joi.object({
   titulo: Joi.string().min(5).max(255).messages({
     "string.min": "El título debe tener como mínimo 5 caracteres.",
