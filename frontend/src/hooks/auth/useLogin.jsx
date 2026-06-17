@@ -11,15 +11,42 @@ const useLogin = () => {
         if (inputData.password) setErrorPassword('');
     }, [inputData.email, inputData.password]);
 
+    const normalizeError = (dataMessage) => {
+        if (typeof dataMessage === 'string') {
+            return {
+                dataInfo: 'auth',
+                message: dataMessage,
+            };
+        }
+
+        if (dataMessage && typeof dataMessage === 'object') {
+            return {
+                dataInfo: dataMessage.dataInfo || 'auth',
+                message: dataMessage.message || 'Credenciales incorrectas',
+            };
+        }
+
+        return {
+            dataInfo: 'auth',
+            message: 'Credenciales incorrectas',
+        };
+    };
+
     const errorData = (dataMessage) => {
-        if (dataMessage.dataInfo === 'email') {
-            setErrorEmail(dataMessage.message);
-        } else if (dataMessage.dataInfo === 'password') {
-            setErrorPassword(dataMessage.message);
-        } else if (dataMessage.dataInfo === 'auth') {
-            showErrorAlert('Credenciales incorrectas', dataMessage.message);
-        } else if (dataMessage.dataInfo === 'estadoVerificacion') {
-            showErrorAlert('Cuenta no disponible', dataMessage.message);
+        const normalizedError = normalizeError(dataMessage);
+
+        if (normalizedError.dataInfo === 'email') {
+            setErrorEmail(normalizedError.message);
+        } else if (normalizedError.dataInfo === 'password') {
+            setErrorPassword(normalizedError.message);
+        } else if (normalizedError.dataInfo === 'auth') {
+            setErrorPassword(normalizedError.message);
+            showErrorAlert('Credenciales incorrectas', normalizedError.message);
+        } else if (normalizedError.dataInfo === 'estadoVerificacion') {
+            showErrorAlert('Cuenta no disponible', normalizedError.message);
+        } else {
+            setErrorPassword(normalizedError.message);
+            showErrorAlert('Credenciales incorrectas', normalizedError.message);
         }
     };
 
