@@ -5,21 +5,63 @@ import '@styles/basePublicaciones.css';
 
 export default function BuscarArriendos() {
   const { publicaciones, cargando, error, cargarPublicaciones } = usePublicaciones();
-  const [filtroTipo, setFiltroTipo] = useState("");
-  const handleSelectChange = (e) => {
-    const nuevoTipo = e.target.value;
-    setFiltroTipo(nuevoTipo); 
-    cargarPublicaciones({ tipoInmueble: nuevoTipo }); 
+  
+  const [filtros, setFiltros] = useState({
+    tipoInmueble: "",
+    precioMin: "",
+    precioMax: "", 
+    direccionOrden: ""
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFiltros(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const aplicarFiltros = () => {
+    const parametrosConsulta = {};
+
+    if (filtros.tipoInmueble) parametrosConsulta.tipoInmueble = filtros.tipoInmueble;
+    if (filtros.precioMin) parametrosConsulta.precioMin = filtros.precioMin;
+    if (filtros.precioMax) parametrosConsulta.precioMax = filtros.precioMax;
+    
+    if (filtros.direccionOrden) {
+      parametrosConsulta.ordenarPor = "precioMensual";
+      parametrosConsulta.direccionOrden = filtros.direccionOrden;
+    }
+
+    cargarPublicaciones(parametrosConsulta);
+  };
+
+  const limpiarFiltros = () => {
+    setFiltros({ tipoInmueble: "", precioMin: "", precioMax: "", direccionOrden: "" });
+    cargarPublicaciones({}); 
   };
 
   return (
     <div className="home-container">
       <h1 className="home-title">Encuentra tu próximo arriendo</h1>
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+      
+      <div style={{ 
+        marginBottom: '30px', 
+        display: 'flex', 
+        gap: '15px', 
+        justifyContent: 'center',
+        flexWrap: 'wrap',
+        backgroundColor: '#f8fafc',
+        padding: '20px',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0'
+      }}>
+        
         <select 
-          value={filtroTipo} 
-          onChange={handleSelectChange}
-          style={{ padding: '8px', borderRadius: '6px' }}
+          name="tipoInmueble"
+          value={filtros.tipoInmueble} 
+          onChange={handleInputChange}
+          style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', minWidth: '150px' }}
         >
           <option value="">Todos los tipos</option>
           <option value="departamento">Departamento</option>
@@ -27,6 +69,40 @@ export default function BuscarArriendos() {
           <option value="pieza">Pieza</option>
           <option value="estudio">Estudio</option>
         </select>
+        <input 
+          type="number" 
+          name="precioMax"
+          placeholder="Precio Máximo ($)" 
+          value={filtros.precioMax}
+          onChange={handleInputChange}
+          onWheel={(e) => e.target.blur()}
+          style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', minWidth: '30px', maxWidth: '150px' }}
+        />
+
+        <select 
+          name="direccionOrden"
+          value={filtros.direccionOrden} 
+          onChange={handleInputChange}
+          style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', minWidth: '150px' }}
+        >
+          <option value="">Ordenar por...</option>
+          <option value="ASC">Precio: Menor a Mayor</option>
+          <option value="DESC">Precio: Mayor a Menor</option>
+        </select>
+
+        <button 
+          onClick={aplicarFiltros}
+          style={{ padding: '10px 20px', borderRadius: '8px', backgroundColor: '#008080', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          Buscar
+        </button>
+
+        <button 
+          onClick={limpiarFiltros}
+          style={{ padding: '10px 20px', borderRadius: '8px', backgroundColor: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          Limpiar
+        </button>
       </div>
 
       {cargando && <p className="loading-text">Cargando alojamientos...</p>}
@@ -42,7 +118,9 @@ export default function BuscarArriendos() {
               />
             ))
           ) : (
-            <p className="empty-text">No encontramos arriendos con esos filtros.</p>
+            <p className="empty-text" style={{ textAlign: 'center', width: '100%', gridColumn: '1 / -1', marginTop: '20px' }}>
+              No encontramos arriendos con esos filtros.
+            </p>
           )}
         </div>
       )}
