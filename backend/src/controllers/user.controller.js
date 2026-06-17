@@ -1,18 +1,18 @@
 "use strict";
 import {
   deleteUserService,
+  getProfileService,
   getUserService,
   getUsersService,
-  updateProfileService,
-  getProfileService,
   updateArrendadorProfileService,
+  updateProfileService,
   verifyPasswordService,
 } from "../services/user.service.js";
 import {
+  profileArrendadorBodyValidation,
   profileBodyValidation,
   userBodyValidation,
   userQueryValidation,
-  profileArrendadorBodyValidation,
 } from "../validations/user.validation.js";
 import {
   handleErrorClient,
@@ -232,6 +232,20 @@ export async function getProfile(req, res) {
     const { id } = req.user;
 
     const [user, userError] = await getProfileService(id);
+
+    if (userError) return handleErrorClient(res, 404, "Error obteniendo perfil", userError);
+
+    handleSuccess(res, 200, "Perfil obtenido correctamente", user);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function getProfileById(req, res) {
+  try {
+    const { id } = req.params;
+
+    const [user, userError] = await getProfileService(Number(id));
 
     if (userError) return handleErrorClient(res, 404, "Error obteniendo perfil", userError);
 

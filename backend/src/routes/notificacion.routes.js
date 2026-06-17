@@ -14,10 +14,10 @@ const router = Router();
 router.use(authenticateJwt);
 
 router
-  .get("/", getNotificacionesByUserId)
   .get("/count", getNotificacionesNoLeidasCount)
-  .patch("/:id/leer", marcarNotificacionLeida)
   .patch("/leer-todas", marcarTodasNotificacionesLeidas)
+  .get("/", getNotificacionesByUserId)
+  .patch("/:id/leer", marcarNotificacionLeida)
   .delete("/:id", eliminarNotificacion);
 
 export default router;
