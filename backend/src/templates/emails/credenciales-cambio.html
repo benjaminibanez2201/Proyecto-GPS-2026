@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .header { background-color: #008080; padding: 30px; text-align: center; }
+    .header img { max-width: 180px; }
+    .body { padding: 32px; color: #2c3e50; }
+    .body h2 { margin-top: 0; }
+    .alert { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 16px; border-radius: 6px; margin: 20px 0; }
+    .btn { display: inline-block; margin-top: 24px; padding: 12px 28px; background-color: #008080; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold; }
+    .footer { padding: 20px; text-align: center; font-size: 12px; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="cid:arriendu-banner" alt="ArriendU" />
+    </div>
+    <div class="body">
+      <h2>Aviso de seguridad</h2>
+      <p>Hola, <strong>{{ nombreCompleto }}</strong>.</p>
+      <p>Te informamos que recientemente se realizó un cambio en <strong>{{ descripcion }}</strong> de tu cuenta en ArriendU.</p>
+      <div class="alert">
+        Si no realizaste este cambio, te recomendamos contactar al soporte inmediatamente.
+      </div>
+      <p>Si fuiste tú quien realizó el cambio, puedes ignorar este mensaje e iniciar sesión normalmente.</p>
+      <a href="{{ loginUrl }}" class="btn">Iniciar sesión</a>
+    </div>
+    <div class="footer">
+      © ArriendU — Este es un mensaje automático, por favor no respondas este correo.
+    </div>
+  </div>
+</body>
+</html>
