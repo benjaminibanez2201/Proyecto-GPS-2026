@@ -1,6 +1,13 @@
 "use strict";
-import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/responseHandlers.js";
-import { crearArriendoServicio, obtenerArriendoPorIdServicio, confirmarArriendoServicio, listarArriendosServicio, actualizarArriendoServicio, eliminarArriendoServicio } from "../services/rentals.service.js";
+import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
+import {
+  actualizarArriendoServicio,
+  confirmarArriendoServicio,
+  crearArriendoServicio,
+  eliminarArriendoServicio,
+  listarArriendosServicio,
+  obtenerArriendoPorIdServicio,
+} from "../services/rentals.service.js";
 
 export async function crearArriendo(req, res) {
   try {
@@ -37,7 +44,8 @@ export async function confirmarArriendo(req, res) {
 
 export async function listarArriendos(req, res) {
   try {
-    const [data, error] = await listarArriendosServicio();
+    const userId = req.user.id; // Extraemos el ID del usuario logueado
+    const [data, error] = await listarArriendosServicio(userId); // Le pasamos el ID
     if (error) return handleErrorClient(res, 400, error);
     return handleSuccess(res, 200, "Lista de arriendos", data);
   } catch (error) {

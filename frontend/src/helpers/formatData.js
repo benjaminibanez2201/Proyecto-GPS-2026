@@ -9,6 +9,9 @@ export function formatUserData(user) {
         rol: startCase(user.rol),
         estadoVerificacion: startCase(user.estadoVerificacion || 'pendiente'),
         rut: formatRut(user.rut),
+        verificacionRevisadaEn: user.verificacionRevisadaEn
+            ? formatTempo(user.verificacionRevisadaEn, "DD-MM-YYYY HH:mm")
+            : user.verificacionRevisadaEn,
         createdAtRaw: user.createdAt,
         createdAt: formatTempo(user.createdAt, "DD-MM-YYYY")
     };
@@ -31,6 +34,9 @@ export function formatPostUpdate(user) {
         estadoVerificacion: startCase(user.estadoVerificacion || 'pendiente'),
         rut: formatRut(user.rut),
         email: user.email,
+        verificacionRevisadaEn: user.verificacionRevisadaEn
+            ? formatTempo(user.verificacionRevisadaEn, "DD-MM-YYYY HH:mm")
+            : user.verificacionRevisadaEn,
         createdAtRaw: user.createdAt,
         createdAt: formatTempo(user.createdAt, "DD-MM-YYYY")
     };

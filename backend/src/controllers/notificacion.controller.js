@@ -1,11 +1,11 @@
 "use strict";
 import {
     createNotificacionService,
+    eliminarNotificacionService,
     getNotificacionesByUserIdService,
+    getNotificacionesNoLeidasCountService,
     marcarNotificacionLeidaService,
     marcarTodasNotificacionesLeidasService,
-    eliminarNotificacionService,
-    getNotificacionesNoLeidasCountService
 } from "../services/notificacion.service.js";
 
 import {
@@ -66,7 +66,10 @@ export async function marcarNotificacionLeida(req, res) {
 
         if (!requestingUserId) return handleErrorClient(res, 401, "Usuario no autenticado");
 
-        const [updatedNotificacion, errorUpdatedNotificacion] = await marcarNotificacionLeidaService(notificacionId, requestingUserId);
+        const [updatedNotificacion, errorUpdatedNotificacion] = await marcarNotificacionLeidaService(
+            notificacionId,
+            requestingUserId,
+        );
 
         if (errorUpdatedNotificacion) return handleErrorClient(res, 400, errorUpdatedNotificacion);
 

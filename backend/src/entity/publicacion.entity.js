@@ -15,28 +15,36 @@ const PublicacionSchema = new EntitySchema({
       length: 255,
       nullable: false,
     },
-    descripcion: {
+    tipoInmueble: {
+      type: "enum",
+      enum: ["departamento", "casa", "pieza", "estudio"],
+      nullable: false,
+    },
+    precioMensual: {
+      type: "int",
+      nullable: false,
+    },
+    ubicacion: {
+      type: "varchar",
+      length: 255,
+      nullable: false,
+    },
+    fotos: {
+      type: "simple-array",
+      nullable: true,
+    },
+    serviciosIncluidos: {
+      type: "simple-array",
+      nullable: true,
+    },
+    reglasConvivencia: {
       type: "text",
       nullable: true,
     },
-    activo: {
-      type: "boolean",
-      default: true,
-      nullable: false,
-    },
-    contadorViews: {
-      type: "int",
-      default: 0,
-      nullable: false,
-    },
-    contadorFavoritos: {
-      type: "int",
-      default: 0,
-      nullable: false,
-    },
-    contadorConversaciones: {
-      type: "int",
-      default: 0,
+    estado: {
+      type: "enum",
+      enum: ["activa", "inactiva"],
+      default: "activa",
       nullable: false,
     },
     createdAt: {
@@ -52,12 +60,12 @@ const PublicacionSchema = new EntitySchema({
     },
   },
   relations: {
-    owner: {
+    arrendador: {
       type: "many-to-one",
       target: "User",
-      joinColumn: true,
+      joinColumn: { name: "arrendador_id" },
       nullable: false,
-      cascade: false,
+      onDelete: "CASCADE",
     },
   },
 });

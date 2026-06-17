@@ -1,23 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, ArrowLeft } from 'lucide-react'; 
+import { Star, ArrowLeft } from 'lucide-react';
 import { obtenerResenasUsuario, obtenerPerfilUsuario } from '../services/rentalsAndReviews.service.js';
 
 export default function PerfilUsuario() {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const [usuario, setUsuario] = useState(null);
   const [resenas, setResenas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const colores = {
-    principal: '#008080',   
-    secundario: '#e6dfd3',  
+    principal: '#008080',
+    secundario: '#e6dfd3',
     textoOscuro: '#2c3e50',
     blanco: '#ffffff',
-    oro: '#ffd21f'        
+    oro: '#ffd21f'
   };
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function PerfilUsuario() {
             reviewsCount: dataUsuario.reviewsCount || dataResenas?.length || 0,
           });
         }
-      } catch (e) {
+      } catch {
         setError('Error inesperado al cargar el perfil');
       } finally {
         setLoading(false);
@@ -64,14 +64,14 @@ export default function PerfilUsuario() {
         {Array(maxEstrellas).fill().map((_, i) => {
           const esLlena = i < estrellasLlenas;
           return (
-            <Star 
-              key={i} 
-              size={20} 
+            <Star
+              key={i}
+              size={20}
               strokeWidth={2}
               // Si es llena, se pinta con tu color #ffd21f. Si es vacía, el fondo es transparente.
-              fill={esLlena ? colores.oro : 'transparent'} 
+              fill={esLlena ? colores.oro : 'transparent'}
               // El borde de la estrella toma el color oro si está llena, o un gris suave si está vacía
-              color={esLlena ? colores.oro : '#d9d9d9'} 
+              color={esLlena ? colores.oro : '#d9d9d9'}
             />
           );
         })}
@@ -80,15 +80,15 @@ export default function PerfilUsuario() {
   };
 
   return (
-    <div style={{ 
-      backgroundColor: '#f9f8f6', 
-      minHeight: '100vh', 
+    <div style={{
+      backgroundColor: '#f9f8f6',
+      minHeight: '100vh',
       padding: '40px 20px',
       fontFamily: 'sans-serif',
-      color: colores.textoOscuro 
+      color: colores.textoOscuro
     }}>
-      <button 
-        onClick={() => navigate(-1)} 
+      <button
+        onClick={() => navigate(-1)}
         style={{
           backgroundColor: 'transparent',
           border: `2px solid ${colores.principal}`,
@@ -107,15 +107,15 @@ export default function PerfilUsuario() {
         Volver a la vista anterior
       </button>
 
-      <div style={{ 
-        maxWidth: '800px', 
-        margin: '0 auto', 
-        backgroundColor: colores.blanco, 
-        borderRadius: '12px', 
+      <div style={{
+        maxWidth: '800px',
+        margin: '0 auto',
+        backgroundColor: colores.blanco,
+        borderRadius: '12px',
         boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
         overflow: 'hidden'
       }}>
-        
+
         <div style={{ backgroundColor: colores.secundario, padding: '40px', textAlign: 'center' }}>
           <div style={{
             width: '100px',
@@ -135,20 +135,20 @@ export default function PerfilUsuario() {
             {usuario?.nombre.charAt(0)}
           </div>
           <h2 style={{ margin: '0 0 5px 0', fontSize: '24px' }}>{usuario?.nombre}</h2>
-          <span style={{ 
-            backgroundColor: colores.principal, 
-            color: colores.blanco, 
-            padding: '4px 12px', 
-            borderRadius: '12px', 
+          <span style={{
+            backgroundColor: colores.principal,
+            color: colores.blanco,
+            padding: '4px 12px',
+            borderRadius: '12px',
             fontSize: '12px',
-            fontWeight: 'bold' 
+            fontWeight: 'bold'
           }}>{usuario?.rol}</span>
         </div>
 
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-around', 
-          padding: '20px', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          padding: '20px',
           borderBottom: '1px solid #eee',
           textAlign: 'center'
         }}>
@@ -175,10 +175,10 @@ export default function PerfilUsuario() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {resenas.map((resena) => (
-                <div key={resena.id} style={{ 
-                  padding: '15px', 
-                  borderRadius: '8px', 
-                  backgroundColor: '#fdfbf7', 
+                <div key={resena.id} style={{
+                  padding: '15px',
+                  borderRadius: '8px',
+                  backgroundColor: '#fdfbf7',
                   borderLeft: `4px solid ${colores.principal}`,
                   boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
                 }}>

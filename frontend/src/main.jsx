@@ -4,7 +4,6 @@ import Login from '@pages/Login';
 import ForgotPassword from '@pages/ForgotPassword';
 import ResetPassword from '@pages/ResetPassword';
 import Home from '@pages/Home';
-import Users from '@pages/Users';
 import AdminUsers from '@pages/AdminUsers';
 import Register from '@pages/Register';
 import Error404 from '@pages/Error404';
@@ -15,6 +14,29 @@ import AdminPanel from '@pages/AdminPanel';
 import '@styles/styles.css';
 import HistorialArriendos from './pages/HistorialArriendos.jsx';
 import PerfilUsuario from './pages/PerfilUsuario.jsx';
+import Notificaciones from '@pages/Notificaciones';
+import MisPublicaciones from '@pages/MisPublicaciones';
+
+const APP_NAME = 'ArriendU';
+
+function getTitleFromPath(pathname) {
+  const titleRules = [
+    { pattern: /^\/$/, title: APP_NAME },
+    { pattern: /^\/home\/?$/, title: APP_NAME },
+    { pattern: /^\/auth\/?$/, title: `Iniciar sesión - ${APP_NAME}` },
+    { pattern: /^\/register\/?$/, title: `Crear una cuenta - ${APP_NAME}` },
+    { pattern: /^\/forgot-password\/?$/, title: `Recuperar contraseña - ${APP_NAME}` },
+    { pattern: /^\/reset-password\/[^/]+\/?$/, title: `Restablecer contraseña - ${APP_NAME}` },
+    { pattern: /^\/admin\/?$/, title: `Panel administrador - ${APP_NAME}` },
+    { pattern: /^\/users\/?$/, title: `Gestión de usuarios - ${APP_NAME}` },
+    { pattern: /^\/profile\/?$/, title: `Mi perfil - ${APP_NAME}` },
+    { pattern: /^\/historial\/?$/, title: `Historial de arriendos - ${APP_NAME}` },
+    { pattern: /^\/perfil\/[^/]+\/?$/, title: `Perfil de usuario - ${APP_NAME}` },
+  ];
+
+  const matchedRule = titleRules.find((rule) => rule.pattern.test(pathname));
+  return matchedRule ? matchedRule.title : APP_NAME;
+}
 
 const router = createBrowserRouter([
   {
@@ -46,7 +68,7 @@ const router = createBrowserRouter([
       {
         path: '/profile',
         element: (
-          <ProtectedRoute allowedRoles={['estudiante']}>
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
             <Profile />
           </ProtectedRoute>
         ),
@@ -64,9 +86,25 @@ const router = createBrowserRouter([
         element: <HistorialArriendos />
       },
       {
+        path: 'notificaciones',
+        element: (
+          <ProtectedRoute>
+            <Notificaciones />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'perfil/:id',
         element: <PerfilUsuario />
-      }
+      },
+      {
+      path: '/mis-publicaciones',
+      element: (
+        <ProtectedRoute allowedRoles={['arrendador']}>
+          <MisPublicaciones />
+        </ProtectedRoute>
+      ),
+    },
     ]
   },
   {
@@ -86,6 +124,11 @@ const router = createBrowserRouter([
     element: <Register/>
   }
 ])
+
+document.title = getTitleFromPath(router.state.location.pathname);
+router.subscribe((state) => {
+  document.title = getTitleFromPath(state.location.pathname);
+});
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <RouterProvider router={router}/>

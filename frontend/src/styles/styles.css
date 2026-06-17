@@ -28,3 +28,35 @@ img:hover {
 	box-shadow: 0 8px 20px rgba(0,0,0,0.06);
 	opacity: 0.98;
 }
+
+/* Disable hover transform for images inside the login page */
+.login-page img:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+/* Botón confirmar arriendo: hover y estado disabled */
+.confirm-btn {
+	background-color: #008080;
+	color: #ffffff;
+	border: none;
+	padding: 6px 12px;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+	font-weight: 600;
+}
+
+.confirm-btn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+.confirm-btn:disabled,
+.confirm-btn[disabled] {
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none;
+	box-shadow: none;
+}

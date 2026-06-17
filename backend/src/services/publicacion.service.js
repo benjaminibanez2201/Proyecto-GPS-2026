@@ -1,150 +1,77 @@
 "use strict";
 import { AppDataSource } from "../config/configDb.js";
-import {
-  obtenerPublicacionBloqueadaRepositorio,
-  obtenerFavoritoRepositorio,
-  crearFavoritoRepositorio,
-  eliminarFavoritoRepositorio,
-  guardarPublicacionRepositorio,
-} from "../repositories/publicacion.repository.js";
+import PublicacionSchema from "../entity/publicacion.entity.js";
 
-function mapPublicacionDetalleDTO(publicacion, esFavorito = false) {
-  return {
-    id_publicacion: Number(publicacion.id_publicacion),
-    titulo: publicacion.titulo,
-    descripcion: publicacion.descripcion,
-    contador_views: Number(publicacion.contadorViews || 0),
-    contador_favoritos: Number(publicacion.contadorFavoritos || 0),
-    contador_conversaciones: Number(publicacion.contadorConversaciones || 0),
-    createdAt: publicacion.createdAt,
-    estado: publicacion.activo ? "activa" : "inactiva",
-    es_favorito: Boolean(esFavorito),
-    owner: publicacion.owner
-      ? {
-          id: publicacion.owner.id,
-          nombreCompleto: publicacion.owner.nombreCompleto,
-          email: publicacion.owner.email,
-        }
-      : null,
-  };
-}
-
-export async function obtenerDetallePublicacionServicio(id_publicacion, usuarioAutenticado) {
+export async function createPublicacionService(arrendadorId, body) {
   try {
-    if (!usuarioAutenticado || usuarioAutenticado.rol !== "estudiante") {
-      return [null, "Solo un estudiante puede visualizar este detalle"];
-    }
+    const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
 
-    const [detalle, error] = await AppDataSource.transaction(async (manager) => {
-      const [publicacion, errorPublicacion] = await obtenerPublicacionBloqueadaRepositorio(manager, id_publicacion);
-      if (errorPublicacion) return [null, errorPublicacion];
-      if (!publicacion) return [null, "Publicación no encontrada"];
-
-      publicacion.contadorViews = Number(publicacion.contadorViews || 0) + 1;
-      const [publicacionActualizada, errorGuardado] = await guardarPublicacionRepositorio(manager, publicacion);
-      if (errorGuardado) return [null, errorGuardado];
-
-      const [favorito] = await obtenerFavoritoRepositorio(manager, id_publicacion, usuarioAutenticado.id);
-
-      return [mapPublicacionDetalleDTO(publicacionActualizada, Boolean(favorito)), null];
+    const newPublicacion = publicacionRepository.create({
+      titulo: body.titulo,
+      tipoInmueble: body.tipoInmueble,
+      precioMensual: body.precioMensual,
+      ubicacion: body.ubicacion,
+      fotos: body.fotos,
+      serviciosIncluidos: body.serviciosIncluidos || [],
+      reglasConvivencia: body.reglasConvivencia || null,
+      arrendador: { id: arrendadorId },
     });
 
-    if (error) return [null, error];
+    await publicacionRepository.save(newPublicacion);
 
-    return [detalle, null];
+    return [newPublicacion, null];
   } catch (error) {
-    console.error("Error obtenerDetallePublicacionServicio:", error);
+    console.error("Error al crear publicación:", error);
     return [null, "Error interno del servidor"];
   }
 }
 
-export async function agregarFavoritoServicio(id_publicacion, usuarioAutenticado) {
+export async function obtenerPublicacionesArrendadorService(arrendadorId) {
   try {
-    if (!usuarioAutenticado || usuarioAutenticado.rol !== "estudiante") {
-      return [null, "Solo un estudiante puede marcar favoritos"];
-    }
-
-    const [resultado, error] = await AppDataSource.transaction(async (manager) => {
-      const [publicacion, errorPublicacion] = await obtenerPublicacionBloqueadaRepositorio(manager, id_publicacion);
-      if (errorPublicacion) return [null, errorPublicacion];
-      if (!publicacion) return [null, "Publicación no encontrada"];
-
-      const [favoritoExistente] = await obtenerFavoritoRepositorio(manager, id_publicacion, usuarioAutenticado.id);
-      if (favoritoExistente) {
-        return [mapPublicacionDetalleDTO(publicacion, true), null];
-      }
-
-      const [favoritoCreado, errorFavorito] = await crearFavoritoRepositorio(
-        manager,
-        publicacion,
-        usuarioAutenticado.id,
-      );
-
-      if (errorFavorito) return [null, errorFavorito];
-
-      publicacion.contadorFavoritos = Number(publicacion.contadorFavoritos || 0) + 1;
-      const [publicacionActualizada, errorGuardado] = await guardarPublicacionRepositorio(manager, publicacion);
-      if (errorGuardado) return [null, errorGuardado];
-
-      return [
-        {
-          ...mapPublicacionDetalleDTO(publicacionActualizada, true),
-          favoritoId: favoritoCreado.id,
-        },
-        null,
-      ];
+    const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
+    const publicaciones = await publicacionRepository.find({
+      where: { arrendador: { id: arrendadorId } },
+      order: { createdAt: "DESC" },
     });
-
-    if (error) return [null, error];
-
-    return [resultado, null];
+    return [publicaciones, null];
   } catch (error) {
-    console.error("Error agregarFavoritoServicio:", error);
-    return [null, "Error interno del servidor"];
+    return [null, "Error al buscar publicaciones en la base de datos"];
   }
 }
 
-export async function eliminarFavoritoServicio(id_publicacion, usuarioAutenticado) {
+export async function updatePublicacionService(publicacionId, arrendadorId, body) {
   try {
-    if (!usuarioAutenticado || usuarioAutenticado.rol !== "estudiante") {
-      return [null, "Solo un estudiante puede eliminar favoritos"];
-    }
-
-    const [resultado, error] = await AppDataSource.transaction(async (manager) => {
-      const [publicacion, errorPublicacion] = await obtenerPublicacionBloqueadaRepositorio(manager, id_publicacion);
-      if (errorPublicacion) return [null, errorPublicacion];
-      if (!publicacion) return [null, "Publicación no encontrada"];
-
-      const [favoritoExistente] = await obtenerFavoritoRepositorio(manager, id_publicacion, usuarioAutenticado.id);
-      if (!favoritoExistente) {
-        return [mapPublicacionDetalleDTO(publicacion, false), null];
-      }
-
-      const [favoritoEliminado, errorFavorito] = await eliminarFavoritoRepositorio(manager, favoritoExistente);
-      if (errorFavorito) return [null, errorFavorito];
-
-      if (favoritoEliminado) {
-        publicacion.contadorFavoritos = Math.max(0, Number(publicacion.contadorFavoritos || 0) - 1);
-        const [publicacionActualizada, errorGuardado] = await guardarPublicacionRepositorio(manager, publicacion);
-        if (errorGuardado) return [null, errorGuardado];
-
-        return [mapPublicacionDetalleDTO(publicacionActualizada, false), null];
-      }
-
-      return [mapPublicacionDetalleDTO(publicacion, false), null];
+    const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
+    
+    const publicacion = await publicacionRepository.findOne({
+      where: { id: publicacionId, arrendador: { id: arrendadorId } }
     });
 
-    if (error) return [null, error];
+    if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];
 
-    return [resultado, null];
+    // Mezclamos los datos nuevos
+    publicacionRepository.merge(publicacion, body);
+    await publicacionRepository.save(publicacion);
+
+    return [publicacion, null];
   } catch (error) {
-    console.error("Error eliminarFavoritoServicio:", error);
-    return [null, "Error interno del servidor"];
+    return [null, "Error interno del servidor al actualizar"];
   }
 }
 
-export default {
-  obtenerDetallePublicacionServicio,
-  agregarFavoritoServicio,
-  eliminarFavoritoServicio,
-};
+export async function deletePublicacionService(publicacionId, arrendadorId) {
+  try {
+    const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
+
+    const publicacion = await publicacionRepository.findOne({
+      where: { id: publicacionId, arrendador: { id: arrendadorId } }
+    });
+
+    if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];
+
+    await publicacionRepository.remove(publicacion);
+    return [true, null];
+  } catch (error) {
+    return [null, "Error interno del servidor al eliminar"];
+  }
+}

@@ -29,6 +29,18 @@ export async function updateUser(data, rut) {
     }
 }
 
+export async function updateUserVerificationStatus(rut, reviewPayload) {
+    try {
+        const payload = typeof reviewPayload === 'string'
+            ? { estadoVerificacion: reviewPayload }
+            : reviewPayload;
+        const response = await axios.patch(`/user/detail/verification?rut=${encodeURIComponent(rut)}`, payload);
+        return response.data.data;
+    } catch (error) {
+        return error.response?.data || { message: 'Error al actualizar estado de verificacion' };
+    }
+}
+
 export async function deleteUser(rut) {
     try {
         const response = await axios.delete(`/user/detail/?rut=${rut}`);
@@ -42,6 +54,69 @@ export async function updateProfile(data) {
     try {
         const response = await axios.patch('/profile/', data);
         return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function getProfile() {
+    try {
+        const response = await axios.get('/profile/');
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function getMisPublicaciones() {
+    try {
+        const response = await axios.get('/publicacion/mis-publicaciones');
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function updateArrendadorProfile(data) {
+    try {
+        const response = await axios.patch('/profile/arrendador', data);
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function eliminarPublicacion(id) {
+    try {
+        const response = await axios.delete(`/publicacion/${id}`);
+        return response.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function editarPublicacion(id, data) {
+    try {
+        const response = await axios.put(`/publicacion/${id}`, data);
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function crearPublicacion(data) {
+    try {
+        const response = await axios.post('/publicacion/', data);
+        return response.data.data;
+    } catch (error) {
+        return error.response.data;
+    }
+}
+
+export async function verifyPassword(password) {
+    try {
+        const response = await axios.post('/profile/verify-password', { password });
+        return response.data;
     } catch (error) {
         return error.response.data;
     }

@@ -1,101 +1,103 @@
 "use strict";
-import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
+import { createPublicacionService } from "../services/publicacion.service.js";
+import { 
+  publicacionBodyValidation,
+  publicacionUpdateValidation,
+} from "../validations/publicacion.validation.js";
 import {
-  obtenerDetallePublicacionServicio,
-  agregarFavoritoServicio,
-  eliminarFavoritoServicio,
+  handleErrorClient,
+  handleErrorServer,
+  handleSuccess,
+} from "../handlers/responseHandlers.js";
+import { 
+  obtenerPublicacionesArrendadorService,
+  updatePublicacionService,
+  deletePublicacionService 
 } from "../services/publicacion.service.js";
 
-export async function obtenerDetallePublicacion(req, res) {
+
+export async function createPublicacion(req, res) {
   try {
-    const idPublicacion = Number(req.params.id_publicacion);
+    const { body } = req;
+    const { id, rol, estadoVerificacion } = req.user;
 
-    if (Number.isNaN(idPublicacion)) {
-      return handleErrorClient(res, 400, "El identificador de la publicación no es válido");
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden crear publicaciones");
     }
 
-    const [data, error] = await obtenerDetallePublicacionServicio(idPublicacion, req.user);
-
-    if (error === "Publicación no encontrada") {
-      return handleErrorClient(res, 404, error);
+    if (estadoVerificacion !== "aprobado") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Tu cuenta debe estar verificada para crear publicaciones");
     }
 
-    if (
-      error === "Solo un estudiante puede visualizar este detalle" ||
-      error === "Solo un estudiante puede marcar favoritos" ||
-      error === "Solo un estudiante puede eliminar favoritos"
-    ) {
-      return handleErrorClient(res, 403, error);
+    const { error: bodyError } = publicacionBodyValidation.validate(body);
+
+    if (bodyError) {
+      return handleErrorClient(res, 400, "Error de validación", bodyError.message);
     }
 
-    if (error) {
-      return handleErrorServer(res, 500, error);
-    }
+    const [publicacion, publicacionError] = await createPublicacionService(id, body);
 
-    return handleSuccess(res, 200, "Detalle de publicación obtenido", data);
+    if (publicacionError) return handleErrorClient(res, 400, "Error creando publicación", publicacionError);
+
+    handleSuccess(res, 201, "Publicación creada correctamente", publicacion);
   } catch (error) {
-    return handleErrorServer(res, 500, error.message);
+    handleErrorServer(res, 500, error.message);
   }
 }
 
-export async function agregarFavorito(req, res) {
+export async function getPublicacionesPropias(req, res) {
   try {
-    const idPublicacion = Number(req.params.id_publicacion);
+    const { id, rol } = req.user;
 
-    if (Number.isNaN(idPublicacion)) {
-      return handleErrorClient(res, 400, "El identificador de la publicación no es válido");
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden ver sus publicaciones");
     }
 
-    const [data, error] = await agregarFavoritoServicio(idPublicacion, req.user);
+    const [publicaciones, error] = await obtenerPublicacionesArrendadorService(id);
+    if (error) return handleErrorClient(res, 400, "Error al obtener publicaciones", error);
 
-    if (error === "Publicación no encontrada") {
-      return handleErrorClient(res, 404, error);
-    }
-
-    if (error === "Solo un estudiante puede marcar favoritos") {
-      return handleErrorClient(res, 403, error);
-    }
-
-    if (error) {
-      return handleErrorServer(res, 500, error);
-    }
-
-    return handleSuccess(res, 200, "Favorito agregado", data);
+    handleSuccess(res, 200, "Publicaciones obtenidas correctamente", publicaciones);
   } catch (error) {
-    return handleErrorServer(res, 500, error.message);
+    handleErrorServer(res, 500, error.message);
   }
 }
 
-export async function eliminarFavorito(req, res) {
+export async function updatePublicacion(req, res) {
   try {
-    const idPublicacion = Number(req.params.id_publicacion);
+    const { body, params } = req;
+    const { id: publicacionId } = params;
+    const { id: arrendadorId, rol } = req.user;
 
-    if (Number.isNaN(idPublicacion)) {
-      return handleErrorClient(res, 400, "El identificador de la publicación no es válido");
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden editar publicaciones");
     }
 
-    const [data, error] = await eliminarFavoritoServicio(idPublicacion, req.user);
+    const { error: bodyError } = publicacionUpdateValidation.validate(body);
+    if (bodyError) return handleErrorClient(res, 400, "Error de validación", bodyError.message);
 
-    if (error === "Publicación no encontrada") {
-      return handleErrorClient(res, 404, error);
-    }
+    const [publicacion, error] = await updatePublicacionService(publicacionId, arrendadorId, body);
+    if (error) return handleErrorClient(res, 400, "Error al editar publicación", error);
 
-    if (error === "Solo un estudiante puede eliminar favoritos") {
-      return handleErrorClient(res, 403, error);
-    }
-
-    if (error) {
-      return handleErrorServer(res, 500, error);
-    }
-
-    return handleSuccess(res, 200, "Favorito eliminado", data);
+    handleSuccess(res, 200, "Publicación actualizada correctamente", publicacion);
   } catch (error) {
-    return handleErrorServer(res, 500, error.message);
+    handleErrorServer(res, 500, error.message);
   }
 }
 
-export default {
-  obtenerDetallePublicacion,
-  agregarFavorito,
-  eliminarFavorito,
-};
+export async function deletePublicacion(req, res) {
+  try {
+    const { id: publicacionId } = req.params;
+    const { id: arrendadorId, rol } = req.user;
+
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden eliminar publicaciones");
+    }
+
+    const [deleted, error] = await deletePublicacionService(publicacionId, arrendadorId);
+    if (error) return handleErrorClient(res, 400, "Error al eliminar publicación", error);
+
+    handleSuccess(res, 200, "Publicación eliminada correctamente", null);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}

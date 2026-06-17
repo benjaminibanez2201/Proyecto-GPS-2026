@@ -7,12 +7,12 @@ import rentalsRoutes from "./rentals.routes.js";
 import reviewsRoutes from "./reviews.routes.js";
 import mensajeRoutes from "./mensaje.routes.js";
 import reportesRoutes from "./reportes.routes.js";
-import publicacionEstadisticasRoutes from "./publicacion.estadisticas.routes.js";
+import notificacionRoutes from "./notificacion.routes.js";
 import publicacionRoutes from "./publicacion.routes.js";
+import uploadRoutes from "./upload.routes.js";
 
 
 const router = Router();
-
 router
     .use("/auth", authRoutes)
     .use("/user", userRoutes)
@@ -21,7 +21,8 @@ router
     .use("/reviews", reviewsRoutes)
     .use("/mensajes", mensajeRoutes)
     .use("/reportes", reportesRoutes)
-    .use("/publicaciones", publicacionRoutes)
-    .use("/publicaciones", publicacionEstadisticasRoutes);
-    
+export default router;
+
+    .use("/publicacion", publicacionRoutes);
+
 export default router;

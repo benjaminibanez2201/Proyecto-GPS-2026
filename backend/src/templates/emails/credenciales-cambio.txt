@@ -1,0 +1,11 @@
+Aviso de seguridad - ArriendU
+
+Hola, {{ nombreCompleto }}.
+
+Te informamos que recientemente se realizó un cambio en {{ descripcion }} de tu cuenta en ArriendU.
+
+Si no realizaste este cambio, contacta al soporte inmediatamente.
+
+Si fuiste tú quien realizó el cambio, puedes ignorar este mensaje e iniciar sesión en: {{ loginUrl }}
+
+© ArriendU

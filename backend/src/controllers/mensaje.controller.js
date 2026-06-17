@@ -1,13 +1,13 @@
 "use strict";
 import {
+  marcarConversacionLeidaParaUsuario,
   obtenerConversacionesDeUsuario,
   obtenerConversacionPorId,
-  marcarConversacionLeidaParaUsuario,
 } from "../services/conversacion.service.js";
 import {
   enviarMensaje,
-  obtenerMensajesPorConversacion,
   marcarMensajesLeidos,
+  obtenerMensajesPorConversacion,
 } from "../services/mensaje.service.js";
 import {
   handleErrorClient,
@@ -67,8 +67,8 @@ export async function obtenerDetalleConversacion(req, res) {
     if (errorConversacion) return handleErrorClient(res, 404, errorConversacion);
 
     if (
-      conversacion.estudiante.id !== usuarioId &&
-      conversacion.arrendador.id !== usuarioId
+      conversacion.estudiante.id !== usuarioId
+      && conversacion.arrendador.id !== usuarioId
     ) {
       return handleErrorClient(res, 403, "No autorizado para ver esta conversación");
     }
@@ -99,8 +99,8 @@ export async function responderConversacion(req, res) {
     if (errorConversacion) return handleErrorClient(res, 404, errorConversacion);
 
     if (
-      conversacion.estudiante.id !== remitenteId &&
-      conversacion.arrendador.id !== remitenteId
+      conversacion.estudiante.id !== remitenteId
+      && conversacion.arrendador.id !== remitenteId
     ) {
       return handleErrorClient(res, 403, "No autorizado para escribir en esta conversación");
     }
