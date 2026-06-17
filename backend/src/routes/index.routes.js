@@ -8,6 +8,7 @@ import reviewsRoutes from "./reviews.routes.js";
 import mensajeRoutes from "./mensaje.routes.js";
 import reportesRoutes from "./reportes.routes.js";
 import notificacionRoutes from "./notificacion.routes.js";
+
 import publicacionRoutes from "./publicacion.routes.js";
 import uploadRoutes from "./upload.routes.js";
 
@@ -21,8 +22,8 @@ router
     .use("/reviews", reviewsRoutes)
     .use("/mensajes", mensajeRoutes)
     .use("/reportes", reportesRoutes)
-export default router;
-
-    .use("/publicacion", publicacionRoutes);
+    .use("/notificaciones", notificacionRoutes)
+    .use("/publicacion", publicacionRoutes)
+    .use("/upload", uploadRoutes);
 
 export default router;
