@@ -5,7 +5,10 @@ import {
   createPublicacion, 
   getPublicacionesPropias,
   updatePublicacion,
-  deletePublicacion
+  deletePublicacion,
+  getFavoritos,
+  addFavorito,
+  removeFavorito,
 } from "../controllers/publicacion.controller.js";
 
 const router = Router();
@@ -13,6 +16,9 @@ const router = Router();
 router.use(authenticateJwt);
 
 router.post("/", createPublicacion); // Req 8
+router.get("/favoritos", getFavoritos);
+router.post("/:id/favorito", addFavorito);
+router.delete("/:id/favorito", removeFavorito);
 router.get("/mis-publicaciones", getPublicacionesPropias); // Req 28
 router.put("/:id", updatePublicacion); // Req 9
 router.delete("/:id", deletePublicacion); // Req 9

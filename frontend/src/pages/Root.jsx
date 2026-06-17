@@ -34,7 +34,6 @@ function PageRoot() {
   const { user } = useAuth();
   const userRole = (user?.rol || '').toString().toLowerCase();
   const normalizedRole = userRole === 'admin' ? 'administrador' : userRole;
-  const userId = user?.id;
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -54,6 +53,7 @@ function PageRoot() {
       items: [
         { label: 'Buscar Arriendos', icon: Home, disabled: true },
         { label: 'Mensajes', icon: MessageCircle, disabled: true },
+        { label: 'Mis Favoritos', icon: Heart, to: '/favoritos' },
         { label: 'Historial de Arriendos', icon: History, to: '/historial' },
         { label: 'Mi Perfil', icon: User, to: '/profile' }, 
       ],
@@ -64,6 +64,7 @@ function PageRoot() {
       items: [
         { label: 'Mis Publicaciones', icon: Home, to: '/mis-publicaciones' },
         { label: 'Mensajes', icon: MessageCircle, disabled: true },
+        { label: 'Mis Favoritos', icon: Heart, to: '/favoritos' },
         { label: 'Historial de Arriendos', icon: History, to: '/historial' },
         { label: 'Mi Perfil', icon: User, to: '/profile' },
       ],

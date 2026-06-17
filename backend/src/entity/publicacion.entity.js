@@ -41,6 +41,21 @@ const PublicacionSchema = new EntitySchema({
       type: "text",
       nullable: true,
     },
+    contadorViews: {
+      type: "int",
+      default: 0,
+      nullable: false,
+    },
+    contadorFavoritos: {
+      type: "int",
+      default: 0,
+      nullable: false,
+    },
+    contadorConversaciones: {
+      type: "int",
+      default: 0,
+      nullable: false,
+    },
     estado: {
       type: "enum",
       enum: ["activa", "inactiva"],
