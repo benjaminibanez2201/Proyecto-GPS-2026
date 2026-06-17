@@ -2,6 +2,7 @@
 import User from "../entity/user.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
+import { sendCredentialChangedEmail } from "./email.service.js";
 
 //LA OCUPO PARA VER UN PERFIL, REVISAR SUS RESEÑAS Y CALIFICACIÓN.
 export async function getUserService(query) {
@@ -194,7 +195,10 @@ export async function updateArrendadorProfileService(id, body) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
-    const userFound = await userRepository.findOne({ where: { id } });
+    const userFound = await userRepository.findOne({ 
+      where: { id },
+      select: ['id', 'nombreCompleto', 'email', 'telefono', 'fotoPerfil', 'rol', 'estadoVerificacion']
+    });
 
     if (!userFound) return [null, "Usuario no encontrado"];
 
@@ -220,6 +224,21 @@ export async function updateArrendadorProfileService(id, body) {
     if (!userData) return [null, "Usuario no encontrado después de actualizar"];
 
     const { password, ...userUpdated } = userData;
+
+    console.log("body.email:", body.email);
+    console.log("userFound.email:", userFound.email);
+    if (body.email && body.email !== userFound.email) {
+      try {
+        console.log("Enviando correo de aviso a:", userFound.email);
+        await sendCredentialChangedEmail(
+          { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
+          ['email'],
+          console.log("correo enviado a", userFound.email)
+        );
+      } catch (emailError) {
+        console.error("Error al enviar correo de aviso:", emailError);
+      }
+    }
 
     return [userUpdated, null];
   } catch (error) {
