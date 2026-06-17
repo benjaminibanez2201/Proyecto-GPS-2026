@@ -35,7 +35,7 @@ export function useNotificaciones() {
     try {
       const [count, err] = await obtenerCantidadNotificacionesNoLeidas();
       if (!err) setUnreadCount(typeof count === 'number' ? count : Number(count) || 0);
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, []);

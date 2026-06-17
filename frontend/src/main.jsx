@@ -15,6 +15,9 @@ import '@styles/styles.css';
 import HistorialArriendos from './pages/HistorialArriendos.jsx';
 import PerfilUsuario from './pages/PerfilUsuario.jsx';
 import Notificaciones from '@pages/Notificaciones';
+import BuscarArriendos from '@pages/BuscarArriendo.jsx';
+import DetallePublicacion from '@pages/DetallePublicacion.jsx';
+import Favoritos from '@pages/Favoritos.jsx';
 import MisPublicaciones from '@pages/MisPublicaciones';
 import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
 import MisFavoritos from '@pages/MisFavoritos';
@@ -36,11 +39,13 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/favoritos\/?$/, title: `Mis favoritos - ${APP_NAME}` },
     { pattern: /^\/historial\/?$/, title: `Historial de arriendos - ${APP_NAME}` },
     { pattern: /^\/perfil\/[^/]+\/?$/, title: `Perfil de usuario - ${APP_NAME}` },
+    { pattern: /^\/publicacion\/?$/, title: `Buscar arriendos - ${APP_NAME}` },
   ];
 
   const matchedRule = titleRules.find((rule) => rule.pattern.test(pathname));
   return matchedRule ? matchedRule.title : APP_NAME;
 }
+
 
 const router = createBrowserRouter([
   {
@@ -108,6 +113,30 @@ const router = createBrowserRouter([
       {
         path: 'perfil/:id',
         element: <PerfilUsuario />
+      },
+      {
+        path: 'buscar',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante']}>
+            <BuscarArriendos />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'publicacion/:id', 
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
+            <DetallePublicacion />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'favoritos',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante']}>
+            <Favoritos />
+          </ProtectedRoute>
+        )
       },
       {
       path: '/mis-publicaciones',

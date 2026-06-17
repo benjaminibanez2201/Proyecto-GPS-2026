@@ -2,12 +2,11 @@
 import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
 import { 
-  addFavorito, 
   createPublicacion,
   deletePublicacion,
-  getFavoritos,
+  getPublicacionById,
+  getPublicaciones,
   getPublicacionesPropias,
-  removeFavorito,
   updatePublicacion,
 } from "../controllers/publicacion.controller.js";
 
@@ -15,12 +14,11 @@ const router = Router();
 
 router.use(authenticateJwt);
 
-router.post("/", createPublicacion); // Req 8
-router.get("/favoritos", getFavoritos);
-router.post("/:id/favorito", addFavorito);
-router.delete("/:id/favorito", removeFavorito);
-router.get("/mis-publicaciones", getPublicacionesPropias); // Req 28
-router.put("/:id", updatePublicacion); // Req 9
-router.delete("/:id", deletePublicacion); // Req 9
+router.post("/", createPublicacion); 
+router.get("/", getPublicaciones);
+router.get("/mis-publicaciones", getPublicacionesPropias); 
+router.get("/:id", getPublicacionById);
+router.put("/:id", updatePublicacion); 
+router.delete("/:id", deletePublicacion); 
 
 export default router;
