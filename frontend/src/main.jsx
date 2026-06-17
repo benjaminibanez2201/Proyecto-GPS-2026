@@ -19,6 +19,7 @@ import BuscarArriendos from '@pages/BuscarArriendo.jsx';
 import DetallePublicacion from '@pages/DetallePublicacion.jsx';
 import Favoritos from '@pages/Favoritos.jsx';
 import MisPublicaciones from '@pages/MisPublicaciones';
+import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
 
 const APP_NAME = 'ArriendU';
 
@@ -33,6 +34,7 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/admin\/?$/, title: `Panel administrador - ${APP_NAME}` },
     { pattern: /^\/users\/?$/, title: `Gestión de usuarios - ${APP_NAME}` },
     { pattern: /^\/profile\/?$/, title: `Mi perfil - ${APP_NAME}` },
+    { pattern: /^\/profile\/calificaciones\/?$/, title: `Calificaciones recibidas - ${APP_NAME}` },
     { pattern: /^\/historial\/?$/, title: `Historial de arriendos - ${APP_NAME}` },
     { pattern: /^\/perfil\/[^/]+\/?$/, title: `Perfil de usuario - ${APP_NAME}` },
     { pattern: /^\/publicacion\/?$/, title: `Buscar arriendos - ${APP_NAME}` },
@@ -75,6 +77,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
             <Profile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile/calificaciones',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
+            <CalificacionesRecibidas />
           </ProtectedRoute>
         ),
       },

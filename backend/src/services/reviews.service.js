@@ -3,6 +3,8 @@ import Review from "../entity/review.entity.js";
 import User from "../entity/user.entity.js";
 import Rental from "../entity/rental.entity.js";
 import { AppDataSource } from "../config/configDb.js";
+import { createNotificacionService } from "./notificacion.service.js";
+import { In } from "typeorm";
 
 export async function crearResenaServicio(body, authorId) {
   try {
@@ -14,10 +16,11 @@ export async function crearResenaServicio(body, authorId) {
 
     const arriendo = await repositorioArriendo.findOne({ where: { id: rentalId } });
     if (!arriendo) return [null, "Arriendo no encontrado"];
-    if (arriendo.status !== "COMPLETED") return [null, "El arriendo no está confirmado por ambas partes"];
+    if (arriendo.status !== "COMPLETED") {
+      return [null, "El arriendo no está confirmado por ambas partes"];
+    }
 
-    const esParticipante =
-      Number(authorId) === Number(arriendo.arrendadorId)
+    const esParticipante = Number(authorId) === Number(arriendo.arrendadorId)
       || Number(authorId) === Number(arriendo.estudianteId);
     if (!esParticipante) return [null, "No puedes calificar en este arriendo"];
 
@@ -46,6 +49,18 @@ export async function crearResenaServicio(body, authorId) {
       await repositorioUsuario.update({ id: targetUserId }, { avgRating: newAvg, reviewsCount: newCount });
     }
 
+    try {
+      await createNotificacionService({
+        userId: targetUserId,
+        tipo: "REVIEW_CREATED",
+        mensaje: `Recibiste una calificación de ${rating} estrella${Number(rating) === 1 ? "" : "s"} en un arriendo`,
+        targetType: "review",
+        targetId: guardada.id,
+      });
+    } catch (notifError) {
+      console.error("Error creando notificación de reseña:", notifError);
+    }
+
     return [guardada, null];
   } catch (error) {
     console.error("Error crearResenaServicio:", error);
@@ -62,6 +77,44 @@ export async function obtenerResenasPorUsuarioServicio(userId) {
     return [resenas, null];
   } catch (error) {
     console.error("Error obtenerResenasPorUsuarioServicio:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function obtenerResenasRecibidasServicio(userId) {
+  try {
+    const repositorioResena = AppDataSource.getRepository(Review);
+    const repositorioUsuario = AppDataSource.getRepository(User);
+
+    const resenas = await repositorioResena.find({
+      where: { targetUserId: userId },
+      order: { createdAt: "DESC" },
+    });
+
+    if (resenas.length === 0) {
+      return [[], null];
+    }
+
+    const authorIds = [...new Set(resenas.map((resena) => Number(resena.authorId)))];
+    const autores = await repositorioUsuario.find({
+      where: { id: In(authorIds) },
+      select: {
+        id: true,
+        nombreCompleto: true,
+        fotoPerfil: true,
+      },
+    });
+
+    const autoresMap = new Map(autores.map((autor) => [Number(autor.id), autor]));
+
+    const resenasEnriquecidas = resenas.map((resena) => ({
+      ...resena,
+      author: autoresMap.get(Number(resena.authorId)) || null,
+    }));
+
+    return [resenasEnriquecidas, null];
+  } catch (error) {
+    console.error("Error obtenerResenasRecibidasServicio:", error);
     return [null, "Error interno del servidor"];
   }
 }

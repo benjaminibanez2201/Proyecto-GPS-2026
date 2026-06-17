@@ -1,6 +1,8 @@
 "use strict";
 import Rental from "../entity/rental.entity.js";
+import Review from "../entity/review.entity.js";
 import { AppDataSource } from "../config/configDb.js";
+import { In } from "typeorm";
 import { sendRentalCompleteEmail } from "./email.service.js";
 import { createNotificacionService } from "./notificacion.service.js";
 
@@ -127,6 +129,8 @@ export async function listarArriendosServicio(userId) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
 
+    const repositorioResena = AppDataSource.getRepository(Review);
+    
     const arriendos = await repositorioArriendo.find({
       where: [
         { arrendadorId: Number(userId) },
@@ -141,7 +145,29 @@ export async function listarArriendosServicio(userId) {
       }
     });
 
-    return [arriendos, null];
+    const rentalIds = arriendos.map((arriendo) => arriendo.id);
+    const resenas = rentalIds.length > 0
+      ? await repositorioResena.find({
+          where: {
+            rentalId: In(rentalIds),
+            authorId: Number(userId),
+          },
+        })
+      : [];
+
+    const resenasPorArriendo = new Map(resenas.map((resena) => [Number(resena.rentalId), resena]));
+
+    const arriendosConResena = arriendos.map((arriendo) => {
+      const miResena = resenasPorArriendo.get(Number(arriendo.id)) || null;
+
+      return {
+        ...arriendo,
+        miResena,
+        puedeCalificar: arriendo.status === "COMPLETED" && !miResena,
+      };
+    });
+    
+    return [arriendosConResena, null];
   } catch (error) {
     console.error("Error listarArriendosServicio:", error);
     return [null, "Error interno del servidor"];

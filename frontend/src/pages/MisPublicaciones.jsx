@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getMisPublicaciones, eliminarPublicacion, editarPublicacion } from '@services/user.service.js';
+import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion } from '@services/user.service.js';
 import { Building2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -67,6 +67,110 @@ const MisPublicaciones = () => {
     }
   };
 
+  const handleCrear = async () => {
+    const { value: formValues } = await Swal.fire({
+  title: 'Nueva publicación',
+  html: `
+    <div style="display: flex; flex-direction: column; gap: 14px; text-align: left; padding: 10px 20px; font-family: Arial, sans-serif;">
+      
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Título de la publicación *</label>
+        <input id="swal-titulo" placeholder="Ej: Pieza Universitaria" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none;">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Tipo de inmueble *</label>
+        <select id="swal-tipo" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; width: 100%;">
+          <option value="" disabled selected>Selecciona tipo de inmueble</option>
+          <option value="pieza">Pieza</option>
+          <option value="departamento">Departamento</option>
+          <option value="casa">Casa</option>
+          <option value="estudio">Estudio</option>
+        </select>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Precio mensual ($) *</label>
+        <input id="swal-precio" type="number" placeholder="Ej: 180000" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none;">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Ubicación *</label>
+        <input id="swal-ubicacion" placeholder="Dirección exacta del inmueble" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none;">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">URL de foto principal *</label>
+        <input id="swal-foto" placeholder="https://ejemplo.com/imagen.jpg" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none;">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Servicios incluidos (separados por coma)</label>
+        <input id="swal-servicios" placeholder="Wifi, Luz, Agua, Lavandería" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none;">
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-weight: 600; font-size: 13px; color: #374151;">Reglas de convivencia</label>
+        <textarea id="swal-reglas" placeholder="Reglas del hogar o ambiente de estudio..." rows="3" 
+          style="padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; resize: vertical; font-family: Arial, sans-serif;"></textarea>
+      </div>
+
+    </div>
+  `,
+  focusConfirm: false,
+  showCancelButton: true,
+  confirmButtonColor: accent,
+  cancelButtonColor: '#64748b',
+  confirmButtonText: 'Publicar Inmueble',
+  cancelButtonText: 'Cancelar',
+  customClass: {
+    popup: 'my-swal-popup-radius' 
+  },
+  preConfirm: () => {
+    const titulo = document.getElementById('swal-titulo').value;
+    const tipoInmueble = document.getElementById('swal-tipo').value;
+    const precioMensual = document.getElementById('swal-precio').value;
+    const ubicacion = document.getElementById('swal-ubicacion').value;
+    const fotos = document.getElementById('swal-foto').value;
+    const serviciosRaw = document.getElementById('swal-servicios').value;
+    const reglasConvivencia = document.getElementById('swal-reglas').value;
+
+    if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !fotos) {
+      Swal.showValidationMessage('Por favor completa todos los campos obligatorios (*)');
+      return false;
+    }
+
+    const serviciosIncluidos = serviciosRaw ? serviciosRaw.split(',').map(s => s.trim()) : [];
+
+    return { 
+      titulo, 
+      tipoInmueble, 
+      precioMensual: parseInt(precioMensual), 
+      ubicacion, 
+      fotos: [fotos], 
+      serviciosIncluidos, 
+      reglasConvivencia 
+    };
+  }
+})
+
+    if (formValues) {
+      const response = await crearPublicacion(formValues);
+      if (response?.id) {
+        Swal.fire({ icon: 'success', title: '¡Publicación creada!', confirmButtonColor: accent });
+        fetchPublicaciones();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: response?.message || 'No se pudo crear la publicación', confirmButtonColor: accent });
+      }
+    }
+  };
+
   return (
     <div style={styles.page}>
       <section style={styles.hero}>
@@ -79,12 +183,9 @@ const MisPublicaciones = () => {
             <p style={styles.heroSubtitle}>Gestiona los inmuebles que has subido a la plataforma.</p>
           </div>
         </div>
-        <button
-          onClick={() => Swal.fire({ title: 'Próximamente', icon: 'info' })}
-          style={styles.button}
-        >
-          ➕ Publicar Inmueble
-        </button>
+        <button onClick={handleCrear} style={styles.button}>
+        ➕ Publicar Inmueble
+      </button>
       </section>
 
       <section style={styles.card}>
