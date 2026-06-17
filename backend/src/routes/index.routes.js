@@ -7,6 +7,8 @@ import rentalsRoutes from "./rentals.routes.js";
 import reviewsRoutes from "./reviews.routes.js";
 import mensajeRoutes from "./mensaje.routes.js";
 import reportesRoutes from "./reportes.routes.js";
+import publicacionEstadisticasRoutes from "./publicacion.estadisticas.routes.js";
+import publicacionRoutes from "./publicacion.routes.js";
 
 
 const router = Router();
@@ -18,6 +20,8 @@ router
     .use("/rentals", rentalsRoutes)
     .use("/reviews", reviewsRoutes)
     .use("/mensajes", mensajeRoutes)
-    .use("/reportes", reportesRoutes);
+    .use("/reportes", reportesRoutes)
+    .use("/publicaciones", publicacionRoutes)
+    .use("/publicaciones", publicacionEstadisticasRoutes);
     
 export default router;
