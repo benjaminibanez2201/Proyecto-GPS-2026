@@ -113,6 +113,33 @@ export async function crearPublicacion(data) {
     }
 }
 
+export async function getMisFavoritos() {
+    try {
+        const response = await axios.get('/publicacion/favoritos');
+        return response.data.data;
+    } catch (error) {
+        return error.response?.data || { message: 'Error al cargar favoritos' };
+    }
+}
+
+export async function agregarFavorito(publicacionId) {
+    try {
+        const response = await axios.post(`/publicacion/${publicacionId}/favorito`);
+        return response.data.data;
+    } catch (error) {
+        return error.response?.data || { message: 'Error al guardar favorito' };
+    }
+}
+
+export async function eliminarFavorito(publicacionId) {
+    try {
+        const response = await axios.delete(`/publicacion/${publicacionId}/favorito`);
+        return response.data.data;
+    } catch (error) {
+        return error.response?.data || { message: 'Error al eliminar favorito' };
+    }
+}
+
 export async function verifyPassword(password) {
     try {
         const response = await axios.post('/profile/verify-password', { password });

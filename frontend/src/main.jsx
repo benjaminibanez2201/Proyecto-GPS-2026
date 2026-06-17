@@ -17,6 +17,7 @@ import PerfilUsuario from './pages/PerfilUsuario.jsx';
 import Notificaciones from '@pages/Notificaciones';
 import MisPublicaciones from '@pages/MisPublicaciones';
 import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
+import MisFavoritos from '@pages/MisFavoritos';
 
 const APP_NAME = 'ArriendU';
 
@@ -32,6 +33,7 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/users\/?$/, title: `Gestión de usuarios - ${APP_NAME}` },
     { pattern: /^\/profile\/?$/, title: `Mi perfil - ${APP_NAME}` },
     { pattern: /^\/profile\/calificaciones\/?$/, title: `Calificaciones recibidas - ${APP_NAME}` },
+    { pattern: /^\/favoritos\/?$/, title: `Mis favoritos - ${APP_NAME}` },
     { pattern: /^\/historial\/?$/, title: `Historial de arriendos - ${APP_NAME}` },
     { pattern: /^\/perfil\/[^/]+\/?$/, title: `Perfil de usuario - ${APP_NAME}` },
   ];
@@ -115,6 +117,14 @@ const router = createBrowserRouter([
         </ProtectedRoute>
       ),
     },
+      {
+        path: '/favoritos',
+        element: (
+          <ProtectedRoute>
+            <MisFavoritos />
+          </ProtectedRoute>
+        ),
+      },
     ]
   },
   {

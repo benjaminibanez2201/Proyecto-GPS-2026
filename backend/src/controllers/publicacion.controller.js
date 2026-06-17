@@ -12,7 +12,10 @@ import {
 import { 
   obtenerPublicacionesArrendadorService,
   updatePublicacionService,
-  deletePublicacionService 
+  deletePublicacionService,
+  getFavoritosUsuarioService,
+  addFavoritoService,
+  removeFavoritoService,
 } from "../services/publicacion.service.js";
 
 
@@ -97,6 +100,57 @@ export async function deletePublicacion(req, res) {
     if (error) return handleErrorClient(res, 400, "Error al eliminar publicación", error);
 
     handleSuccess(res, 200, "Publicación eliminada correctamente", null);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function getFavoritos(req, res) {
+  try {
+    const { id: usuarioId } = req.user;
+
+    const [favoritos, error] = await getFavoritosUsuarioService(usuarioId);
+    if (error) return handleErrorClient(res, 400, "Error al obtener favoritos", error);
+
+    handleSuccess(res, 200, "Favoritos obtenidos correctamente", favoritos);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function addFavorito(req, res) {
+  try {
+    const { id } = req.params;
+    const publicacionId = Number(id);
+    const { id: usuarioId } = req.user;
+
+    if (!Number.isInteger(publicacionId)) {
+      return handleErrorClient(res, 400, "ID de publicación inválido");
+    }
+
+    const [favorito, error] = await addFavoritoService(publicacionId, usuarioId);
+    if (error) return handleErrorClient(res, 400, "Error al guardar favorito", error);
+
+    handleSuccess(res, 201, "Publicación agregada a favoritos", favorito);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function removeFavorito(req, res) {
+  try {
+    const { id } = req.params;
+    const publicacionId = Number(id);
+    const { id: usuarioId } = req.user;
+
+    if (!Number.isInteger(publicacionId)) {
+      return handleErrorClient(res, 400, "ID de publicación inválido");
+    }
+
+    const [eliminado, error] = await removeFavoritoService(publicacionId, usuarioId);
+    if (error) return handleErrorClient(res, 400, "Error al eliminar favorito", error);
+
+    handleSuccess(res, 200, "Publicación eliminada de favoritos", eliminado);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
