@@ -10,6 +10,7 @@ import notificacionRoutes from "./notificacion.routes.js";
 import publicacionRoutes from "./publicacion.routes.js";
 import uploadRoutes from "./upload.routes.js";
 
+import publicacionRoutes from "./publicacion.routes.js";
 
 const router = Router();
 router
@@ -18,9 +19,7 @@ router
     .use("/profile", profileRoutes)
     .use("/rentals", rentalsRoutes)
     .use("/reviews", reviewsRoutes)
-    .use("/notificaciones", notificacionRoutes)
     .use("/mensajes", mensajeRoutes)
-    .use("/publicacion", publicacionRoutes)
-    .use("/uploads", uploadRoutes);
+    .use("/publicacion", publicacionRoutes);
 
 export default router;

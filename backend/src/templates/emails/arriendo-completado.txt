@@ -1,0 +1,9 @@
+Hola {{name}},
+
+Tu arriendo con {{otherName}} ha sido confirmado por ambas partes. Gracias por usar ArriendU.
+
+Para ver el detalle, ingresa a:
+{{rentalUrl}}
+
+Saludos,
+Soporte ArriendU

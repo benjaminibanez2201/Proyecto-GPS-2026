@@ -50,6 +50,7 @@ function getBrandAttachments() {
   ];
 }
 
+
 async function sendTemplateEmail({ attachments = [], data, subject, template, to }) {
   const { html, text } = await renderEmailTemplate(template, data);
 
@@ -241,4 +242,22 @@ export async function sendRentalCompleteEmail(rental) {
   } catch (error) {
     console.error("Error al enviar correos de arriendo completado:", error);
   }
+}
+
+export async function sendCredentialChangedEmail(user, tiposCambio = []) {
+  const descripcion = tiposCambio.includes('email')
+    ? 'tu correo electrónico de acceso'
+    : 'tu contraseña';
+
+  return sendTemplateEmail({
+    to: user.email, // se envía al correo anterior
+    subject: "Aviso de seguridad: cambio de credenciales en ArriendU",
+    template: "credenciales-cambio",
+    attachments: getBrandAttachments(),
+    data: {
+      nombreCompleto: user.nombreCompleto,
+      descripcion,
+      loginUrl: `${normalizeBaseUrl(FRONTEND_URL)}/auth`,
+    },
+  });
 }
