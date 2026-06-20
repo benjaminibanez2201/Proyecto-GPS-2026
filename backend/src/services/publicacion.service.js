@@ -36,6 +36,7 @@ export async function getPublicacionesService(filtros) {
     const { precioMax, tipoInmueble, ordenarPor, direccionOrden, pagina } = filtros;
 
     const query = publicacionRepository.createQueryBuilder("publicacion")
+      .leftJoin("publicacion.arrendador", "arrendador")
       .where("publicacion.estado = :estado", { estado: "activa" });
 
     if (precioMax) {
@@ -59,6 +60,11 @@ export async function getPublicacionesService(filtros) {
       "publicacion.tipoInmueble",
       "publicacion.ubicacion",
       "publicacion.fotos",
+      "publicacion.serviciosIncluidos",
+      "arrendador.id",
+      "arrendador.nombreCompleto",
+      "arrendador.avgRating",
+      "arrendador.reviewsCount",
     ]);
 
     const limite = 20; 
@@ -95,6 +101,8 @@ export async function getPublicacionDetalleService(id) {
         "arrendador.email",
         "arrendador.fotoPerfil",
         "arrendador.telefono",
+        "arrendador.avgRating",
+        "arrendador.reviewsCount",
       ])
       .where("publicacion.id = :id", { id: parseInt(id) })
       .andWhere("publicacion.estado = :estado", { estado: "activa" })
