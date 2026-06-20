@@ -69,6 +69,7 @@ export async function getFavoritosService(estudianteId) {
 
     const favoritos = await favoritoRepository.createQueryBuilder("favorito")
       .innerJoinAndSelect("favorito.publicacion", "publicacion")
+      .leftJoin("publicacion.arrendador", "arrendador")
       .where("favorito.estudiante_id = :estudianteId", { estudianteId })
       .orderBy("favorito.createdAt", "DESC")
       .select([
@@ -80,7 +81,12 @@ export async function getFavoritosService(estudianteId) {
         "publicacion.tipoInmueble",
         "publicacion.ubicacion",
         "publicacion.fotos",
-        "publicacion.estado"
+        "publicacion.serviciosIncluidos",
+        "publicacion.estado",
+        "arrendador.id",
+        "arrendador.nombreCompleto",
+        "arrendador.avgRating",
+        "arrendador.reviewsCount",
       ])
       .getMany();
 
