@@ -95,6 +95,8 @@ export async function getPublicacionDetalleService(id) {
         "arrendador.email",
         "arrendador.fotoPerfil",
         "arrendador.telefono",
+        "arrendador.avgRating",
+        "arrendador.reviewsCount",
       ])
       .where("publicacion.id = :id", { id: parseInt(id) })
       .andWhere("publicacion.estado = :estado", { estado: "activa" })

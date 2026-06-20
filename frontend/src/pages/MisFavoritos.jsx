@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Heart, House, MapPin } from 'lucide-react';
 import Swal from 'sweetalert2';
+import ComparadorPublicacionesModal from '@components/ComparadorPublicacionesModal';
 import { eliminarFavorito, getMisFavoritos } from '@services/user.service.js';
 
 const accent = '#0f766e';
@@ -9,9 +10,15 @@ function formatPrice(value) {
   return Number(value || 0).toLocaleString('es-CL');
 }
 
+function getPublicacionId(publicacion) {
+  return publicacion?.id_publicacion || publicacion?.id || publicacion?._id;
+}
+
 const MisFavoritos = () => {
   const [favoritos, setFavoritos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [comparacion, setComparacion] = useState([]);
+  const [comparadorAbierto, setComparadorAbierto] = useState(false);
 
   useEffect(() => {
     fetchFavoritos();
@@ -62,7 +69,44 @@ const MisFavoritos = () => {
       confirmButtonColor: accent,
     });
 
+    setComparacion((prev) => prev.filter((publicacion) => getPublicacionId(publicacion) !== publicacionId));
     fetchFavoritos();
+  };
+
+  const toggleComparacion = (publicacion) => {
+    const publicacionId = getPublicacionId(publicacion);
+    const yaSeleccionada = comparacion.some((item) => getPublicacionId(item) === publicacionId);
+
+    if (yaSeleccionada) {
+      setComparacion((prev) => prev.filter((item) => getPublicacionId(item) !== publicacionId));
+      return;
+    }
+
+    if (comparacion.length >= 3) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Limite alcanzado',
+        text: 'Puedes comparar hasta tres publicaciones a la vez.',
+        confirmButtonColor: accent,
+      });
+      return;
+    }
+
+    setComparacion((prev) => [...prev, publicacion]);
+  };
+
+  const abrirComparador = () => {
+    if (comparacion.length < 2) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Seleccion insuficiente',
+        text: 'Selecciona al menos dos publicaciones para comparar.',
+        confirmButtonColor: accent,
+      });
+      return;
+    }
+
+    setComparadorAbierto(true);
   };
 
   return (
@@ -85,6 +129,22 @@ const MisFavoritos = () => {
           <h2 style={styles.cardTitle}>Tus publicaciones favoritas</h2>
           <p style={styles.cardSubtitle}>Desde aquí puedes revisar o quitar publicaciones de tu lista.</p>
         </header>
+
+        {!loading && favoritos.length > 0 && (
+          <div style={styles.compareToolbar}>
+            <span style={styles.compareCounter}>Seleccionadas: {comparacion.length}/3</span>
+            <button type="button" onClick={abrirComparador} style={styles.compareButton}>
+              Comparar seleccionadas
+            </button>
+          </div>
+        )}
+
+        {comparadorAbierto && (
+          <ComparadorPublicacionesModal
+            publicaciones={comparacion}
+            onClose={() => setComparadorAbierto(false)}
+          />
+        )}
 
         {loading ? (
           <p style={styles.emptyText}>Cargando favoritos...</p>
@@ -123,6 +183,23 @@ const MisFavoritos = () => {
                     <span style={styles.priceLabel}>Arriendo mensual</span>
                     <strong style={styles.priceValue}>${formatPrice(publicacion.precioMensual)} / mes</strong>
                   </div>
+
+                  <label
+                    style={{
+                      ...styles.compareLabel,
+                      ...(comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === publicacionId)
+                        ? styles.compareLabelDisabled
+                        : {}),
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={comparacion.some((item) => getPublicacionId(item) === publicacionId)}
+                      disabled={comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === publicacionId)}
+                      onChange={() => toggleComparacion(publicacion)}
+                    />
+                    Comparar
+                  </label>
 
                   <button
                     type="button"
@@ -218,6 +295,33 @@ const styles = {
     margin: 0,
     fontSize: '14px',
     color: '#64748b',
+  },
+  compareToolbar: {
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: '14px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    justifyContent: 'space-between',
+    marginBottom: '18px',
+    padding: '12px 14px',
+  },
+  compareCounter: {
+    color: '#475569',
+    fontSize: '14px',
+    fontWeight: 700,
+  },
+  compareButton: {
+    backgroundColor: accent,
+    border: 'none',
+    borderRadius: '10px',
+    color: '#ffffff',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: 700,
+    padding: '10px 14px',
   },
   emptyState: {
     padding: '36px 20px',
@@ -326,6 +430,19 @@ const styles = {
   priceValue: {
     fontSize: '15px',
     color: '#0f172a',
+  },
+  compareLabel: {
+    alignItems: 'center',
+    color: '#334155',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    fontSize: '13px',
+    fontWeight: 700,
+    gap: '8px',
+  },
+  compareLabelDisabled: {
+    color: '#94a3b8',
+    cursor: 'not-allowed',
   },
   removeButton: {
     border: 'none',
