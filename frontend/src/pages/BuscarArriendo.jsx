@@ -1,20 +1,12 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { usePublicaciones } from '../hooks/publicaciones/usePublicacion';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
-import ComparadorPublicaciones from '../components/ComparadorPublicaciones';
 import PublicacionCard from '../components/PublicacionCard';
-import Swal from 'sweetalert2';
 import '@styles/basePublicaciones.css';
-
-function getPublicacionId(publicacion) {
-  return publicacion?.id_publicacion || publicacion?.id || publicacion?._id;
-}
 
 export default function BuscarArriendos() {
   const { publicaciones, cargando, error, cargarPublicaciones } = usePublicaciones();
   const { favoritos, handleAgregarFavorito, handleEliminarFavorito } = useFavoritos();
-  const [comparacion, setComparacion] = useState([]);
-  const [comparadorAbierto, setComparadorAbierto] = useState(false);
   
   const [filtros, setFiltros] = useState({
     tipoInmueble: "",
@@ -49,42 +41,6 @@ export default function BuscarArriendos() {
   const limpiarFiltros = () => {
     setFiltros({ tipoInmueble: "", precioMin: "", precioMax: "", direccionOrden: "" });
     cargarPublicaciones({}); 
-  };
-
-  const toggleComparacion = (publicacion) => {
-    const idPublicacion = getPublicacionId(publicacion);
-    const yaSeleccionada = comparacion.some((item) => getPublicacionId(item) === idPublicacion);
-
-    if (yaSeleccionada) {
-      setComparacion((prev) => prev.filter((item) => getPublicacionId(item) !== idPublicacion));
-      return;
-    }
-
-    if (comparacion.length >= 3) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Limite alcanzado',
-        text: 'Puedes comparar hasta tres publicaciones a la vez.',
-        confirmButtonColor: '#008080',
-      });
-      return;
-    }
-
-    setComparacion((prev) => [...prev, publicacion]);
-  };
-
-  const abrirComparador = () => {
-    if (comparacion.length < 2) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Seleccion insuficiente',
-        text: 'Selecciona al menos dos publicaciones para comparar.',
-        confirmButtonColor: '#008080',
-      });
-      return;
-    }
-
-    setComparadorAbierto(true);
   };
 
   return (
@@ -151,33 +107,6 @@ export default function BuscarArriendos() {
         </button>
       </div>
 
-      <div style={{
-        alignItems: 'center',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-        justifyContent: 'center',
-        marginBottom: '20px',
-      }}>
-        <span style={{ color: '#475569', fontSize: '14px', fontWeight: 600 }}>
-          Seleccionadas: {comparacion.length}/3
-        </span>
-        <button
-          type="button"
-          onClick={abrirComparador}
-          style={{ padding: '10px 18px', borderRadius: '8px', backgroundColor: '#0f766e', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          Comparar seleccionadas
-        </button>
-      </div>
-
-      {comparadorAbierto && (
-        <ComparadorPublicaciones
-          publicaciones={comparacion}
-          onClose={() => setComparadorAbierto(false)}
-        />
-      )}
-
       {cargando && <p className="loading-text">Cargando alojamientos...</p>}
       {error && <p className="error-text"> Error: {error}</p>}
 
@@ -191,9 +120,6 @@ export default function BuscarArriendos() {
                 favoritos={favoritos}
                 handleAgregarFavorito={handleAgregarFavorito}
                 handleEliminarFavorito={handleEliminarFavorito}
-                selectedForCompare={comparacion.some((item) => getPublicacionId(item) === getPublicacionId(pub))}
-                onToggleCompare={toggleComparacion}
-                compareDisabled={comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === getPublicacionId(pub))}
               />
             ))
           ) : (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/publicacionCard.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -6,10 +6,7 @@ export default function PublicacionCard({
   publicacion, 
   favoritos = [], 
   handleAgregarFavorito, 
-  handleEliminarFavorito,
-  selectedForCompare = false,
-  onToggleCompare,
-  compareDisabled = false,
+  handleEliminarFavorito 
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -109,29 +106,6 @@ export default function PublicacionCard({
         <h3 className="publicacion-title">{titulo || 'Sin título'}</h3>
         <p className="publicacion-location">{ubicacion || 'Ubicación no disponible'}</p>
         
-        {onToggleCompare && (
-          <label
-            style={{
-              alignItems: 'center',
-              color: compareDisabled ? '#94a3b8' : '#334155',
-              cursor: compareDisabled ? 'not-allowed' : 'pointer',
-              display: 'inline-flex',
-              fontSize: '13px',
-              fontWeight: 700,
-              gap: '8px',
-              marginBottom: '12px',
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={selectedForCompare}
-              disabled={compareDisabled}
-              onChange={() => onToggleCompare(publicacion)}
-            />
-            Comparar
-          </label>
-        )}
-
         <div className="publicacion-footer">
           <span className="publicacion-price">{precioFormateado} <small>/mes</small></span>
           <button 
