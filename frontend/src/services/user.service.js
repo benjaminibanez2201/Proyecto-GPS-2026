@@ -115,7 +115,7 @@ export async function crearPublicacion(data) {
 
 export async function getMisFavoritos() {
     try {
-        const response = await axios.get('/publicacion/favoritos');
+        const response = await axios.get('/favoritos');
         return response.data.data;
     } catch (error) {
         return error.response?.data || { message: 'Error al cargar favoritos' };
@@ -124,16 +124,16 @@ export async function getMisFavoritos() {
 
 export async function agregarFavorito(publicacionId) {
     try {
-        const response = await axios.post(`/publicacion/${publicacionId}/favorito`);
+        const response = await axios.post('/favoritos', { publicacionId });
         return response.data.data;
     } catch (error) {
         return error.response?.data || { message: 'Error al guardar favorito' };
     }
 }
-
+ 
 export async function eliminarFavorito(publicacionId) {
     try {
-        const response = await axios.delete(`/publicacion/${publicacionId}/favorito`);
+        const response = await axios.delete(`/favoritos/${publicacionId}`);
         return response.data.data;
     } catch (error) {
         return error.response?.data || { message: 'Error al eliminar favorito' };
