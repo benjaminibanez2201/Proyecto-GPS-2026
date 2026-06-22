@@ -215,10 +215,24 @@ export async function updateArrendadorProfileService(id, body) {
 
     const userFound = await userRepository.findOne({ 
       where: { id },
-      select: ['id', 'nombreCompleto', 'email', 'telefono', 'fotoPerfil', 'rol', 'estadoVerificacion']
+      select: ['id', 'nombreCompleto', 'email', 'telefono', 'fotoPerfil', 'rol', 'estadoVerificacion', 'password']
     });
 
+    console.log("body.email recibido:", body.email);
+    console.log("userFound.email:", userFound.email);
+    console.log("Son distintos:", body.email !== userFound.email);
+
     if (!userFound) return [null, "Usuario no encontrado"];
+
+    if (body.email && body.email !== userFound.email) {
+      if (!body.passwordActual) {
+        return [null, "Se requiere la contraseña actual para cambiar el correo"];
+      }
+      const isMatch = await comparePassword(body.passwordActual, userFound.password);
+      if (!isMatch) return [null, "Contraseña incorrecta"];
+    }
+
+    delete body.passwordActual;
 
     if (body.email) {
       const existingEmail = await userRepository.findOne({ where: { email: body.email } });
@@ -243,15 +257,11 @@ export async function updateArrendadorProfileService(id, body) {
 
     const { password, ...userUpdated } = userData;
 
-    console.log("body.email:", body.email);
-    console.log("userFound.email:", userFound.email);
     if (body.email && body.email !== userFound.email) {
       try {
-        console.log("Enviando correo de aviso a:", userFound.email);
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
-          ['email'],
-          console.log("correo enviado a", userFound.email)
+          ['email']
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);

@@ -89,6 +89,10 @@ const Profile = () => {
         });
         return;
       }
+      
+      if (cambiaEmail) {
+      filteredData.passwordActual = passwordActual;
+    }
     }
 
     const response = profileData?.rol === 'arrendador'

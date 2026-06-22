@@ -240,6 +240,9 @@ export const userBodyValidation = Joi.object({
       "string.uri": "La foto de perfil debe ser una URL válida.",
       "string.max": "La URL de la foto no puede superar los 255 caracteres.",
     }),
+    passwordActual: Joi.string().optional().messages({
+      "string.base": "La contraseña debe ser de tipo string.",
+    }),
 })
   .or("nombreCompleto", "email", "telefono", "fotoPerfil")
   .unknown(false)
