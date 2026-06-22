@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { 
-      updateProfile, 
-      getProfile, 
-      getMisPublicaciones, 
-      updateArrendadorProfile, 
-      verifyPassword,
-     } from '@services/user.service.js';
+  updateProfile, 
+  getProfile, 
+  getMisPublicaciones, 
+  updateArrendadorProfile, 
+  verifyPassword,
+} from '@services/user.service.js';
 import { useAuth } from '@context/AuthContext';
 import { UserCircle2, Save, Pencil, X, Home } from 'lucide-react'; 
 import Swal from 'sweetalert2';
@@ -35,7 +35,8 @@ const Profile = () => {
       setValue('carrera', data.carrera || '');
       setValue('telefono', data.telefono || '');
       setValue('fotoPerfil', data.fotoPerfil || '');
-      setValue("email", data.email || "");
+      setValue('email', data.email || '');
+      setValue('newPassword', '');
 
       if (data.rol === 'arrendador') {
         const pubs = await getMisPublicaciones();
@@ -47,78 +48,87 @@ const Profile = () => {
   };
 
   const onSubmit = async (data) => {
-  const filteredData = Object.fromEntries(
-    Object.entries(data).filter(([_, v]) => v !== '')
-  );
+    console.log("data del form:", data);
+    const camposEstudiante = ['nombreCompleto', 'fotoPerfil', 'universidad', 'carrera', 'newPassword'];
+    const camposArrendador = ['nombreCompleto', 'fotoPerfil', 'telefono', 'email'];
+    
+    const camposPermitidos = profileData?.rol === 'estudiante' ? camposEstudiante : camposArrendador;
+    
+    const filteredData = Object.fromEntries(
+      Object.entries(data)
+        .filter(([key, v]) => v !== '' && camposPermitidos.includes(key))
+    );
+    console.log("filteredData:", filteredData);
+    const cambiaEmail = filteredData.email && filteredData.email !== profileData?.email;
+    const cambiaPassword = filteredData.newPassword && filteredData.newPassword.trim() !== '';
 
-  const cambiaEmail = filteredData.email && filteredData.email !== profileData?.email;
+    if (cambiaEmail || cambiaPassword) {
+      const { value: passwordActual } = await Swal.fire({
+        title: 'Confirmación de Seguridad',
+        text: 'Por seguridad, ingresa tu contraseña actual para confirmar los cambios.',
+        input: 'password',
+        inputPlaceholder: 'Tu contraseña actual',
+        showCancelButton: true,
+        confirmButtonColor: accent,
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Confirmar',
+        inputValidator: (value) => {
+          if (!value) return 'Debes ingresar tu contraseña para continuar';
+        }
+      });
 
-  if (cambiaEmail) {
-    const { value: passwordActual } = await Swal.fire({
-      title: 'Confirmación de Seguridad',
-      text: 'Por seguridad, ingresa tu contraseña actual para confirmar el cambio de correo.',
-      input: 'password',
-      inputPlaceholder: 'Tu contraseña actual',
-      showCancelButton: true,
-      confirmButtonColor: accent,
-      cancelButtonText: 'Cancelar',
-      confirmButtonText: 'Confirmar',
-      inputValidator: (value) => {
-        if (!value) return 'Debes ingresar tu contraseña para continuar';
+      if (!passwordActual) return;
+
+      const verification = await verifyPassword(passwordActual);
+      if (verification?.status !== 'Success') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Contraseña incorrecta',
+          text: 'No se pudo verificar tu identidad.',
+          confirmButtonColor: accent
+        });
+        return;
       }
-    });
-
-    if (!passwordActual) return;
-
-    const verification = await verifyPassword(passwordActual);
-    if (verification?.status !== 'Success') {
-      Swal.fire({
-        icon: 'error',
-        title: 'Contraseña incorrecta',
-        text: 'No se pudo verificar tu identidad. Los cambios no fueron guardados.',
-        confirmButtonColor: accent
-      });
-      return;
     }
-  }
 
-  const response = profileData?.rol === 'arrendador'
-    ? await updateArrendadorProfile(filteredData)
-    : await updateProfile(filteredData);
+    const response = profileData?.rol === 'arrendador'
+      ? await updateArrendadorProfile(filteredData)
+      : await updateProfile(filteredData);
 
-  if (response) {
-    if (cambiaEmail) {
-      await Swal.fire({
-        icon: 'success',
-        title: '¡Correo actualizado!',
-        text: 'Tu correo fue cambiado. Debes iniciar sesión nuevamente.',
-        confirmButtonColor: accent,
-      });
-      sessionStorage.removeItem('usuario');
-      navigate('/auth');
-    } else {
-      Swal.fire({
-        icon: 'success',
-        title: '¡Perfil actualizado!',
-        text: 'Tus datos han sido guardados correctamente.',
-        confirmButtonColor: accent,
-      });
-      setEditMode(false);
-      fetchProfile();
+    if (response) {
+      if (cambiaEmail || cambiaPassword) {
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Credenciales actualizadas!',
+          text: 'Tus datos fueron cambiados. Debes iniciar sesión nuevamente.',
+          confirmButtonColor: accent,
+        });
+        sessionStorage.removeItem('usuario');
+        navigate('/auth');
+      } else {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Perfil actualizado!',
+          text: 'Tus datos han sido guardados correctamente.',
+          confirmButtonColor: accent,
+        });
+        setEditMode(false);
+        fetchProfile();
+      }
     }
-  }
-}; 
+  };
 
   const fields = [
     { label: 'Nombre completo', field: 'nombreCompleto', placeholder: 'Tu nombre completo' },
     { label: 'Foto de perfil (URL)', field: 'fotoPerfil', placeholder: 'https://...' },
     ...(profileData?.rol === 'estudiante' ? [
       { label: 'Universidad', field: 'universidad', placeholder: 'Tu universidad' },
-      { label: 'Carrera', field: 'carrera', placeholder: 'Tu carrera' }
+      { label: 'Carrera', field: 'carrera', placeholder: 'Tu carrera' },
+      { label: 'Nueva contraseña', field: 'newPassword', placeholder: 'Mínimo 8 caracteres', type: 'password' },
     ] : []),
     ...(profileData?.rol === 'arrendador' ? [
       { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678' },
-      { label: "Correo", field: "email", placeholder: "tucorreo@gmail.com" },
+      { label: 'Correo', field: 'email', placeholder: 'tucorreo@gmail.com' },
     ] : [])
   ];
 
@@ -131,16 +141,12 @@ const Profile = () => {
     ] : []),
     ...(profileData?.rol === 'arrendador' ? [
       { label: 'Teléfono', value: profileData?.telefono || 'No especificado' },
-      { 
-        label: 'Estado de Verificación', 
-        value: (profileData?.estadoVerificacion || 'pendiente').toUpperCase()
-      }
+      { label: 'Estado de Verificación', value: (profileData?.estadoVerificacion || 'pendiente').toUpperCase() }
     ] : [])
   ];
 
   return (
     <div style={styles.page}>
-      {/* Hero */}
       <section style={styles.hero}>
         <div style={styles.heroContent}>
           <div style={styles.avatarWrap}>
@@ -157,7 +163,6 @@ const Profile = () => {
         <span style={styles.rolBadge}>{profileData?.rol || user?.rol}</span>
       </section>
 
-      {/* Card Datos Personales */}
       <section style={styles.card}>
         <header style={styles.cardHeader}>
           <div>
@@ -182,12 +187,13 @@ const Profile = () => {
         {editMode ? (
           <form onSubmit={handleSubmit(onSubmit)} style={styles.form}>
             <div style={styles.grid}>
-              {fields.map(({ label, field, placeholder }) => (
+              {fields.map(({ label, field, placeholder, type }) => (
                 <div key={field} style={styles.fieldGroup}>
                   <label style={styles.label}>{label}</label>
                   <input
                     {...register(field)}
                     placeholder={placeholder}
+                    type={type || 'text'}
                     style={styles.input}
                   />
                 </div>
