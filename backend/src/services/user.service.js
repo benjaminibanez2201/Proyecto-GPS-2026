@@ -146,7 +146,10 @@ export async function updateProfileService(id, body) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
-    const userFound = await userRepository.findOne({ where: { id } });
+    const userFound = await userRepository.findOne({ 
+      where: { id },
+      select: ['id', 'nombreCompleto', 'universidad', 'carrera', 'telefono', 'fotoPerfil', 'password']
+    });
 
     if (!userFound) return [null, "Usuario no encontrado"];
 
@@ -159,11 +162,26 @@ export async function updateProfileService(id, body) {
       updatedAt: new Date(),
     };
 
+    if (body.newPassword && body.newPassword.trim() !== '') {
+      dataToUpdate.password = await encryptPassword(body.newPassword);
+    }
+
     await userRepository.update({ id: userFound.id }, dataToUpdate);
 
     const userData = await userRepository.findOne({ where: { id: userFound.id } });
 
     if (!userData) return [null, "Usuario no encontrado después de actualizar"];
+
+    if (body.newPassword) {
+      try {
+        await sendCredentialChangedEmail(
+          { email: userData.email, nombreCompleto: userData.nombreCompleto },
+          ['password']
+        );
+      } catch (emailError) {
+        console.error("Error al enviar correo de aviso:", emailError);
+      }
+    }
 
     const { password, ...userUpdated } = userData;
 
