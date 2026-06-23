@@ -100,7 +100,6 @@ export default function CalificacionesRecibidas() {
       <section style={styles.section}>
         <header style={styles.sectionHeader}>
           <div>
-            <p style={styles.sectionEyebrow}>Detalle</p>
             <h2 style={styles.sectionTitle}>Todas tus valoraciones</h2>
           </div>
           <span style={styles.sectionCount}>{resenas.length} comentarios</span>
@@ -110,7 +109,7 @@ export default function CalificacionesRecibidas() {
           <div style={styles.emptyState}>
             <MessageSquareQuote size={38} strokeWidth={1.9} />
             <h3 style={styles.emptyTitle}>Aún no tienes calificaciones visibles</h3>
-            <p style={styles.emptyText}>Cuando recibas valoraciones, aparecerán aquí con el detalle completo.</p>
+            <p style={styles.emptyText}>Cuando recibas una, aparecerán aquí con el detalle completo.</p>
           </div>
         ) : (
           <div style={styles.list}>

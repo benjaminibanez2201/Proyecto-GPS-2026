@@ -126,7 +126,6 @@ export default function HistorialArriendos() {
     <div style={styles.page}>
       <section style={styles.hero}>
         <div>
-          <p style={styles.eyebrow}>Historial</p>
           <h2 style={styles.title}>Arriendos concretados</h2>
           <p style={styles.subtitle}>Revisa tus arriendos, dale a confirmar y deja una calificación.</p>
         </div>
