@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Heart, House, MapPin } from 'lucide-react';
+import { Heart, House, MapPin, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import ComparadorPublicacionesModal from '@components/ComparadorPublicacionesModal';
 import { eliminarFavorito, getMisFavoritos } from '@services/user.service.js';
@@ -161,65 +161,65 @@ const MisFavoritos = () => {
             {favoritos.map((item) => {
               const publicacion = item.publicacion || item;
               const publicacionId = publicacion.id_publicacion || publicacion.id;
+              
+              const fallbackImage = 'https://via.placeholder.com/400x250?text=Imagen+no+disponible';
+              const imagenPrincipal = publicacion.fotos && publicacion.fotos.length > 0 
+                ? publicacion.fotos[0] 
+                : fallbackImage;
 
               return (
                 <article key={item.id || publicacionId} style={styles.favoriteCard}>
-                  <div style={styles.favoriteHeader}>
-                    <div style={styles.favoriteIcon}>
-                      <House size={20} strokeWidth={2.1} />
-                    </div>
+                  {/* SECCIÓN DE IMAGEN CON BADGE ABSOLUTO */}
+                  <div style={styles.cardImageSection}>
+                    <img src={imagenPrincipal} alt={publicacion.titulo} style={styles.cardImage} />
                     <span style={styles.badge}>{publicacion.estado || 'activa'}</span>
                   </div>
 
-                  <h3 style={styles.favoriteTitle}>{publicacion.titulo}</h3>
-                  <p style={styles.favoriteMeta}>{publicacion.tipoInmueble}</p>
+                  {/* SECCIÓN DE DETALLES DE LA PUBLICACIÓN */}
+                  <div style={styles.cardDetailsSection}>
+                    <h3 style={styles.favoriteTitle}>{publicacion.titulo}</h3>
+                    <p style={styles.favoriteMeta}>{publicacion.tipoInmueble}</p>
 
-                  <div style={styles.detailRow}>
-                    <MapPin size={16} strokeWidth={2} />
-                    <span>{publicacion.ubicacion}</span>
+                    <div style={styles.detailRow}>
+                      <MapPin size={16} strokeWidth={2} />
+                      <span>{publicacion.ubicacion}</span>
+                    </div>
+
+                    <div style={styles.priceRow}>
+                      <span style={styles.priceLabel}>Arriendo mensual</span>
+                      <strong style={styles.priceValue}>${formatPrice(publicacion.precioMensual)} / mes</strong>
+                    </div>
+
+                    {/* SECCIÓN DE ACCIONES FINAL: COMPARAR Y ELIMINAR */}
+                    <div style={styles.cardActionsSection}>
+                      <label
+                        style={{
+                          ...styles.compareLabel,
+                          ...(comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === publicacionId)
+                            ? styles.compareLabelDisabled
+                            : {}),
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={comparacion.some((item) => getPublicacionId(item) === publicacionId)}
+                          disabled={comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === publicacionId)}
+                          onChange={() => toggleComparacion(publicacion)}
+                        />
+                        Comparar
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={() => handleEliminarFavorito(publicacionId)}
+                        style={styles.removeButton}
+                        title='Eliminar de favoritos'
+                      >
+                        <Trash2 size={20} color="#dc2626" />
+                        <span>Eliminar</span>
+                      </button>
+                    </div>
                   </div>
-
-                  <div style={styles.priceRow}>
-                    <span style={styles.priceLabel}>Arriendo mensual</span>
-                    <strong style={styles.priceValue}>${formatPrice(publicacion.precioMensual)} / mes</strong>
-                  </div>
-
-                  <label
-                    style={{
-                      ...styles.compareLabel,
-                      ...(comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === publicacionId)
-                        ? styles.compareLabelDisabled
-                        : {}),
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={comparacion.some((item) => getPublicacionId(item) === publicacionId)}
-                      disabled={comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === publicacionId)}
-                      onChange={() => toggleComparacion(publicacion)}
-                    />
-                    Comparar
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={() => handleEliminarFavorito(publicacionId)}
-                    style={{ 
-                      background: 'none', 
-                      border: 'none', 
-                      cursor: 'pointer',
-                      padding: '8px',
-                      transition: 'all 0.2s ease',
-                      marginTop: '8px',
-                      alignSelf: 'flex-start',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    title='Eliminar de favoritos'
-                  >
-                    <Heart size={28} fill="#dc2626" color="#dc2626" />
-                  </button>
                 </article>
               );
             })}
@@ -322,6 +322,7 @@ const styles = {
     fontSize: '13px',
     fontWeight: 700,
     padding: '10px 14px',
+    transition: 'background-color 0.2s ease',
   },
   emptyState: {
     padding: '36px 20px',
@@ -361,39 +362,50 @@ const styles = {
   },
   favoriteCard: {
     padding: '18px',
-    borderRadius: '18px',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
+    borderRadius: '22px',
+    backgroundColor: '#ffffff',
+    border: '1px solid rgba(15, 23, 42, 0.06)',
+    boxShadow: '0 8px 20px rgba(15, 23, 42, 0.05)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
-  },
-  favoriteHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     gap: '12px',
+    overflow: 'hidden',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
   },
-  favoriteIcon: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '14px',
-    backgroundColor: '#e6f4f1',
-    color: accent,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+  cardImageSection: {
+    position: 'relative',
+    width: '100%',
+    height: '180px',
+    overflow: 'hidden',
+    borderRadius: '16px',
+    marginBottom: '10px',
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
   },
   badge: {
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
     display: 'inline-flex',
     alignItems: 'center',
     borderRadius: '999px',
-    padding: '6px 10px',
+    padding: '6px 12px',
     fontSize: '12px',
     fontWeight: '700',
     color: '#0f766e',
     backgroundColor: '#dff3ef',
     textTransform: 'capitalize',
+    zIndex: 1,
+  },
+  cardDetailsSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    flex: '1 1 auto',
   },
   favoriteTitle: {
     margin: 0,
@@ -416,11 +428,12 @@ const styles = {
   },
   priceRow: {
     display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '10px',
     padding: '12px 14px',
     borderRadius: '14px',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f1f5f9',
     border: '1px solid #e2e8f0',
   },
   priceLabel: {
@@ -428,8 +441,17 @@ const styles = {
     color: '#64748b',
   },
   priceValue: {
-    fontSize: '15px',
+    fontSize: '18px',
     color: '#0f172a',
+  },
+  cardActionsSection: {
+    marginTop: 'auto',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '10px',
+    paddingTop: '10px',
+    borderTop: '1px solid #e2e8f0',
   },
   compareLabel: {
     alignItems: 'center',
@@ -446,8 +468,8 @@ const styles = {
   },
   removeButton: {
     border: 'none',
-    borderRadius: '12px',
-    padding: '10px 12px',
+    borderRadius: '10px',
+    padding: '10px 14px',
     backgroundColor: '#fee2e2',
     color: '#b91c1c',
     cursor: 'pointer',
@@ -456,6 +478,7 @@ const styles = {
     justifyContent: 'center',
     gap: '8px',
     fontWeight: '700',
+    transition: 'background-color 0.2s ease',
   },
 };
 
