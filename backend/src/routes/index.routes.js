@@ -10,7 +10,7 @@ import reportesRoutes from "./reportes.routes.js";
 import notificacionRoutes from "./notificacion.routes.js";
 import publicacionRoutes from "./publicacion.routes.js";
 import uploadRoutes from "./upload.routes.js";
-
+import favoritoRoutes from "./favorito.route.js";
 
 const router = Router();
 router
@@ -21,8 +21,9 @@ router
     .use("/reviews", reviewsRoutes)
     .use("/mensajes", mensajeRoutes)
     .use("/reportes", reportesRoutes)
-export default router;
-
-    .use("/publicacion", publicacionRoutes);
+    .use("/notificaciones", notificacionRoutes)
+    .use("/publicacion", publicacionRoutes)
+    .use("/uploads", uploadRoutes)
+    .use("/favoritos", favoritoRoutes);
 
 export default router;

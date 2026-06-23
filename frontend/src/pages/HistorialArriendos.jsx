@@ -100,13 +100,6 @@ export default function HistorialArriendos() {
       comment,
     };
 
-    const [, err] = await crearResena(payload);
-    if (err) alert(err);
-    else {
-      alert('Calificacion enviada exitosamente');
-      setModalAbierto(false);
-      setComment('');
-      setRating(5);
     try {
       setSendingReview(true);
       const [, err] = await crearResena(payload);
@@ -119,7 +112,7 @@ export default function HistorialArriendos() {
       await showSuccessConfirm(
         'Calificación enviada',
         'La contraparte recibirá una notificación dentro del sistema.',
-        'Entendido',
+        'Entendido'
       );
 
       cerrarModalCalificacion();
@@ -133,7 +126,6 @@ export default function HistorialArriendos() {
     <div style={styles.page}>
       <section style={styles.hero}>
         <div>
-          <p style={styles.eyebrow}>Historial</p>
           <h2 style={styles.title}>Arriendos concretados</h2>
           <p style={styles.subtitle}>Revisa tus arriendos, dale a confirmar y deja una calificación.</p>
         </div>
@@ -657,4 +649,4 @@ const styles = {
     fontWeight: 700,
     boxShadow: '0 14px 28px rgba(15, 118, 110, 0.22)',
   },
-}};
+};
