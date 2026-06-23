@@ -237,15 +237,11 @@ export async function updateArrendadorProfileService(id, body) {
       select: ['id', 'nombreCompleto', 'email', 'telefono', 'fotoPerfil', 'rol', 'estadoVerificacion', 'password']
     });
 
-    console.log("body.email recibido:", body.email);
-    console.log("userFound.email:", userFound.email);
-    console.log("Son distintos:", body.email !== userFound.email);
-
     if (!userFound) return [null, "Usuario no encontrado"];
 
-    if (body.email && body.email !== userFound.email) {
+    if ((body.email && body.email !== userFound.email) || body.newPassword) {
       if (!body.passwordActual) {
-        return [null, "Se requiere la contraseña actual para cambiar el correo"];
+        return [null, "Se requiere la contraseña actual para cambiar las credenciales"];
       }
       const isMatch = await comparePassword(body.passwordActual, userFound.password);
       if (!isMatch) return [null, "Contraseña incorrecta"];
@@ -253,7 +249,7 @@ export async function updateArrendadorProfileService(id, body) {
 
     delete body.passwordActual;
 
-    if (body.email) {
+    if (body.email && body.email !== userFound.email) {
       const existingEmail = await userRepository.findOne({ where: { email: body.email } });
       if (existingEmail && existingEmail.id !== userFound.id) {
         return [null, "El correo ya está en uso por otro usuario"];
@@ -268,6 +264,10 @@ export async function updateArrendadorProfileService(id, body) {
       updatedAt: new Date(),
     };
 
+    if (body.newPassword && body.newPassword.trim() !== '') {
+      dataToUpdate.password = await encryptPassword(body.newPassword);
+    }
+
     await userRepository.update({ id: userFound.id }, dataToUpdate);
 
     const userData = await userRepository.findOne({ where: { id: userFound.id } });
@@ -281,6 +281,17 @@ export async function updateArrendadorProfileService(id, body) {
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
           ['email']
+        );
+      } catch (emailError) {
+        console.error("Error al enviar correo de aviso:", emailError);
+      }
+    }
+
+    if (body.newPassword) {
+      try {
+        await sendCredentialChangedEmail(
+          { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
+          ['password']
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
