@@ -59,7 +59,6 @@ export default function DetallePublicacion() {
 
     const estadoAnterior = esFavorito;
 
-    // Si ya está guardado, pedir confirmación para quitar
     if (estadoAnterior) {
       const confirmacion = await Swal.fire({
         title: '¿Seguro que quieres eliminarlo de tus favoritos?',
@@ -165,11 +164,50 @@ export default function DetallePublicacion() {
 
         <hr style={{ margin: '30px 0', borderColor: '#e2e8f0', opacity: 0.5 }}/>
         
-        <img 
-          src={imagenPrincipal} 
-          alt={publicacion.titulo || 'Imagen del arriendo'} 
-          style={{ width: '100%', height: '400px', objectFit: 'cover', borderRadius: '12px', marginBottom: '30px', transform: 'none', transition: 'none'}}
-        />
+        {/* === CONTENEDOR DE LA IMAGEN CON EL BOTÓN FLOTANTE === */}
+        <div style={{ position: 'relative', marginBottom: '30px' }}>
+          <img 
+            src={imagenPrincipal} 
+            alt={publicacion.titulo || 'Imagen del arriendo'} 
+            style={{ width: '100%', height: '400px', objectFit: 'cover', borderRadius: '12px', display: 'block' }}
+          />
+          
+          {!esArrendador && (
+            <button 
+              type="button"
+              onClick={toggleFavorito}
+              disabled={procesando}
+              title={esFavorito ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
+              style={{ 
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                zIndex: 10,
+                background: 'rgba(255, 255, 255, 0.9)', 
+                border: 'none', 
+                borderRadius: '50%',
+                width: '52px',
+                height: '52px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: procesando ? 'wait' : 'pointer',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                transition: 'all 0.2s ease',
+                transform: esFavorito ? 'scale(1.05)' : 'scale(1)',
+                opacity: procesando ? 0.7 : 1
+              }}
+            >
+              <Heart 
+                size={28} 
+                fill={esFavorito ? "#dc2626" : "none"} 
+                color={esFavorito ? "#dc2626" : "#64748b"} 
+                strokeWidth={2}
+              />
+            </button>
+          )}
+        </div>
+        {/* ==================================================== */}
 
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
           <div>
@@ -197,42 +235,15 @@ export default function DetallePublicacion() {
                 <li>No se han especificado servicios</li>
               )}
             </ul>
+            
+            {/* El botón de contactar queda solo y más limpio en esta sección */}
             {!esArrendador && (
-              <>
-                <button className="confirm-btn" style={{ width: '100%', marginTop: '30px' }}>
-                  Contactar al Propietario
-                </button>
-
-                <button 
-                  type="button"
-                  onClick={toggleFavorito}
-                  disabled={procesando}
-                  style={{ 
-                    marginTop: '30px', 
-                    padding: '12px',
-                    background: 'none', 
-                    border: 'none', 
-                    cursor: procesando ? 'wait' : 'pointer',
-                    opacity: procesando ? 0.7 : 1,
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '30px auto 0'
-                  }}
-                  title={esFavorito ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
-                >
-                  {esFavorito ? (
-                    <Heart size={40} fill="#dc2626" color="#dc2626" />
-                  ) : (
-                    <Heart size={40} color="#64748b" />
-                  )}
-                </button>
-              </>
+              <button className="confirm-btn" style={{ width: '100%', marginTop: '30px' }}>
+                Contactar al Propietario
+              </button>
             )}
 
           </div>
-          
         </div>
       </div>
     </div>
