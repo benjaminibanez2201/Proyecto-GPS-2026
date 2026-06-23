@@ -13,8 +13,8 @@ export async function crearReporte(id_publicacion, reporterId, motivo) {
     const repoUser = AppDataSource.getRepository(User);
 
     const publicacion = await repoPublicacion.findOne({ 
-      where: { id_publicacion }, 
-      relations: ["owner"] });
+      where: { id: id_publicacion }, 
+      relations: ["arrendador"] });
     if (!publicacion) return [null, "Publicación no encontrada"];
 
     const reporter = await repoUser.findOneBy({ id: reporterId });
@@ -35,13 +35,13 @@ export async function listarPublicacionesReportadas() {
     const repoReport = AppDataSource.getRepository(ReportePublicacion);
 
     const pendientes = await repoReport.find({ 
-        where: { estado: "pendiente" }, 
-        relations: ["publicacion", "reporter", "publicacion.owner"] });
+      where: { estado: "pendiente" }, 
+      relations: ["publicacion", "reporter", "publicacion.arrendador"] });
 
     // Agrupar por publicación
     const map = new Map();
     for (const r of pendientes) {
-      const pubId = r.publicacion.id_publicacion;
+      const pubId = r.publicacion.id;
       if (!map.has(pubId)) map.set(pubId, { publicacion: r.publicacion, reportes: [] });
       map.get(pubId).reportes.push(r);
     }
@@ -66,14 +66,14 @@ export async function obtenerDetalleReporte(reportId) {
     const repoReport = AppDataSource.getRepository(ReportePublicacion);
 
     const reporte = await repoReport.findOne({ 
-        where: { id: reportId }, 
-        relations: ["publicacion", "reporter", "publicacion.owner"] });
+      where: { id: reportId }, 
+      relations: ["publicacion", "reporter", "publicacion.arrendador"] });
     if (!reporte) return [null, "Reporte no encontrado"];
 
     const repoReportes = AppDataSource.getRepository(ReportePublicacion);
     const asociados = await repoReportes.find({ 
-        where: { publicacion: { id_publicacion: reporte.publicacion.id_publicacion } }, 
-        relations: ["reporter"] });
+      where: { publicacion: { id: reporte.publicacion.id } }, 
+      relations: ["reporter"] });
 
     return [{ reporte, asociados }, null];
   } catch (error) {
@@ -93,19 +93,19 @@ export async function resolverReporte(id_publicacion, administradorId, accion, o
     if (!admin) return [null, "Administrador no encontrado"];
 
     const publicacion = await repoPublicacion.findOne({ 
-      where: { id_publicacion }, 
-      relations: ["owner"] });
+      where: { id: id_publicacion }, 
+      relations: ["arrendador"] });
     if (!publicacion) return [null, "Publicación no encontrada"];
 
     if (!["mantener", "desactivar"].includes(accion)) return [null, "Acción inválida"];
 
     if (accion === "desactivar") {
-      publicacion.activo = false;
+      publicacion.estado = "inactiva";
       await repoPublicacion.save(publicacion);
     }
 
     const pendientes = await repoReport.find({ 
-      where: { publicacion: { id_publicacion }, 
+      where: { publicacion: { id: id_publicacion }, 
       estado: "pendiente" } });
     for (const r of pendientes) {
       r.estado = "revisado";
@@ -120,17 +120,17 @@ export async function resolverReporte(id_publicacion, administradorId, accion, o
         reporte: reporteRelacionado, accion, observacion });
     await repoAction.save(accionRegistro);
 
-    const arrendador = publicacion.owner;
+    const arrendador = publicacion.arrendador;
     if (arrendador && arrendador.id) {
       const tipo = accion === "desactivar" ? "publicacion_desactivada" : "reporte_descartado";
       const mensaje = accion === "desactivar"
         ? `Tu publicación ha sido desactivada tras revisión: ${observacion || "Sin observaciones"}`
-        : `Tu publicación se mantiene activa tras revisión de reportes.`;
+        : "Tu publicación se mantiene activa tras revisión de reportes.";
 
       await createNotificacionService({ 
         userId: arrendador.id, tipo, mensaje, 
         targetType: "Publicacion", 
-        targetId: publicacion.id_publicacion });
+        targetId: publicacion.id });
     }
 
     return [true, null];
