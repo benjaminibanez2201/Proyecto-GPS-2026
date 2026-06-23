@@ -133,7 +133,8 @@ export async function sendRentalCompleteEmail(rental) {
   try {
     const transporter = createTransporter();
     const baseUrl = normalizeBaseUrl(FRONTEND_URL);
-    const rentalUrl = `${baseUrl}/rental/${rental.id}`;
+    const idPublicacion = rental.publicacionId || rental.publicacion?.id || rental.id;
+    const rentalUrl = `${baseUrl}/publicacion/${idPublicacion}`;
     const greetingNameArrendador = rental.arrendador?.nombreCompleto || "Arrendador";
     const greetingNameEstudiante = rental.estudiante?.nombreCompleto || "Estudiante";
 
