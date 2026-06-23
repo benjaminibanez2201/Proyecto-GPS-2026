@@ -18,10 +18,12 @@ const Login = () => {
         try {
             const response = await login(data);
             if (response.status === 'Success') {
-                const storedUser = JSON.parse(sessionStorage.getItem('usuario')) || {};
-                
-                //buscar si hay ruta guardada
-                const originUrl = location.state?.from?.pathname;
+                    const storedUser = JSON.parse(sessionStorage.getItem('usuario')) || {};
+
+                    // buscar si hay ruta guardada en state o en query param ?next=
+                    const params = new URLSearchParams(location.search);
+                    const nextParam = params.get('next');
+                    const originUrl = nextParam || location.state?.from?.pathname;
 
                 //para redirigir al usuario a la página de origen después del inicio de sesión
                 if (storedUser.rol === 'admin' || storedUser.rol === 'administrador') {
