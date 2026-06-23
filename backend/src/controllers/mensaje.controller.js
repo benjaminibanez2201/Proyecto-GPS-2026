@@ -17,8 +17,8 @@ import {
 
 export async function contactarPublicacion(req, res) {
   try {
-    const { id_publicacion, publicationId, contenido } = req.body;
-    const publicacionId = id_publicacion ?? publicationId; //revisar
+    const { id_publicacion, contenido } = req.body;
+    const publicacionId = id_publicacion;
     const remitenteId = req.user.id;
 
     if (!publicacionId || !contenido) {

@@ -12,7 +12,7 @@ import { renderEmailTemplate } from "../helpers/emailTemplate.helper.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const bannerPath = path.resolve(__dirname, "../../../frontend/public/BannerArriendU.png");
+const bannerPath = path.resolve(__dirname, "../../../frontend/src/assets/slidebaar.png");
 const bannerCid = "arriendu-banner";
 const logoPath = path.resolve(__dirname, "../../../frontend/src/assets/miLogo.png");
 const logoCid = "arriendu-logo";
@@ -38,7 +38,7 @@ function normalizeBaseUrl(url = "http://localhost:5173") {
 function getBrandAttachments() {
   return [
     {
-      filename: "BannerArriendU.png",
+      filename: "slidebaar.png",
       path: bannerPath,
       cid: bannerCid,
     },
@@ -133,7 +133,10 @@ export async function sendRentalCompleteEmail(rental) {
   try {
     const transporter = createTransporter();
     const baseUrl = normalizeBaseUrl(FRONTEND_URL);
-    const rentalUrl = `${baseUrl}/rental/${rental.id}`;
+    const idPublicacion = rental.publicacionId || rental.publicacion?.id || rental.id;
+    const rentalUrl = `${baseUrl}/publicacion/${idPublicacion}`;
+    const nextPath = `/publicacion/${idPublicacion}`;
+    const loginWithNextUrl = `${baseUrl}/auth?next=${encodeURIComponent(nextPath)}`;
     const greetingNameArrendador = rental.arrendador?.nombreCompleto || "Arrendador";
     const greetingNameEstudiante = rental.estudiante?.nombreCompleto || "Estudiante";
 
@@ -184,12 +187,12 @@ export async function sendRentalCompleteEmail(rental) {
       from: EMAIL_FROM,
       to,
       subject,
-      text: [
+        text: [
         `Hola ${name},`,
         "",
         `Tu arriendo con ${otherName} ha sido confirmado por ambas partes. Gracias por usar ArriendU.`,
         "",
-        rentalUrl,
+        loginWithNextUrl,
         "",
         "Saludos,",
         "Soporte ArriendU",
@@ -206,7 +209,7 @@ export async function sendRentalCompleteEmail(rental) {
         `        <p style="${pStyle}">Hola ${name},</p>`,
         `        <p style="${pStyle}">Tu arriendo con ${otherName} ha sido confirmado por ambas partes.</p>`,
         `        <div style="${centerStyle}">`,
-        `          <a href="${rentalUrl}" style="${buttonStyle}">Ver arriendo</a>`,
+        `          <a href="${loginWithNextUrl}" style="${buttonStyle}">Ver arriendo</a>`,
         "        </div>",
         "        <p style=\"margin:0;font-size:13px;line-height:1.6;color:#6b7280;\">",
         "          Este es un mensaje automatico, por favor no respondas.",

@@ -37,6 +37,18 @@ const passwordSchema = Joi.string()
     "string.pattern.base": "La contrasena debe contener al menos una mayuscula, un numero y un caracter especial.",
   });
 
+const loginPasswordSchema = Joi.string()
+  .min(1)
+  .max(100)
+  .required()
+  .messages({
+    "string.empty": "Credenciales incorrectas",
+    "any.required": "Credenciales incorrectas",
+    "string.base": "Credenciales incorrectas",
+    "string.min": "Credenciales incorrectas",
+    "string.max": "Credenciales incorrectas",
+  });
+
 const nombreCompletoSchema = Joi.string()
   .min(15)
   .max(50)
@@ -100,7 +112,7 @@ const strictMessages = {
 
 export const authValidation = Joi.object({
   email: emailSchema,
-  password: passwordSchema,
+  password: loginPasswordSchema,
 }).unknown(false).messages(strictMessages);
 
 export const registerValidation = Joi.object(baseRegisterFields)

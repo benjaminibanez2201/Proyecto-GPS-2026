@@ -100,13 +100,6 @@ export default function HistorialArriendos() {
       comment,
     };
 
-    const [, err] = await crearResena(payload);
-    if (err) alert(err);
-    else {
-      alert('Calificacion enviada exitosamente');
-      setModalAbierto(false);
-      setComment('');
-      setRating(5);
     try {
       setSendingReview(true);
       const [, err] = await crearResena(payload);
@@ -118,8 +111,8 @@ export default function HistorialArriendos() {
 
       await showSuccessConfirm(
         'Calificación enviada',
-        'La contraparte recibirá una notificación dentro del sistema.',
-        'Entendido',
+        'La otra persona recibirá una notificación dentro del sistema.',
+        'Entendido'
       );
 
       cerrarModalCalificacion();
@@ -133,7 +126,6 @@ export default function HistorialArriendos() {
     <div style={styles.page}>
       <section style={styles.hero}>
         <div>
-          <p style={styles.eyebrow}>Historial</p>
           <h2 style={styles.title}>Arriendos concretados</h2>
           <p style={styles.subtitle}>Revisa tus arriendos, dale a confirmar y deja una calificación.</p>
         </div>
@@ -200,7 +192,7 @@ export default function HistorialArriendos() {
                     </span>
                   ) : yaConfirme ? (
                     <span style={styles.waitingChip}>
-                      <Clock size={16} /> Esperando otra parte
+                      <Clock size={16} /> Esperando la confirmación de la otra persona...
                     </span>
                   ) : (
                     <button
@@ -220,8 +212,7 @@ export default function HistorialArriendos() {
                     >
                       <span style={styles.calificarIcon}><Star size={16} fill="#fff" /></span>
                       <span>
-                        <strong style={styles.calificarTitle}>Calificar contraparte</strong>
-                        <small style={styles.calificarSubtext}>Deja una opinión sobre el arriendo</small>
+                        <strong style={styles.calificarTitle}>Calificar el arriendo</strong>
                       </span>
                       <ArrowRight size={16} />
                     </button>
@@ -248,7 +239,6 @@ export default function HistorialArriendos() {
           <div style={styles.modalCard} onClick={(event) => event.stopPropagation()}>
             <div style={styles.modalHeader}>
               <div>
-                <p style={styles.modalEyebrow}>Calificación</p>
                 <h3 style={styles.modalTitle}>Comparte tu experiencia</h3>
                 <p style={styles.modalSubtitle}>Tu calificación ayuda a que otras personas tomen una decisión</p>
               </div>
@@ -262,7 +252,7 @@ export default function HistorialArriendos() {
                 <MessageSquareText size={18} />
               </div>
               <div>
-                <p style={styles.reviewContextTitle}>{arriendoSeleccionado?.contratanteNombre || 'Contraparte'}</p>
+                <p style={styles.reviewContextTitle}>{arriendoSeleccionado?.contratanteNombre}</p>
               </div>
             </div>
 
@@ -657,4 +647,4 @@ const styles = {
     fontWeight: 700,
     boxShadow: '0 14px 28px rgba(15, 118, 110, 0.22)',
   },
-}};
+};

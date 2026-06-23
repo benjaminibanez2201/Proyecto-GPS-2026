@@ -4,12 +4,15 @@ import Publicacion from "../entity/publicacion.entity.js";
 import User from "../entity/user.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 
-export async function buscarConversacionPorPublicacionYEstudiante(id_publicacion, estudianteId) {
+export async function buscarConversacionPorPublicacionYEstudiante(id_publicacion, id_estudiante) {
   try {
     const repositorioConversacion = AppDataSource.getRepository(Conversacion);
 
     const conversacion = await repositorioConversacion.findOne({
-      where: { publicacion: { id: id_publicacion }, estudiante: { id: estudianteId } },
+      where: {
+        publicacion: { id_publicacion },
+        estudiante: { id: id_estudiante },
+      },
       relations: ["publicacion", "estudiante", "arrendador"],
     });
 
@@ -20,33 +23,40 @@ export async function buscarConversacionPorPublicacionYEstudiante(id_publicacion
   }
 }
 
-export async function crearConversacion(id_publicacion, estudianteId) {
+export async function crearConversacion(id_publicacion, id_estudiante) {
   try {
-    const repositorioPublicacion = AppDataSource.getRepository(Publicacion);
-    const repositorioUsuario = AppDataSource.getRepository(User);
-    const repositorioConversacion = AppDataSource.getRepository(Conversacion);
+    const [conversacionGuardada, errorTransaccion] = await AppDataSource.transaction(async (manager) => {
+      const repositorioPublicacion = manager.getRepository(Publicacion);
+      const repositorioUsuario = manager.getRepository(User);
+      const repositorioConversacion = manager.getRepository(Conversacion);
 
-    const publicacion = await repositorioPublicacion.findOne({
-      where: { id: id_publicacion },
-      relations: ["owner"],
+      const publicacion = await repositorioPublicacion.findOne({
+        where: { id_publicacion },
+        relations: ["owner"],
+      });
+
+      if (!publicacion) return [null, "Publicación no encontrada"];
+
+      const estudiante = await repositorioUsuario.findOneBy({ id: id_estudiante });
+
+      if (!estudiante) return [null, "Estudiante no encontrado"];
+
+      const arrendador = publicacion.owner;
+
+      const nuevaConversacion = repositorioConversacion.create({
+        publicacion,
+        estudiante,
+        arrendador,
+        ultimaFechaMensaje: new Date(),
+      });
+
+      const conversacionCreada = await repositorioConversacion.save(nuevaConversacion);
+      await repositorioPublicacion.increment({ id_publicacion }, "contadorConversaciones", 1);
+
+      return [conversacionCreada, null];
     });
 
-    if (!publicacion) return [null, "Publicación no encontrada"];
-
-    const estudiante = await repositorioUsuario.findOneBy({ id: estudianteId });
-
-    if (!estudiante) return [null, "Estudiante no encontrado"];
-
-    const arrendador = publicacion.owner;
-
-    const nuevaConversacion = repositorioConversacion.create({
-      publicacion,
-      estudiante,
-      arrendador,
-      ultimaFechaMensaje: new Date(),
-    });
-
-    const conversacionGuardada = await repositorioConversacion.save(nuevaConversacion);
+    if (errorTransaccion) return [null, errorTransaccion];
 
     return [conversacionGuardada, null];
   } catch (error) {
