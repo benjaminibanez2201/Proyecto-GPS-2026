@@ -6,10 +6,11 @@ import profileRoutes from "./profile.routes.js";
 import rentalsRoutes from "./rentals.routes.js";
 import reviewsRoutes from "./reviews.routes.js";
 import mensajeRoutes from "./mensaje.routes.js";
+import reportesRoutes from "./reportes.routes.js";
 import notificacionRoutes from "./notificacion.routes.js";
 import publicacionRoutes from "./publicacion.routes.js";
 import uploadRoutes from "./upload.routes.js";
-
+import favoritoRoutes from "./favorito.route.js";
 
 const router = Router();
 router
@@ -19,6 +20,10 @@ router
     .use("/rentals", rentalsRoutes)
     .use("/reviews", reviewsRoutes)
     .use("/mensajes", mensajeRoutes)
-    .use("/publicacion", publicacionRoutes);
+    .use("/reportes", reportesRoutes)
+    .use("/notificaciones", notificacionRoutes)
+    .use("/publicacion", publicacionRoutes)
+    .use("/uploads", uploadRoutes)
+    .use("/favoritos", favoritoRoutes);
 
 export default router;

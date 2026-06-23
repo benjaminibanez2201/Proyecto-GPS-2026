@@ -41,6 +41,21 @@ const PublicacionSchema = new EntitySchema({
       type: "text",
       nullable: true,
     },
+    contadorViews: {
+      type: "int",
+      default: 0,
+      nullable: false,
+    },
+    contadorFavoritos: {
+      type: "int",
+      default: 0,
+      nullable: false,
+    },
+    contadorConversaciones: {
+      type: "int",
+      default: 0,
+      nullable: false,
+    },
     estado: {
       type: "enum",
       enum: ["activa", "inactiva"],
@@ -56,6 +71,10 @@ const PublicacionSchema = new EntitySchema({
       type: "timestamp with time zone",
       default: () => "CURRENT_TIMESTAMP",
       onUpdate: "CURRENT_TIMESTAMP",
+      nullable: false,
+    },
+    arrendador_id: {
+      type: "int",
       nullable: false,
     },
   },

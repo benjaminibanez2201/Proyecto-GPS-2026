@@ -2,10 +2,41 @@
 import Mensaje from "../entity/mensaje.entity.js";
 import Conversacion from "../entity/conversacion.entity.js";
 import { AppDataSource } from "../config/configDb.js";
+import { createNotificacionService } from "./notificacion.service.js";
 import {
   buscarConversacionPorPublicacionYEstudiante,
   crearConversacion,
 } from "./conversacion.service.js";
+
+function getMessageNotificationData(conversacion, remitenteId) {
+  const estudianteId = Number(conversacion.estudiante?.id);
+  const arrendadorId = Number(conversacion.arrendador?.id);
+  const senderId = Number(remitenteId);
+
+  if (senderId === estudianteId) {
+    const alreadyHadUnreadMessages = Number(conversacion.noLeidosArrendador || 0) > 0;
+
+    return {
+      shouldNotify: !alreadyHadUnreadMessages,
+      userId: arrendadorId,
+      senderName: conversacion.estudiante?.nombreCompleto || "un estudiante",
+      targetId: conversacion.id,
+    };
+  }
+
+  if (senderId === arrendadorId) {
+    const alreadyHadUnreadMessages = Number(conversacion.noLeidosEstudiante || 0) > 0;
+
+    return {
+      shouldNotify: !alreadyHadUnreadMessages,
+      userId: estudianteId,
+      senderName: conversacion.arrendador?.nombreCompleto || "un arrendador",
+      targetId: conversacion.id,
+    };
+  }
+
+  return null;
+}
 
 export async function enviarMensaje({ conversacionId = null, id_publicacion = null, remitenteId, contenido }) {
   try {
@@ -51,6 +82,11 @@ export async function enviarMensaje({ conversacionId = null, id_publicacion = nu
     const mensajeGuardado = await repositorioMensaje.save(nuevoMensaje);
 
     conversacion.ultimaFechaMensaje = new Date();
+    const notificationData = getMessageNotificationData(
+      conversacion,
+      remitenteId,
+    );
+
     if (conversacion.estudiante && conversacion.estudiante.id === remitenteId) {
       conversacion.noLeidosArrendador = (conversacion.noLeidosArrendador || 0) + 1;
     } else {
@@ -58,6 +94,20 @@ export async function enviarMensaje({ conversacionId = null, id_publicacion = nu
     }
 
     await repositorioConversacion.save(conversacion);
+
+    if (notificationData?.shouldNotify && notificationData.userId) {
+      try {
+        await createNotificacionService({
+          userId: notificationData.userId,
+          tipo: "MESSAGE_RECEIVED",
+          mensaje: `Recibiste un nuevo mensaje de ${notificationData.senderName}`,
+          targetType: "conversation",
+          targetId: notificationData.targetId,
+        });
+      } catch (notifError) {
+        console.error("Error creando notificaciÃ³n de mensaje:", notifError);
+      }
+    }
 
     return [mensajeGuardado, null];
   } catch (error) {

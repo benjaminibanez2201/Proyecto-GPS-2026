@@ -40,6 +40,15 @@ export async function obtenerResenasUsuario(userId) {
   }
 }
 
+export async function obtenerResenasRecibidas(userId) {
+  try {
+    const response = await axios.get('/reviews/received');
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || "Error al cargar las reseñas recibidas"];
+  }
+}
+
 //obtener los datos del usuario para su perfil
 export async function obtenerPerfilUsuario(userId) {
   try {
