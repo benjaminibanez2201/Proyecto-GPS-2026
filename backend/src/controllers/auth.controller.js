@@ -1,5 +1,6 @@
 "use strict";
 import {
+  confirmEmailService,
   forgotPasswordService,
   loginService,
   registerService,
@@ -136,6 +137,21 @@ export async function logout(req, res) {
   try {
     res.clearCookie("jwt", { httpOnly: true });
     handleSuccess(res, 200, "Sesion cerrada exitosamente");
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function confirmEmail(req, res) {
+  try {
+    const { token } = req.params;
+    const [confirmation, errorConfirmation] = await confirmEmailService(token);
+
+    if (errorConfirmation) {
+      return handleErrorClient(res, 400, "Error confirmando correo", errorConfirmation);
+    }
+
+    handleSuccess(res, 200, confirmation.message, confirmation);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

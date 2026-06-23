@@ -3,6 +3,7 @@ import User from "../entity/user.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
 import { removeVerificationUploadsForUser } from "../helpers/upload.helper.js";
+import { createEmailVerificationData } from "./auth.service.js";
 import {
   sendAccountApprovedEmail,
   sendAccountRejectedEmail,
@@ -53,7 +54,7 @@ async function notifyVerificationResult(user, estadoVerificacion, reviewData) {
 
   if (estadoVerificacion === "aprobado") {
     tipo = "verificacion_aprobada";
-    mensaje = "Tu cuenta fue aprobada. Ya puedes usar ArriendU.";
+    mensaje = "Tu cuenta fue aprobada. Confirma tu correo para activar el acceso.";
     sendEmail = () => sendAccountApprovedEmail(user);
   } else if (estadoVerificacion === "rechazado") {
     tipo = "verificacion_rechazada";
@@ -285,6 +286,15 @@ export async function updateUserVerificationStatusService(query, reviewPayload, 
       verificacionRevisadaEn: new Date(),
       verificacionRevisadaPorId: reviewerId,
       updatedAt: new Date(),
+      ...(estadoVerificacion === "aprobado" && !userFound.emailVerificado
+        ? createEmailVerificationData()
+        : {}),
+      ...(estadoVerificacion !== "aprobado"
+        ? {
+          emailVerificacionExpires: null,
+          emailVerificacionToken: null,
+        }
+        : {}),
     };
 
     await userRepository.update(
