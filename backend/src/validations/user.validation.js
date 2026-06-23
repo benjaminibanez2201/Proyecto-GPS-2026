@@ -196,8 +196,20 @@ export const userBodyValidation = Joi.object({
       "string.max": "La nueva contraseña debe tener como máximo 50 caracteres.",
       "string.pattern.base": "La contraseña debe contener al menos una mayúscula, un número y un carácter especial.",
     }),
+    email: Joi.string()
+      .min(5)
+      .max(100)
+      .email()
+      .messages({
+        "string.empty": "El correo no puede estar vacío.",
+        "string.base": "El correo debe ser de tipo string.",
+        "string.email": "El correo debe tener un formato válido.",
+      }),
+    passwordActual: Joi.string().optional().messages({
+      "string.base": "La contraseña debe ser de tipo string.",
+    }),
 })
-  .or("nombreCompleto", "universidad", "carrera", "telefono", "fotoPerfil", "newPassword")
+  .or("nombreCompleto", "universidad", "carrera", "telefono", "fotoPerfil", "newPassword", "email")
   .unknown(false)
   .messages({
     "object.unknown": "No se permiten propiedades adicionales.",

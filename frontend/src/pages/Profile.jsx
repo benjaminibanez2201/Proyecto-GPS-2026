@@ -49,7 +49,7 @@ const Profile = () => {
 
   const onSubmit = async (data) => {
     console.log("data del form:", data);
-    const camposEstudiante = ['nombreCompleto', 'fotoPerfil', 'universidad', 'carrera', 'newPassword'];
+    const camposEstudiante = ['nombreCompleto', 'fotoPerfil', 'universidad', 'carrera', 'newPassword', 'email'];
     const camposArrendador = ['nombreCompleto', 'fotoPerfil', 'telefono', 'email'];
     
     const camposPermitidos = profileData?.rol === 'estudiante' ? camposEstudiante : camposArrendador;
@@ -89,11 +89,11 @@ const Profile = () => {
         });
         return;
       }
-      
+
       if (cambiaEmail) {
-      filteredData.passwordActual = passwordActual;
-    }
-    }
+        filteredData.passwordActual = passwordActual;
+      }
+}
 
     const response = profileData?.rol === 'arrendador'
       ? await updateArrendadorProfile(filteredData)
@@ -128,6 +128,7 @@ const Profile = () => {
     ...(profileData?.rol === 'estudiante' ? [
       { label: 'Universidad', field: 'universidad', placeholder: 'Tu universidad' },
       { label: 'Carrera', field: 'carrera', placeholder: 'Tu carrera' },
+      { label: 'Correo', field: 'email', placeholder: 'tucorreo@gmail.com' },
       { label: 'Nueva contraseña', field: 'newPassword', placeholder: 'Mínimo 8 caracteres', type: 'password' },
     ] : []),
     ...(profileData?.rol === 'arrendador' ? [
