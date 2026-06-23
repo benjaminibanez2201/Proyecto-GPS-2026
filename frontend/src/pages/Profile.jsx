@@ -48,9 +48,8 @@ const Profile = () => {
   };
 
   const onSubmit = async (data) => {
-    console.log("data del form:", data);
     const camposEstudiante = ['nombreCompleto', 'fotoPerfil', 'universidad', 'carrera', 'newPassword', 'email'];
-    const camposArrendador = ['nombreCompleto', 'fotoPerfil', 'telefono', 'email'];
+    const camposArrendador = ['nombreCompleto', 'fotoPerfil', 'telefono', 'email', 'newPassword'];
     
     const camposPermitidos = profileData?.rol === 'estudiante' ? camposEstudiante : camposArrendador;
     
@@ -58,9 +57,12 @@ const Profile = () => {
       Object.entries(data)
         .filter(([key, v]) => v !== '' && camposPermitidos.includes(key))
     );
-    console.log("filteredData:", filteredData);
+
     const cambiaEmail = filteredData.email && filteredData.email !== profileData?.email;
     const cambiaPassword = filteredData.newPassword && filteredData.newPassword.trim() !== '';
+
+    console.log("cambiaPassword:", cambiaPassword);
+    console.log("filteredData:", filteredData);
 
     if (cambiaEmail || cambiaPassword) {
       const { value: passwordActual } = await Swal.fire({
@@ -90,7 +92,7 @@ const Profile = () => {
         return;
       }
 
-      if (cambiaEmail) {
+      if (cambiaEmail || (cambiaPassword && profileData?.rol === 'arrendador')) {
         filteredData.passwordActual = passwordActual;
       }
 }
@@ -134,6 +136,7 @@ const Profile = () => {
     ...(profileData?.rol === 'arrendador' ? [
       { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678' },
       { label: 'Correo', field: 'email', placeholder: 'tucorreo@gmail.com' },
+      { label: 'Nueva contraseña', field: 'newPassword', placeholder: 'Mínimo 8 caracteres', type: 'password' },
     ] : [])
   ];
 
