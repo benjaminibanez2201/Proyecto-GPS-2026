@@ -125,7 +125,6 @@ const MisFavoritos = () => {
 
       <section style={styles.card}>
         <header style={styles.cardHeader}>
-          <p style={{ ...styles.eyebrow, color: accent }}>Guardadas</p>
           <h2 style={styles.cardTitle}>Tus publicaciones favoritas</h2>
           <p style={styles.cardSubtitle}>Desde aquí puedes revisar o quitar publicaciones de tu lista.</p>
         </header>
