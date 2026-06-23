@@ -148,10 +148,17 @@ export async function updateProfileService(id, body) {
 
     const userFound = await userRepository.findOne({ 
       where: { id },
-      select: ['id', 'nombreCompleto', 'universidad', 'carrera', 'telefono', 'fotoPerfil', 'password']
+      select: ['id', 'nombreCompleto', 'universidad', 'carrera', 'telefono', 'fotoPerfil', 'password', 'email']
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];
+
+    if (body.email && body.email !== userFound.email) {
+      const existingEmail = await userRepository.findOne({ where: { email: body.email } });
+      if (existingEmail && existingEmail.id !== userFound.id) {
+        return [null, "El correo ya está en uso por otro usuario"];
+      }
+    }
 
     const dataToUpdate = {
       ...(body.nombreCompleto && { nombreCompleto: body.nombreCompleto }),
@@ -159,6 +166,7 @@ export async function updateProfileService(id, body) {
       ...(body.carrera && { carrera: body.carrera }),
       ...(body.telefono && { telefono: body.telefono }),
       ...(body.fotoPerfil && { fotoPerfil: body.fotoPerfil }),
+      ...(body.email && { email: body.email }),
       updatedAt: new Date(),
     };
 
@@ -175,8 +183,19 @@ export async function updateProfileService(id, body) {
     if (body.newPassword) {
       try {
         await sendCredentialChangedEmail(
-          { email: userData.email, nombreCompleto: userData.nombreCompleto },
+          { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
           ['password']
+        );
+      } catch (emailError) {
+        console.error("Error al enviar correo de aviso:", emailError);
+      }
+    }
+
+    if (body.email && body.email !== userFound.email) {
+      try {
+        await sendCredentialChangedEmail(
+          { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
+          ['email']
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
