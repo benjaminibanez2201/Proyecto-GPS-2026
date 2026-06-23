@@ -6,6 +6,7 @@ import {
   eliminarResenaServicio,
   obtenerResenaPorIdServicio,
   obtenerResenasPorUsuarioServicio,
+  obtenerResenasRecibidasServicio,
 } from "../services/reviews.service.js";
 
 export async function crearResena(req, res) {
@@ -26,6 +27,17 @@ export async function obtenerResenasPorUsuario(req, res) {
     const [data, error] = await obtenerResenasPorUsuarioServicio(Number(id));
     if (error) return handleErrorClient(res, 400, error);
     return handleSuccess(res, 200, "Reviews del usuario", data);
+  } catch (error) {
+    return handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function obtenerResenasRecibidas(req, res) {
+  try {
+    const { id } = req.user;
+    const [data, error] = await obtenerResenasRecibidasServicio(Number(id));
+    if (error) return handleErrorClient(res, 400, error);
+    return handleSuccess(res, 200, "Reviews recibidas", data);
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }

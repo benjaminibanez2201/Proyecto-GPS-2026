@@ -2,14 +2,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { login } from '@services/auth.service.js';
 import Form from '@components/Form';
 import useLogin from '@hooks/auth/useLogin.jsx';
+import slidebaar from '@assets/slidebaar.png';
 import '@styles/form.css';
 import '@styles/login.css';
 
 const Login = () => {
     const navigate = useNavigate();
     const {
-        errorEmail,
-        errorPassword,
         errorData,
         handleInputChange
     } = useLogin();
@@ -68,7 +67,7 @@ const Login = () => {
                     }}
                 >
                     <img
-                        src="/BannerArriendU.png"
+                        src={slidebaar}
                         alt="Banner ArriendU"
                         style={{ width: '100%', maxWidth: '330px', height: 'auto' }}
                     />
@@ -109,7 +108,6 @@ const Login = () => {
                                     required: true,
                                     minLength: 5,
                                     maxLength: 100,
-                                    errorMessageData: errorEmail,
                                     onChange: (e) => handleInputChange('email', e.target.value),
                                 },
                                 {
@@ -119,7 +117,6 @@ const Login = () => {
                                     fieldType: 'input',
                                     type: "password",
                                     required: true,
-                                    errorMessageData: errorPassword,
                                     onChange: (e) => handleInputChange('password', e.target.value)
                                 },
                             ]}
