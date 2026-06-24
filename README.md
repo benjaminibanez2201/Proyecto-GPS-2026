@@ -115,6 +115,24 @@ cd frontend
 npm run dev
 ```
 
+## Pruebas funcionales
+
+La guia de validacion de requisitos funcionales esta en:
+
+- `docs/testing/README.md`
+- `docs/testing/curls.md`
+- `postman/ArriendU_RF_Testing.postman_collection.json`
+- `postman/ArriendU_Local.postman_environment.json`
+- `scripts/run-rf-smoke.ps1`
+
+Para una validacion rapida:
+
+```powershell
+.\scripts\run-rf-smoke.ps1
+```
+
+La coleccion Postman cubre `RF_01` a `RF_34`. Primero importa el environment local y ejecuta la carpeta `00 - Login y tokens base`.
+
 ## Estado del proyecto
 
 El proyecto está en desarrollo y algunas funcionalidades siguen en ajustándose.

@@ -1,0 +1,1550 @@
+{
+  "info": {
+    "name": "ArriendU - Pruebas RF",
+    "description": "Coleccion Postman para validar RF_01 a RF_34 de ArriendU.\nImportar junto con ArriendU_Local.postman_environment.json.\nEjecutar primero la carpeta 00 - Login y tokens base.\nAlgunas pruebas requieren variables creadas previamente o archivos locales.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Login y tokens base",
+      "item": [
+        {
+          "name": "Login administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}",
+                  "const token = responseBody?.data?.token || responseBody?.data?.accessToken || responseBody?.token;",
+                  "if (token) pm.environment.set(\"tokenAdmin\", token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Obtiene token admin semilla para RF_12, RF_13, RF_14, RF_15 y RF_16.",
+            "url": {
+              "raw": "{{baseUrl}}/auth/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}",
+                  "const token = responseBody?.data?.token || responseBody?.data?.accessToken || responseBody?.token;",
+                  "if (token) pm.environment.set(\"tokenEstudiante\", token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Obtiene token estudiante semilla para busqueda, favoritos, reportes, arriendos y resenas.",
+            "url": {
+              "raw": "{{baseUrl}}/auth/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{estudianteEmail}}\",\n  \"password\": \"{{estudiantePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login arrendador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}",
+                  "const token = responseBody?.data?.token || responseBody?.data?.accessToken || responseBody?.token;",
+                  "if (token) pm.environment.set(\"tokenArrendador\", token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Obtiene token arrendador semilla para publicaciones, arriendos y resenas.",
+            "url": {
+              "raw": "{{baseUrl}}/auth/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{arrendadorEmail}}\",\n  \"password\": \"{{arrendadorPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Cobertura RF_01 a RF_34",
+      "item": [
+        {
+          "name": "RF_01 - Registro de estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "description": "Registro multipart de estudiante. Elegir archivos locales validos antes de enviar.",
+            "url": {
+              "raw": "{{baseUrl}}/auth/register"
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nombreCompleto",
+                  "type": "text",
+                  "value": "Estudiante Prueba Automatizada",
+                  "src": []
+                },
+                {
+                  "key": "email",
+                  "type": "text",
+                  "value": "{{emailEstudianteNuevo}}",
+                  "src": []
+                },
+                {
+                  "key": "rut",
+                  "type": "text",
+                  "value": "{{rutEstudianteNuevo}}",
+                  "src": []
+                },
+                {
+                  "key": "password",
+                  "type": "text",
+                  "value": "Estudiante1234.",
+                  "src": []
+                },
+                {
+                  "key": "rol",
+                  "type": "text",
+                  "value": "estudiante",
+                  "src": []
+                },
+                {
+                  "key": "universidad",
+                  "type": "text",
+                  "value": "Universidad del Bio Bio",
+                  "src": []
+                },
+                {
+                  "key": "carrera",
+                  "type": "text",
+                  "value": "Ingenieria Civil Informatica",
+                  "src": []
+                },
+                {
+                  "key": "terminosAceptados",
+                  "type": "text",
+                  "value": "true",
+                  "src": []
+                },
+                {
+                  "key": "documentoVerificacion",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "carnetIdentidadFrontal",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "carnetIdentidadReverso",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "RF_02 - Login estudiante/arrendador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}",
+                  "const token = responseBody?.data?.token || responseBody?.data?.accessToken || responseBody?.token;",
+                  "if (token) pm.environment.set(\"tokenEstudiante\", token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Valida credenciales y cuenta aprobada/verificada.",
+            "url": {
+              "raw": "{{baseUrl}}/auth/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{estudianteEmail}}\",\n  \"password\": \"{{estudiantePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_03 - Edicion perfil estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Edita datos publicos del perfil de estudiante autenticado.",
+            "url": {
+              "raw": "{{baseUrl}}/profile"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreCompleto\": \"Usuario Estudiante Actualizado\",\n  \"universidad\": \"Universidad del Bio Bio\",\n  \"carrera\": \"Ingenieria Civil Informatica\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_04 - Busqueda de publicaciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "Busca publicaciones activas con filtros disponibles en backend.",
+            "url": {
+              "raw": "{{baseUrl}}/publicacion?precioMax={{precioMax}}&tipoInmueble=departamento&ordenarPor=precioMensual&direccionOrden=ASC"
+            }
+          }
+        },
+        {
+          "name": "RF_05 - Detalle de publicacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "Obtiene detalle publico de una publicacion.",
+            "url": {
+              "raw": "{{baseUrl}}/publicacion/{{publicacionId}}"
+            }
+          }
+        },
+        {
+          "name": "RF_06 - Guardar favorito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Guarda una publicacion como favorita del estudiante.",
+            "url": {
+              "raw": "{{baseUrl}}/favoritos"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicacionId\": \"{{publicacionId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_07 - Registro de arrendador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "description": "Registro multipart de arrendador. Elegir archivos locales validos antes de enviar.",
+            "url": {
+              "raw": "{{baseUrl}}/auth/register"
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nombreCompleto",
+                  "type": "text",
+                  "value": "Arrendador Prueba Automatizada",
+                  "src": []
+                },
+                {
+                  "key": "email",
+                  "type": "text",
+                  "value": "{{emailArrendadorNuevo}}",
+                  "src": []
+                },
+                {
+                  "key": "rut",
+                  "type": "text",
+                  "value": "{{rutArrendadorNuevo}}",
+                  "src": []
+                },
+                {
+                  "key": "password",
+                  "type": "text",
+                  "value": "Arrendador1234.",
+                  "src": []
+                },
+                {
+                  "key": "rol",
+                  "type": "text",
+                  "value": "arrendador",
+                  "src": []
+                },
+                {
+                  "key": "telefono",
+                  "type": "text",
+                  "value": "+56 9 1111 2222",
+                  "src": []
+                },
+                {
+                  "key": "terminosAceptados",
+                  "type": "text",
+                  "value": "true",
+                  "src": []
+                },
+                {
+                  "key": "documentoResidencia",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "fotoPerfil",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "documentoVerificacion",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "documentoVerificacionReverso",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "RF_08 - Crear publicacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenArrendador}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Crea publicacion como arrendador aprobado.",
+            "url": {
+              "raw": "{{baseUrl}}/publicacion"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Departamento prueba Postman\",\n  \"tipoInmueble\": \"departamento\",\n  \"precioMensual\": 280000,\n  \"ubicacion\": \"Concepcion centro\",\n  \"fotos\": [\n    \"https://example.com/depto.jpg\"\n  ],\n  \"serviciosIncluidos\": [\n    \"agua\",\n    \"luz\",\n    \"internet\"\n  ],\n  \"reglasConvivencia\": \"No fumar.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_09 - Editar publicacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenArrendador}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Actualiza una publicacion propia del arrendador.",
+            "url": {
+              "raw": "{{baseUrl}}/publicacion/{{publicacionId}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precioMensual\": 290000,\n  \"reglasConvivencia\": \"No fumar. Mantener espacios comunes limpios.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_10 - Bandeja de mensajes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenArrendador}}"
+              }
+            ],
+            "description": "Lista conversaciones del usuario autenticado.",
+            "url": {
+              "raw": "{{baseUrl}}/mensajes/conversaciones"
+            }
+          }
+        },
+        {
+          "name": "RF_11 - Calificar estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenArrendador}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Arrendador califica a estudiante tras arriendo completado.",
+            "url": {
+              "raw": "{{baseUrl}}/reviews"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rentalId\": \"{{rentalId}}\",\n  \"targetUserId\": \"{{userIdEstudiante}}\",\n  \"rating\": 5,\n  \"comment\": \"Excelente comunicacion y cumplimiento.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_12 - Login administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}",
+                  "const token = responseBody?.data?.token || responseBody?.data?.accessToken || responseBody?.token;",
+                  "if (token) pm.environment.set(\"tokenAdmin\", token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Valida credenciales del admin semilla.",
+            "url": {
+              "raw": "{{baseUrl}}/auth/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_13 - Aprobar/rechazar verificacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Actualiza estado de verificacion de un usuario.",
+            "url": {
+              "raw": "{{baseUrl}}/user/detail/verification?id={{userIdPendiente}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estadoVerificacion\": \"aprobado\",\n  \"comentarioVerificacion\": \"Documentos revisados.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_14 - Gestion de usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Edita un usuario desde administracion.",
+            "url": {
+              "raw": "{{baseUrl}}/user/detail?id={{userIdEstudiante}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreCompleto\": \"Usuario Estudiante Admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_15 - Listar reportes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "description": "Admin lista publicaciones reportadas pendientes.",
+            "url": {
+              "raw": "{{baseUrl}}/reportes"
+            }
+          }
+        },
+        {
+          "name": "RF_16 - Listar usuarios registrados",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "description": "Admin obtiene listado completo sin password.",
+            "url": {
+              "raw": "{{baseUrl}}/user"
+            }
+          }
+        },
+        {
+          "name": "RF_17 - Registro sin terminos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (400)\", function () {",
+                  "  pm.expect([400]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "description": "Prueba negativa: el registro debe fallar si no acepta terminos.",
+            "url": {
+              "raw": "{{baseUrl}}/auth/register"
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nombreCompleto",
+                  "type": "text",
+                  "value": "Estudiante Sin Terminos",
+                  "src": []
+                },
+                {
+                  "key": "email",
+                  "type": "text",
+                  "value": "{{emailSinTerminos}}",
+                  "src": []
+                },
+                {
+                  "key": "rut",
+                  "type": "text",
+                  "value": "{{rutSinTerminos}}",
+                  "src": []
+                },
+                {
+                  "key": "password",
+                  "type": "text",
+                  "value": "Estudiante1234.",
+                  "src": []
+                },
+                {
+                  "key": "rol",
+                  "type": "text",
+                  "value": "estudiante",
+                  "src": []
+                },
+                {
+                  "key": "universidad",
+                  "type": "text",
+                  "value": "Universidad del Bio Bio",
+                  "src": []
+                },
+                {
+                  "key": "carrera",
+                  "type": "text",
+                  "value": "Ingenieria Civil Informatica",
+                  "src": []
+                },
+                {
+                  "key": "documentoVerificacion",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "carnetIdentidadFrontal",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "carnetIdentidadReverso",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "RF_18 - Iniciar conversacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Estudiante contacta al arrendador desde una publicacion.",
+            "url": {
+              "raw": "{{baseUrl}}/mensajes/contacto"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_publicacion\": \"{{publicacionId}}\",\n  \"contenido\": \"Hola, me interesa coordinar una visita.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_19 - Calificar arrendador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Estudiante califica a arrendador tras arriendo completado.",
+            "url": {
+              "raw": "{{baseUrl}}/reviews"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rentalId\": \"{{rentalId}}\",\n  \"targetUserId\": \"{{userIdArrendador}}\",\n  \"rating\": 5,\n  \"comment\": \"Muy buen arrendador.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_20 - Reportar publicacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Estudiante reporta una publicacion sospechosa.",
+            "url": {
+              "raw": "{{baseUrl}}/reportes/publicacion"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_publicacion\": \"{{publicacionId}}\",\n  \"motivo\": \"Informacion inconsistente en la publicacion.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_21 - Solicitar recuperacion password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Envia correo de recuperacion si la cuenta existe.",
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{estudianteEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_22 - Editar perfil arrendador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenArrendador}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Actualiza datos publicos de arrendador.",
+            "url": {
+              "raw": "{{baseUrl}}/profile/arrendador"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telefono\": \"+56 9 2222 3333\",\n  \"nombreCompleto\": \"Usuario Arrendador Actualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RF_23 - Confirmar arriendo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "Confirma arriendo como participante; repetir con la otra parte para completarlo.",
+            "url": {
+              "raw": "{{baseUrl}}/rentals/{{rentalId}}/confirm"
+            }
+          }
+        },
+        {
+          "name": "RF_24 - Ver perfil publico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "Obtiene perfil publico de otro usuario autenticado.",
+            "url": {
+              "raw": "{{baseUrl}}/profile/{{userIdArrendador}}"
+            }
+          }
+        },
+        {
+          "name": "RF_25 - Centro de notificaciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "Lista notificaciones propias ordenadas por fecha.",
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones?limit=20&offset=0"
+            }
+          }
+        },
+        {
+          "name": "RF_26 - Notificacion por correo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "Evidencia indirecta: eventos como aprobacion, mensaje o arriendo completado disparan email y notificacion interna.",
+            "url": {
+              "raw": "{{baseUrl}}/notificaciones/count"
+            }
+          }
+        },
+        {
+          "name": "RF_27 - Perfil propio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "Obtiene el perfil del usuario autenticado.",
+            "url": {
+              "raw": "{{baseUrl}}/profile"
+            }
+          }
+        },
+        {
+          "name": "RF_28 - Mis publicaciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenArrendador}}"
+              }
+            ],
+            "description": "Arrendador lista solo sus publicaciones.",
+            "url": {
+              "raw": "{{baseUrl}}/publicacion/mis-publicaciones"
+            }
+          }
+        },
+        {
+          "name": "RF_29 - Historial arriendos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "Lista arriendos propios e indica si se puede calificar.",
+            "url": {
+              "raw": "{{baseUrl}}/rentals"
+            }
+          }
+        },
+        {
+          "name": "RF_30 - Eliminar favorito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "Elimina una publicacion de favoritos sin afectar la publicacion original.",
+            "url": {
+              "raw": "{{baseUrl}}/favoritos/{{publicacionId}}"
+            }
+          }
+        },
+        {
+          "name": "RF_31 - Calificaciones recibidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "Lista resenas recibidas por el usuario autenticado.",
+            "url": {
+              "raw": "{{baseUrl}}/reviews/received"
+            }
+          }
+        },
+        {
+          "name": "RF_32 - Mapa interactivo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "description": "API base para alimentar mapa: devuelve publicaciones con ubicacion; validacion visual se hace en frontend.",
+            "url": {
+              "raw": "{{baseUrl}}/publicacion?tipoInmueble=departamento"
+            }
+          }
+        },
+        {
+          "name": "RF_33 - Confirmar correo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 201, 204)\", function () {",
+                  "  pm.expect([200,201,204]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "description": "Pegar token recibido por correo en la variable verificationToken.",
+            "url": {
+              "raw": "{{baseUrl}}/auth/confirm-email/{{verificationToken}}"
+            }
+          }
+        },
+        {
+          "name": "RF_34 - Estadisticas publicacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status esperado (200, 404)\", function () {",
+                  "  pm.expect([200,404]).to.include(pm.response.code);",
+                  "});",
+                  "let responseBody = {};",
+                  "try { responseBody = pm.response.json(); } catch (error) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenArrendador}}"
+              }
+            ],
+            "description": "Ruta esperada para estadisticas. Revisar observaciones: actualmente puede no estar montada o no coincidir con entidad.",
+            "url": {
+              "raw": "{{baseUrl}}/publicacion/{{publicacionId}}/estadisticas"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
