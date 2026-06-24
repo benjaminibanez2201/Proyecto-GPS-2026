@@ -22,6 +22,17 @@ function createErrorMessage(dataInfo, message) {
   };
 }
 
+export function getLoginAccessError(userFound) {
+  if (userFound?.estadoCuenta === "suspendido") {
+    return createErrorMessage(
+      "estadoCuenta",
+      "Tu cuenta está suspendida. Contacta al soporte para más información.",
+    );
+  }
+
+  return null;
+}
+
 export async function loginService(user) {
   try {
     const userRepository = AppDataSource.getRepository(User);
@@ -41,6 +52,12 @@ export async function loginService(user) {
 
     if (!isMatch) {
       return [null, createErrorMessage("auth", "Credenciales incorrectas")];
+    }
+
+    const accessError = getLoginAccessError(userFound);
+
+    if (accessError) {
+      return [null, accessError];
     }
 
     if (userFound.estadoVerificacion === "pendiente") {

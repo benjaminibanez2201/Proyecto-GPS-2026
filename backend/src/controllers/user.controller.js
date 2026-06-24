@@ -9,6 +9,7 @@ import {
   updateUserVerificationStatusService,
   updateArrendadorProfileService,
   verifyPasswordService,
+  toggleUserStatusService,
 } from "../services/user.service.js";
 import {
   profileArrendadorBodyValidation,
@@ -147,7 +148,7 @@ export async function updateUserVerificationStatus(req, res) {
 export async function deleteUser(req, res) {
   try {
     const { rut, id, email } = req.query;
-
+    const adminId = req.user?.id;
     const { error: queryError } = userQueryValidation.validate({
       rut,
       id,
@@ -163,11 +164,11 @@ export async function deleteUser(req, res) {
       );
     }
 
-    const [userDelete, errorUserDelete] = await deleteUserService({
-      rut,
-      id,
-      email,
-    });
+    const [userDelete, errorUserDelete] = await deleteUserService({ 
+      rut, 
+      id, 
+      email
+     }, adminId);
 
     if (errorUserDelete) return handleErrorClient(res, 404, "Error eliminado al usuario", errorUserDelete);
 
@@ -317,6 +318,41 @@ export async function verifyPassword(req, res) {
     if (error) return handleErrorClient(res, 400, "Error verificando contraseña", error);
 
     handleSuccess(res, 200, "Contraseña verificada correctamente", { valid });
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function toggleUserStatus(req, res) {
+  try {
+    const adminId = req.user?.id;
+    const rawId = req.query?.id ?? req.body?.id;
+    const estadoCuenta = String(req.body?.estadoCuenta ?? req.query?.estadoCuenta ?? "")
+      .trim()
+      .toLowerCase();
+    const id = rawId !== undefined && rawId !== null ? Number(rawId) : null;
+
+    if (req.user?.rol !== "admin") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los administradores pueden gestionar el estado de las cuentas");
+    }
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return handleErrorClient(res, 400, "Error de validación", "Se requiere un id válido del usuario a modificar.");
+    }
+
+    if (!estadoCuenta || !["activo", "suspendido"].includes(estadoCuenta)) {
+      return handleErrorClient(res, 400, "Error de validación", "El estado de la cuenta debe ser 'activo' o 'suspendido'");
+    }
+
+    const [user, error] = await toggleUserStatusService(adminId, id, estadoCuenta);
+
+    if (error) return handleErrorClient(res, 400, "Error modificando estado del usuario", error);
+
+    const mensaje = estadoCuenta === "suspendido"
+      ? "Cuenta de usuario suspendida correctamente"
+      : "Cuenta de usuario reactivada correctamente";
+
+    handleSuccess(res, 200, mensaje, user);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
