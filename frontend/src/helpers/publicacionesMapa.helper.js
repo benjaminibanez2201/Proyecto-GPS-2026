@@ -86,6 +86,30 @@ export async function resolvePublicationLocation(publicacion) {
   }
 
   const commune = getPublicacionComuna(publicacion) || COMMUNES[0];
+
+  try {
+    //Preparamos el texto para buscar. Le agregamos "Biobío, Chile"
+    //para ayudar al buscador a no confundirse con calles de otros países
+    const query = encodeURIComponent(`${ubicacion}, ${commune.name}, Región del Biobío, Chile`);
+    
+    // 2. Consultamos a la API de OpenStreetMap (Nominatim)
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+    const data = await response.json();
+
+    //Si encuentra la calle, usamos esas coordenadas reales
+    if (data && data.length > 0) {
+      return {
+        commune,
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+      };
+    }
+  } catch (error) {
+    console.error("Error buscando la dirección exacta:", error);
+  }
+
+  //PLAN B: Si la API no encuentra la calle o falla el internet,
+  // usamos una posición aproximada basada en la comuna y un offset estable
   const seed = hashText(ubicacion);
   const latOffset = getStableOffset(seed, 12);
   const lngOffset = getStableOffset(Math.floor(seed / 13), 12);
@@ -96,3 +120,4 @@ export async function resolvePublicationLocation(publicacion) {
     lng: commune.center.lng + lngOffset,
   };
 }
+
