@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import { fileURLToPath } from "url";
 import path from "path";
 import {
+  BACKEND_URL,
   EMAIL_FROM,
   EMAIL_PASS,
   EMAIL_USER,
@@ -35,6 +36,10 @@ function normalizeBaseUrl(url = "http://localhost:5173") {
   return url.replace(/\/$/, "");
 }
 
+function buildEmailConfirmationUrl(token) {
+  return `${normalizeBaseUrl(BACKEND_URL)}/auth/confirm-email/${encodeURIComponent(token)}`;
+}
+
 function getBrandAttachments() {
   return [
     {
@@ -65,11 +70,16 @@ async function sendTemplateEmail({ attachments = [], data, subject, template, to
 }
 
 export async function sendAccountApprovedEmail(user) {
+  const confirmEmailUrl = user.emailVerificacionToken
+    ? buildEmailConfirmationUrl(user.emailVerificacionToken)
+    : `${normalizeBaseUrl(FRONTEND_URL)}/auth`;
+
   return sendTemplateEmail({
     to: user.email,
-    subject: "Tu cuenta ArriendU fue aprobada",
+    subject: "Confirma tu correo para activar tu cuenta ArriendU",
     template: "account-approved",
     data: {
+      confirmEmailUrl,
       loginUrl: `${normalizeBaseUrl(FRONTEND_URL)}/auth`,
       nombreCompleto: user.nombreCompleto,
     },
