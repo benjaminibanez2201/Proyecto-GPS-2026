@@ -30,6 +30,8 @@ const useLogin = () => {
 
         if (normalizedError.dataInfo === 'auth' || normalizedError.dataInfo === 'email' || normalizedError.dataInfo === 'password') {
             showErrorAlert('Credenciales incorrectas', normalizedError.message);
+        } else if (normalizedError.dataInfo === 'estadoCuenta') {
+            showErrorAlert('Cuenta suspendida\n', normalizedError.message);
         } else if (normalizedError.dataInfo === 'estadoVerificacion') {
             showErrorAlert('Cuenta no disponible', normalizedError.message);
         } else {
