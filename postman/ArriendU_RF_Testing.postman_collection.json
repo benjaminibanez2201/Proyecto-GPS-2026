@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "ArriendU - Pruebas RF",
-    "description": "Coleccion Postman para validar RF_01 a RF_34 de ArriendU.\nImportar junto con ArriendU_Local.postman_environment.json.\nEjecutar primero la carpeta 00 - Login y tokens base.\nAlgunas pruebas requieren variables creadas previamente o archivos locales.",
+    "name": "ArriendU - Pruebas RF Completa",
+    "description": "Coleccion Postman para validar RF_01 a RF_34 de ArriendU.\nImportar junto con ArriendU_Local.postman_environment.json.\nEjecutar primero la carpeta 00 - Login y tokens base.\nCada request incluye URL estructurada, headers, body y cURL equivalente en la descripcion.\nAlgunas pruebas requieren variables creadas previamente o archivos locales.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -35,9 +35,16 @@
                 "value": "application/json"
               }
             ],
-            "description": "Obtiene token admin semilla para RF_12, RF_13, RF_14, RF_15 y RF_16.",
+            "description": "Obtiene token admin semilla para RF_12, RF_13, RF_14, RF_15 y RF_16.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/auth/login' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/auth/login"
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -77,9 +84,16 @@
                 "value": "application/json"
               }
             ],
-            "description": "Obtiene token estudiante semilla para busqueda, favoritos, reportes, arriendos y resenas.",
+            "description": "Obtiene token estudiante semilla para busqueda, favoritos, reportes, arriendos y resenas.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/auth/login' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"email\": \"{{estudianteEmail}}\",\n  \"password\": \"{{estudiantePassword}}\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/auth/login"
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -119,9 +133,16 @@
                 "value": "application/json"
               }
             ],
-            "description": "Obtiene token arrendador semilla para publicaciones, arriendos y resenas.",
+            "description": "Obtiene token arrendador semilla para publicaciones, arriendos y resenas.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/auth/login' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"email\": \"{{arrendadorEmail}}\",\n  \"password\": \"{{arrendadorPassword}}\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/auth/login"
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -159,9 +180,16 @@
           "request": {
             "method": "POST",
             "header": [],
-            "description": "Registro multipart de estudiante. Elegir archivos locales validos antes de enviar.",
+            "description": "Registro multipart de estudiante. Elegir archivos locales validos antes de enviar.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/auth/register' \\\n  --form 'nombreCompleto=Estudiante Prueba Automatizada' \\\n  --form 'email={{emailEstudianteNuevo}}' \\\n  --form 'rut={{rutEstudianteNuevo}}' \\\n  --form 'password=Estudiante1234.' \\\n  --form 'rol=estudiante' \\\n  --form 'universidad=Universidad del Bio Bio' \\\n  --form 'carrera=Ingenieria Civil Informatica' \\\n  --form 'terminosAceptados=true' \\\n  --form 'documentoVerificacion=@/ruta/local/documentoVerificacion' \\\n  --form 'carnetIdentidadFrontal=@/ruta/local/carnetIdentidadFrontal' \\\n  --form 'carnetIdentidadReverso=@/ruta/local/carnetIdentidadReverso'\n```",
             "url": {
-              "raw": "{{baseUrl}}/auth/register"
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             },
             "body": {
               "mode": "formdata",
@@ -260,9 +288,16 @@
                 "value": "application/json"
               }
             ],
-            "description": "Valida credenciales y cuenta aprobada/verificada.",
+            "description": "Valida credenciales y cuenta aprobada/verificada.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/auth/login' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"email\": \"{{estudianteEmail}}\",\n  \"password\": \"{{estudiantePassword}}\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/auth/login"
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -304,9 +339,15 @@
                 "value": "application/json"
               }
             ],
-            "description": "Edita datos publicos del perfil de estudiante autenticado.",
+            "description": "Edita datos publicos del perfil de estudiante autenticado.\n\ncURL equivalente:\n```bash\ncurl --location --request PATCH '{{baseUrl}}/profile' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"nombreCompleto\": \"Usuario Estudiante Actualizado\",\n  \"universidad\": \"Universidad del Bio Bio\",\n  \"carrera\": \"Ingenieria Civil Informatica\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/profile"
+              "raw": "{{baseUrl}}/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -344,9 +385,33 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "Busca publicaciones activas con filtros disponibles en backend.",
+            "description": "Busca publicaciones activas con filtros disponibles en backend.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/publicacion?precioMax={{precioMax}}&tipoInmueble=departamento&ordenarPor=precioMensual&direccionOrden=ASC' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/publicacion?precioMax={{precioMax}}&tipoInmueble=departamento&ordenarPor=precioMensual&direccionOrden=ASC"
+              "raw": "{{baseUrl}}/publicacion?precioMax={{precioMax}}&tipoInmueble=departamento&ordenarPor=precioMensual&direccionOrden=ASC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicacion"
+              ],
+              "query": [
+                {
+                  "key": "precioMax",
+                  "value": "{{precioMax}}"
+                },
+                {
+                  "key": "tipoInmueble",
+                  "value": "departamento"
+                },
+                {
+                  "key": "ordenarPor",
+                  "value": "precioMensual"
+                },
+                {
+                  "key": "direccionOrden",
+                  "value": "ASC"
+                }
+              ]
             }
           }
         },
@@ -375,9 +440,16 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "Obtiene detalle publico de una publicacion.",
+            "description": "Obtiene detalle publico de una publicacion.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/publicacion/{{publicacionId}}' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/publicacion/{{publicacionId}}"
+              "raw": "{{baseUrl}}/publicacion/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicacion",
+                "{{publicacionId}}"
+              ]
             }
           }
         },
@@ -410,9 +482,15 @@
                 "value": "application/json"
               }
             ],
-            "description": "Guarda una publicacion como favorita del estudiante.",
+            "description": "Guarda una publicacion como favorita del estudiante.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/favoritos' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"publicacionId\": \"{{publicacionId}}\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/favoritos"
+              "raw": "{{baseUrl}}/favoritos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -445,9 +523,16 @@
           "request": {
             "method": "POST",
             "header": [],
-            "description": "Registro multipart de arrendador. Elegir archivos locales validos antes de enviar.",
+            "description": "Registro multipart de arrendador. Elegir archivos locales validos antes de enviar.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/auth/register' \\\n  --form 'nombreCompleto=Arrendador Prueba Automatizada' \\\n  --form 'email={{emailArrendadorNuevo}}' \\\n  --form 'rut={{rutArrendadorNuevo}}' \\\n  --form 'password=Arrendador1234.' \\\n  --form 'rol=arrendador' \\\n  --form 'telefono=+56 9 1111 2222' \\\n  --form 'terminosAceptados=true' \\\n  --form 'documentoResidencia=@/ruta/local/documentoResidencia' \\\n  --form 'fotoPerfil=@/ruta/local/fotoPerfil' \\\n  --form 'documentoVerificacion=@/ruta/local/documentoVerificacion' \\\n  --form 'documentoVerificacionReverso=@/ruta/local/documentoVerificacionReverso'\n```",
             "url": {
-              "raw": "{{baseUrl}}/auth/register"
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             },
             "body": {
               "mode": "formdata",
@@ -547,9 +632,15 @@
                 "value": "application/json"
               }
             ],
-            "description": "Crea publicacion como arrendador aprobado.",
+            "description": "Crea publicacion como arrendador aprobado.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/publicacion' \\\n  --header 'Authorization: Bearer {{tokenArrendador}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"titulo\": \"Departamento prueba Postman\",\n  \"tipoInmueble\": \"departamento\",\n  \"precioMensual\": 280000,\n  \"ubicacion\": \"Concepcion centro\",\n  \"fotos\": [\n    \"https://example.com/depto.jpg\"\n  ],\n  \"serviciosIncluidos\": [\n    \"agua\",\n    \"luz\",\n    \"internet\"\n  ],\n  \"reglasConvivencia\": \"No fumar.\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/publicacion"
+              "raw": "{{baseUrl}}/publicacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicacion"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -591,9 +682,16 @@
                 "value": "application/json"
               }
             ],
-            "description": "Actualiza una publicacion propia del arrendador.",
+            "description": "Actualiza una publicacion propia del arrendador.\n\ncURL equivalente:\n```bash\ncurl --location --request PUT '{{baseUrl}}/publicacion/{{publicacionId}}' \\\n  --header 'Authorization: Bearer {{tokenArrendador}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"precioMensual\": 290000,\n  \"reglasConvivencia\": \"No fumar. Mantener espacios comunes limpios.\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/publicacion/{{publicacionId}}"
+              "raw": "{{baseUrl}}/publicacion/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicacion",
+                "{{publicacionId}}"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -631,9 +729,16 @@
                 "value": "Bearer {{tokenArrendador}}"
               }
             ],
-            "description": "Lista conversaciones del usuario autenticado.",
+            "description": "Lista conversaciones del usuario autenticado.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/mensajes/conversaciones' \\\n  --header 'Authorization: Bearer {{tokenArrendador}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/mensajes/conversaciones"
+              "raw": "{{baseUrl}}/mensajes/conversaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mensajes",
+                "conversaciones"
+              ]
             }
           }
         },
@@ -666,9 +771,15 @@
                 "value": "application/json"
               }
             ],
-            "description": "Arrendador califica a estudiante tras arriendo completado.",
+            "description": "Arrendador califica a estudiante tras arriendo completado.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/reviews' \\\n  --header 'Authorization: Bearer {{tokenArrendador}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"rentalId\": \"{{rentalId}}\",\n  \"targetUserId\": \"{{userIdEstudiante}}\",\n  \"rating\": 5,\n  \"comment\": \"Excelente comunicacion y cumplimiento.\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/reviews"
+              "raw": "{{baseUrl}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -708,9 +819,16 @@
                 "value": "application/json"
               }
             ],
-            "description": "Valida credenciales del admin semilla.",
+            "description": "Valida credenciales del admin semilla.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/auth/login' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/auth/login"
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -752,9 +870,23 @@
                 "value": "application/json"
               }
             ],
-            "description": "Actualiza estado de verificacion de un usuario.",
+            "description": "Actualiza estado de verificacion de un usuario.\n\ncURL equivalente:\n```bash\ncurl --location --request PATCH '{{baseUrl}}/user/detail/verification?id={{userIdPendiente}}' \\\n  --header 'Authorization: Bearer {{tokenAdmin}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"estadoVerificacion\": \"aprobado\",\n  \"comentarioVerificacion\": \"Documentos revisados.\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/user/detail/verification?id={{userIdPendiente}}"
+              "raw": "{{baseUrl}}/user/detail/verification?id={{userIdPendiente}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "detail",
+                "verification"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{userIdPendiente}}"
+                }
+              ]
             },
             "body": {
               "mode": "raw",
@@ -796,9 +928,22 @@
                 "value": "application/json"
               }
             ],
-            "description": "Edita un usuario desde administracion.",
+            "description": "Edita un usuario desde administracion.\n\ncURL equivalente:\n```bash\ncurl --location --request PATCH '{{baseUrl}}/user/detail?id={{userIdEstudiante}}' \\\n  --header 'Authorization: Bearer {{tokenAdmin}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"nombreCompleto\": \"Usuario Estudiante Admin\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/user/detail?id={{userIdEstudiante}}"
+              "raw": "{{baseUrl}}/user/detail?id={{userIdEstudiante}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "detail"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{userIdEstudiante}}"
+                }
+              ]
             },
             "body": {
               "mode": "raw",
@@ -836,9 +981,15 @@
                 "value": "Bearer {{tokenAdmin}}"
               }
             ],
-            "description": "Admin lista publicaciones reportadas pendientes.",
+            "description": "Admin lista publicaciones reportadas pendientes.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/reportes' \\\n  --header 'Authorization: Bearer {{tokenAdmin}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/reportes"
+              "raw": "{{baseUrl}}/reportes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportes"
+              ]
             }
           }
         },
@@ -867,9 +1018,15 @@
                 "value": "Bearer {{tokenAdmin}}"
               }
             ],
-            "description": "Admin obtiene listado completo sin password.",
+            "description": "Admin obtiene listado completo sin password.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/user' \\\n  --header 'Authorization: Bearer {{tokenAdmin}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/user"
+              "raw": "{{baseUrl}}/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user"
+              ]
             }
           }
         },
@@ -893,9 +1050,16 @@
           "request": {
             "method": "POST",
             "header": [],
-            "description": "Prueba negativa: el registro debe fallar si no acepta terminos.",
+            "description": "Prueba negativa: el registro debe fallar si no acepta terminos.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/auth/register' \\\n  --form 'nombreCompleto=Estudiante Sin Terminos' \\\n  --form 'email={{emailSinTerminos}}' \\\n  --form 'rut={{rutSinTerminos}}' \\\n  --form 'password=Estudiante1234.' \\\n  --form 'rol=estudiante' \\\n  --form 'universidad=Universidad del Bio Bio' \\\n  --form 'carrera=Ingenieria Civil Informatica' \\\n  --form 'documentoVerificacion=@/ruta/local/documentoVerificacion' \\\n  --form 'carnetIdentidadFrontal=@/ruta/local/carnetIdentidadFrontal' \\\n  --form 'carnetIdentidadReverso=@/ruta/local/carnetIdentidadReverso'\n```",
             "url": {
-              "raw": "{{baseUrl}}/auth/register"
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             },
             "body": {
               "mode": "formdata",
@@ -990,9 +1154,16 @@
                 "value": "application/json"
               }
             ],
-            "description": "Estudiante contacta al arrendador desde una publicacion.",
+            "description": "Estudiante contacta al arrendador desde una publicacion.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/mensajes/contacto' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"id_publicacion\": \"{{publicacionId}}\",\n  \"contenido\": \"Hola, me interesa coordinar una visita.\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/mensajes/contacto"
+              "raw": "{{baseUrl}}/mensajes/contacto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mensajes",
+                "contacto"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -1034,9 +1205,15 @@
                 "value": "application/json"
               }
             ],
-            "description": "Estudiante califica a arrendador tras arriendo completado.",
+            "description": "Estudiante califica a arrendador tras arriendo completado.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/reviews' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"rentalId\": \"{{rentalId}}\",\n  \"targetUserId\": \"{{userIdArrendador}}\",\n  \"rating\": 5,\n  \"comment\": \"Muy buen arrendador.\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/reviews"
+              "raw": "{{baseUrl}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -1078,9 +1255,16 @@
                 "value": "application/json"
               }
             ],
-            "description": "Estudiante reporta una publicacion sospechosa.",
+            "description": "Estudiante reporta una publicacion sospechosa.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/reportes/publicacion' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"id_publicacion\": \"{{publicacionId}}\",\n  \"motivo\": \"Informacion inconsistente en la publicacion.\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/reportes/publicacion"
+              "raw": "{{baseUrl}}/reportes/publicacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportes",
+                "publicacion"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -1118,9 +1302,16 @@
                 "value": "application/json"
               }
             ],
-            "description": "Envia correo de recuperacion si la cuenta existe.",
+            "description": "Envia correo de recuperacion si la cuenta existe.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/auth/forgot-password' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"email\": \"{{estudianteEmail}}\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/auth/forgot-password"
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -1162,9 +1353,16 @@
                 "value": "application/json"
               }
             ],
-            "description": "Actualiza datos publicos de arrendador.",
+            "description": "Actualiza datos publicos de arrendador.\n\ncURL equivalente:\n```bash\ncurl --location --request PATCH '{{baseUrl}}/profile/arrendador' \\\n  --header 'Authorization: Bearer {{tokenArrendador}}' \\\n  --header 'Content-Type: application/json' \\\n  --data-raw '{\n  \"telefono\": \"+56 9 2222 3333\",\n  \"nombreCompleto\": \"Usuario Arrendador Actualizado\"\n}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/profile/arrendador"
+              "raw": "{{baseUrl}}/profile/arrendador",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile",
+                "arrendador"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -1202,9 +1400,17 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "Confirma arriendo como participante; repetir con la otra parte para completarlo.",
+            "description": "Confirma arriendo como participante; repetir con la otra parte para completarlo.\n\ncURL equivalente:\n```bash\ncurl --location --request POST '{{baseUrl}}/rentals/{{rentalId}}/confirm' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/rentals/{{rentalId}}/confirm"
+              "raw": "{{baseUrl}}/rentals/{{rentalId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rentals",
+                "{{rentalId}}",
+                "confirm"
+              ]
             }
           }
         },
@@ -1233,9 +1439,16 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "Obtiene perfil publico de otro usuario autenticado.",
+            "description": "Obtiene perfil publico de otro usuario autenticado.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/profile/{{userIdArrendador}}' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/profile/{{userIdArrendador}}"
+              "raw": "{{baseUrl}}/profile/{{userIdArrendador}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile",
+                "{{userIdArrendador}}"
+              ]
             }
           }
         },
@@ -1264,9 +1477,25 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "Lista notificaciones propias ordenadas por fecha.",
+            "description": "Lista notificaciones propias ordenadas por fecha.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/notificaciones?limit=20&offset=0' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/notificaciones?limit=20&offset=0"
+              "raw": "{{baseUrl}}/notificaciones?limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
             }
           }
         },
@@ -1295,9 +1524,16 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "Evidencia indirecta: eventos como aprobacion, mensaje o arriendo completado disparan email y notificacion interna.",
+            "description": "Evidencia indirecta: eventos como aprobacion, mensaje o arriendo completado disparan email y notificacion interna.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/notificaciones/count' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/notificaciones/count"
+              "raw": "{{baseUrl}}/notificaciones/count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notificaciones",
+                "count"
+              ]
             }
           }
         },
@@ -1326,9 +1562,15 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "Obtiene el perfil del usuario autenticado.",
+            "description": "Obtiene el perfil del usuario autenticado.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/profile' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/profile"
+              "raw": "{{baseUrl}}/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile"
+              ]
             }
           }
         },
@@ -1357,9 +1599,16 @@
                 "value": "Bearer {{tokenArrendador}}"
               }
             ],
-            "description": "Arrendador lista solo sus publicaciones.",
+            "description": "Arrendador lista solo sus publicaciones.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/publicacion/mis-publicaciones' \\\n  --header 'Authorization: Bearer {{tokenArrendador}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/publicacion/mis-publicaciones"
+              "raw": "{{baseUrl}}/publicacion/mis-publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicacion",
+                "mis-publicaciones"
+              ]
             }
           }
         },
@@ -1388,9 +1637,15 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "Lista arriendos propios e indica si se puede calificar.",
+            "description": "Lista arriendos propios e indica si se puede calificar.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/rentals' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/rentals"
+              "raw": "{{baseUrl}}/rentals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rentals"
+              ]
             }
           }
         },
@@ -1419,9 +1674,16 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "Elimina una publicacion de favoritos sin afectar la publicacion original.",
+            "description": "Elimina una publicacion de favoritos sin afectar la publicacion original.\n\ncURL equivalente:\n```bash\ncurl --location --request DELETE '{{baseUrl}}/favoritos/{{publicacionId}}' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/favoritos/{{publicacionId}}"
+              "raw": "{{baseUrl}}/favoritos/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "favoritos",
+                "{{publicacionId}}"
+              ]
             }
           }
         },
@@ -1450,9 +1712,16 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "Lista resenas recibidas por el usuario autenticado.",
+            "description": "Lista resenas recibidas por el usuario autenticado.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/reviews/received' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/reviews/received"
+              "raw": "{{baseUrl}}/reviews/received",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "received"
+              ]
             }
           }
         },
@@ -1481,9 +1750,21 @@
                 "value": "Bearer {{tokenEstudiante}}"
               }
             ],
-            "description": "API base para alimentar mapa: devuelve publicaciones con ubicacion; validacion visual se hace en frontend.",
+            "description": "API base para alimentar mapa: devuelve publicaciones con ubicacion; validacion visual se hace en frontend.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/publicacion?tipoInmueble=departamento' \\\n  --header 'Authorization: Bearer {{tokenEstudiante}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/publicacion?tipoInmueble=departamento"
+              "raw": "{{baseUrl}}/publicacion?tipoInmueble=departamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicacion"
+              ],
+              "query": [
+                {
+                  "key": "tipoInmueble",
+                  "value": "departamento"
+                }
+              ]
             }
           }
         },
@@ -1507,9 +1788,17 @@
           "request": {
             "method": "GET",
             "header": [],
-            "description": "Pegar token recibido por correo en la variable verificationToken.",
+            "description": "Pegar token recibido por correo en la variable verificationToken.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/auth/confirm-email/{{verificationToken}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/auth/confirm-email/{{verificationToken}}"
+              "raw": "{{baseUrl}}/auth/confirm-email/{{verificationToken}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "confirm-email",
+                "{{verificationToken}}"
+              ]
             }
           }
         },
@@ -1538,9 +1827,17 @@
                 "value": "Bearer {{tokenArrendador}}"
               }
             ],
-            "description": "Ruta esperada para estadisticas. Revisar observaciones: actualmente puede no estar montada o no coincidir con entidad.",
+            "description": "Ruta esperada para estadisticas. Revisar observaciones: actualmente puede no estar montada o no coincidir con entidad.\n\ncURL equivalente:\n```bash\ncurl --location --request GET '{{baseUrl}}/publicacion/{{publicacionId}}/estadisticas' \\\n  --header 'Authorization: Bearer {{tokenArrendador}}'\n```",
             "url": {
-              "raw": "{{baseUrl}}/publicacion/{{publicacionId}}/estadisticas"
+              "raw": "{{baseUrl}}/publicacion/{{publicacionId}}/estadisticas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicacion",
+                "{{publicacionId}}",
+                "estadisticas"
+              ]
             }
           }
         }

@@ -61,7 +61,7 @@ Tambien crea una publicacion base para mensajes si existe el arrendador semilla.
 
 ## Como usar Postman
 
-1. Importar `postman/ArriendU_RF_Testing.postman_collection.json`.
+1. Importar `postman/ArriendU_RF_Testing.postman_collection.json`; en Postman debe quedar como `ArriendU - Pruebas RF Completa`.
 2. Importar `postman/ArriendU_Local.postman_environment.json`.
 3. Seleccionar environment `ArriendU Local`.
 4. Ejecutar primero la carpeta `00 - Login y tokens base`.
@@ -71,6 +71,7 @@ Tambien crea una publicacion base para mensajes si existe el arrendador semilla.
 Notas:
 
 - Los RF de registro requieren seleccionar archivos locales en Postman.
+- Cada request incluye URL estructurada, headers, body y un cURL equivalente en su descripcion.
 - Los RF que dependen de IDs (`publicacionId`, `rentalId`, `reviewId`, `notificacionId`) usan valores del environment y pueden requerir ajuste segun la base local.
 - El RF_33 requiere pegar en `verificationToken` el token recibido por correo.
 - El RF_34 queda documentado, pero el endpoint de estadisticas requiere revision porque la ruta existe en el repo pero no esta montada actualmente en `index.routes.js`.

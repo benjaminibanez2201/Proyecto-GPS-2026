@@ -131,7 +131,7 @@ Para una validacion rapida:
 .\scripts\run-rf-smoke.ps1
 ```
 
-La coleccion Postman cubre `RF_01` a `RF_34`. Primero importa el environment local y ejecuta la carpeta `00 - Login y tokens base`.
+La coleccion Postman se importa como `ArriendU - Pruebas RF Completa` y cubre `RF_01` a `RF_34`. Primero importa el environment local, selecciona `ArriendU Local` y ejecuta la carpeta `00 - Login y tokens base`. Cada request incluye URL, headers, body y cURL equivalente en su descripcion.
 
 ## Estado del proyecto
 

@@ -29,6 +29,74 @@ function formData(fields) {
   };
 }
 
+function buildPostmanUrl(routePath) {
+  const [pathname, queryString] = routePath.split("?");
+  const normalizedPath = pathname.replace(/^\/+/, "");
+
+  const url = {
+    raw: `{{baseUrl}}${routePath}`,
+    host: ["{{baseUrl}}"],
+    path: normalizedPath ? normalizedPath.split("/") : [],
+  };
+
+  if (queryString) {
+    url.query = queryString
+      .split("&")
+      .filter(Boolean)
+      .map((part) => {
+        const separatorIndex = part.indexOf("=");
+        if (separatorIndex === -1) {
+          return { key: part, value: "" };
+        }
+
+        return {
+          key: part.slice(0, separatorIndex),
+          value: part.slice(separatorIndex + 1),
+        };
+      });
+  }
+
+  return url;
+}
+
+function singleQuote(value) {
+  return `'${String(value).replace(/'/g, "'\\''")}'`;
+}
+
+function curlForRequest({ method, path: routePath, headers = baseHeaders, body }) {
+  const lines = [`curl --location --request ${method} ${singleQuote(`{{baseUrl}}${routePath}`)}`];
+
+  for (const header of headers) {
+    lines.push(`  --header ${singleQuote(`${header.key}: ${header.value}`)}`);
+  }
+
+  if (body?.mode === "raw") {
+    lines.push(`  --data-raw ${singleQuote(body.raw)}`);
+  }
+
+  if (body?.mode === "formdata") {
+    for (const field of body.formdata) {
+      const value = field.type === "file"
+        ? `@/ruta/local/${field.key}`
+        : field.value;
+      lines.push(`  --form ${singleQuote(`${field.key}=${value}`)}`);
+    }
+  }
+
+  return lines.join(" \\\n");
+}
+
+function descriptionWithCurl({ description, method, path, headers, body }) {
+  return [
+    description,
+    "",
+    "cURL equivalente:",
+    "```bash",
+    curlForRequest({ method, path, headers, body }),
+    "```",
+  ].join("\n");
+}
+
 function testScript({ expected = [200, 201, 204], tokenTarget }) {
   const lines = [
     `pm.test("status esperado (${expected.join(", ")})", function () {`,
@@ -64,10 +132,8 @@ function request({
     request: {
       method,
       header: headers,
-      description,
-      url: {
-        raw: `{{baseUrl}}${path}`,
-      },
+      description: descriptionWithCurl({ description, method, path, headers, body }),
+      url: buildPostmanUrl(path),
       ...(body ? { body } : {}),
     },
   };
@@ -421,11 +487,12 @@ const rfItems = [
 
 const collection = {
   info: {
-    name: "ArriendU - Pruebas RF",
+    name: "ArriendU - Pruebas RF Completa",
     description: [
       "Coleccion Postman para validar RF_01 a RF_34 de ArriendU.",
       "Importar junto con ArriendU_Local.postman_environment.json.",
       "Ejecutar primero la carpeta 00 - Login y tokens base.",
+      "Cada request incluye URL estructurada, headers, body y cURL equivalente en la descripcion.",
       "Algunas pruebas requieren variables creadas previamente o archivos locales.",
     ].join("\n"),
     schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
