@@ -33,10 +33,18 @@ export async function getPublicacionesService(filtros) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
     
-    const { precioMax, tipoInmueble, ordenarPor, direccionOrden, pagina } = filtros;
+    const { titulo, precioMin, precioMax, tipoInmueble, ordenarPor, direccionOrden, pagina } = filtros;
 
     const query = publicacionRepository.createQueryBuilder("publicacion")
       .where("publicacion.estado = :estado", { estado: "activa" });
+    
+    if (titulo) {
+      query.andWhere("LOWER(publicacion.titulo) LIKE LOWER(:titulo)", { titulo: `%${titulo}%` });
+    }
+
+    if (precioMin) {
+      query.andWhere("publicacion.precioMensual >= :precioMin", { precioMin: parseInt(precioMin) });
+    }
 
     if (precioMax) {
       query.andWhere("publicacion.precioMensual <= :precioMax", { precioMax: parseInt(precioMax) });

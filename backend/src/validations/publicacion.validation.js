@@ -61,9 +61,18 @@ export const publicacionBodyValidation = Joi.object({
 
 
 export const publicacionQueryValidation = Joi.object({
+  precioMin: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      "number.base": "El precio mínimo debe ser un número.",
+      "number.positive": "El precio mínimo debe ser positivo."
+    }),
   precioMax: Joi.number()
     .integer()
     .positive()
+    .min(Joi.ref('precioMin'))
     .optional()
     .messages({
       "number.base": "El precio máximo debe ser un número.",
