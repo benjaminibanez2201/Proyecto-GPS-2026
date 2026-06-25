@@ -352,6 +352,7 @@ const Form = ({
             required: field.required ? field.requiredMessage || 'Este campo es obligatorio' : false,
             validate: field.validate || {},
         });
+        const isControlledCheckbox = typeof field.checked === 'boolean';
 
         return (
             <div className="checkbox-field">
@@ -360,8 +361,8 @@ const Form = ({
                     id={field.name}
                     name={field.name}
                     type="checkbox"
-                    checked={typeof field.checked === 'boolean' ? field.checked : undefined}
-                    defaultChecked={field.defaultChecked || false}
+                    checked={isControlledCheckbox ? field.checked : undefined}
+                    defaultChecked={isControlledCheckbox ? undefined : field.defaultChecked || false}
                     disabled={field.disabled}
                     readOnly={field.readOnly}
                     onClick={field.onClick}
