@@ -110,6 +110,25 @@ function formatValue(value) {
     return value;
 }
 
+function getFileExtension(filename = '') {
+    return filename.split('.').pop()?.toLowerCase() || '';
+}
+
+function isImagePreview(preview) {
+    const contentType = (preview.contentType || '').toLowerCase();
+    const extension = getFileExtension(preview.filename);
+
+    return contentType.startsWith('image/')
+        || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'].includes(extension);
+}
+
+function isPdfPreview(preview) {
+    const contentType = (preview.contentType || '').toLowerCase();
+    const extension = getFileExtension(preview.filename);
+
+    return contentType.includes('application/pdf') || extension === 'pdf';
+}
+
 function PdfFilePreview({ preview }) {
     const pagesRef = useRef(null);
     const [error, setError] = useState('');
@@ -338,10 +357,14 @@ function ImageFilePreview({ preview }) {
                 aria-label={`Ampliar ${preview.filename}`}
                 title="Ampliar imagen"
                 style={{
-                    border: 'none',
+                    display: 'block',
+                    width: 'min(320px, 100%)',
+                    border: '1px solid #d7eeee',
+                    borderRadius: '10px',
                     padding: 0,
-                    backgroundColor: 'transparent',
+                    backgroundColor: '#f8fafc',
                     cursor: 'zoom-in',
+                    overflow: 'hidden',
                     textAlign: 'left',
                 }}
             >
@@ -349,12 +372,11 @@ function ImageFilePreview({ preview }) {
                     src={preview.url}
                     alt={preview.filename}
                     style={{
-                        width: 'min(240px, 100%)',
-                        maxHeight: '180px',
-                        objectFit: 'cover',
-                        borderRadius: '8px',
-                        border: '1px solid #d7eeee',
+                        width: '100%',
+                        height: '180px',
+                        objectFit: 'contain',
                         display: 'block',
+                        backgroundColor: '#ffffff',
                     }}
                 />
             </button>
@@ -540,16 +562,21 @@ function VerificationFilePreview({ value }) {
         return <span>Cargando archivo...</span>;
     }
 
-    const isImage = preview.contentType?.startsWith('image/');
-    const isPdf = preview.contentType === 'application/pdf';
+    const isImage = isImagePreview(preview);
+    const isPdf = isPdfPreview(preview);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start', width: '100%' }}>
             {isImage && (
                 <ImageFilePreview preview={preview} />
             )}
             {isPdf && (
                 <PdfFilePreview preview={preview} />
+            )}
+            {!isImage && !isPdf && (
+                <span style={{ color: '#b45309', fontSize: '13px', fontWeight: 700 }}>
+                    Vista previa no disponible para este tipo de archivo.
+                </span>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '100%' }}>
                 <span style={{ color: '#0f766e', fontSize: '12px', fontWeight: 800 }}>
@@ -1064,11 +1091,11 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                                 ? documentFieldLabels[field]
                                                 : fieldLabels[field] || field}
                                         </span>
-                                        <span style={{ fontSize: '14px', lineHeight: 1.5, color: '#0f172a', wordBreak: 'break-word' }}>
+                                        <div style={{ fontSize: '14px', lineHeight: 1.5, color: '#0f172a', wordBreak: 'break-word', minWidth: 0 }}>
                                             {field === 'documentoResidencia' || field === 'documentoVerificacion' || field === 'documentoVerificacionReverso' || field === 'carnetIdentidadFrontal' || field === 'carnetIdentidadReverso' || field === 'fotoPerfil'
                                                 ? <VerificationFilePreview value={user?.[field]} />
                                                 : formatValue(user?.[field])}
-                                        </span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
