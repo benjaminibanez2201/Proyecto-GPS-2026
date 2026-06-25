@@ -195,7 +195,6 @@ const Register = () => {
                                 label: 'Carnet de identidad',
                                 name: 'carnetIdentidad',
                                 fieldType: 'fieldGroup',
-                                icon: 'identity-card',
                                 groupClassName: 'identity-document-group',
                                 fields: [
                                     {
@@ -272,7 +271,6 @@ const Register = () => {
                                 label: 'Carnet de identidad',
                                 name: 'carnetIdentidadArrendador',
                                 fieldType: 'fieldGroup',
-                                icon: 'identity-card',
                                 groupClassName: 'identity-document-group',
                                 fields: [
                                     {
