@@ -702,7 +702,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
         >
             <style>
                 {`
-                    .rf13-quick-reasons {
+                    .verification-quick-reasons {
                         display: flex;
                         flex-direction: column;
                         gap: 8px;
@@ -713,33 +713,33 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                         border: 1px solid #dbeafe;
                     }
 
-                    .rf13-quick-reasons__title {
+                    .verification-quick-reasons__title {
                         color: #334155;
                         font-size: 12px;
                         font-weight: 800;
                     }
 
-                    .rf13-quick-reasons__row {
+                    .verification-quick-reasons__row {
                         display: grid;
                         grid-template-columns: minmax(130px, 0.65fr) minmax(0, 1fr);
                         gap: 8px;
                         align-items: start;
                     }
 
-                    .rf13-quick-reasons__doc {
+                    .verification-quick-reasons__doc {
                         color: #0f766e;
                         font-size: 12px;
                         font-weight: 800;
                         line-height: 1.35;
                     }
 
-                    .rf13-quick-reasons__actions {
+                    .verification-quick-reasons__actions {
                         display: flex;
                         flex-wrap: wrap;
                         gap: 6px;
                     }
 
-                    .rf13-quick-reasons__chip {
+                    .verification-quick-reasons__chip {
                         border: 1px solid #99d7d2;
                         border-radius: 999px;
                         padding: 5px 9px;
@@ -750,15 +750,15 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                         cursor: pointer;
                     }
 
-                    .rf13-quick-reasons__chip:hover,
-                    .rf13-quick-reasons__chip:focus-visible {
+                    .verification-quick-reasons__chip:hover,
+                    .verification-quick-reasons__chip:focus-visible {
                         border-color: #0f766e;
                         background: #e7f6f2;
                         outline: none;
                     }
 
                     @media (max-width: 620px) {
-                        .rf13-quick-reasons__row {
+                        .verification-quick-reasons__row {
                             grid-template-columns: 1fr;
                         }
                     }
@@ -892,7 +892,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '12px' }}>
                                         <div>
                                             <p style={{ margin: '0 0 6px', color: '#0f766e', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                                Revisión RF13
+                                                Revisión de antecedentes
                                             </p>
                                             <h3 style={{ margin: 0, color: '#0f172a', fontSize: '18px', lineHeight: 1.25 }}>
                                                 Documentos de {normalizedRole}
@@ -926,21 +926,21 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                     </div>
 
                                     {quickReasonDocuments.length > 0 && normalizedStatus !== 'aprobado' && (
-                                        <div className="rf13-quick-reasons">
-                                            <span className="rf13-quick-reasons__title">
+                                        <div className="verification-quick-reasons">
+                                            <span className="verification-quick-reasons__title">
                                                 Motivos sugeridos
                                             </span>
                                             {quickReasonDocuments.map((document) => (
-                                                <div key={`quick-${document.field}`} className="rf13-quick-reasons__row">
-                                                    <span className="rf13-quick-reasons__doc">
+                                                <div key={`quick-${document.field}`} className="verification-quick-reasons__row">
+                                                    <span className="verification-quick-reasons__doc">
                                                         {document.label}
                                                     </span>
-                                                    <div className="rf13-quick-reasons__actions">
+                                                    <div className="verification-quick-reasons__actions">
                                                         {getQuickReasonsForDocument(document).map((reason) => (
                                                             <button
                                                                 key={`${document.field}-${reason.label}`}
                                                                 type="button"
-                                                                className="rf13-quick-reasons__chip"
+                                                                className="verification-quick-reasons__chip"
                                                                 onClick={() => applyQuickReason(reason.buildComment(document))}
                                                             >
                                                                 {reason.label}
@@ -948,7 +948,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                                         ))}
                                                         <button
                                                             type="button"
-                                                            className="rf13-quick-reasons__chip"
+                                                            className="verification-quick-reasons__chip"
                                                             onClick={() => applyQuickReason(`${document.label}: `, true)}
                                                         >
                                                             Otro
