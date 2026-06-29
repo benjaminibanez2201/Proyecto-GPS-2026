@@ -625,6 +625,8 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
     }));
     const hasMissingRequiredDocs = requiredDocuments.some((document) => !document.isPresent);
     const canReview = Boolean(onVerificationAction) && ['estudiante', 'arrendador'].includes(normalizedRole);
+    const hasPendingInfoRequest = Boolean(String(user?.solicitudAntecedentes || '').trim());
+    const shouldShowVerificationReview = canReview && normalizedStatus === 'pendiente' && !hasPendingInfoRequest;
     const quickReasonDocuments = requiredDocuments.filter((document) => document.isPresent);
 
     const applyQuickReason = (comment, keepCursor = false) => {
@@ -640,7 +642,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
     };
 
     const submitVerificationAction = async (actionType) => {
-        if (!canReview) return;
+        if (!shouldShowVerificationReview) return;
 
         const trimmedComment = reviewComment.trim();
         let payload = null;
@@ -914,7 +916,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                         </section>
 
                         <section style={{ padding: '24px 32px 56px', backgroundColor: '#ffffff', borderBottomLeftRadius: '22px', borderBottomRightRadius: '22px' }}>
-                            {canReview && (
+                            {shouldShowVerificationReview && (
                                 <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '14px', border: '1px solid #d7eeee', backgroundColor: '#f8fafc' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '12px' }}>
                                         <div>
@@ -952,7 +954,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                         ))}
                                     </div>
 
-                                    {quickReasonDocuments.length > 0 && normalizedStatus !== 'aprobado' && (
+                                    {quickReasonDocuments.length > 0 && (
                                         <div className="verification-quick-reasons">
                                             <span className="verification-quick-reasons__title">
                                                 Motivos sugeridos
@@ -1022,15 +1024,15 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                         <button
                                             type="button"
                                             onClick={() => submitVerificationAction('approve')}
-                                            disabled={isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado'}
+                                            disabled={isSubmittingReview || hasMissingRequiredDocs}
                                             style={{
                                                 border: 'none',
                                                 borderRadius: '10px',
                                                 padding: '10px 14px',
                                                 backgroundColor: '#0f766e',
                                                 color: '#ffffff',
-                                                cursor: isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado' ? 'not-allowed' : 'pointer',
-                                                opacity: isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado' ? 0.55 : 1,
+                                                cursor: isSubmittingReview || hasMissingRequiredDocs ? 'not-allowed' : 'pointer',
+                                                opacity: isSubmittingReview || hasMissingRequiredDocs ? 0.55 : 1,
                                                 fontWeight: 800,
                                             }}
                                         >
@@ -1056,15 +1058,15 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                         <button
                                             type="button"
                                             onClick={() => submitVerificationAction('request-info')}
-                                            disabled={isSubmittingReview || normalizedStatus === 'aprobado'}
+                                            disabled={isSubmittingReview}
                                             style={{
                                                 border: '1px solid #0f766e',
                                                 borderRadius: '10px',
                                                 padding: '10px 14px',
                                                 backgroundColor: '#ffffff',
                                                 color: '#0f766e',
-                                                cursor: isSubmittingReview || normalizedStatus === 'aprobado' ? 'not-allowed' : 'pointer',
-                                                opacity: isSubmittingReview || normalizedStatus === 'aprobado' ? 0.55 : 1,
+                                                cursor: isSubmittingReview ? 'not-allowed' : 'pointer',
+                                                opacity: isSubmittingReview ? 0.55 : 1,
                                                 fontWeight: 800,
                                             }}
                                         >
