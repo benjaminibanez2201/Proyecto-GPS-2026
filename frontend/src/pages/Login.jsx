@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation} from 'react-router-dom';
 import { login } from '@services/auth.service.js';
 import Form from '@components/Form';
 import useLogin from '@hooks/auth/useLogin.jsx';
@@ -8,6 +8,7 @@ import '@styles/login.css';
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const {
         errorData,
         handleInputChange
@@ -17,11 +18,23 @@ const Login = () => {
         try {
             const response = await login(data);
             if (response.status === 'Success') {
-                const storedUser = JSON.parse(sessionStorage.getItem('usuario')) || {};
+                    const storedUser = JSON.parse(sessionStorage.getItem('usuario')) || {};
+
+                    // buscar si hay ruta guardada en state o en query param ?next=
+                    const params = new URLSearchParams(location.search);
+                    const nextParam = params.get('next');
+                    const originUrl = nextParam || location.state?.from?.pathname;
+
+                //para redirigir al usuario a la página de origen después del inicio de sesión
                 if (storedUser.rol === 'admin' || storedUser.rol === 'administrador') {
-                    navigate('/admin');
+                    // Los admins siempre van al panel, sin importar de dónde venían
+                    navigate('/admin', { replace: true });
+                } else if (originUrl) {
+                    //si estudiante/arrendador venía de un enlace externo, lo mandamos ahí
+                    navigate(originUrl, { replace: true });
                 } else {
-                    navigate('/home');
+                    //si no, al home normal
+                    navigate('/home', { replace: true });
                 }
             } else if (response.status === 'Client error') {
                 errorData(response.details);
