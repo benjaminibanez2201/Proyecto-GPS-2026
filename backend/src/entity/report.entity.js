@@ -22,7 +22,7 @@ const ReportePublicacionSchema = new EntitySchema({
     },
     accion: {
       type: "enum",
-      enum: ["sin_accion", "mantenida", "desactivada"],
+      enum: ["sin_accion", "mantenida", "desactivada", "reactivada"],
       default: "sin_accion",
       nullable: false,
     },

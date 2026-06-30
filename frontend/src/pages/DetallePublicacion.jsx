@@ -235,10 +235,14 @@ export default function DetallePublicacion() {
                 <li>No se han especificado servicios</li>
               )}
             </ul>
-            
-            {/* El botón de contactar queda solo y más limpio en esta sección */}
+
             {!esArrendador && (
-              <button className="confirm-btn" style={{ width: '100%', marginTop: '30px' }}>
+              <button
+                type="button"
+                className="confirm-btn"
+                onClick={() => navigate(`/mensajes?publicacion=${id}`)}
+                style={{ width: '100%', marginTop: '30px' }}
+              >
                 Contactar al Propietario
               </button>
             )}
