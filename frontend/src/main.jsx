@@ -20,6 +20,7 @@ import DetallePublicacion from '@pages/DetallePublicacion.jsx';
 import MisPublicaciones from '@pages/MisPublicaciones';
 import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
 import MisFavoritos from '@pages/MisFavoritos';
+import Mensajes from '@pages/Mensajes.jsx';
 
 const APP_NAME = 'ArriendU';
 
@@ -38,6 +39,7 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/favoritos\/?$/, title: `Mis favoritos - ${APP_NAME}` },
     { pattern: /^\/historial\/?$/, title: `Historial de arriendos - ${APP_NAME}` },
     { pattern: /^\/perfil\/[^/]+\/?$/, title: `Perfil de usuario - ${APP_NAME}` },
+    { pattern: /^\/mensajes\/?$/, title: `Mensajes - ${APP_NAME}` },
     { pattern: /^\/publicacion\/?$/, title: `Buscar arriendos - ${APP_NAME}` },
   ];
 
@@ -106,6 +108,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Notificaciones />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'mensajes',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
+            <Mensajes />
           </ProtectedRoute>
         ),
       },
