@@ -24,7 +24,6 @@ const Form = ({
     const [fileUploadProgress, setFileUploadProgress] = useState({});
     const [fileUploadStatus, setFileUploadStatus] = useState({});
     const [dragActiveFiles, setDragActiveFiles] = useState({});
-    const fileInputRefs = useRef({});
     const uploadTimerRefs = useRef({});
     const flatFields = useMemo(() => {
         const flattenFields = (fieldList) => fieldList.flatMap((field) => (
@@ -178,14 +177,6 @@ const Form = ({
 
         if (!file) return;
 
-        if (fileInputRefs.current[field.name]) {
-            try {
-                fileInputRefs.current[field.name].files = files;
-            } catch {
-                // Some browsers do not allow assigning FileList to the native input.
-            }
-        }
-
         const droppedFileEvent = {
             target: {
                 name: field.name,
@@ -241,7 +232,6 @@ const Form = ({
                         disabled={field.disabled}
                         ref={(element) => {
                             registerProps.ref(element);
-                            fileInputRefs.current[field.name] = element;
                         }}
                         onChange={(event) => handleFileInputChange(field, event, registerProps)}
                     />
