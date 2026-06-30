@@ -38,6 +38,24 @@ export const publicacionBodyValidation = Joi.object({
       "string.min": "La ubicación debe tener como mínimo 5 caracteres.",
       "string.max": "La ubicación debe tener como máximo 255 caracteres.",
     }),
+  latitud: Joi.number()
+    .min(-90)
+    .max(90)
+    .optional()
+    .messages({
+      "number.base": "La latitud debe ser un número.",
+      "number.min": "La latitud debe estar entre -90 y 90.",
+      "number.max": "La latitud debe estar entre -90 y 90.",
+    }),
+  longitud: Joi.number()
+    .min(-180)
+    .max(180)
+    .optional()
+    .messages({
+      "number.base": "La longitud debe ser un número.",
+      "number.min": "La longitud debe estar entre -180 y 180.",
+      "number.max": "La longitud debe estar entre -180 y 180.",
+    }),
   fotos: Joi.array()
     .items(Joi.string().uri())
     .min(1)
@@ -138,6 +156,16 @@ export const publicacionUpdateValidation = Joi.object({
   ubicacion: Joi.string().min(5).max(255).messages({
     "string.min": "La ubicación debe tener como mínimo 5 caracteres.",
     "string.max": "La ubicación debe tener como máximo 255 caracteres.",
+  }),
+  latitud: Joi.number().min(-90).max(90).messages({
+    "number.base": "La latitud debe ser un número.",
+    "number.min": "La latitud debe estar entre -90 y 90.",
+    "number.max": "La latitud debe estar entre -90 y 90.",
+  }),
+  longitud: Joi.number().min(-180).max(180).messages({
+    "number.base": "La longitud debe ser un número.",
+    "number.min": "La longitud debe estar entre -180 y 180.",
+    "number.max": "La longitud debe estar entre -180 y 180.",
   }),
   fotos: Joi.array().items(Joi.string().uri()),
   serviciosIncluidos: Joi.array().items(Joi.string()),
