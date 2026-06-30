@@ -7,6 +7,9 @@ import useUsers from '@hooks/users/useGetUsers.jsx';
 import useEditUser from '@hooks/users/useEditUser';
 import useDeleteUser from '@hooks/users/useDeleteUser';
 import { useAuth } from '@context/AuthContext';
+import { formatPostUpdate } from '@helpers/formatData.js';
+import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
+import { updateUserVerificationStatus } from '@services/user.service.js';
 import '@styles/users.css';
 
 const AdminUsers = () => {
@@ -43,6 +46,38 @@ const AdminUsers = () => {
         setSelectedUser(userData);
         setIsDetailsOpen(true);
     }, []);
+
+    const handleVerificationAction = useCallback(async (targetUser, payload) => {
+        const updatedUser = await updateUserVerificationStatus(targetUser, payload);
+
+        if (!updatedUser?.id) {
+            const errorMessage = updatedUser?.details || updatedUser?.message || 'No se pudo actualizar la revisión';
+            showErrorAlert('Revisión no actualizada', errorMessage);
+            throw new Error(errorMessage);
+        }
+
+        const formattedUser = formatPostUpdate(updatedUser);
+        setUsers((prevUsers) => prevUsers.map((currentUser) => (
+            currentUser.id === formattedUser.id ? formattedUser : currentUser
+        )));
+        setSelectedUser(formattedUser);
+
+        const requiresEmail = payload.estadoVerificacion !== 'pendiente' || Boolean(payload.solicitudAntecedentes);
+        let actionMessage = 'La revisión fue guardada correctamente.';
+
+        if (requiresEmail && updatedUser.avisoCorreoEnviado === false) {
+            actionMessage = 'La revisión se guardó, pero no se pudo enviar el correo automáticamente.';
+        } else if (payload.estadoVerificacion === 'aprobado') {
+            actionMessage = 'La cuenta fue aprobada y se avisó al usuario.';
+        } else if (payload.estadoVerificacion === 'rechazado') {
+            actionMessage = 'La cuenta fue rechazada con comentario y se avisó al usuario.';
+        } else if (payload.solicitudAntecedentes) {
+            actionMessage = 'Se solicitaron antecedentes adicionales por correo.';
+        }
+
+        showSuccessAlert('Revisión actualizada', actionMessage);
+        return formattedUser;
+    }, [setUsers]);
 
     const handleAdvancedFilterChange = useCallback((field) => (event) => {
         const { value } = event.target;
@@ -107,7 +142,7 @@ const AdminUsers = () => {
             formatter: () => '<button type="button" class="table-view-button">Ver</button>',
             cellClick: (e, cell) => handleViewUser(cell.getRow().getData()),
         },
-    ]), []);
+    ]), [handleViewUser]);
 
     const colores = {
         principal: '#008080',
@@ -287,7 +322,12 @@ const AdminUsers = () => {
             </section>
 
             <Popup show={isPopupOpen} setShow={setIsPopupOpen} data={dataUser} action={handleUpdate} />
-            <UserDetailsModal show={isDetailsOpen} setShow={setIsDetailsOpen} user={selectedUser} />
+            <UserDetailsModal
+                show={isDetailsOpen}
+                setShow={setIsDetailsOpen}
+                user={selectedUser}
+                onVerificationAction={handleVerificationAction}
+            />
         </div>
     );
 };

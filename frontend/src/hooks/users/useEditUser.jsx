@@ -43,7 +43,7 @@ const useEditUser = (setUsers) => {
 
             if (requestedStatus && requestedStatus !== currentStatus) {
                 updatedUser = await updateUserVerificationStatus(
-                    updatedUser?.rut || editableUserData.rut || originalUser.rut,
+                    updatedUser?.id ? updatedUser : (editableUserData.rut || originalUser.rut),
                     requestedStatus,
                 );
 
