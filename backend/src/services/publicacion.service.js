@@ -1,6 +1,7 @@
 "use strict";
 import { AppDataSource } from "../config/configDb.js";
 import PublicacionSchema from "../entity/publicacion.entity.js";
+import { obtenerCoordenadasArriendo } from "../helpers/geocoding.helper.js";
 
 // ==========================================
 // SERVICIOS DE PUBLICACIÓN
@@ -9,11 +10,17 @@ export async function createPublicacionService(arrendadorId, body) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
 
+    const coordenadas = body.latitud != null && body.longitud != null
+      ? { latitud: body.latitud, longitud: body.longitud }
+      : await obtenerCoordenadasArriendo(body.ubicacion);
+
     const newPublicacion = publicacionRepository.create({
       titulo: body.titulo,
       tipoInmueble: body.tipoInmueble,
       precioMensual: body.precioMensual,
       ubicacion: body.ubicacion,
+      latitud: coordenadas?.latitud ?? null,
+      longitud: coordenadas?.longitud ?? null,
       fotos: body.fotos,
       serviciosIncluidos: body.serviciosIncluidos || [],
       reglasConvivencia: body.reglasConvivencia || null,
@@ -62,6 +69,8 @@ export async function getPublicacionesService(filtros) {
       "publicacion.precioMensual",
       "publicacion.tipoInmueble",
       "publicacion.ubicacion",
+      "publicacion.latitud",
+      "publicacion.longitud",
       "publicacion.fotos",
     ]);
 
@@ -139,6 +148,15 @@ export async function updatePublicacionService(publicacionId, arrendadorId, body
     });
 
     if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];
+
+    if (body.ubicacion && (body.ubicacion !== publicacion.ubicacion || body.latitud == null || body.longitud == null)) {
+      const coordenadas = body.latitud != null && body.longitud != null
+        ? { latitud: body.latitud, longitud: body.longitud }
+        : await obtenerCoordenadasArriendo(body.ubicacion);
+
+      publicacion.latitud = coordenadas?.latitud ?? null;
+      publicacion.longitud = coordenadas?.longitud ?? null;
+    }
 
     // Mezclamos los datos nuevos
     publicacionRepository.merge(publicacion, body);
