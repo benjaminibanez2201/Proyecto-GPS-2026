@@ -16,6 +16,7 @@ export async function createPublicacionService(arrendadorId, body) {
       ubicacion: body.ubicacion,
       fotos: body.fotos,
       serviciosIncluidos: body.serviciosIncluidos || [],
+      distanciaCampus: body.distanciaCampus ?? null,
       reglasConvivencia: body.reglasConvivencia || null,
       arrendador: { id: arrendadorId },
     });
@@ -32,8 +33,17 @@ export async function createPublicacionService(arrendadorId, body) {
 export async function getPublicacionesService(filtros) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
-    
-    const { titulo, precioMin, precioMax, tipoInmueble, ordenarPor, direccionOrden, pagina } = filtros;
+    const { 
+      titulo, 
+      precioMin, 
+      precioMax, 
+      tipoInmueble, 
+      ordenarPor, 
+      direccionOrden, 
+      pagina,
+      distanciaCampus,
+      servicios 
+    } = filtros;
 
     const query = publicacionRepository.createQueryBuilder("publicacion")
       .where("publicacion.estado = :estado", { estado: "activa" });
@@ -54,12 +64,24 @@ export async function getPublicacionesService(filtros) {
       query.andWhere("publicacion.tipoInmueble = :tipoInmueble", { tipoInmueble });
     }
 
-    const opcionesOrdenValidas = ["precioMensual"];
+    if (distanciaCampus) {
+      query.andWhere("publicacion.distanciaCampus <= :distanciaCampus", { distanciaCampus: parseInt(distanciaCampus) });
+    }
+
+    if (servicios) {
+      const serviciosArray = Array.isArray(servicios) ? servicios : servicios.split(',');
+      serviciosArray.forEach((servicio, index) => {
+        query.andWhere(`:servicio${index} = ANY(publicacion.serviciosIncluidos)`, {
+          [`servicio${index}`]: servicio
+        });
+      });
+    }
+
+    const opcionesOrdenValidas = ["precioMensual", "distanciaCampus"];
     const campoOrden = opcionesOrdenValidas.includes(ordenarPor) ? ordenarPor : "precioMensual";
     const direccion = direccionOrden?.toUpperCase() === "DESC" ? "DESC" : "ASC";
 
     query.orderBy(`publicacion.${campoOrden}`, direccion);
-
     query.select([
       "publicacion.id",
       "publicacion.titulo",
@@ -67,6 +89,8 @@ export async function getPublicacionesService(filtros) {
       "publicacion.tipoInmueble",
       "publicacion.ubicacion",
       "publicacion.fotos",
+      "publicacion.serviciosIncluidos",
+      "publicacion.distanciaCampus",
     ]);
 
     const limite = 20; 
@@ -97,6 +121,20 @@ export async function getPublicacionDetalleService(id) {
     
     const publicacion = await publicacionRepository.createQueryBuilder("publicacion")
       .leftJoin("publicacion.arrendador", "arrendador")
+      .select([
+        "publicacion.id",
+        "publicacion.titulo",
+        "publicacion.precioMensual",
+        "publicacion.tipoInmueble",
+        "publicacion.ubicacion",
+        "publicacion.fotos",
+        "publicacion.serviciosIncluidos", 
+        "publicacion.distanciaCampus",  
+        "publicacion.reglasConvivencia", 
+        "publicacion.estado",
+        "publicacion.createdAt",          
+        "publicacion.updatedAt"
+      ])
       .addSelect([
         "arrendador.id",
         "arrendador.nombreCompleto", 

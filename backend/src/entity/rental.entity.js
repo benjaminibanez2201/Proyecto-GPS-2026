@@ -18,6 +18,10 @@ const ArriendoEsquema = new EntitySchema({
       type: "int",
       nullable: false,
     },
+    publicacionId: { //se lo agregue para poder obtener el id de la 
+      type: "int", //publicacion en el correo de confimacion de arriendo
+      nullable: false, 
+    },
     status: {
       type: "enum",
       enum: ["PENDING", "CONFIRMED", "COMPLETED"],
@@ -55,6 +59,14 @@ const ArriendoEsquema = new EntitySchema({
       target: "User",
       joinColumn: {
         name: "estudianteId",
+      },
+      nullable: false,
+    },
+    publicacion: {
+      type: "many-to-one",
+      target: "Publicacion", 
+      joinColumn: {
+        name: "publicacionId",
       },
       nullable: false,
     },

@@ -1,6 +1,7 @@
 "use strict";
 import User from "../entity/user.entity.js";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { ACCESS_TOKEN_SECRET } from "../config/configEnv.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
@@ -14,6 +15,8 @@ import {
   removeStoredFiles,
   removeUploadedTempFiles,
 } from "../helpers/upload.helper.js";
+
+const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 function createErrorMessage(dataInfo, message) {
   return {
@@ -31,6 +34,15 @@ export function getLoginAccessError(userFound) {
   }
 
   return null;
+}
+
+export function createEmailVerificationData() {
+  return {
+    emailVerificacionExpires: new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS),
+    emailVerificacionToken: crypto.randomBytes(32).toString("hex"),
+    emailVerificado: false,
+    emailVerificadoEn: null,
+  };
 }
 
 export async function loginService(user) {
@@ -83,6 +95,17 @@ export async function loginService(user) {
       )];
     }
 
+    if (
+      userFound.rol !== "admin"
+      && userFound.estadoVerificacion === "aprobado"
+      && userFound.emailVerificado === false
+    ) {
+      return [null, createErrorMessage(
+        "emailVerificado",
+        "Tu cuenta fue aprobada, pero debes confirmar tu correo antes de iniciar sesion.",
+      )];
+    }
+
     const payload = {
       id: userFound.id,
       nombreCompleto: userFound.nombreCompleto,
@@ -90,6 +113,7 @@ export async function loginService(user) {
       rut: userFound.rut,
       rol: userFound.rol,
       estadoVerificacion: userFound.estadoVerificacion,
+      emailVerificado: userFound.emailVerificado,
     };
 
     const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, {
@@ -176,6 +200,8 @@ export async function registerService(user, uploadedFiles = {}) {
     const newUser = userRepository.create({
       carrera,
       email,
+      emailVerificado: false,
+      emailVerificadoEn: null,
       estadoVerificacion: "pendiente",
       nombreCompleto,
       password: await encryptPassword(password),
@@ -255,6 +281,49 @@ export async function registerService(user, uploadedFiles = {}) {
     if (!uploadsCommitted) {
       await removeUploadedTempFiles(uploadedFiles);
     }
+  }
+}
+
+export async function confirmEmailService(token) {
+  try {
+    const normalizedToken = String(token || "").trim();
+
+    if (!normalizedToken) {
+      return [null, "El enlace de confirmacion es invalido"];
+    }
+
+    const userRepository = AppDataSource.getRepository(User);
+    const userFound = await userRepository.findOne({
+      where: { emailVerificacionToken: normalizedToken },
+    });
+
+    if (!userFound) {
+      return [null, "El enlace de confirmacion es invalido o ya fue utilizado"];
+    }
+
+    if (
+      userFound.emailVerificacionExpires
+      && userFound.emailVerificacionExpires < new Date()
+    ) {
+      return [null, "El enlace de confirmacion ha expirado"];
+    }
+
+    userFound.emailVerificado = true;
+    userFound.emailVerificadoEn = new Date();
+    userFound.emailVerificacionToken = null;
+    userFound.emailVerificacionExpires = null;
+    userFound.updatedAt = new Date();
+
+    await userRepository.save(userFound);
+
+    return [{
+      email: userFound.email,
+      emailVerificado: userFound.emailVerificado,
+      message: "Correo confirmado correctamente. Ya puedes iniciar sesion.",
+    }, null];
+  } catch (error) {
+    console.error("Error al confirmar correo:", error);
+    return [null, "Error interno del servidor"];
   }
 }
 

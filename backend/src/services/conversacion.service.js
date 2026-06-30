@@ -10,7 +10,7 @@ export async function buscarConversacionPorPublicacionYEstudiante(id_publicacion
 
     const conversacion = await repositorioConversacion.findOne({
       where: {
-        publicacion: { id_publicacion },
+        publicacion: { id: id_publicacion },
         estudiante: { id: id_estudiante },
       },
       relations: ["publicacion", "estudiante", "arrendador"],
@@ -31,8 +31,8 @@ export async function crearConversacion(id_publicacion, id_estudiante) {
       const repositorioConversacion = manager.getRepository(Conversacion);
 
       const publicacion = await repositorioPublicacion.findOne({
-        where: { id_publicacion },
-        relations: ["owner"],
+        where: { id: id_publicacion },
+        relations: ["arrendador"],
       });
 
       if (!publicacion) return [null, "Publicación no encontrada"];
@@ -41,7 +41,7 @@ export async function crearConversacion(id_publicacion, id_estudiante) {
 
       if (!estudiante) return [null, "Estudiante no encontrado"];
 
-      const arrendador = publicacion.owner;
+      const arrendador = publicacion.arrendador;
 
       const nuevaConversacion = repositorioConversacion.create({
         publicacion,
@@ -51,7 +51,7 @@ export async function crearConversacion(id_publicacion, id_estudiante) {
       });
 
       const conversacionCreada = await repositorioConversacion.save(nuevaConversacion);
-      await repositorioPublicacion.increment({ id_publicacion }, "contadorConversaciones", 1);
+      await repositorioPublicacion.increment({ id: id_publicacion }, "contadorConversaciones", 1);
 
       return [conversacionCreada, null];
     });

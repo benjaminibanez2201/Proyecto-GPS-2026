@@ -64,7 +64,6 @@ function PageRoot() {
       items: [
         { label: 'Mis Publicaciones', icon: Home, to: '/mis-publicaciones' },
         { label: 'Mensajes', icon: MessageCircle, disabled: true },
-        { label: 'Mis Favoritos', icon: Heart, to: '/favoritos' },
         { label: 'Historial de Arriendos', icon: History, to: '/historial' },
         { label: 'Mi Perfil', icon: User, to: '/profile' },
       ],

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Heart } from 'lucide-react';
 import '../styles/publicacionCard.css';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate} from 'react-router-dom';
 
 export default function PublicacionCard({ 
   publicacion, 
@@ -12,9 +13,7 @@ export default function PublicacionCard({
   compareDisabled = false,
 }) {
   const navigate = useNavigate();
-  const location = useLocation();
   
-  const esPaginaFavoritos = location.pathname.includes('/favoritos');
   const idPublicacion = publicacion?.id || publicacion?._id;
 
   const [esFavorito, setEsFavorito] = useState(false);
@@ -79,27 +78,37 @@ export default function PublicacionCard({
       <div className="publicacion-image-container" style={{ position: 'relative' }}>
         <img src={imagenPrincipal} alt={titulo} className="publicacion-image" />
         
-        {esPaginaFavoritos && (
-          <button 
-            onClick={toggleFavorito}
-            disabled={procesando}
-            style={{ 
-              cursor: procesando ? 'wait' : 'pointer',
-              fontSize: '20px', 
-              background: 'none', 
-              border: 'none', 
-              position: 'absolute', 
-              top: '10px', 
-              right: '10px',
-              zIndex: 10,
-              transition: 'transform 0.2s ease',
-              transform: esFavorito ? 'scale(1.1)' : 'scale(1)',
-              opacity: procesando ? 0.7 : 1
-            }}
-          >
-            {esFavorito ? '❤️' : '🤍'}
-          </button>
-        )}
+        <button 
+          onClick={toggleFavorito}
+          disabled={procesando}
+          title={esFavorito ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
+          style={{ 
+            position: 'absolute', 
+            top: '12px', 
+            right: '12px',
+            zIndex: 10,
+            background: 'rgba(255, 255, 255, 0.9)', 
+            border: 'none', 
+            borderRadius: '50%',
+            width: '36px',
+            height: '36px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: procesando ? 'wait' : 'pointer',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+            transition: 'all 0.2s ease',
+            transform: esFavorito ? 'scale(1.05)' : 'scale(1)',
+            opacity: procesando ? 0.7 : 1
+          }}
+        >
+          <Heart 
+            size={20} 
+            fill={esFavorito ? "#dc2626" : "none"} 
+            color={esFavorito ? "#dc2626" : "#64748b"} 
+            strokeWidth={2}
+          />
+        </button>
       </div>
 
       <div className="publicacion-info">

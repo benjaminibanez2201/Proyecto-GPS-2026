@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { usePublicaciones } from '../hooks/publicaciones/usePublicacion';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import ComparadorPublicacionesModal from '../components/ComparadorPublicacionesModal';
 import PublicacionCard from '../components/PublicacionCard';
 import { Search } from 'lucide-react'; 
+import PublicationMap from '@components/PublicationMap';
 import Swal from 'sweetalert2';
 import '@styles/basePublicaciones.css';
 
@@ -16,6 +17,7 @@ export default function BuscarArriendos() {
   const { favoritos, handleAgregarFavorito, handleEliminarFavorito } = useFavoritos();
   const [comparacion, setComparacion] = useState([]);
   const [comparadorAbierto, setComparadorAbierto] = useState(false);
+  const [mostrarMapa, setMostrarMapa] = useState(false);
   
   const [filtros, setFiltros] = useState({
     titulo: "",
@@ -27,6 +29,7 @@ export default function BuscarArriendos() {
 
   const precioMinimoBase = 100000;
   const precioMaximoBase = 1000000;
+  const publicacionesVisibles = useMemo(() => publicaciones, [publicaciones]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -75,11 +78,13 @@ export default function BuscarArriendos() {
       parametrosConsulta.direccionOrden = filtros.direccionOrden;
     }
 
+    setMostrarMapa(Object.keys(parametrosConsulta).length > 0);
     cargarPublicaciones(parametrosConsulta);
   };
 
   const limpiarFiltros = () => {
     setFiltros({ titulo: "", tipoInmueble: "", precioMin: "", precioMax: "", direccionOrden: "" });
+    setMostrarMapa(false);
     cargarPublicaciones({}); 
   };
 
@@ -297,26 +302,30 @@ export default function BuscarArriendos() {
       {error && <p className="error-text" style={{ textAlign: 'center' }}> Error: {error}</p>}
 
       {!cargando && !error && (
-        <div className="publicaciones-grid">
-          {publicaciones.length > 0 ? (
-            publicaciones.map((pub) => (
-              <PublicacionCard 
-                key={pub.id} 
-                publicacion={pub}
-                favoritos={favoritos}
-                handleAgregarFavorito={handleAgregarFavorito}
-                handleEliminarFavorito={handleEliminarFavorito}
-                selectedForCompare={comparacion.some((item) => getPublicacionId(item) === getPublicacionId(pub))}
-                onToggleCompare={toggleComparacion}
-                compareDisabled={comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === getPublicacionId(pub))}
-              />
-            ))
-          ) : (
-            <p className="empty-text" style={{ textAlign: 'center', width: '100%', gridColumn: '1 / -1', marginTop: '20px', color: '#64748b' }}>
-              No encontramos arriendos con esos filtros.
-            </p>
-          )}
-        </div>
+        <>
+          {mostrarMapa && <PublicationMap publicaciones={publicacionesVisibles} />}
+
+          <div className="publicaciones-grid">
+            {publicacionesVisibles.length > 0 ? (
+              publicacionesVisibles.map((pub) => (
+                <PublicacionCard 
+                  key={pub.id} 
+                  publicacion={pub}
+                  favoritos={favoritos}
+                  handleAgregarFavorito={handleAgregarFavorito}
+                  handleEliminarFavorito={handleEliminarFavorito}
+                  selectedForCompare={comparacion.some((item) => getPublicacionId(item) === getPublicacionId(pub))}
+                  onToggleCompare={toggleComparacion}
+                  compareDisabled={comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === getPublicacionId(pub))}
+                />
+              ))
+            ) : (
+              <p className="empty-text" style={{ textAlign: 'center', width: '100%', gridColumn: '1 / -1', marginTop: '20px' }}>
+                No encontramos arriendos con esos filtros.
+              </p>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

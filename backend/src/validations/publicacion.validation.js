@@ -47,8 +47,19 @@ export const publicacionBodyValidation = Joi.object({
       "array.min": "Debes agregar al menos una foto.",
     }),
   serviciosIncluidos: Joi.array()
-    .items(Joi.string())
+    .items(
+      Joi.string().valid("agua", "luz", "gas", "internet", "tv_cable", "calefaccion", "estacionamiento", "lavadora")
+    )
     .optional(),
+  distanciaCampus: Joi.number()
+    .integer()
+    .positive()
+    .allow(null)
+    .optional()
+    .messages({
+      "number.base": "La distancia al campus debe ser un número.",
+      "number.positive": "La distancia al campus debe ser positiva.",
+    }),
   reglasConvivencia: Joi.string()
     .max(1000)
     .optional()
@@ -141,13 +152,19 @@ export const publicacionUpdateValidation = Joi.object({
     "string.max": "La ubicación debe tener como máximo 255 caracteres.",
   }),
   fotos: Joi.array().items(Joi.string().uri()),
-  serviciosIncluidos: Joi.array().items(Joi.string()),
+  serviciosIncluidos: Joi.array().items(
+    Joi.string().valid("agua", "luz", "gas", "internet", "tv_cable", "calefaccion", "estacionamiento", "lavadora")
+  ),
+  distanciaCampus: Joi.number().integer().positive().allow(null).messages({
+    "number.base": "La distancia al campus debe ser un número.",
+    "number.positive": "La distancia al campus debe ser positiva.",
+  }),
   reglasConvivencia: Joi.string().max(1000).messages({
     "string.max": "Las reglas no pueden superar los 1000 caracteres.",
   }),
   estado: Joi.string().valid("activa", "inactiva"),
 })
-  .or("titulo", "tipoInmueble", "precioMensual", "ubicacion", "fotos", "serviciosIncluidos", "reglasConvivencia", "estado")
+  .or("titulo", "tipoInmueble", "precioMensual", "ubicacion", "fotos", "serviciosIncluidos", "distanciaCampus", "reglasConvivencia", "estado")
   .unknown(false)
   .messages({
     "object.unknown": "No se permiten propiedades adicionales.",
