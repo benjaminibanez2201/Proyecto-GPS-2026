@@ -17,3 +17,21 @@ export async function obtenerMisReportes() {
     return [null, error.response?.data?.message || 'Error al obtener tus reportes'];
   }
 }
+
+export async function obtenerPublicacionesReportadas() {
+  try {
+    const response = await axios.get('/reportes');
+    return [response.data.data ?? [], null];
+  } catch (error) {
+    return [null, error.response?.data?.message || 'Error al obtener publicaciones reportadas'];
+  }
+}
+
+export async function resolverPublicacionReportada(idPublicacion, data) {
+  try {
+    const response = await axios.patch(`/reportes/${idPublicacion}/review`, data);
+    return [response.data.data ?? response.data.message ?? null, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || 'Error al resolver reporte'];
+  }
+}

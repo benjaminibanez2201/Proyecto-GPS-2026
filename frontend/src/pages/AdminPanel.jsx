@@ -64,6 +64,7 @@ const AdminPanel = () => {
     const navigate = useNavigate();
 
     const goToUsers = () => navigate('/admin/users');
+    const goToReportes = () => navigate('/admin/reportes');
 
     return (
         <div style={styles.page}>
@@ -115,6 +116,18 @@ const AdminPanel = () => {
                                             style={styles.listUsersButton}
                                         >
                                             Listar usuarios
+                                        </button>
+                                    </div>
+                                )}
+                                {card.title === 'Publicaciones reportadas' && (
+                                    <div style={styles.cardActionBlock}>
+                                        <p style={styles.cardActionLabel}>Opciones</p>
+                                        <button
+                                            type="button"
+                                            onClick={goToReportes}
+                                            style={styles.listUsersButton}
+                                        >
+                                            Revisar reportes
                                         </button>
                                     </div>
                                 )}
