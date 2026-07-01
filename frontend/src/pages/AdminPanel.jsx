@@ -1,9 +1,57 @@
+import { useEffect, useMemo, useState } from 'react';
 import { BadgeCheck, ClipboardList, FlagTriangleRight, ShieldCheck, Users as UsersIcon } from 'lucide-react';
 import { useAuth } from '@context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { obtenerPublicacionesReportadas } from '@services/reportes.service.js';
+import { obtenerUsuarios } from '@services/user.service.js';
+
+const normalizeText = (value) => String(value || '').trim().toLowerCase();
+
+const formatDate = (value) => {
+    if (!value) return 'Sin fecha registrada';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Sin fecha registrada';
+
+    return new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' }).format(date);
+};
+
+const buildRecentUsers = (users) => users
+    .filter((item) => normalizeText(item.rol) !== 'admin')
+    .sort((a, b) => new Date(b.createdAtRaw || b.createdAt || 0) - new Date(a.createdAtRaw || a.createdAt || 0))
+    .slice(0, 2)
+    .map((item) => ({
+        title: item.nombreCompleto || item.email || 'Usuario sin nombre',
+        detail: `${item.rol || 'Usuario'} - Registro: ${formatDate(item.createdAtRaw || item.createdAt)}`,
+        badge: item.estadoVerificacion || 'Pendiente'
+    }));
+
+const buildPendingDocuments = (users) => users
+    .filter((item) => normalizeText(item.estadoVerificacion || 'pendiente') === 'pendiente')
+    .slice(0, 2)
+    .map((item) => ({
+        title: item.nombreCompleto || item.email || 'Usuario sin nombre',
+        detail: `${item.rol || 'Usuario'} pendiente de verificacion`,
+        badge: 'Pendiente'
+    }));
+
+const buildReportedPosts = (reportes) => reportes
+    .slice(0, 2)
+    .map((item) => ({
+        title: item.publicacion?.titulo || 'Publicacion sin titulo',
+        detail: `${item.cantidadReportes || 0} reporte(s) - ${item.publicacion?.estado || 'sin estado'}`,
+        badge: item.cantidadReportes > 1 ? 'Alerta' : 'Revision'
+    }));
+
+const fallbackItems = (message) => [{ title: message, detail: 'No hay datos para mostrar', badge: 'OK' }];
 
 const AdminPanel = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const [users, setUsers] = useState([]);
+    const [reportes, setReportes] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     const colores = {
         principal: '#008080',
@@ -13,55 +61,78 @@ const AdminPanel = () => {
         grisSuave: '#f4f6f6'
     };
 
-    const stats = [
-        {
-            label: 'Usuarios por revisar',
-            value: '7',
-            detail: '3 con verificacion pendiente',
-            icon: UsersIcon
-        },
-        {
-            label: 'Documentos en cola',
-            value: '5',
-            detail: '2 requieren revision hoy',
-            icon: ShieldCheck
-        },
-        {
-            label: 'Reportes activos',
-            value: '4',
-            detail: '1 publicacion bloqueada',
-            icon: FlagTriangleRight
-        }
-    ];
+    useEffect(() => {
+        const cargarDatos = async () => {
+            setLoading(true);
+            setError('');
 
-    const cards = [
-        {
-            title: 'Gestion de usuarios',
-            subtitle: 'Listar usuarios, revisar estados y bloquear cuentas.',
-            items: [
-                { title: 'Usuario nuevo en revision', detail: 'Solicitud enviada hace 1 hora', badge: 'Nuevo' },
-                { title: 'Cuenta reportada', detail: 'Bloqueo sugerido', badge: 'Alerta' }
-            ]
-        },
-        {
-            title: 'Documentos de verificacion',
-            subtitle: 'Revisar documentos subidos por los usuarios.',
-            items: [
-                { title: 'Cedula pendiente', detail: 'Arrendador en espera', badge: 'Pendiente' },
-                { title: 'Contrato adjunto', detail: 'Validacion necesaria', badge: 'Revision' }
-            ]
-        },
-        {
-            title: 'Publicaciones reportadas',
-            subtitle: 'Desactivar publicaciones con reportes activos.',
-            items: [
-                { title: 'Depto con 3 reportes', detail: 'Requiere evaluacion', badge: 'Critico' },
-                { title: 'Publicacion en disputa', detail: 'Revision de contenido', badge: 'En curso' }
-            ]
-        }
-    ];
+            const [[usuariosData, usuariosError], [reportesData, reportesError]] = await Promise.all([
+                obtenerUsuarios(),
+                obtenerPublicacionesReportadas()
+            ]);
 
-    const navigate = useNavigate();
+            setUsers(Array.isArray(usuariosData) ? usuariosData : []);
+            setReportes(Array.isArray(reportesData) ? reportesData : []);
+
+            const errors = [usuariosError, reportesError].filter(Boolean);
+            setError(errors.length ? errors.join(' ') : '');
+            setLoading(false);
+        };
+
+        cargarDatos();
+    }, []);
+
+    const dashboard = useMemo(() => {
+        const verifiableUsers = users.filter((item) => ['estudiante', 'arrendador'].includes(normalizeText(item.rol)));
+        const pendingUsers = verifiableUsers.filter((item) => normalizeText(item.estadoVerificacion || 'pendiente') === 'pendiente');
+        const approvedUsers = verifiableUsers.filter((item) => normalizeText(item.estadoVerificacion) === 'aprobado');
+        const totalReportes = reportes.reduce((sum, item) => sum + Number(item.cantidadReportes || 0), 0);
+        const inactivasReportadas = reportes.filter((item) => normalizeText(item.publicacion?.estado) === 'inactiva').length;
+
+        const usersList = buildRecentUsers(users);
+        const docsList = buildPendingDocuments(verifiableUsers);
+        const reportsList = buildReportedPosts(reportes);
+
+        return {
+            stats: [
+                {
+                    label: 'Usuarios por revisar',
+                    value: pendingUsers.length,
+                    detail: `${approvedUsers.length} cuentas verificadas`,
+                    icon: UsersIcon
+                },
+                {
+                    label: 'Usuarios registrados',
+                    value: users.length,
+                    detail: `${verifiableUsers.length} cuentas verificables`,
+                    icon: ShieldCheck
+                },
+                {
+                    label: 'Reportes activos',
+                    value: totalReportes,
+                    detail: `${inactivasReportadas} publicacion(es) inactiva(s)`,
+                    icon: FlagTriangleRight
+                }
+            ],
+            cards: [
+                {
+                    title: 'Gestion de usuarios',
+                    subtitle: `${users.length} usuario(s) registrados en el sistema.`,
+                    items: usersList.length ? usersList : fallbackItems('Sin usuarios registrados')
+                },
+                {
+                    title: 'Documentos de verificacion',
+                    subtitle: `${pendingUsers.length} cuenta(s) esperan revision administrativa.`,
+                    items: docsList.length ? docsList : fallbackItems('Sin verificaciones pendientes')
+                },
+                {
+                    title: 'Publicaciones reportadas',
+                    subtitle: `${reportes.length} publicacion(es) con reportes pendientes.`,
+                    items: reportsList.length ? reportsList : fallbackItems('Sin reportes pendientes')
+                }
+            ]
+        };
+    }, [reportes, users]);
 
     const goToUsers = () => navigate('/admin/users');
     const goToReportes = () => navigate('/admin/reportes');
@@ -81,8 +152,11 @@ const AdminPanel = () => {
                 </div>
             </section>
 
+            {loading && <p style={styles.notice}>Cargando datos reales del panel...</p>}
+            {!loading && error && <p style={{ ...styles.notice, ...styles.error }}>{error}</p>}
+
             <section style={styles.gridStats}>
-                {stats.map((stat) => {
+                {dashboard.stats.map((stat) => {
                     const Icon = stat.icon;
                     return (
                         <article key={stat.label} style={styles.statCard}>
@@ -100,7 +174,7 @@ const AdminPanel = () => {
             </section>
 
             <section style={styles.contentGrid}>
-                {cards.map((card) => (
+                {dashboard.cards.map((card) => (
                     <article key={card.title} style={styles.card}>
                         <header style={styles.cardHeader}>
                             <div>
@@ -139,7 +213,7 @@ const AdminPanel = () => {
 
                         <div style={styles.cardList}>
                             {card.items.map((item) => (
-                                <div key={item.title} style={styles.listItem}>
+                                <div key={`${card.title}-${item.title}-${item.badge}`} style={styles.listItem}>
                                     <div>
                                         <p style={styles.listTitle}>{item.title}</p>
                                         <p style={styles.listDetail}>{item.detail}</p>
@@ -206,6 +280,21 @@ const styles = {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: '16px'
+    },
+    notice: {
+        margin: 0,
+        padding: '12px 14px',
+        borderRadius: '12px',
+        backgroundColor: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        color: '#475569',
+        fontSize: '14px',
+        fontWeight: '700'
+    },
+    error: {
+        color: '#b91c1c',
+        backgroundColor: '#fef2f2',
+        borderColor: '#fecaca'
     },
     statCard: {
         display: 'flex',
