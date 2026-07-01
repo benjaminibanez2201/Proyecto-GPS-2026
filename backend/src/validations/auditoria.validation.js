@@ -2,13 +2,11 @@
 import Joi from "joi";
 
 export const auditoriaQueryValidation = Joi.object({
-  adminId: Joi.number()
-    .integer()
-    .positive()
+  adminNombre: Joi.string()
+    .max(255)
     .optional()
     .messages({
-      "number.base": "El ID del administrador debe ser un número.",
-      "number.positive": "El ID del administrador debe ser positivo.",
+      "string.max": "El nombre del administrador no puede superar los 255 caracteres.",
     }),
   accion: Joi.string()
     .max(50)

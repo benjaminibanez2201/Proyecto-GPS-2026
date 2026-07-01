@@ -6,6 +6,7 @@ import indexRoutes from "./routes/index.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import mensajeRoutes from "./routes/mensaje.routes.js";
+import publicacionEstadisticasRoutes from "./routes/publicacion.estadisticas.routes.js";
 import session from "express-session";
 import passport from "passport";
 import express, { json, urlencoded } from "express";
@@ -67,6 +68,7 @@ async function setupServer() {
     app.use("/auth", authRoutes);
     app.use("/user", userRoutes);
     app.use("/mensajes", mensajeRoutes);
+    app.use("/api/publicaciones", publicacionEstadisticasRoutes);
 
     app.listen(PORT, () => {
       console.log(`=> Servidor corriendo en ${HOST}:${PORT}/api`);

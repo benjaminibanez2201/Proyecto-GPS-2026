@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth, AuthProvider } from '@context/AuthContext';
 import { obtenerCantidadNotificacionesNoLeidas } from '@services/notificacion.service.js';
+import { obtenerConversaciones } from '@services/mensaje.service.js';
 import slidebaar from '../assets/slidebaar.png';
 import miLogo from '../assets/miLogo.png';
 
@@ -37,6 +38,7 @@ function PageRoot() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
 
   const colores = {
     principal: '#008080',
@@ -53,7 +55,7 @@ function PageRoot() {
       items: [
         { label: 'Buscar Arriendos', icon: Home, to: '/buscar' },
         { label: 'Mis Favoritos', icon: Heart, to: '/favoritos' },
-        { label: 'Mensajes', icon: MessageCircle, disabled: true },
+        { label: 'Mensajes', icon: MessageCircle, to: '/mensajes' },
         { label: 'Historial de Arriendos', icon: History, to: '/historial' },
         { label: 'Mi Perfil', icon: User, to: '/profile' }, 
       ],
@@ -63,7 +65,7 @@ function PageRoot() {
       subtitle: 'Gestiona tus propiedades y responde interesados.',
       items: [
         { label: 'Mis Publicaciones', icon: Home, to: '/mis-publicaciones' },
-        { label: 'Mensajes', icon: MessageCircle, disabled: true },
+        { label: 'Mensajes', icon: MessageCircle, to: '/mensajes' },
         { label: 'Historial de Arriendos', icon: History, to: '/historial' },
         { label: 'Mi Perfil', icon: User, to: '/profile' },
       ],
@@ -81,6 +83,7 @@ function PageRoot() {
   };
 
   const menu = menus[normalizedRole] || menus.estudiante;
+  const unreadMessagesBadge = menu.items.some((item) => item.label === 'Mensajes') ? unreadMessagesCount : 0;
   const handleBannerClick = () => {
     navigate(normalizedRole === 'administrador' ? '/admin' : '/home');
   };
@@ -113,6 +116,7 @@ function PageRoot() {
   const renderMenuItem = (item) => {
     const Icon = item.icon;
     const hoverKey = item.label;
+    const messageBadgeCount = item.label === 'Mensajes' ? unreadMessagesBadge : 0;
 
     if (item.disabled) {
       return (
@@ -144,7 +148,34 @@ function PageRoot() {
         })}
         end
       >
-        <Icon size={20} strokeWidth={2} />
+        <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={20} strokeWidth={2} />
+          {messageBadgeCount > 0 && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '-8px',
+                right: '-10px',
+                minWidth: '18px',
+                height: '18px',
+                padding: '0 5px',
+                borderRadius: '999px',
+                backgroundColor: '#ef4444',
+                color: '#ffffff',
+                fontSize: '11px',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid rgba(0, 128, 128, 0.95)',
+                lineHeight: 1,
+              }}
+              aria-label={`Mensajes no leídos: ${messageBadgeCount}`}
+            >
+              {messageBadgeCount > 99 ? '99+' : messageBadgeCount}
+            </span>
+          )}
+        </span>
         {!isSidebarCollapsed && <span>{item.label}</span>}
       </NavLink>
     );
@@ -162,9 +193,27 @@ function PageRoot() {
     }
   }, []);
 
+  const refreshUnreadMessagesCount = useCallback(async () => {
+    const [conversations, errorConversations] = await obtenerConversaciones();
+    if (errorConversations) return;
+
+    const count = Array.isArray(conversations)
+      ? conversations.filter((conversation) => {
+        const unreadForRole = normalizedRole === 'arrendador'
+          ? Number(conversation?.noLeidosArrendador || 0)
+          : Number(conversation?.noLeidosEstudiante || 0);
+
+        return unreadForRole > 0;
+      }).length
+      : 0;
+
+    setUnreadMessagesCount(count);
+  }, [normalizedRole]);
+
   useEffect(() => {
     refreshUnreadCount();
-  }, [refreshUnreadCount, location.pathname]);
+    refreshUnreadMessagesCount();
+  }, [refreshUnreadCount, refreshUnreadMessagesCount, location.pathname]);
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: 'sans-serif' }}>

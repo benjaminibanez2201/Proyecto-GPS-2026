@@ -10,6 +10,16 @@ export async function listarArriendos() {
   }
 }
 
+// Crear arriendo
+export async function createArriendo(data) {
+  try {
+    const response = await axios.post('/rentals', data);
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || "Error al crear arriendo"];
+  }
+}
+
 // Confirmar arriendo
 export async function confirmarArriendo(id) {
   try {
@@ -17,6 +27,16 @@ export async function confirmarArriendo(id) {
     return [response.data.data, null];
   } catch (error) {
     return [null, error.response?.data?.message || "Error al confirmar arriendo"];
+  }
+}
+
+// Anular arriendo
+export async function anularArriendo(id) {
+  try {
+    const response = await axios.post(`/rentals/${id}/cancel`);
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || "Error al anular arriendo"];
   }
 }
 

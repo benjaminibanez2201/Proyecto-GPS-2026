@@ -26,8 +26,10 @@ export async function getAuditoriaService(filtros = {}) {
         "admin.email",
       ]);
 
-    if (filtros.adminId) {
-      query.andWhere("admin.id = :adminId", { adminId: filtros.adminId });
+    if (filtros.adminNombre) {
+      query.andWhere("LOWER(admin.nombreCompleto) LIKE LOWER(:adminNombre)", {
+        adminNombre: `%${filtros.adminNombre}%`,
+      });
     }
 
     if (filtros.accion) {

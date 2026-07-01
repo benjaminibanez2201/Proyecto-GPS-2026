@@ -38,6 +38,24 @@ export const publicacionBodyValidation = Joi.object({
       "string.min": "La ubicación debe tener como mínimo 5 caracteres.",
       "string.max": "La ubicación debe tener como máximo 255 caracteres.",
     }),
+  latitud: Joi.number()
+    .min(-90)
+    .max(90)
+    .optional()
+    .messages({
+      "number.base": "La latitud debe ser un número.",
+      "number.min": "La latitud debe estar entre -90 y 90.",
+      "number.max": "La latitud debe estar entre -90 y 90.",
+    }),
+  longitud: Joi.number()
+    .min(-180)
+    .max(180)
+    .optional()
+    .messages({
+      "number.base": "La longitud debe ser un número.",
+      "number.min": "La longitud debe estar entre -180 y 180.",
+      "number.max": "La longitud debe estar entre -180 y 180.",
+    }),
   fotos: Joi.array()
     .items(Joi.string().uri())
     .min(1)
@@ -65,6 +83,18 @@ export const publicacionBodyValidation = Joi.object({
     .optional()
     .messages({
       "string.max": "Las reglas de convivencia no pueden superar los 1000 caracteres.",
+    }),
+  rules: Joi.string()
+    .max(1000)
+    .optional()
+    .messages({
+      "string.max": "Las reglas de convivencia no pueden superar los 1000 caracteres.",
+    }),
+  estado: Joi.string()
+    .valid("activa", "arrendada")
+    .optional()
+    .messages({
+      "any.only": "El estado debe ser activa o arrendada.",
     }),
 }).unknown(false).messages({
   "object.unknown": "No se permiten propiedades adicionales.",
@@ -176,6 +206,16 @@ export const publicacionUpdateValidation = Joi.object({
     "string.min": "La ubicación debe tener como mínimo 5 caracteres.",
     "string.max": "La ubicación debe tener como máximo 255 caracteres.",
   }),
+  latitud: Joi.number().min(-90).max(90).messages({
+    "number.base": "La latitud debe ser un número.",
+    "number.min": "La latitud debe estar entre -90 y 90.",
+    "number.max": "La latitud debe estar entre -90 y 90.",
+  }),
+  longitud: Joi.number().min(-180).max(180).messages({
+    "number.base": "La longitud debe ser un número.",
+    "number.min": "La longitud debe estar entre -180 y 180.",
+    "number.max": "La longitud debe estar entre -180 y 180.",
+  }),
   fotos: Joi.array().items(Joi.string().uri()),
   serviciosIncluidos: Joi.array().items(
     Joi.string().valid("agua", "luz", "gas", "internet", "tv_cable", "calefaccion", "estacionamiento", "lavadora")
@@ -187,9 +227,19 @@ export const publicacionUpdateValidation = Joi.object({
   reglasConvivencia: Joi.string().max(1000).messages({
     "string.max": "Las reglas no pueden superar los 1000 caracteres.",
   }),
-  estado: Joi.string().valid("activa", "inactiva"),
+  estado: Joi.string().valid("activa", "arrendada"),
 })
-  .or("titulo", "tipoInmueble", "precioMensual", "ubicacion", "fotos", "serviciosIncluidos", "distanciaCampus", "reglasConvivencia", "estado")
+  .or(
+    "titulo", 
+    "tipoInmueble",
+     "precioMensual", 
+     "ubicacion", 
+     "fotos", 
+     "serviciosIncluidos",
+      "distanciaCampus",
+      "reglasConvivencia",
+      "estado"
+    )
   .unknown(false)
   .messages({
     "object.unknown": "No se permiten propiedades adicionales.",

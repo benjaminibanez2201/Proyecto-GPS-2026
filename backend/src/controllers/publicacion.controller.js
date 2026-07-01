@@ -7,6 +7,7 @@ import {
   obtenerPublicacionesArrendadorService,
   updatePublicacionService 
 } from "../services/publicacion.service.js";
+import { incrementarVisualizacionesPublicacionServicio } from "../services/publicacion.estadisticas.service.js";
 import { 
   publicacionBodyValidation,
   publicacionIdValidation,
@@ -103,6 +104,10 @@ export async function getPublicacionById(req, res) {
     const [publicacion, error] = await getPublicacionDetalleService(paramsValidados.id);
     if (error) {
       return handleErrorClient(res, 404, "Publicación no encontrada", error);
+    }
+
+    if (publicacion?.arrendador?.id && Number(publicacion.arrendador.id) !== Number(req.user.id)) {
+      await incrementarVisualizacionesPublicacionServicio(paramsValidados.id);
     }
 
     handleSuccess(res, 200, "Detalle de la publicación obtenido", publicacion);

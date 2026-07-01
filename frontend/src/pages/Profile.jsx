@@ -9,7 +9,7 @@ import {
   verifyPassword,
 } from '@services/user.service.js';
 import { useAuth } from '@context/AuthContext';
-import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight, Image, GraduationCap, BookOpen, Mail, Lock, Phone } from 'lucide-react'; 
+import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight, FlagTriangleRight, Image, GraduationCap, BookOpen, Mail, Lock, Phone } from 'lucide-react'; 
 import Swal from 'sweetalert2';
 
 const accent = '#0f766e';
@@ -341,6 +341,26 @@ const Profile = () => {
 
       {!editMode && (
         <section style={styles.card}>
+          <div style={styles.reportsCard}>
+            <div style={styles.reportsIconWrap}>
+              <FlagTriangleRight size={24} strokeWidth={2.1} />
+            </div>
+            <div style={styles.reviewsCopy}>
+              <h3 style={styles.reviewsTitle}>Mis reportes</h3>
+              <p style={styles.reviewsText}>
+                Revisa las denuncias que has enviado desde el detalle de una publicación y sigue su estado.
+              </p>
+            </div>
+            <button type="button" onClick={() => navigate('/profile/reportes')} style={styles.reviewsButton}>
+              Ver mis reportes
+              <ChevronRight size={16} strokeWidth={2.4} />
+            </button>
+          </div>
+        </section>
+      )}
+
+      {!editMode && (
+        <section style={styles.card}>
           <div style={styles.reviewsCard}>
             <div style={styles.reviewsIconWrap}>
               <Star size={24} strokeWidth={2.1} />
@@ -469,6 +489,24 @@ const styles = {
     justifyContent: 'space-between',
     gap: '16px',
     flexWrap: 'wrap',
+  },
+  reportsCard: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '16px',
+    flexWrap: 'wrap',
+  },
+  reportsIconWrap: {
+    width: '58px',
+    height: '58px',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff4d6',
+    color: '#b08900',
+    flexShrink: 0,
   },
   reviewsIconWrap: {
     width: '58px',

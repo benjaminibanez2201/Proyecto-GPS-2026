@@ -29,6 +29,18 @@ const PublicacionSchema = new EntitySchema({
       length: 255,
       nullable: false,
     },
+    latitud: {
+      type: "numeric",
+      precision: 10,
+      scale: 8,
+      nullable: true,
+    },
+    longitud: {
+      type: "numeric",
+      precision: 10,
+      scale: 8,
+      nullable: true,
+    },
     fotos: {
       type: "simple-array",
       nullable: true,
@@ -74,7 +86,7 @@ const PublicacionSchema = new EntitySchema({
     },
     estado: {
       type: "enum",
-      enum: ["activa", "inactiva"],
+      enum: ["activa", "arrendada", "disponible"],
       default: "activa",
       nullable: false,
     },
