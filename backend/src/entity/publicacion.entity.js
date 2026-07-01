@@ -70,7 +70,7 @@ const PublicacionSchema = new EntitySchema({
     },
     estado: {
       type: "enum",
-      enum: ["activa", "inactiva"],
+      enum: ["activa", "arrendada", "disponible"],
       default: "activa",
       nullable: false,
     },

@@ -23,7 +23,7 @@ export async function createPublicacionService(arrendadorId, body) {
       longitud: coordenadas?.longitud ?? null,
       fotos: body.fotos,
       serviciosIncluidos: body.serviciosIncluidos || [],
-      reglasConvivencia: body.reglasConvivencia || null,
+      reglasConvivencia: body.reglasConvivencia ?? body.rules ?? null,
       arrendador: { id: arrendadorId },
     });
 
@@ -43,7 +43,7 @@ export async function getPublicacionesService(filtros) {
     const { precioMin, precioMax, tipoInmueble, ordenarPor, direccionOrden, pagina } = filtros;
 
     const query = publicacionRepository.createQueryBuilder("publicacion")
-      .where("publicacion.estado = :estado", { estado: "activa" });
+      .where("publicacion.estado IN (:...estados)", { estados: ["activa", "arrendada"] });
 
     if (precioMin) {
       query.andWhere("publicacion.precioMensual >= :precioMin", { precioMin: parseInt(precioMin) });
@@ -104,7 +104,7 @@ export async function getPublicacionDetalleService(id) {
       .leftJoin("publicacion.arrendador", "arrendador")
       .addSelect([
         "arrendador.id",
-        "arrendador.nombreCompleto", 
+        "arrendador.nombreCompleto",
         "arrendador.email",
         "arrendador.fotoPerfil",
         "arrendador.telefono",
@@ -112,7 +112,7 @@ export async function getPublicacionDetalleService(id) {
         "arrendador.reviewsCount",
       ])
       .where("publicacion.id = :id", { id: parseInt(id) })
-      .andWhere("publicacion.estado = :estado", { estado: "activa" })
+      .andWhere("publicacion.estado IN (:...estados)", { estados: ["activa", "arrendada"] })
       .getOne();
 
     if (!publicacion) {
