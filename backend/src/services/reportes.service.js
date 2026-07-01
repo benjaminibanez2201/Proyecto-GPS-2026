@@ -61,6 +61,33 @@ export async function listarPublicacionesReportadas() {
   }
 }
 
+export async function listarReportesDeUsuario(reporterId) {
+  try {
+    const repoReport = AppDataSource.getRepository(ReportePublicacion);
+
+    const reportes = await repoReport.find({
+      where: { reporter: { id: reporterId } },
+      relations: ["publicacion", "publicacion.arrendador"],
+      order: { createdAt: "DESC" },
+    });
+
+    const result = reportes.map((reporte) => ({
+      id: reporte.id,
+      motivo: reporte.motivo,
+      estado: reporte.estado,
+      accion: reporte.accion,
+      createdAt: reporte.createdAt,
+      resolvedAt: reporte.resolvedAt,
+      publicacion: reporte.publicacion,
+    }));
+
+    return [result, null];
+  } catch (error) {
+    console.error("Error listarReportesDeUsuario:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
 export async function obtenerDetalleReporte(reportId) {
   try {
     const repoReport = AppDataSource.getRepository(ReportePublicacion);
@@ -155,4 +182,4 @@ export async function resolverReporte(id_publicacion, administradorId, accion, o
   }
 }
 
-export default { crearReporte, listarPublicacionesReportadas, obtenerDetalleReporte, resolverReporte };
+export default { crearReporte, listarPublicacionesReportadas, listarReportesDeUsuario, obtenerDetalleReporte, resolverReporte };

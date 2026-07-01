@@ -2,6 +2,7 @@
 import {
   crearReporte,
   listarPublicacionesReportadas,
+  listarReportesDeUsuario,
   obtenerDetalleReporte,
   resolverReporte,
 } from "../services/reportes.service.js";
@@ -15,7 +16,7 @@ export async function crearReportePublicacion(req, res) {
 
     const [result, error] = await crearReporte(id_publicacion, reporterId, motivo);
     if (error) return handleErrorClient(res, 400, error);
-    return handleSuccess(res, 201, result);
+    return handleSuccess(res, 201, "Reporte creado correctamente", result);
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
@@ -25,7 +26,18 @@ export async function listarReportes(req, res) {
   try {
     const [result, error] = await listarPublicacionesReportadas();
     if (error) return handleErrorServer(res, 500, error);
-    return handleSuccess(res, 200, result);
+    return handleSuccess(res, 200, "Reportes obtenidos correctamente", result);
+  } catch (error) {
+    return handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function misReportes(req, res) {
+  try {
+    const reporterId = req.user.id;
+    const [result, error] = await listarReportesDeUsuario(reporterId);
+    if (error) return handleErrorServer(res, 500, error);
+    return handleSuccess(res, 200, "Mis reportes obtenidos correctamente", result);
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
@@ -36,7 +48,7 @@ export async function detalleReporte(req, res) {
     const { id } = req.params;
     const [result, error] = await obtenerDetalleReporte(Number(id));
     if (error) return handleErrorClient(res, 404, error);
-    return handleSuccess(res, 200, result);
+    return handleSuccess(res, 200, "Detalle del reporte obtenido correctamente", result);
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
@@ -57,4 +69,4 @@ export async function reviewReporte(req, res) {
   }
 }
 
-export default { crearReportePublicacion, listarReportes, detalleReporte, reviewReporte };
+export default { crearReportePublicacion, listarReportes, misReportes, detalleReporte, reviewReporte };
