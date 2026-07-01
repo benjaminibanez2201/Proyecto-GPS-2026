@@ -43,7 +43,7 @@ export async function getPublicacionesService(filtros) {
     const { precioMin, precioMax, tipoInmueble, ordenarPor, direccionOrden, pagina } = filtros;
 
     const query = publicacionRepository.createQueryBuilder("publicacion")
-      .where("publicacion.estado IN (:...estados)", { estados: ["activa", "arrendada"] });
+      .where("publicacion.estado IN (:...estados)", { estados: ["activa", "disponible"] });
 
     if (precioMin) {
       query.andWhere("publicacion.precioMensual >= :precioMin", { precioMin: parseInt(precioMin) });
@@ -112,7 +112,7 @@ export async function getPublicacionDetalleService(id) {
         "arrendador.reviewsCount",
       ])
       .where("publicacion.id = :id", { id: parseInt(id) })
-      .andWhere("publicacion.estado IN (:...estados)", { estados: ["activa", "arrendada"] })
+      .andWhere("publicacion.estado IN (:...estados)", { estados: ["activa", "disponible"] })
       .getOne();
 
     if (!publicacion) {
