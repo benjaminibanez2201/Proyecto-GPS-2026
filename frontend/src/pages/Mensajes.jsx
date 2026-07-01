@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, UserRound, Sparkles } from 'lucide-react';
+import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, UserRound, Sparkles, CheckCircle, Clock } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
 import {
@@ -9,6 +9,7 @@ import {
   obtenerDetalleConversacion,
   responderConversacion,
 } from '@services/mensaje.service.js';
+import { createArriendo, listarArriendos } from '@services/rentalsAndReviews.service.js';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
 import '@styles/mensajes.css';
 
@@ -95,6 +96,8 @@ export default function Mensajes() {
   const [error, setError] = useState('');
   const [composeText, setComposeText] = useState('');
   const [searchText, setSearchText] = useState('');
+  const [rentalForConversation, setRentalForConversation] = useState(null);
+  const [loadingRentalConfirmation, setLoadingRentalConfirmation] = useState(false);
 
   const publicationTargetId = publicationIdParam ? Number(publicationIdParam) : null;
   const conversationTargetId = conversationIdParam ? Number(conversationIdParam) : null;
@@ -142,6 +145,36 @@ export default function Mensajes() {
     setMessages(Array.isArray(data?.mensajes) ? data.mensajes : []);
     setLoadingDetail(false);
   };
+
+  const loadRentalForConversation = useCallback(async (conversation) => {
+    if (!conversation?.id || !user?.id) {
+      setRentalForConversation(null);
+      return null;
+    }
+
+    const [data] = await listarArriendos();
+    const rentals = Array.isArray(data) ? data : [];
+
+    const matchedRental = rentals.find((rental) => {
+      const samePublication = String(rental?.publicacionId) === String(conversation?.publicacion?.id);
+      const sameParticipants = Number(rental?.arrendadorId) === Number(conversation?.arrendador?.id)
+        && Number(rental?.estudianteId) === Number(conversation?.estudiante?.id);
+
+      return samePublication && sameParticipants;
+    });
+
+    setRentalForConversation(matchedRental || null);
+    return matchedRental || null;
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!selectedConversation) {
+      setRentalForConversation(null);
+      return;
+    }
+
+    loadRentalForConversation(selectedConversation);
+  }, [loadRentalForConversation, selectedConversation, user?.id]);
 
   useEffect(() => {
     const init = async () => {
@@ -203,6 +236,15 @@ export default function Mensajes() {
     () => getOtherParticipant(selectedConversation, user?.id, userRole),
     [selectedConversation, user?.id, userRole],
   );
+
+  const isRentalCompleted = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'COMPLETED');
+  const isRentalCancelled = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'CANCELLED');
+  const isCurrentUserArrendador = Boolean(
+    selectedConversation?.arrendador?.id && Number(user?.id) === Number(selectedConversation.arrendador.id),
+  );
+  const shouldShowConfirmRentalButton = Boolean(
+    selectedConversation?.publicacion?.id && selectedConversation?.arrendador?.id && selectedConversation?.estudiante?.id && isCurrentUserArrendador,
+  ) && !isRentalCompleted && !isRentalCancelled;
 
   const handleSelectConversation = async (conversationId) => {
     setSearchParams({ conversacion: String(conversationId) });
@@ -282,6 +324,37 @@ export default function Mensajes() {
     if (selectedConversationId) {
       await loadConversationDetail(selectedConversationId);
     }
+  };
+
+  const handleConfirmRental = async () => {
+    if (!selectedConversation?.publicacion?.id || !selectedConversation?.arrendador?.id || !selectedConversation?.estudiante?.id) {
+      await Swal.fire('No se puede aceptar', 'Esta conversación no tiene la información suficiente para aceptar el arriendo.', 'warning');
+      return;
+    }
+
+    if (!isCurrentUserArrendador) {
+      await Swal.fire('No autorizado', 'Solo el arrendador puede aceptar el arriendo desde el chat.', 'warning');
+      return;
+    }
+
+    setLoadingRentalConfirmation(true);
+
+    const [acceptedRental, errorResponse] = await createArriendo({
+      arrendadorId: Number(selectedConversation.arrendador.id),
+      estudianteId: Number(selectedConversation.estudiante.id),
+      publicacionId: Number(selectedConversation.publicacion.id),
+    });
+
+    setLoadingRentalConfirmation(false);
+
+    if (errorResponse) {
+      await Swal.fire('No se pudo aceptar', errorResponse, 'error');
+      return;
+    }
+
+    setRentalForConversation(acceptedRental || null);
+    await Swal.fire('Arriendo aceptado', 'El arriendo quedó concretado y la publicación pasó a estado arrendada.', 'success');
+    await loadRentalForConversation(selectedConversation);
   };
 
   const isContactComposerVisible = Boolean(publicationTargetId);
@@ -435,6 +508,20 @@ export default function Mensajes() {
                     <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${selectedConversation?.publicacion?.id}`)}>
                       Ver publicación
                     </button>
+                    {shouldShowConfirmRentalButton && (
+                      <button type="button" className="mensajes-send-btn" onClick={handleConfirmRental} disabled={loadingRentalConfirmation}>
+                        {loadingRentalConfirmation ? (
+                          <><RefreshCw size={18} className="spin" /> Aceptando...</>
+                        ) : (
+                          <><CheckCircle size={18} /> Aceptar arriendo</>
+                        )}
+                      </button>
+                    )}
+                    {isRentalCompleted && (
+                      <button type="button" className="mensajes-send-btn" disabled>
+                        <CheckCircle size={18} /> Arriendo aceptado
+                      </button>
+                    )}
                     <button type="button" className="mensajes-icon-btn" onClick={handleRefresh}>
                       <RefreshCw size={18} />
                     </button>

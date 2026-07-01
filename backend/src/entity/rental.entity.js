@@ -24,7 +24,7 @@ const ArriendoEsquema = new EntitySchema({
     },
     status: {
       type: "enum",
-      enum: ["PENDING", "CONFIRMED", "COMPLETED"],
+      enum: ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"],
       default: "PENDING",
     },
     confirmedByArrendador: {

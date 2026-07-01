@@ -278,7 +278,7 @@ const MisPublicaciones = () => {
           ubicacion: document.getElementById('swal-ubicacion').value, 
           fotos: [document.getElementById('swal-foto').value], 
           serviciosIncluidos, 
-          rules: document.getElementById('swal-reglas').value 
+          reglasConvivencia: document.getElementById('swal-reglas').value 
         };
       }
     });
