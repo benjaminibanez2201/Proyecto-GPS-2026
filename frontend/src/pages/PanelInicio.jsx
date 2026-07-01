@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, BadgeCheck, Building2, Clock3, MessageSquareMore, Sparkles, TrendingUp, ClipboardList } from 'lucide-react';
 import { useAuth } from '@context/AuthContext';
-import { getPublicaciones } from '@services/publicacion.service.js';
+import { getMisPublicaciones as getMisPublicacionesArrendador, getPublicaciones } from '@services/publicacion.service.js';
 import { obtenerMisFavoritos } from '@services/favoritos.service.js';
 import { obtenerConversaciones } from '@services/mensaje.service.js';
 import { listarArriendos } from '@services/rentalsAndReviews.service.js';
@@ -63,6 +63,35 @@ const buildRecommendationItems = (publicaciones) => publicaciones
     badge: item.tipoInmueble || 'Disponible',
   }));
 
+const buildOwnerPublicationItems = (publicaciones) => publicaciones
+  .slice(0, 2)
+  .map((item) => ({
+    title: item.titulo || `Publicacion #${item.id}`,
+    detail: `${formatPrice(item.precioMensual)} - ${item.ubicacion || 'Sin ubicacion'}`,
+    badge: item.estado || 'Sin estado',
+  }));
+
+const buildOwnerConversationItems = (conversaciones) => conversaciones
+  .slice(0, 2)
+  .map((item) => {
+    const unreadCount = Number(item.noLeidosArrendador || 0);
+    return {
+      title: item.publicacion?.titulo || `Conversacion #${item.id}`,
+      detail: `${item.estudiante?.nombreCompleto || 'Estudiante'} - ${formatDate(item.ultimaFechaMensaje || item.updatedAt || item.createdAt)}`,
+      badge: unreadCount > 0 ? `${unreadCount} nuevo(s)` : 'Al dia',
+    };
+  });
+
+const buildOwnerAlertItems = (publicaciones) => {
+  const alertas = publicaciones.filter((item) => normalizeText(item.estado) !== 'activa');
+
+  return alertas.slice(0, 2).map((item) => ({
+    title: item.titulo || `Publicacion #${item.id}`,
+    detail: `Estado actual: ${item.estado || 'sin estado'}`,
+    badge: normalizeText(item.estado) === 'arrendada' ? 'Arrendada' : 'Revision',
+  }));
+};
+
 const buildStudentConfig = ({ arriendos, conversaciones, favoritos, publicacionesInfo }) => {
   const completedRentals = arriendos.filter((item) => normalizeText(item.status) === 'completed');
   const pendingRentals = arriendos.filter((item) => normalizeText(item.status) !== 'completed');
@@ -99,6 +128,46 @@ const buildStudentConfig = ({ arriendos, conversaciones, favoritos, publicacione
     note: favoritos.length
       ? `Tienes ${favoritos.length} publicacion(es) guardadas para comparar o revisar despues.`
       : 'Guarda publicaciones como favoritas para compararlas y volver a ellas rapidamente.',
+  };
+};
+
+const buildOwnerConfig = ({ publicaciones, conversaciones, arriendos }) => {
+  const activePublications = publicaciones.filter((item) => normalizeText(item.estado) === 'activa');
+  const inactiveOrRented = publicaciones.filter((item) => normalizeText(item.estado) !== 'activa');
+  const unreadMessages = conversaciones.reduce((sum, item) => sum + Number(item.noLeidosArrendador || 0), 0);
+  const completedRentals = arriendos.filter((item) => normalizeText(item.status) === 'completed');
+
+  const publicationItems = buildOwnerPublicationItems(publicaciones);
+  const conversationItems = buildOwnerConversationItems(conversaciones);
+  const alertItems = buildOwnerAlertItems(publicaciones);
+
+  return {
+    ...roleConfig.arrendador,
+    stats: [
+      { label: 'Publicaciones activas', value: activePublications.length, detail: `${publicaciones.length} publicacion(es) en total`, icon: Building2 },
+      { label: 'Contactos por revisar', value: conversaciones.length, detail: `${unreadMessages} mensaje(s) sin leer`, icon: ClipboardList },
+      { label: 'Alertas pendientes', value: inactiveOrRented.length, detail: `${completedRentals.length} arriendo(s) concretados`, icon: AlertTriangle },
+    ],
+    primary: {
+      title: 'Tus publicaciones',
+      subtitle: `${publicaciones.length} publicacion(es) creadas en la plataforma.`,
+      items: publicationItems.length ? publicationItems : fallbackItems('Sin publicaciones registradas'),
+    },
+    secondary: {
+      title: 'Contactos recientes',
+      subtitle: `${conversaciones.length} conversacion(es) con estudiantes.`,
+      items: conversationItems.length ? conversationItems : fallbackItems('Sin conversaciones recientes'),
+    },
+    tertiary: {
+      title: 'Alertas de publicaciones',
+      subtitle: `${inactiveOrRented.length} publicacion(es) fuera de estado activo.`,
+      items: alertItems.length ? alertItems : fallbackItems('Sin alertas pendientes'),
+    },
+    note: activePublications.length
+      ? `Tienes ${activePublications.length} publicacion(es) activas recibiendo contactos.`
+      : 'Publica o reactiva una propiedad para recibir contactos de estudiantes.',
+    noteLink: '/mis-publicaciones',
+    noteLinkText: 'Ver publicaciones',
   };
 };
 
@@ -184,8 +253,15 @@ function PanelInicio() {
     favoritos: [],
     publicacionesInfo: { data: [], total: 0 },
   });
+  const [ownerData, setOwnerData] = useState({
+    publicaciones: [],
+    conversaciones: [],
+    arriendos: [],
+  });
   const [loadingStudentData, setLoadingStudentData] = useState(userRole === 'estudiante');
+  const [loadingOwnerData, setLoadingOwnerData] = useState(userRole === 'arrendador');
   const [studentError, setStudentError] = useState('');
+  const [ownerError, setOwnerError] = useState('');
 
   useEffect(() => {
     if (userRole !== 'estudiante') {
@@ -228,13 +304,52 @@ function PanelInicio() {
     cargarDatosEstudiante();
   }, [userRole]);
 
+  useEffect(() => {
+    if (userRole !== 'arrendador') {
+      setLoadingOwnerData(false);
+      setOwnerError('');
+      return;
+    }
+
+    const cargarDatosArrendador = async () => {
+      setLoadingOwnerData(true);
+      setOwnerError('');
+
+      const [
+        [publicacionesData, publicacionesError],
+        [conversacionesData, conversacionesError],
+        [arriendosData, arriendosError],
+      ] = await Promise.all([
+        getMisPublicacionesArrendador(),
+        obtenerConversaciones(),
+        listarArriendos(),
+      ]);
+
+      setOwnerData({
+        publicaciones: Array.isArray(publicacionesData) ? publicacionesData : [],
+        conversaciones: Array.isArray(conversacionesData) ? conversacionesData : [],
+        arriendos: Array.isArray(arriendosData) ? arriendosData : [],
+      });
+
+      const errors = [publicacionesError, conversacionesError, arriendosError].filter(Boolean);
+      setOwnerError(errors.length ? errors.join(' ') : '');
+      setLoadingOwnerData(false);
+    };
+
+    cargarDatosArrendador();
+  }, [userRole]);
+
   const config = useMemo(() => {
     if (userRole === 'estudiante') {
       return buildStudentConfig(studentData);
     }
 
+    if (userRole === 'arrendador') {
+      return buildOwnerConfig(ownerData);
+    }
+
     return roleConfig[userRole] || roleConfig.estudiante;
-  }, [studentData, userRole]);
+  }, [ownerData, studentData, userRole]);
 
   return (
     <div style={styles.page}>
@@ -254,6 +369,12 @@ function PanelInicio() {
       )}
       {userRole === 'estudiante' && !loadingStudentData && studentError && (
         <p style={{ ...styles.notice, ...styles.error }}>{studentError}</p>
+      )}
+      {userRole === 'arrendador' && loadingOwnerData && (
+        <p style={styles.notice}>Cargando datos reales de tu panel...</p>
+      )}
+      {userRole === 'arrendador' && !loadingOwnerData && ownerError && (
+        <p style={{ ...styles.notice, ...styles.error }}>{ownerError}</p>
       )}
 
       <section style={styles.gridStats}>
@@ -282,8 +403,8 @@ function PanelInicio() {
         <aside style={{ ...styles.noteCard, borderColor: `${config.accent}33` }}>
           <div style={styles.noteIcon}><Clock3 size={20} strokeWidth={2.1} /></div>
           <p style={styles.noteText}>{config.note}</p>
-          <Link to="/historial" style={{ ...styles.noteLink, color: config.accent }}>
-            Ver historial
+          <Link to={config.noteLink || '/historial'} style={{ ...styles.noteLink, color: config.accent }}>
+            {config.noteLinkText || 'Ver historial'}
           </Link>
         </aside>
       </section>
