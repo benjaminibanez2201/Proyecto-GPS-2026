@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion } from '@services/user.service.js';
-import { Building2, Pencil, Trash2, Home } from 'lucide-react';
+import { Building2, BarChart3, Pencil, Trash2, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
 
 const accent = '#0f766e';
 
 const MisPublicaciones = () => {
   const [publicaciones, setPublicaciones] = useState([]);
+  const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
+  const [mostrarEstadisticas, setMostrarEstadisticas] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPublicaciones();
@@ -278,7 +283,7 @@ const MisPublicaciones = () => {
           ubicacion: document.getElementById('swal-ubicacion').value, 
           fotos: [document.getElementById('swal-foto').value], 
           serviciosIncluidos, 
-          rules: document.getElementById('swal-reglas').value 
+          reglasConvivencia: document.getElementById('swal-reglas').value 
         };
       }
     });
@@ -292,6 +297,21 @@ const MisPublicaciones = () => {
         Swal.fire({ icon: 'error', title: 'Error', text: response?.message || 'No se pudo crear la publicación', confirmButtonColor: accent });
       }
     }
+  };
+
+  const abrirEstadisticas = (pub) => {
+    setPublicacionSeleccionada(pub);
+    setMostrarEstadisticas(true);
+  };
+
+  const cerrarEstadisticas = () => {
+    setMostrarEstadisticas(false);
+    setPublicacionSeleccionada(null);
+  };
+
+  const irAlDetalle = (pub) => {
+    if (!pub?.id) return;
+    navigate(`/publicacion/${pub.id}`);
   };
 
   return (
@@ -366,6 +386,10 @@ const MisPublicaciones = () => {
                   }}>
                     {pub.estado}
                   </span>
+                  <button onClick={() => abrirEstadisticas(pub)} style={styles.btnStats}>
+                    <BarChart3 size={14} strokeWidth={2.2} />
+                    Estadísticas
+                  </button>
                 </div>
                 
                 {/* Bloque de Textos */}
@@ -398,6 +422,13 @@ const MisPublicaciones = () => {
           </div>
         )}
       </section>
+
+      <EstadisticasPublicacionModal
+        open={mostrarEstadisticas}
+        publicacion={publicacionSeleccionada}
+        onClose={cerrarEstadisticas}
+        onGoToDetalle={irAlDetalle}
+      />
     </div>
   );
 };
@@ -434,66 +465,12 @@ const styles = {
   cardSubtitle: { margin: 0, fontSize: '14px', color: '#64748b' },
   
   // ¡AQUÍ ESTÁ LA MAGIA! Transformamos la lista plana en un Grid de tarjetas tipo catálogo
-  pubListContainer: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', // Hace que se acomoden solas en columnas
-    gap: '20px',
-  },
-  pubItem: {
-    display: 'flex',
-    flexDirection: 'column', // Tarjeta vertical
-    borderRadius: '20px',
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    overflow: 'hidden',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 10px 15px -3px rgba(0, 0, 0, 0.04)',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-  },
   
   // Contenedor superior con fondo y badge flotante
-  leftSection: { 
-    position: 'relative',
-    height: '140px',
-    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#94a3b8'
-  },
   
   // Datos internos de la tarjeta
-  infoContainer: {
-    padding: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    flex: 1,
-  },
-  pubTitulo: { margin: 0, fontSize: '18px', fontWeight: '800', color: '#0f172a', lineHeight: '1.3' },
-  pubDetalle: { margin: 0, fontSize: '14px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '6px' },
-  
-  typeBadge: { 
-    alignSelf: 'flex-start', textTransform: 'uppercase', fontSize: '10px', fontWeight: '800', 
-    color: '#0f766e', backgroundColor: '#ccfbf1', padding: '4px 8px', borderRadius: '6px', letterSpacing: '0.04em' 
-  },
   
   // Sección de botones abajo pegados al borde de la tarjeta
-  rightSection: { 
-    display: 'grid', 
-    gridTemplateColumns: '1fr 1fr', 
-    borderTop: '1px solid #f1f5f9',
-    backgroundColor: '#f8fafc'
-  },
-  btnEditar: { 
-    border: 'none', background: 'none', padding: '14px', cursor: 'pointer', 
-    color: '#0f766e', fontSize: '13px', fontWeight: '700', display: 'flex', 
-    alignItems: 'center', justifyContent: 'center', gap: '6px', borderRight: '1px solid #f1f5f9'
-  },
-  btnEliminar: { 
-    border: 'none', background: 'none', padding: '14px', cursor: 'pointer', 
-    color: '#dc2626', fontSize: '13px', fontWeight: '700', display: 'flex', 
-    alignItems: 'center', justifyContent: 'center', gap: '6px'
-  },
   // Agrega o reemplaza estos campos exactos dentro de tu constante "styles"
   pubListContainer: {
     display: 'grid',
@@ -607,6 +584,19 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: '6px',
+  },
+  btnStats: {
+    border: '1px solid #dbe4ee',
+    backgroundColor: '#f8fafc',
+    color: '#0f766e',
+    borderRadius: '10px',
+    padding: '8px 12px',
+    fontSize: '13px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
     gap: '6px',
   },
 };

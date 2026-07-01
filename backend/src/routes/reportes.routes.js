@@ -9,6 +9,9 @@ const router = Router();
 // Estudiante reporta publicación
 router.post("/publicacion", authenticateJwt, reportesController.crearReportePublicacion);
 
+// Historial de reportes del usuario autenticado
+router.get("/mios", authenticateJwt, reportesController.misReportes);
+
 // Listado de publicaciones reportadas (solo admin)
 router.get("/", authenticateJwt, isAdmin, reportesController.listarReportes);
 

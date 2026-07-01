@@ -12,7 +12,7 @@ const ReportActionSchema = new EntitySchema({
     },
     accion: {
       type: "enum",
-      enum: ["mantener", "desactivar"],
+      enum: ["mantener", "desactivar", "reactivar"],
       nullable: false,
     },
     observacion: {

@@ -21,6 +21,8 @@ import MisPublicaciones from '@pages/MisPublicaciones';
 import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
 import MisFavoritos from '@pages/MisFavoritos';
 import AdminAuditoria from '@pages/AdminAuditoria';
+import Mensajes from '@pages/Mensajes.jsx';
+import MisReportes from '@pages/MisReportes.jsx';
 
 const APP_NAME = 'ArriendU';
 
@@ -32,14 +34,29 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/register\/?$/, title: `Crear una cuenta - ${APP_NAME}` },
     { pattern: /^\/forgot-password\/?$/, title: `Recuperar contraseña - ${APP_NAME}` },
     { pattern: /^\/reset-password\/[^/]+\/?$/, title: `Restablecer contraseña - ${APP_NAME}` },
-    { pattern: /^\/admin\/?$/, title: `Panel administrador - ${APP_NAME}` },
-    { pattern: /^\/users\/?$/, title: `Gestión de usuarios - ${APP_NAME}` },
+    
+    // Perfiles y Usuarios
     { pattern: /^\/profile\/?$/, title: `Mi perfil - ${APP_NAME}` },
+    { pattern: /^\/profile\/reportes\/?$/, title: `Mis reportes - ${APP_NAME}` },
     { pattern: /^\/profile\/calificaciones\/?$/, title: `Calificaciones recibidas - ${APP_NAME}` },
+    { pattern: /^\/perfil\/[^/]+\/?$/, title: `Perfil de usuario - ${APP_NAME}` },
+    
+    // Estudiante
+    { pattern: /^\/buscar\/?$/, title: `Buscar arriendos - ${APP_NAME}` }, 
     { pattern: /^\/favoritos\/?$/, title: `Mis favoritos - ${APP_NAME}` },
     { pattern: /^\/historial\/?$/, title: `Historial de arriendos - ${APP_NAME}` },
-    { pattern: /^\/perfil\/[^/]+\/?$/, title: `Perfil de usuario - ${APP_NAME}` },
-    { pattern: /^\/publicacion\/?$/, title: `Buscar arriendos - ${APP_NAME}` },
+    
+    // Arrendador
+    { pattern: /^\/mis-publicaciones\/?$/, title: `Mis publicaciones - ${APP_NAME}` }, 
+    
+    // Compartidos (Estudiante y Arrendador)
+    { pattern: /^\/notificaciones\/?$/, title: `Notificaciones - ${APP_NAME}` }, 
+    { pattern: /^\/mensajes\/?$/, title: `Mensajes - ${APP_NAME}` },
+    { pattern: /^\/publicacion\/[^/]+\/?$/, title: `Detalle de publicación - ${APP_NAME}` }, 
+
+    // Administrador
+    { pattern: /^\/admin\/?$/, title: `Panel administrador - ${APP_NAME}` },
+    { pattern: /^\/admin\/users\/?$/, title: `Gestión de usuarios - ${APP_NAME}` }, 
   ];
 
   const matchedRule = titleRules.find((rule) => rule.pattern.test(pathname));
@@ -91,6 +108,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: 'profile/reportes',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
+            <MisReportes />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'profile/calificaciones',
         element: (
           <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
@@ -115,6 +140,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Notificaciones />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'mensajes',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
+            <Mensajes />
           </ProtectedRoute>
         ),
       },

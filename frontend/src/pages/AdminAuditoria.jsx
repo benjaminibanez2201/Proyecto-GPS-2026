@@ -51,11 +51,11 @@ const AdminAuditoria = () => {
 
   const [filtrosAplicados, setFiltrosAplicados] = useState({});
   const [filtros, setFiltros] = useState({
-    adminId: '',
-    accion: '',
-    fechaDesde: '',
-    fechaHasta: '',
-  });
+  adminNombre: '',
+  accion: '',
+  fechaDesde: '',
+  fechaHasta: '',
+});
 
   const limite = 15;
 
@@ -95,12 +95,12 @@ const AdminAuditoria = () => {
   };
 
   const limpiarFiltros = () => {
-    const vacios = { adminId: '', accion: '', fechaDesde: '', fechaHasta: '' };
-    setFiltros(vacios);
-    setFiltrosAplicados({});
-    setPagina(1);
-    cargarAuditoria(1, {});
-  };
+  const vacios = { adminNombre: '', accion: '', fechaDesde: '', fechaHasta: '' };
+  setFiltros(vacios);
+  setFiltrosAplicados({});
+  setPagina(1);
+  cargarAuditoria(1, {});
+};
 
   const irAPagina = (nuevaPagina) => {
     if (nuevaPagina < 1 || nuevaPagina > totalPaginas) return;
@@ -161,69 +161,68 @@ const AdminAuditoria = () => {
         </header>
 
         <section style={styles.advancedFiltersPanel}>
-          <div style={styles.advancedFiltersHeader}>
-            <div>
-              <p style={styles.cardEyebrow}>Filtros</p>
-              <p style={styles.cardSubtitle}>Todos los campos son opcionales.</p>
+            <div style={styles.advancedFiltersHeader}>
+                <div>
+                <p style={styles.cardEyebrow}>Filtros</p>
+                <p style={styles.cardSubtitle}>Todos los campos son opcionales.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="button" onClick={aplicarFiltros} style={styles.actionButton}>
+                    Buscar
+                </button>
+                <button type="button" onClick={limpiarFiltros} style={styles.clearFiltersButton}>
+                    Limpiar filtros
+                </button>
+                </div>
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button type="button" onClick={aplicarFiltros} style={styles.actionButton}>
-                Buscar
-              </button>
-              <button type="button" onClick={limpiarFiltros} style={styles.clearFiltersButton}>
-                Limpiar filtros
-              </button>
+
+            <div style={styles.advancedFiltersGrid}>
+                <label style={styles.filterField}>
+                <span style={styles.filterLabel}>Nombre del administrador</span>
+                <input
+                    type="text"
+                    value={filtros.adminNombre}
+                    onChange={handleFiltroChange('adminNombre')}
+                    placeholder="Ej. Juan Pérez"
+                    style={styles.filterInput}
+                />
+                </label>
+
+                <label style={styles.filterField}>
+                <span style={styles.filterLabel}>Tipo de acción</span>
+                <select
+                    value={filtros.accion}
+                    onChange={handleFiltroChange('accion')}
+                    style={styles.filterInput}
+                >
+                    <option value="">Todas</option>
+                    {Object.entries(ACCION_LABELS).map(([valor, etiqueta]) => (
+                    <option key={valor} value={valor}>{etiqueta}</option>
+                    ))}
+                </select>
+                </label>
+
+                <label style={styles.filterField}>
+                <span style={styles.filterLabel}>Fecha desde</span>
+                <input
+                    type="date"
+                    value={filtros.fechaDesde}
+                    onChange={handleFiltroChange('fechaDesde')}
+                    style={styles.filterInput}
+                />
+                </label>
+
+                <label style={styles.filterField}>
+                <span style={styles.filterLabel}>Fecha hasta</span>
+                <input
+                    type="date"
+                    value={filtros.fechaHasta}
+                    onChange={handleFiltroChange('fechaHasta')}
+                    style={styles.filterInput}
+                />
+                </label>
             </div>
-          </div>
-
-          <div style={styles.advancedFiltersGrid}>
-            <label style={styles.filterField}>
-              <span style={styles.filterLabel}>ID del administrador</span>
-              <input
-                type="number"
-                min="1"
-                value={filtros.adminId}
-                onChange={handleFiltroChange('adminId')}
-                placeholder="Ej. 3"
-                style={styles.filterInput}
-              />
-            </label>
-
-            <label style={styles.filterField}>
-              <span style={styles.filterLabel}>Tipo de acción</span>
-              <select
-                value={filtros.accion}
-                onChange={handleFiltroChange('accion')}
-                style={styles.filterInput}
-              >
-                <option value="">Todas</option>
-                {Object.entries(ACCION_LABELS).map(([valor, etiqueta]) => (
-                  <option key={valor} value={valor}>{etiqueta}</option>
-                ))}
-              </select>
-            </label>
-
-            <label style={styles.filterField}>
-              <span style={styles.filterLabel}>Fecha desde</span>
-              <input
-                type="date"
-                value={filtros.fechaDesde}
-                onChange={handleFiltroChange('fechaDesde')}
-                style={styles.filterInput}
-              />
-            </label>
-
-            <label style={styles.filterField}>
-              <span style={styles.filterLabel}>Fecha hasta</span>
-              <input
-                type="date"
-                value={filtros.fechaHasta}
-                onChange={handleFiltroChange('fechaHasta')}
-                style={styles.filterInput}
-              />
-            </label>
-          </div>
-        </section>
+            </section>
 
         <div style={styles.tableWrap}>
           <table style={styles.table}>
