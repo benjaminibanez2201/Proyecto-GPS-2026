@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion } from '@services/user.service.js';
-import { Building2, Pencil, Trash2, Home } from 'lucide-react';
+import { Building2, BarChart3, Pencil, Trash2, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
 
 const accent = '#0f766e';
 
 const MisPublicaciones = () => {
   const [publicaciones, setPublicaciones] = useState([]);
+  const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
+  const [mostrarEstadisticas, setMostrarEstadisticas] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPublicaciones();
@@ -294,6 +299,21 @@ const MisPublicaciones = () => {
     }
   };
 
+  const abrirEstadisticas = (pub) => {
+    setPublicacionSeleccionada(pub);
+    setMostrarEstadisticas(true);
+  };
+
+  const cerrarEstadisticas = () => {
+    setMostrarEstadisticas(false);
+    setPublicacionSeleccionada(null);
+  };
+
+  const irAlDetalle = (pub) => {
+    if (!pub?.id) return;
+    navigate(`/publicacion/${pub.id}`);
+  };
+
   return (
     <div style={styles.page}>
       <section style={styles.hero}>
@@ -366,6 +386,12 @@ const MisPublicaciones = () => {
                   }}>
                     {pub.estado}
                   </span>
+                  <button onClick={() => abrirEstadisticas(pub)} style={styles.btnStats}>
+                    <BarChart3 size={14} strokeWidth={2.2} />
+                    Estadísticas
+                  </button>
+                  <button onClick={() => handleEditar(pub)} style={styles.btnEditar}>Editar</button>
+                  <button onClick={() => handleEliminar(pub.id)} style={styles.btnEliminar}>Eliminar</button>
                 </div>
                 
                 {/* Bloque de Textos */}
@@ -398,6 +424,13 @@ const MisPublicaciones = () => {
           </div>
         )}
       </section>
+
+      <EstadisticasPublicacionModal
+        open={mostrarEstadisticas}
+        publicacion={publicacionSeleccionada}
+        onClose={cerrarEstadisticas}
+        onGoToDetalle={irAlDetalle}
+      />
     </div>
   );
 };
@@ -609,6 +642,23 @@ const styles = {
     justifyContent: 'center',
     gap: '6px',
   },
+  pubTitulo: { margin: '0 0 4px', fontSize: '15px', fontWeight: '700', color: '#0f172a' },
+  pubDetalle: { margin: 0, fontSize: '13px', color: '#64748b', textTransform: 'capitalize' },
+  btnStats: {
+    border: '1px solid #dbe4ee',
+    backgroundColor: '#f8fafc',
+    color: '#0f766e',
+    borderRadius: '10px',
+    padding: '8px 12px',
+    fontSize: '13px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+  },
+  btnEditar: { border: 'none', background: 'none', cursor: 'pointer', color: accent, fontSize: '14px', fontWeight: '600' },
+  btnEliminar: { border: 'none', background: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '14px', fontWeight: '600' },
 };
 
 export default MisPublicaciones;

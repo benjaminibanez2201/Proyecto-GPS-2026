@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { Heart, ArrowLeft } from 'lucide-react';
+import { Heart, ArrowLeft, FlagTriangleRight } from 'lucide-react';
 import { getPublicacionPorId } from '../services/publicacion.service.js';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import { useAuth } from '../context/AuthContext';
+import ModalReportar from '../components/ModalReportar.jsx';
 import '@styles/basePublicaciones.css';
 
 export default function DetallePublicacion() {
@@ -18,7 +19,9 @@ export default function DetallePublicacion() {
   const [esFavorito, setEsFavorito] = useState(false);
   const [procesando, setProcesando] = useState(false);
   const { user } = useAuth(); 
+  const [mostrarModalReporte, setMostrarModalReporte] = useState(false);
   const esArrendador = user?.rol === 'arrendador' || user?.rol === 'Arrendador';
+  const esAutorPublicacion = String(publicacion?.arrendador?.id) === String(user?.id);
 
   const idPublicacion = publicacion?.id || publicacion?._id;
 
@@ -247,9 +250,41 @@ export default function DetallePublicacion() {
               </button>
             )}
 
+            {!esAutorPublicacion && (
+              <button
+                type="button"
+                onClick={() => setMostrarModalReporte(true)}
+                style={{
+                  width: '100%',
+                  marginTop: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '12px 18px',
+                  borderRadius: '12px',
+                  border: '1px solid #f2c94c',
+                  backgroundColor: '#fff7db',
+                  color: '#8b6b00',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                <FlagTriangleRight size={16} strokeWidth={2.2} />
+                Reportar publicación
+              </button>
+            )}
+
           </div>
         </div>
       </div>
+
+      <ModalReportar
+        open={mostrarModalReporte}
+        publicacion={publicacion}
+        onClose={() => setMostrarModalReporte(false)}
+        onSuccess={() => setMostrarModalReporte(false)}
+      />
     </div>
   );
 }
