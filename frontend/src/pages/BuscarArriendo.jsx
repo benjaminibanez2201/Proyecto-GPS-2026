@@ -13,19 +13,20 @@ function getPublicacionId(publicacion) {
 }
 
 export default function BuscarArriendos() {
-  const { publicaciones, cargando, error, cargarPublicaciones } = usePublicaciones();
+  const { publicaciones, cargando, error, paginacion, cargarPublicaciones } = usePublicaciones();
   const { favoritos, handleAgregarFavorito, handleEliminarFavorito } = useFavoritos();
   const [comparacion, setComparacion] = useState([]);
   const [comparadorAbierto, setComparadorAbierto] = useState(false);
   const [mostrarMapa, setMostrarMapa] = useState(false);
-  
+  const [filtrosAplicados, setFiltrosAplicados] = useState({});
+
   const [filtros, setFiltros] = useState({
     titulo: "",
     tipoInmueble: "",
     precioMin: "",
     precioMax: "",
     direccionOrden: "",
-    Campus: "",
+    distanciaCampus: "",
     servicios: []       
   });
 
@@ -89,16 +90,16 @@ export default function BuscarArriendos() {
   };
 
   useEffect(() => {
-  if (error) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Error al aplicar filtros',
-      text: error.message || 'Ocurrió un problema al aplicar los filtros. Se restablecerán los valores por defecto.',
-      confirmButtonColor: '#008080',
-    });
-    limpiarFiltros();
-  }
-}, [error]);
+    if (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al aplicar filtros',
+        text: error.message || 'Ocurrió un problema al aplicar los filtros. Se restablecerán los valores por defecto.',
+        confirmButtonColor: '#008080',
+      });
+      limpiarFiltros();
+    }
+  }, [error]);
 
   const limpiarFiltros = () => {
     setFiltros({
@@ -111,6 +112,7 @@ export default function BuscarArriendos() {
       servicios: []
     });
     setMostrarMapa(false);
+    setFiltrosAplicados({});
     cargarPublicaciones({});
   };
 
@@ -134,7 +136,8 @@ export default function BuscarArriendos() {
       }
 
       setMostrarMapa(Object.keys(parametrosConsulta).length > 0);
-      await cargarPublicaciones(parametrosConsulta);
+      setFiltrosAplicados(parametrosConsulta);
+      await cargarPublicaciones({ ...parametrosConsulta, pagina: 1 });
     } catch (err) {
       Swal.fire({
         icon: 'error',
@@ -144,6 +147,11 @@ export default function BuscarArriendos() {
       });
       limpiarFiltros();
     }
+  };
+
+  const irAPagina = (nuevaPagina) => {
+    if (nuevaPagina < 1 || nuevaPagina > paginacion.totalPaginas || cargando) return;
+    cargarPublicaciones({ ...filtrosAplicados, pagina: nuevaPagina });
   };
 
   const toggleComparacion = (publicacion) => {
@@ -435,6 +443,36 @@ export default function BuscarArriendos() {
               </p>
             )}
           </div>
+
+          {publicacionesVisibles.length > 0 && paginacion.totalPaginas > 1 && (
+            <div style={styles.pagination}>
+              <button
+                type="button"
+                onClick={() => irAPagina(paginacion.paginaActual - 1)}
+                disabled={paginacion.paginaActual <= 1 || cargando}
+                style={{
+                  ...styles.paginationButton,
+                  ...(paginacion.paginaActual <= 1 ? styles.paginationButtonDisabled : {}),
+                }}
+              >
+                Anterior
+              </button>
+              <span style={styles.paginationLabel}>
+                Página {paginacion.paginaActual} de {paginacion.totalPaginas} ({paginacion.total} resultados)
+              </span>
+              <button
+                type="button"
+                onClick={() => irAPagina(paginacion.paginaActual + 1)}
+                disabled={paginacion.paginaActual >= paginacion.totalPaginas || cargando}
+                style={{
+                  ...styles.paginationButton,
+                  ...(paginacion.paginaActual >= paginacion.totalPaginas ? styles.paginationButtonDisabled : {}),
+                }}
+              >
+                Siguiente
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>
@@ -479,5 +517,31 @@ const styles = {
     margin: 0,
     fontSize: '14px',
     color: 'rgba(255,255,255,0.85)',
+  },
+  pagination: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '16px',
+    flexWrap: 'wrap',
+    marginTop: '24px',
+  },
+  paginationButton: {
+    border: 'none',
+    borderRadius: '8px',
+    padding: '10px 18px',
+    backgroundColor: '#0f766e',
+    color: '#ffffff',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+  },
+  paginationButtonDisabled: {
+    backgroundColor: '#94a3b8',
+    cursor: 'not-allowed',
+  },
+  paginationLabel: {
+    fontSize: '13px',
+    color: '#475569',
+    fontWeight: 600,
   },
 };
