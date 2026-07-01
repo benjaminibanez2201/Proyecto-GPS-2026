@@ -1,7 +1,106 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, BadgeCheck, Building2, Clock3, MessageSquareMore, Sparkles, TrendingUp, ClipboardList } from 'lucide-react';
 import { useAuth } from '@context/AuthContext';
+import { getPublicaciones } from '@services/publicacion.service.js';
+import { obtenerMisFavoritos } from '@services/favoritos.service.js';
+import { obtenerConversaciones } from '@services/mensaje.service.js';
+import { listarArriendos } from '@services/rentalsAndReviews.service.js';
+
+const normalizeText = (value) => String(value || '').trim().toLowerCase();
+
+const formatDate = (value) => {
+  if (!value) return 'Sin fecha registrada';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Sin fecha registrada';
+
+  return new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium' }).format(date);
+};
+
+const formatPrice = (value) => {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return 'Precio no informado';
+
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+const fallbackItems = (message) => [{ title: message, detail: 'No hay datos para mostrar', badge: 'OK' }];
+
+const buildRentalItems = (arriendos) => arriendos
+  .slice(0, 2)
+  .map((item) => {
+    const completed = normalizeText(item.status) === 'completed';
+    return {
+      title: `Arriendo #${item.id}`,
+      detail: completed
+        ? `Concretado el ${formatDate(item.completedAt || item.updatedAt || item.createdAt)}`
+        : 'Pendiente de confirmacion desde el historial',
+      badge: completed ? 'Concretado' : 'Pendiente',
+    };
+  });
+
+const buildConversationItems = (conversaciones) => conversaciones
+  .slice(0, 2)
+  .map((item) => {
+    const unreadCount = Number(item.noLeidosEstudiante || 0);
+    return {
+      title: item.publicacion?.titulo || `Conversacion #${item.id}`,
+      detail: `${item.arrendador?.nombreCompleto || 'Arrendador'} - ${formatDate(item.ultimaFechaMensaje || item.updatedAt || item.createdAt)}`,
+      badge: unreadCount > 0 ? `${unreadCount} nuevo(s)` : 'Al dia',
+    };
+  });
+
+const buildRecommendationItems = (publicaciones) => publicaciones
+  .slice(0, 2)
+  .map((item) => ({
+    title: item.titulo || `Publicacion #${item.id}`,
+    detail: `${formatPrice(item.precioMensual)} - ${item.ubicacion || 'Sin ubicacion'}`,
+    badge: item.tipoInmueble || 'Disponible',
+  }));
+
+const buildStudentConfig = ({ arriendos, conversaciones, favoritos, publicacionesInfo }) => {
+  const completedRentals = arriendos.filter((item) => normalizeText(item.status) === 'completed');
+  const pendingRentals = arriendos.filter((item) => normalizeText(item.status) !== 'completed');
+  const unreadMessages = conversaciones.reduce((sum, item) => sum + Number(item.noLeidosEstudiante || 0), 0);
+  const publicaciones = publicacionesInfo.data;
+  const recommendationsTotal = publicacionesInfo.total || publicaciones.length;
+
+  const rentalItems = buildRentalItems(arriendos);
+  const conversationItems = buildConversationItems(conversaciones);
+  const recommendationItems = buildRecommendationItems(publicaciones);
+
+  return {
+    ...roleConfig.estudiante,
+    stats: [
+      { label: 'Arriendos concretados', value: completedRentals.length, detail: `${pendingRentals.length} pendiente(s)`, icon: Building2 },
+      { label: 'Contactos recientes', value: conversaciones.length, detail: `${unreadMessages} mensaje(s) sin leer`, icon: ClipboardList },
+      { label: 'Favoritos guardados', value: favoritos.length, detail: `${recommendationsTotal} arriendo(s) disponibles`, icon: Sparkles },
+    ],
+    primary: {
+      title: 'Estado de tus arriendos',
+      subtitle: `${arriendos.length} arriendo(s) asociados a tu cuenta.`,
+      items: rentalItems.length ? rentalItems : fallbackItems('Sin arriendos registrados'),
+    },
+    secondary: {
+      title: 'Contactos recientes',
+      subtitle: `${conversaciones.length} conversacion(es) iniciadas con arrendadores.`,
+      items: conversationItems.length ? conversationItems : fallbackItems('Sin conversaciones recientes'),
+    },
+    tertiary: {
+      title: 'Arriendos disponibles',
+      subtitle: `${recommendationsTotal} publicacion(es) disponibles para revisar.`,
+      items: recommendationItems.length ? recommendationItems : fallbackItems('Sin publicaciones disponibles'),
+    },
+    note: favoritos.length
+      ? `Tienes ${favoritos.length} publicacion(es) guardadas para comparar o revisar despues.`
+      : 'Guarda publicaciones como favoritas para compararlas y volver a ellas rapidamente.',
+  };
+};
 
 const roleConfig = {
   estudiante: {
@@ -79,8 +178,63 @@ const roleConfig = {
 function PanelInicio() {
   const { user } = useAuth();
   const userRole = (user?.rol || '').toString().toLowerCase();
+  const [studentData, setStudentData] = useState({
+    arriendos: [],
+    conversaciones: [],
+    favoritos: [],
+    publicacionesInfo: { data: [], total: 0 },
+  });
+  const [loadingStudentData, setLoadingStudentData] = useState(userRole === 'estudiante');
+  const [studentError, setStudentError] = useState('');
 
-  const config = useMemo(() => roleConfig[userRole] || roleConfig.estudiante, [userRole]);
+  useEffect(() => {
+    if (userRole !== 'estudiante') {
+      setLoadingStudentData(false);
+      setStudentError('');
+      return;
+    }
+
+    const cargarDatosEstudiante = async () => {
+      setLoadingStudentData(true);
+      setStudentError('');
+
+      const [
+        [arriendosData, arriendosError],
+        [conversacionesData, conversacionesError],
+        [favoritosData, favoritosError],
+        [publicacionesData, publicacionesError],
+      ] = await Promise.all([
+        listarArriendos(),
+        obtenerConversaciones(),
+        obtenerMisFavoritos(),
+        getPublicaciones(),
+      ]);
+
+      setStudentData({
+        arriendos: Array.isArray(arriendosData) ? arriendosData : [],
+        conversaciones: Array.isArray(conversacionesData) ? conversacionesData : [],
+        favoritos: Array.isArray(favoritosData) ? favoritosData : [],
+        publicacionesInfo: {
+          data: Array.isArray(publicacionesData?.data) ? publicacionesData.data : [],
+          total: Number(publicacionesData?.total || publicacionesData?.data?.length || 0),
+        },
+      });
+
+      const errors = [arriendosError, conversacionesError, favoritosError, publicacionesError].filter(Boolean);
+      setStudentError(errors.length ? errors.join(' ') : '');
+      setLoadingStudentData(false);
+    };
+
+    cargarDatosEstudiante();
+  }, [userRole]);
+
+  const config = useMemo(() => {
+    if (userRole === 'estudiante') {
+      return buildStudentConfig(studentData);
+    }
+
+    return roleConfig[userRole] || roleConfig.estudiante;
+  }, [studentData, userRole]);
 
   return (
     <div style={styles.page}>
@@ -94,6 +248,13 @@ function PanelInicio() {
           <span>{userRole || 'estudiante'}</span>
         </div>
       </section>
+
+      {userRole === 'estudiante' && loadingStudentData && (
+        <p style={styles.notice}>Cargando datos reales de tu panel...</p>
+      )}
+      {userRole === 'estudiante' && !loadingStudentData && studentError && (
+        <p style={{ ...styles.notice, ...styles.error }}>{studentError}</p>
+      )}
 
       <section style={styles.gridStats}>
         {config.stats.map((stat) => {
@@ -208,6 +369,21 @@ const styles = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
     gap: '16px',
+  },
+  notice: {
+    margin: 0,
+    padding: '12px 14px',
+    borderRadius: '12px',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    color: '#475569',
+    fontSize: '14px',
+    fontWeight: '700',
+  },
+  error: {
+    color: '#b91c1c',
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
   },
   statCard: {
     display: 'flex',
