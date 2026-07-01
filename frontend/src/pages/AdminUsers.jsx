@@ -6,6 +6,7 @@ import UserDetailsModal from '@components/UserDetailsModal';
 import useUsers from '@hooks/users/useGetUsers.jsx';
 import useEditUser from '@hooks/users/useEditUser';
 import useDeleteUser from '@hooks/users/useDeleteUser';
+import useToggleStatus from '@hooks/users/useToggleStatus';
 import { useAuth } from '@context/AuthContext';
 import { formatPostUpdate } from '@helpers/formatData.js';
 import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
@@ -37,6 +38,7 @@ const AdminUsers = () => {
     } = useEditUser(setUsers);
 
     const { handleDelete } = useDeleteUser(fetchUsers, setDataUser);
+    const { handleToggleStatus } = useToggleStatus(fetchUsers, setDataUser);
 
     const handleSelectionChange = useCallback((selectedUsers) => {
         setDataUser(selectedUsers);
@@ -130,6 +132,22 @@ const AdminUsers = () => {
                 return `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:${colors[normalized] || '#334155'}1a;color:${colors[normalized] || '#334155'};font-weight:700;font-size:12px;">${value || 'Pendiente'}</span>`;
             },
         },
+        {
+            title: 'Acceso',
+            field: 'estadoCuenta',
+            minWidth: 120,
+            widthGrow: 1,
+            responsive: 1,
+            formatter: (cell) => {
+                const value = cell.getValue();
+                const isBlocked = value === 'suspendido';
+                const bgColor = isBlocked ? '#fef2f2' : '#f0fdf4';
+                const textColor = isBlocked ? '#ef4444' : '#16a34a';
+                const label = isBlocked ? 'Bloqueado' : 'Activo';
+
+                return `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:${bgColor};color:${textColor};font-weight:700;font-size:12px;">${label}</span>`;
+            },
+        },
         { title: 'Creado', field: 'createdAt', minWidth: 120, widthGrow: 1, responsive: 2 },
         {
             title: 'Ver',
@@ -142,7 +160,7 @@ const AdminUsers = () => {
             formatter: () => '<button type="button" class="table-view-button">Ver</button>',
             cellClick: (e, cell) => handleViewUser(cell.getRow().getData()),
         },
-    ]), [handleViewUser]);
+    ]), [handleToggleStatus, handleViewUser]);
 
     const colores = {
         principal: '#008080',
@@ -212,6 +230,18 @@ const AdminUsers = () => {
                         </button>
                         <button type="button" onClick={handleClickUpdate} disabled={dataUser.length === 0} style={styles.actionButton}>
                             Editar selección
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleToggleStatus(dataUser)}
+                            disabled={dataUser.length !== 1}
+                            style={styles.actionButton}
+                        >
+                            {dataUser.length === 1 && dataUser[0]?.estadoCuenta === 'suspendido'
+                                ? 'Reactivar selección'
+                                : dataUser.length === 1
+                                    ? 'Suspender selección'
+                                    : 'Cambiar acceso'}
                         </button>
                         <button
                             type="button"

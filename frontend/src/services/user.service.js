@@ -157,3 +157,27 @@ export async function verifyPassword(password) {
         return error.response.data;
     }
 }
+
+export async function toggleUserStatusRequest(id, estadoCuenta) {
+    try {
+        const response = await axios.patch('/user/detail/status', {
+            id,
+            estadoCuenta,
+        }, {
+            params: { id },
+        });
+        return response.data;
+    } catch (error) {
+        const payload = error.response?.data;
+        console.log('--- DEBUG toggleUserStatusRequest ---');
+        console.log('URL:', error.config?.url);
+        console.log('Method:', error.config?.method?.toUpperCase());
+        console.log('Params sent:', error.config?.params);
+        console.log('Body sent:', error.config?.data);
+        console.log('Status:', error.response?.status);
+        console.log('Response data:', payload);
+        console.log('Full error:', error);
+        console.log('--- END DEBUG toggleUserStatusRequest ---');
+        return payload || { message: 'Error al cambiar el estado del usuario' };
+    }
+}

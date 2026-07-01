@@ -46,7 +46,23 @@ const PublicacionSchema = new EntitySchema({
       nullable: true,
     },
     serviciosIncluidos: {
-      type: "simple-array",
+      type: "enum",
+      enum: [
+        "agua", 
+        "luz", 
+        "gas", 
+        "internet", 
+        "tv_cable", 
+        "calefaccion", 
+        "estacionamiento", 
+        "lavadora"
+      ],
+      array: true,
+      default: [],
+      nullable: true,
+    },
+    distanciaCampus: {
+      type: "int",
       nullable: true,
     },
     reglasConvivencia: {

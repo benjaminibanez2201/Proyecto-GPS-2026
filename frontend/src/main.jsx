@@ -20,6 +20,7 @@ import DetallePublicacion from '@pages/DetallePublicacion.jsx';
 import MisPublicaciones from '@pages/MisPublicaciones';
 import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
 import MisFavoritos from '@pages/MisFavoritos';
+import AdminAuditoria from '@pages/AdminAuditoria';
 import Mensajes from '@pages/Mensajes.jsx';
 import MisReportes from '@pages/MisReportes.jsx';
 import AdminReportes from '@pages/AdminReportes.jsx';
@@ -98,6 +99,14 @@ const router = createBrowserRouter([
         <ProtectedRoute allowedRoles={['admin', 'administrador']}>
           <AdminReportes />
         </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/auditoria',
+        element: (
+          <ProtectedRoute allowedRoles={['admin', 'administrador']}>
+            <AdminAuditoria />
+          </ProtectedRoute>
         ),
       },
       {
