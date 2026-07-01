@@ -20,6 +20,7 @@ import DetallePublicacion from '@pages/DetallePublicacion.jsx';
 import MisPublicaciones from '@pages/MisPublicaciones';
 import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
 import MisFavoritos from '@pages/MisFavoritos';
+import AdminAuditoria from '@pages/AdminAuditoria';
 
 const APP_NAME = 'ArriendU';
 
@@ -71,6 +72,14 @@ const router = createBrowserRouter([
         <ProtectedRoute allowedRoles={['admin', 'administrador']}>
           <AdminUsers />
         </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/auditoria',
+        element: (
+          <ProtectedRoute allowedRoles={['admin', 'administrador']}>
+            <AdminAuditoria />
+          </ProtectedRoute>
         ),
       },
       {

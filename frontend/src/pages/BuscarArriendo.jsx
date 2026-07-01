@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { usePublicaciones } from '../hooks/publicaciones/usePublicacion';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import ComparadorPublicacionesModal from '../components/ComparadorPublicacionesModal';
@@ -24,9 +24,21 @@ export default function BuscarArriendos() {
     tipoInmueble: "",
     precioMin: "",
     precioMax: "",
-    direccionOrden: ""
+    direccionOrden: "",
+    Campus: "",
+    servicios: []       
   });
 
+  const serviciosValidos = [
+  { id: "agua", label: "Agua" },
+  { id: "luz", label: "Luz" },
+  { id: "gas", label: "Gas" },
+  { id: "internet", label: "Internet" },
+  { id: "tv_cable", label: "TV Cable" },
+  { id: "calefaccion", label: "Calefacción" },
+  { id: "estacionamiento", label: "Estacionamiento" },
+  { id: "lavadora", label: "Lavadora" }
+  ];
   const precioMinimoBase = 100000;
   const precioMaximoBase = 1000000;
   const publicacionesVisibles = useMemo(() => publicaciones, [publicaciones]);
@@ -37,6 +49,17 @@ export default function BuscarArriendos() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleServicioChange = (servicioId) => {
+    setFiltros((prev) => {
+      const serviciosActuales = prev.servicios || [];
+      if (serviciosActuales.includes(servicioId)) {
+        return { ...prev, servicios: serviciosActuales.filter(id => id !== servicioId) };
+      } else {
+        return { ...prev, servicios: [...serviciosActuales, servicioId] };
+      }
+    });
   };
 
   const handleRangeMinChange = (e) => {
@@ -65,27 +88,62 @@ export default function BuscarArriendos() {
     });
   };
 
-  const aplicarFiltros = () => {
-    const parametrosConsulta = {};
-
-    if (filtros.titulo) parametrosConsulta.titulo = filtros.titulo;
-    if (filtros.tipoInmueble) parametrosConsulta.tipoInmueble = filtros.tipoInmueble;
-    if (filtros.precioMin) parametrosConsulta.precioMin = filtros.precioMin;
-    if (filtros.precioMax) parametrosConsulta.precioMax = filtros.precioMax;
-    
-    if (filtros.direccionOrden) {
-      parametrosConsulta.ordenarPor = "precioMensual";
-      parametrosConsulta.direccionOrden = filtros.direccionOrden;
-    }
-
-    setMostrarMapa(Object.keys(parametrosConsulta).length > 0);
-    cargarPublicaciones(parametrosConsulta);
-  };
+  useEffect(() => {
+  if (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al aplicar filtros',
+      text: error.message || 'Ocurrió un problema al aplicar los filtros. Se restablecerán los valores por defecto.',
+      confirmButtonColor: '#008080',
+    });
+    limpiarFiltros();
+  }
+}, [error]);
 
   const limpiarFiltros = () => {
-    setFiltros({ titulo: "", tipoInmueble: "", precioMin: "", precioMax: "", direccionOrden: "" });
+    setFiltros({
+      titulo: "",
+      tipoInmueble: "",
+      precioMin: "",
+      precioMax: "",
+      direccionOrden: "",
+      distanciaCampus: "",
+      servicios: []
+    });
     setMostrarMapa(false);
-    cargarPublicaciones({}); 
+    cargarPublicaciones({});
+  };
+
+  const aplicarFiltros = async () => {
+    try {
+      const parametrosConsulta = {};
+
+      if (filtros.titulo) parametrosConsulta.titulo = filtros.titulo;
+      if (filtros.tipoInmueble) parametrosConsulta.tipoInmueble = filtros.tipoInmueble;
+      if (filtros.precioMin) parametrosConsulta.precioMin = filtros.precioMin;
+      if (filtros.precioMax) parametrosConsulta.precioMax = filtros.precioMax;
+      if (filtros.distanciaCampus) {
+        parametrosConsulta.distanciaCampus = filtros.distanciaCampus;
+      }
+      if (filtros.servicios && filtros.servicios.length > 0) {
+        parametrosConsulta.servicios = filtros.servicios.join(',');
+      }
+      if (filtros.direccionOrden) {
+        parametrosConsulta.ordenarPor = "precioMensual";
+        parametrosConsulta.direccionOrden = filtros.direccionOrden;
+      }
+
+      setMostrarMapa(Object.keys(parametrosConsulta).length > 0);
+      await cargarPublicaciones(parametrosConsulta);
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al aplicar filtros',
+        text: 'Ocurrió un problema al aplicar los filtros. Se restablecerán los valores por defecto.',
+        confirmButtonColor: '#008080',
+      });
+      limpiarFiltros();
+    }
   };
 
   const toggleComparacion = (publicacion) => {
@@ -155,6 +213,7 @@ export default function BuscarArriendos() {
           </div>
         </div>
       </section>
+
       <div style={{
         marginBottom: '30px',
         backgroundColor: '#f8fafc',
@@ -166,20 +225,28 @@ export default function BuscarArriendos() {
           <span style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>Filtros</span>
           <span style={{ fontSize: '12px', color: '#64748b' }}>Encuentra exactamente lo que buscas</span>
         </div>
-        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', alignItems: 'start' }}>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: '1 / -1' }}>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Buscar por título</label>
-            <input
-              type="text"
-              name="titulo"
-              placeholder="Ej. Departamento céntrico"
-              value={filtros.titulo}
-              onChange={handleInputChange}
-              style={{ padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box', fontSize: '15px' }}
-            />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
+          <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Buscar por título</label>
+          <input
+            type="text"
+            name="titulo"
+            placeholder="Ej. Departamento céntrico"
+            value={filtros.titulo}
+            onChange={handleInputChange}
+            style={{ padding: '12px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box', fontSize: '15px' }}
+          />
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(220px, 1fr) minmax(260px, 1.5fr) minmax(260px, 1.5fr)',
+          gap: '16px',
+          alignItems: 'start',
+          width: '100%'
+        }}>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Tipo de inmueble</label>
               <select
@@ -209,13 +276,27 @@ export default function BuscarArriendos() {
                 <option value="DESC">Precio: Mayor a Menor</option>
               </select>
             </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Distancia máxima al campus (Km)</label>
+              <input
+                type="number"
+                name="distanciaCampus"
+                placeholder="Ej. 3"
+                min="0"
+                step="1"
+                value={filtros.distanciaCampus}
+                onChange={handleInputChange}
+                style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
           </div>
-          <div style={{ gridColumn: 'span 2', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
             <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
               Rango de precio
             </label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '14px 16px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', height: '100%', boxSizing: 'border-box', justifyContent: 'center' }}>
-              
+            <div style={{ display: 'flex', flexDirection: 'column', padding: '14px 16px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', height: '100%', boxSizing: 'border-box', justifyContent: 'space-evenly', gap: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b' }}>Precio Mínimo</span>
@@ -265,9 +346,38 @@ export default function BuscarArriendos() {
                   }}
                 />
               </div>
-
             </div>
           </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
+            <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Servicios incluidos (debe tener todos)</label>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', 
+              gap: '12px', 
+              padding: '16px', 
+              backgroundColor: '#ffffff', 
+              border: '1px solid #e2e8f0', 
+              borderRadius: '10px',
+              height: '100%',
+              boxSizing: 'border-box',
+              alignItems: 'start',
+              alignContent: 'start'
+            }}>
+              {serviciosValidos.map((servicio) => (
+                <label key={servicio.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#334155' }}>
+                  <input
+                    type="checkbox"
+                    checked={filtros.servicios?.includes(servicio.id)}
+                    onChange={() => handleServicioChange(servicio.id)}
+                    style={{ accentColor: '#0f766e', width: '16px', height: '16px', cursor: 'pointer' }}
+                  />
+                  {servicio.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
       
@@ -299,7 +409,7 @@ export default function BuscarArriendos() {
       )}
 
       {cargando && <p className="loading-text" style={{ textAlign: 'center' }}>Cargando alojamientos...</p>}
-      {error && <p className="error-text" style={{ textAlign: 'center' }}> Error: {error}</p>}
+      {error && <p className="error-text" style={{ textAlign: 'center' }}> Error: {error.message}</p>}
 
       {!cargando && !error && (
         <>

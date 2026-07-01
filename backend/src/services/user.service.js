@@ -247,6 +247,7 @@ export async function updateUserVerificationStatusService(query, reviewPayload, 
     );
 
     const userRepository = AppDataSource.getRepository(User);
+    const auditoriaRepository = AppDataSource.getRepository(AuditoriaAdmin);
 
     const userFound = await userRepository.findOne({
       where: [{ id: id }, { rut: rut }, { email: email }],
@@ -312,6 +313,29 @@ export async function updateUserVerificationStatusService(query, reviewPayload, 
     }
 
     const { password, ...userUpdated } = userData;
+
+    if (reviewerId) {
+      let accionAuditoria = "REVISAR_VERIFICACION";
+      if (estadoVerificacion === "aprobado") {
+        accionAuditoria = "APROBAR_DOCUMENTOS";
+      } else if (estadoVerificacion === "rechazado") {
+        accionAuditoria = "RECHAZAR_DOCUMENTOS";
+      } else if (hasInfoRequest) {
+        accionAuditoria = "SOLICITAR_ANTECEDENTES";
+      }
+
+      try {
+        const registroAuditoria = auditoriaRepository.create({
+          accion: accionAuditoria,
+          usuarioAfectadoId: userFound.id,
+          usuarioAfectadoEmail: userFound.email,
+          adminResponsable: { id: reviewerId },
+        });
+        await auditoriaRepository.save(registroAuditoria);
+      } catch (auditoriaError) {
+        console.error("Error al registrar auditoria de verificacion:", auditoriaError);
+      }
+    }
 
     try {
       const notificationResult = await notifyVerificationResult(userUpdated, estadoVerificacion, {

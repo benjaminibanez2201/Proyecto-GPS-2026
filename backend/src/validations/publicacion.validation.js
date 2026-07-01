@@ -72,6 +72,12 @@ export const publicacionBodyValidation = Joi.object({
 
 
 export const publicacionQueryValidation = Joi.object({
+  titulo: Joi.string()
+    .max(255)
+    .optional()
+    .messages({
+      "string.max": "El título de búsqueda debe tener como máximo 255 caracteres."
+    }),
   precioMin: Joi.number()
     .integer()
     .positive()
@@ -94,6 +100,25 @@ export const publicacionQueryValidation = Joi.object({
     .optional()
     .messages({
       "any.only": "El tipo de inmueble a buscar debe ser: departamento, casa, pieza o estudio."
+    }),
+  distanciaCampus: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      "number.base": "La distancia al campus debe ser un número.",
+      "number.positive": "La distancia al campus debe ser positiva."
+    }),
+  servicios: Joi.alternatives()
+    .try(
+      Joi.array().items(
+        Joi.string().valid("agua", "luz", "gas", "internet", "tv_cable", "calefaccion", "estacionamiento", "lavadora")
+      ),
+      Joi.string()
+    )
+    .optional()
+    .messages({
+      "alternatives.match": "Los servicios deben ser válidos."
     }),
   ordenarPor: Joi.string()
     .valid("precioMensual")
