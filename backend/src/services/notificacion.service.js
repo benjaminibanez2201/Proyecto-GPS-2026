@@ -20,6 +20,21 @@ export async function createNotificacionService(data) {
     }
 }
 
+export async function existeNotificacionService({ userId, tipo, targetType, targetId }) {
+    try {
+        const notificacionRepository = AppDataSource.getRepository(Notificacion);
+
+        const notificacion = await notificacionRepository.findOne({
+            where: { userId, tipo, targetType, targetId },
+        });
+
+        return [Boolean(notificacion), null];
+    } catch (error) {
+        console.error("Error al verificar la notificaciÃ³n:", error);
+        return [null, "Error interno del servidor"];
+    }
+}
+
 export async function getNotificacionesByUserIdService(userId, options = {}) {
     try {
         const notificacionRepository = AppDataSource.getRepository(Notificacion);
