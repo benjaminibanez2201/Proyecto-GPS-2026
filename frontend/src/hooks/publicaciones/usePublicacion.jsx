@@ -13,11 +13,11 @@ export function usePublicaciones() {
     const [data, errorRespuesta] = await getPublicaciones(filtros);
 
     if (errorRespuesta) {
-      setError(errorRespuesta);
+      setError({ message: errorRespuesta, ts: Date.now() });
       setPublicaciones([]);
     } else {
       const listaArriendos = data?.data || (Array.isArray(data) ? data : []);
-      
+
       setPublicaciones(listaArriendos);
     }
 
@@ -25,7 +25,7 @@ export function usePublicaciones() {
   }, []);
 
   useEffect(() => {
-    cargarPublicaciones(); 
+    cargarPublicaciones();
   }, [cargarPublicaciones]);
 
   return {

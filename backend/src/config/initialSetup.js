@@ -22,6 +22,7 @@ async function createUsers() {
         password: "Admin1234.",
         rol: "admin",
         estadoVerificacion: "aprobado",
+        estadoCuenta: "activo",
       },
       {
         nombreCompleto: "Usuario Estudiante",
@@ -30,6 +31,7 @@ async function createUsers() {
         password: "Estudiante1234.",
         rol: "estudiante",
         estadoVerificacion: "aprobado",
+        estadoCuenta: "activo",
       },
       {
         nombreCompleto: "Usuario Arrendador",
@@ -38,6 +40,7 @@ async function createUsers() {
         password: "Arrendador1234.",
         rol: "arrendador",
         estadoVerificacion: "aprobado",
+        estadoCuenta: "activo",
       },
     ];
 
