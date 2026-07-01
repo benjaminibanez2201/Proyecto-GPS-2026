@@ -1,7 +1,7 @@
 "use strict";
 import {
-  obtenerEstadisticasPublicacionRepositorio,
   incrementarContadorPublicacionRepositorio,
+  obtenerEstadisticasPublicacionRepositorio,
 } from "../repositories/publicacion.estadisticas.repository.js";
 
 export async function obtenerEstadisticasPublicacionServicio(id_publicacion, usuarioAutenticado) {
@@ -14,7 +14,7 @@ export async function obtenerEstadisticasPublicacionServicio(id_publicacion, usu
     if (errorEstadisticas) return [null, errorEstadisticas];
     if (!estadisticas) return [null, "Publicación no encontrada"];
 
-    if (Number(estadisticas.owner_id) !== Number(usuarioAutenticado.id)) {
+    if (Number(estadisticas.arrendador_id) !== Number(usuarioAutenticado.id)) {
       return [null, "No autorizado para consultar las estadísticas de esta publicación"];
     }
 
@@ -23,10 +23,10 @@ export async function obtenerEstadisticasPublicacionServicio(id_publicacion, usu
         id_publicacion: Number(estadisticas.id_publicacion),
         titulo: estadisticas.titulo,
         contador_views: Number(estadisticas.contador_views || 0),
-        fcontador_favoritos: Number(estadisticas.fcontador_favoritos || 0),
+        contador_favoritos: Number(estadisticas.contador_favoritos || 0),
         contador_conversaciones: Number(estadisticas.contador_conversaciones || 0),
         createdAt: estadisticas.createdAt,
-        estado: estadisticas.activo ? "activa" : "inactiva",
+        estado: estadisticas.estado || "activa",
       },
       null,
     ];

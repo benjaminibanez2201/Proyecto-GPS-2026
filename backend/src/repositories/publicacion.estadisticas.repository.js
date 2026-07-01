@@ -14,16 +14,16 @@ export async function obtenerEstadisticasPublicacionRepositorio(id_publicacion) 
 
     const estadisticas = await repositorioPublicacion
       .createQueryBuilder("publicacion")
-      .leftJoin("publicacion.owner", "owner")
-      .select("publicacion.id_publicacion", "id_publicacion")
+      .leftJoin("publicacion.arrendador", "arrendador")
+      .select("publicacion.id", "id_publicacion")
       .addSelect("publicacion.titulo", "titulo")
       .addSelect("publicacion.contadorViews", "contador_views")
-      .addSelect("publicacion.contadorFavoritos", "fcontador_favoritos")
+      .addSelect("publicacion.contadorFavoritos", "contador_favoritos")
       .addSelect("publicacion.contadorConversaciones", "contador_conversaciones")
       .addSelect("publicacion.createdAt", "createdAt")
-      .addSelect("publicacion.activo", "activo")
-      .addSelect("owner.id", "owner_id")
-      .where("publicacion.id_publicacion = :id_publicacion", { id_publicacion })
+      .addSelect("publicacion.estado", "estado")
+      .addSelect("arrendador.id", "arrendador_id")
+      .where("publicacion.id = :id_publicacion", { id_publicacion })
       .getRawOne();
 
     return [estadisticas, null];
@@ -40,7 +40,7 @@ export async function incrementarContadorPublicacionRepositorio(id_publicacion, 
     if (!contador) return [null, "Contador no permitido"];
 
     const repositorioPublicacion = AppDataSource.getRepository(Publicacion);
-    const resultado = await repositorioPublicacion.increment({ id_publicacion }, contador, cantidad);
+  const resultado = await repositorioPublicacion.increment({ id: id_publicacion }, contador, cantidad);
 
     if (!resultado.affected) return [null, "Publicación no encontrada"];
 
