@@ -390,8 +390,6 @@ const MisPublicaciones = () => {
                     <BarChart3 size={14} strokeWidth={2.2} />
                     Estadísticas
                   </button>
-                  <button onClick={() => handleEditar(pub)} style={styles.btnEditar}>Editar</button>
-                  <button onClick={() => handleEliminar(pub.id)} style={styles.btnEliminar}>Eliminar</button>
                 </div>
                 
                 {/* Bloque de Textos */}
@@ -467,66 +465,12 @@ const styles = {
   cardSubtitle: { margin: 0, fontSize: '14px', color: '#64748b' },
   
   // ¡AQUÍ ESTÁ LA MAGIA! Transformamos la lista plana en un Grid de tarjetas tipo catálogo
-  pubListContainer: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', // Hace que se acomoden solas en columnas
-    gap: '20px',
-  },
-  pubItem: {
-    display: 'flex',
-    flexDirection: 'column', // Tarjeta vertical
-    borderRadius: '20px',
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    overflow: 'hidden',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 10px 15px -3px rgba(0, 0, 0, 0.04)',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-  },
   
   // Contenedor superior con fondo y badge flotante
-  leftSection: { 
-    position: 'relative',
-    height: '140px',
-    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#94a3b8'
-  },
   
   // Datos internos de la tarjeta
-  infoContainer: {
-    padding: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    flex: 1,
-  },
-  pubTitulo: { margin: 0, fontSize: '18px', fontWeight: '800', color: '#0f172a', lineHeight: '1.3' },
-  pubDetalle: { margin: 0, fontSize: '14px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '6px' },
-  
-  typeBadge: { 
-    alignSelf: 'flex-start', textTransform: 'uppercase', fontSize: '10px', fontWeight: '800', 
-    color: '#0f766e', backgroundColor: '#ccfbf1', padding: '4px 8px', borderRadius: '6px', letterSpacing: '0.04em' 
-  },
   
   // Sección de botones abajo pegados al borde de la tarjeta
-  rightSection: { 
-    display: 'grid', 
-    gridTemplateColumns: '1fr 1fr', 
-    borderTop: '1px solid #f1f5f9',
-    backgroundColor: '#f8fafc'
-  },
-  btnEditar: { 
-    border: 'none', background: 'none', padding: '14px', cursor: 'pointer', 
-    color: '#0f766e', fontSize: '13px', fontWeight: '700', display: 'flex', 
-    alignItems: 'center', justifyContent: 'center', gap: '6px', borderRight: '1px solid #f1f5f9'
-  },
-  btnEliminar: { 
-    border: 'none', background: 'none', padding: '14px', cursor: 'pointer', 
-    color: '#dc2626', fontSize: '13px', fontWeight: '700', display: 'flex', 
-    alignItems: 'center', justifyContent: 'center', gap: '6px'
-  },
   // Agrega o reemplaza estos campos exactos dentro de tu constante "styles"
   pubListContainer: {
     display: 'grid',
@@ -642,8 +586,6 @@ const styles = {
     justifyContent: 'center',
     gap: '6px',
   },
-  pubTitulo: { margin: '0 0 4px', fontSize: '15px', fontWeight: '700', color: '#0f172a' },
-  pubDetalle: { margin: 0, fontSize: '13px', color: '#64748b', textTransform: 'capitalize' },
   btnStats: {
     border: '1px solid #dbe4ee',
     backgroundColor: '#f8fafc',
@@ -657,8 +599,6 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
   },
-  btnEditar: { border: 'none', background: 'none', cursor: 'pointer', color: accent, fontSize: '14px', fontWeight: '600' },
-  btnEliminar: { border: 'none', background: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '14px', fontWeight: '600' },
 };
 
 export default MisPublicaciones;
