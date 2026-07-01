@@ -22,6 +22,7 @@ import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
 import MisFavoritos from '@pages/MisFavoritos';
 import Mensajes from '@pages/Mensajes.jsx';
 import MisReportes from '@pages/MisReportes.jsx';
+import AdminReportes from '@pages/AdminReportes.jsx';
 
 const APP_NAME = 'ArriendU';
 
@@ -55,6 +56,7 @@ function getTitleFromPath(pathname) {
 
     // Administrador
     { pattern: /^\/admin\/?$/, title: `Panel administrador - ${APP_NAME}` },
+    { pattern: /^\/admin\/reportes\/?$/, title: `Publicaciones reportadas - ${APP_NAME}` },
     { pattern: /^\/admin\/users\/?$/, title: `Gestión de usuarios - ${APP_NAME}` }, 
   ];
 
@@ -87,6 +89,14 @@ const router = createBrowserRouter([
         element: (
         <ProtectedRoute allowedRoles={['admin', 'administrador']}>
           <AdminUsers />
+        </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/reportes',
+        element: (
+        <ProtectedRoute allowedRoles={['admin', 'administrador']}>
+          <AdminReportes />
         </ProtectedRoute>
         ),
       },
