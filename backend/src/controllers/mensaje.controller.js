@@ -1,6 +1,7 @@
 "use strict";
 import {
   marcarConversacionLeidaParaUsuario,
+  eliminarConversacionPorUsuario,
   obtenerConversacionesDeUsuario,
   obtenerConversacionPorId,
 } from "../services/conversacion.service.js";
@@ -9,6 +10,7 @@ import {
   marcarMensajesLeidos,
   obtenerMensajesPorConversacion,
 } from "../services/mensaje.service.js";
+import { marcarNotificacionesPorTargetLeidasService } from "../services/notificacion.service.js";
 import {
   handleErrorClient,
   handleErrorServer,
@@ -78,6 +80,7 @@ export async function obtenerDetalleConversacion(req, res) {
 
     await marcarMensajesLeidos(Number(id), usuarioId);
     await marcarConversacionLeidaParaUsuario(Number(id), usuarioId);
+    await marcarNotificacionesPorTargetLeidasService(usuarioId, "conversation", Number(id));
 
     handleSuccess(res, 200, "Detalle de conversación", { conversacion, mensajes });
   } catch (error) {
@@ -128,8 +131,31 @@ export async function marcarComoLeido(req, res) {
     if (errorResultado) return handleErrorServer(res, 500, errorResultado);
 
     await marcarConversacionLeidaParaUsuario(Number(id), usuarioId);
+    await marcarNotificacionesPorTargetLeidasService(usuarioId, "conversation", Number(id));
 
     handleSuccess(res, 200, "Mensajes marcados como leídos", resultado);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function eliminarConversacion(req, res) {
+  try {
+    const { id } = req.params;
+    const usuarioId = req.user.id;
+
+    const [resultado, errorResultado] = await eliminarConversacionPorUsuario(Number(id), usuarioId);
+    if (errorResultado === "Conversación no encontrada") {
+      return handleErrorClient(res, 404, errorResultado);
+    }
+
+    if (errorResultado === "No tienes permiso para eliminar esta conversación") {
+      return handleErrorClient(res, 403, errorResultado);
+    }
+
+    if (errorResultado) return handleErrorServer(res, 500, errorResultado);
+
+    handleSuccess(res, 200, "Conversación ocultada correctamente", resultado);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -141,4 +167,5 @@ export default {
   obtenerDetalleConversacion,
   responderConversacion,
   marcarComoLeido,
+  eliminarConversacion,
 };

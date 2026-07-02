@@ -86,7 +86,7 @@ const PublicacionSchema = new EntitySchema({
     },
     estado: {
       type: "enum",
-      enum: ["activa", "arrendada", "disponible"],
+      enum: ["activa", "arrendada", "disponible", "inactiva"],
       default: "activa",
       nullable: false,
     },
@@ -115,6 +115,11 @@ const PublicacionSchema = new EntitySchema({
       onDelete: "CASCADE",
     },
   },
+  ocultadaPorArrendador: {
+  type: "boolean",
+  default: false,
+  nullable: false,
+},
 });
 
 export default PublicacionSchema;

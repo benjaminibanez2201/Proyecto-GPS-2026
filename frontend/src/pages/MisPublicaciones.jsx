@@ -1,17 +1,46 @@
 import { useEffect, useState } from 'react';
 import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion } from '@services/user.service.js';
-import { Building2, BarChart3, Pencil, Trash2, Home } from 'lucide-react';
+import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
 
 const accent = '#0f766e';
+const toCount = (value) => Number(value || 0);
 
 const MisPublicaciones = () => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
   const [mostrarEstadisticas, setMostrarEstadisticas] = useState(false);
   const navigate = useNavigate();
+
+  const resumen = publicaciones.reduce((acumulado, publicacion) => {
+    const visualizaciones = toCount(publicacion.contadorViews);
+    const favoritos = toCount(publicacion.contadorFavoritos);
+    const conversaciones = toCount(publicacion.contadorConversaciones);
+    const estaActiva = publicacion.estado === 'activa';
+
+    acumulado.total += 1;
+    acumulado.activas += estaActiva ? 1 : 0;
+    acumulado.visualizaciones += visualizaciones;
+    acumulado.favoritos += favoritos;
+    acumulado.conversaciones += conversaciones;
+
+    return acumulado;
+  }, {
+    total: 0,
+    activas: 0,
+    visualizaciones: 0,
+    favoritos: 0,
+    conversaciones: 0,
+  });
+
+  const tarjetasResumen = [
+    { label: 'Publicaciones totales', value: resumen.total, icon: Building2, detail: 'Tus anuncios en la plataforma' },
+    { label: 'Publicaciones activas', value: resumen.activas, icon: TrendingUp, detail: 'Publicaciones visibles hoy' },
+    { label: 'Visualizaciones', value: resumen.visualizaciones, icon: Eye, detail: 'Visitas acumuladas' },
+    { label: 'Favoritos y chats', value: resumen.favoritos + resumen.conversaciones, icon: Heart, detail: 'Interacciones recibidas' },
+  ];
 
   useEffect(() => {
     fetchPublicaciones();
@@ -331,6 +360,33 @@ const MisPublicaciones = () => {
         </button>
       </section>
 
+      <section style={styles.statsBand}>
+        <div style={styles.statsBandHeader}>
+          <div>
+            <p style={styles.statsEyebrow}>Rendimiento de tus publicaciones</p>
+            <h2 style={styles.statsTitle}>Estadísticas del arrendador</h2>
+          </div>
+          <p style={styles.statsSubtitle}>
+            Resumen rápido de alcance e interacción de tus anuncios activos.
+          </p>
+        </div>
+
+        <div style={styles.statsGrid}>
+          {tarjetasResumen.map(({ label, value, icon: Icon, detail }) => (
+            <article key={label} style={styles.statsCard}>
+              <div style={styles.statsCardTop}>
+                <div style={styles.statsIconWrap}>
+                  <Icon size={18} strokeWidth={2.2} />
+                </div>
+                <span style={styles.statsLabel}>{label}</span>
+              </div>
+              <p style={styles.statsValue}>{toCount(value).toLocaleString('es-CL')}</p>
+              <p style={styles.statsDetail}>{detail}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section style={styles.card}>
         <header style={styles.cardHeader}>
           <p style={{ ...styles.eyebrow, color: accent }}>Listado</p>
@@ -403,6 +459,21 @@ const MisPublicaciones = () => {
                   </p>
                   
                   <p style={styles.pubUbicacion}>{pub.ubicacion}</p>
+
+                  <div style={styles.metricStrip}>
+                    <span style={styles.metricChip}>
+                      <Eye size={12} strokeWidth={2.4} />
+                      {toCount(pub.contadorViews).toLocaleString('es-CL')} vistas
+                    </span>
+                    <span style={styles.metricChip}>
+                      <Heart size={12} strokeWidth={2.4} />
+                      {toCount(pub.contadorFavoritos).toLocaleString('es-CL')} favoritos
+                    </span>
+                    <span style={styles.metricChip}>
+                      <MessageCircle size={12} strokeWidth={2.4} />
+                      {toCount(pub.contadorConversaciones).toLocaleString('es-CL')} chats
+                    </span>
+                  </div>
                 </div>
                 
                 {/* Botones de acción abajo */}
@@ -454,6 +525,88 @@ const styles = {
     padding: '12px 24px', borderRadius: '14px', backgroundColor: '#ffffff',
     color: '#0f766e', fontWeight: '700', fontSize: '14px', border: 'none', cursor: 'pointer',
     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', transition: 'all 0.2s',
+  },
+  statsBand: {
+    borderRadius: '24px',
+    padding: '28px',
+    background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+    border: '1px solid rgba(15, 23, 42, 0.06)',
+    boxShadow: '0 10px 30px rgba(15, 23, 42, 0.05)',
+  },
+  statsBandHeader: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: '18px',
+    flexWrap: 'wrap',
+    marginBottom: '18px',
+  },
+  statsEyebrow: {
+    margin: '0 0 6px',
+    fontSize: '12px',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    color: accent,
+  },
+  statsTitle: {
+    margin: 0,
+    fontSize: '22px',
+    color: '#0f172a',
+    lineHeight: 1.2,
+  },
+  statsSubtitle: {
+    margin: 0,
+    maxWidth: '420px',
+    color: '#64748b',
+    fontSize: '14px',
+    lineHeight: 1.5,
+  },
+  statsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '14px',
+  },
+  statsCard: {
+    borderRadius: '18px',
+    padding: '18px',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+  },
+  statsCardTop: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '12px',
+  },
+  statsIconWrap: {
+    width: '34px',
+    height: '34px',
+    borderRadius: '12px',
+    backgroundColor: '#dff6f4',
+    color: accent,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  statsLabel: {
+    fontSize: '13px',
+    fontWeight: '800',
+    color: '#334155',
+  },
+  statsValue: {
+    margin: '0 0 6px',
+    fontSize: '32px',
+    fontWeight: '800',
+    color: '#0f172a',
+    lineHeight: 1,
+  },
+  statsDetail: {
+    margin: 0,
+    fontSize: '13px',
+    lineHeight: 1.5,
+    color: '#64748b',
   },
   card: {
     borderRadius: '24px', padding: '32px', backgroundColor: '#ffffff',
@@ -552,6 +705,24 @@ const styles = {
     margin: '2px 0 0 0',
     fontSize: '13px',
     color: '#64748b',
+  },
+  metricStrip: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    marginTop: '10px',
+  },
+  metricChip: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 10px',
+    borderRadius: '999px',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    color: '#334155',
+    fontSize: '12px',
+    fontWeight: '700',
   },
   rightSection: {
     display: 'grid',

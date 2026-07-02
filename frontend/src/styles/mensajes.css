@@ -10,10 +10,11 @@
 .mensajes-shell {
   width: min(1400px, 100%);
   margin: 0 auto;
-  min-height: calc(100vh - 48px);
+  height: calc(100vh - 48px);
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 20px;
+  align-items: stretch;
 }
 
 .mensajes-sidebar,
@@ -32,6 +33,7 @@
   flex-direction: column;
   gap: 18px;
   overflow: hidden;
+  min-height: 0;
 }
 
 .mensajes-sidebar__header,
@@ -115,9 +117,22 @@ background: linear-gradient(135deg, #008080, #0f9d9d);
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
+.mensajes-icon-btn--danger {
+  width: auto;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(220, 38, 38, 0.2);
+}
+
 .mensajes-icon-btn--secondary:hover {
 transform: translateY(-2px);
   box-shadow: 0 14px 28px rgba(0, 128, 128, 0.28);
+}
+
+.mensajes-icon-btn--danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(220, 38, 38, 0.26);
 }
 
 .mensajes-detail__header-actions .mensajes-icon-btn:not(.mensajes-icon-btn--secondary) {
@@ -196,6 +211,7 @@ transform: translateY(-2px);
   overflow-y: auto;
   padding-right: 6px;
   min-height: 0;
+  flex: 1;
 }
 
 .mensajes-list-item {
@@ -207,9 +223,34 @@ transform: translateY(-2px);
   border-radius: 18px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   background: #fff;
-  padding: 14px;
+  padding: 14px 14px 42px;
   cursor: pointer;
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.mensajes-list-item-wrap {
+  position: relative;
+}
+
+.mensajes-list-delete-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  background: rgba(255, 255, 255, 0.95);
+  color: #dc2626;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.mensajes-list-delete-btn:hover {
+  background: #fee2e2;
 }
 
 .mensajes-list-item.is-selected {
@@ -299,10 +340,12 @@ transform: translateY(-2px);
 
 .mensajes-main {
   min-width: 0;
+  min-height: 0;
 }
 
 .mensajes-detail {
   min-height: 100%;
+  height: 100%;
 }
 
 .mensajes-detail__card {
@@ -392,8 +435,13 @@ transform: translateY(-2px);
 
 .mensajes-bubble.is-mine {
   margin-left: auto;
+  align-self: flex-end;
   border-color: rgba(0, 128, 128, 0.24);
   background: linear-gradient(180deg, rgba(0, 128, 128, 0.09), rgba(0, 128, 128, 0.04));
+}
+
+.mensajes-bubble.is-other {
+  align-self: flex-start;
 }
 
 .mensajes-bubble__meta {
@@ -474,6 +522,8 @@ transform: translateY(-2px);
 @media (max-width: 1100px) {
   .mensajes-shell {
     grid-template-columns: 1fr;
+    height: auto;
+    min-height: calc(100vh - 48px);
   }
 
   .mensajes-sidebar {
@@ -502,5 +552,10 @@ transform: translateY(-2px);
 
   .mensajes-list-item {
     grid-template-columns: 1fr;
+  }
+
+  .mensajes-list-delete-btn {
+    bottom: 8px;
+    right: 8px;
   }
 }

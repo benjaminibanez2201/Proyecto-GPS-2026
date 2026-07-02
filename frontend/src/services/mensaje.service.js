@@ -44,3 +44,12 @@ export async function marcarConversacionLeida(conversacionId) {
     return [null, error.response?.data?.message || 'Error al marcar la conversación como leída'];
   }
 }
+
+export async function eliminarConversacion(conversacionId) {
+  try {
+    const response = await axios.delete(`/mensajes/conversaciones/${conversacionId}`);
+    return [response.data?.data || null, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || 'Error al ocultar la conversación'];
+  }
+}
