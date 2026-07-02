@@ -16,7 +16,9 @@ const Form = ({
     onSubmit,
     title,
 }) => {
-    const { register, handleSubmit, formState: { errors }, setValue } = useForm({
+    const { register, handleSubmit, formState: { errors }, getValues, setValue, trigger, watch } = useForm({
+        mode: 'onChange',
+        reValidateMode: 'onChange',
         shouldUnregister: true,
     });
     const [visiblePasswords, setVisiblePasswords] = useState({});
@@ -41,7 +43,7 @@ const Form = ({
     useEffect(() => {
         flatFields.forEach((field) => {
             if (field.fieldType === 'checkbox' && typeof field.checked === 'boolean') {
-                setValue(field.name, field.checked, { shouldValidate: true });
+                setValue(field.name, field.checked, { shouldValidate: field.checked });
             }
         });
     }, [flatFields, setValue]);
@@ -78,6 +80,20 @@ const Form = ({
         Object.values(uploadTimerRefs.current).forEach((timerId) => clearInterval(timerId));
     }, []);
 
+    useEffect(() => {
+        const subscription = watch((_, { name }) => {
+            if (!name) return;
+
+            flatFields.forEach((field) => {
+                if (field.matchField === name && getValues(field.name)) {
+                    trigger(field.name);
+                }
+            });
+        });
+
+        return () => subscription.unsubscribe();
+    }, [flatFields, getValues, trigger, watch]);
+
     const renderInlineMessage = () => {
         if (!inlineMessage) return null;
         if (typeof inlineMessage === 'string') return <p>{inlineMessage}</p>;
@@ -105,13 +121,51 @@ const Form = ({
         return field.type;
     };
 
+    const getFieldValidation = (field) => {
+        const validationRules = typeof field.validate === 'function'
+            ? { custom: field.validate }
+            : { ...(field.validate || {}) };
+
+        if (field.matchField) {
+            validationRules.matchesField = (value) => (
+                value === getValues(field.matchField)
+                || field.matchMessage
+                || 'Los campos no coinciden'
+            );
+        }
+
+        return validationRules;
+    };
+
     const getRegisterOptions = (field) => ({
         required: field.required ? field.requiredMessage || 'Este campo es obligatorio' : false,
         minLength: field.minLength ? { value: field.minLength, message: `Debe tener al menos ${field.minLength} caracteres` } : false,
         maxLength: field.maxLength ? { value: field.maxLength, message: `Debe tener máximo ${field.maxLength} caracteres` } : false,
         pattern: field.pattern ? { value: field.pattern, message: field.patternMessage || 'Formato no válido' } : false,
-        validate: field.validate || {},
+        validate: getFieldValidation(field),
     });
+
+    const renderRequiredMarker = (field) => {
+        if (!field.required || field.hideRequiredHint) return null;
+
+        return (
+            <>
+                <span className="field-required-asterisk" aria-hidden="true">*</span>
+                <span className="field-required-text">Obligatorio</span>
+            </>
+        );
+    };
+
+    const renderFieldLabel = (field) => {
+        if (!field.label || field.hideLabel) return null;
+
+        return (
+            <label className="field-label" htmlFor={field.name}>
+                <span>{field.label}</span>
+                {renderRequiredMarker(field)}
+            </label>
+        );
+    };
 
     const getIconSrc = (icon) => {
         if (icon === 'identity-card') return IdentityCardIcon;
@@ -278,12 +332,15 @@ const Form = ({
         return (
             <input
                 {...registerProps}
+                id={field.name}
                 name={field.name}
                 placeholder={field.placeholder}
                 type={getInputType(field)}
                 accept={field.accept}
                 defaultValue={field.type === 'file' ? undefined : field.defaultValue || ''}
                 disabled={field.disabled}
+                aria-required={field.required ? 'true' : undefined}
+                aria-invalid={errors[field.name] ? 'true' : undefined}
                 onChange={(event) => {
                     registerProps.onChange(event);
                     field.onChange?.(event);
@@ -298,10 +355,13 @@ const Form = ({
         return (
             <textarea
                 {...registerProps}
+                id={field.name}
                 name={field.name}
                 placeholder={field.placeholder}
                 defaultValue={field.defaultValue || ''}
                 disabled={field.disabled}
+                aria-required={field.required ? 'true' : undefined}
+                aria-invalid={errors[field.name] ? 'true' : undefined}
                 onChange={(event) => {
                     registerProps.onChange(event);
                     field.onChange?.(event);
@@ -311,17 +371,17 @@ const Form = ({
     };
 
     const renderSelect = (field) => {
-        const registerProps = register(field.name, {
-            required: field.required ? field.requiredMessage || 'Este campo es obligatorio' : false,
-            validate: field.validate || {},
-        });
+        const registerProps = register(field.name, getRegisterOptions(field));
 
         return (
             <select
                 {...registerProps}
+                id={field.name}
                 name={field.name}
                 defaultValue={field.defaultValue || ''}
                 disabled={field.disabled}
+                aria-required={field.required ? 'true' : undefined}
+                aria-invalid={errors[field.name] ? 'true' : undefined}
                 onChange={(event) => {
                     registerProps.onChange(event);
                     field.onChange?.(event);
@@ -338,10 +398,7 @@ const Form = ({
     };
 
     const renderCheckbox = (field) => {
-        const checkboxRegister = register(field.name, {
-            required: field.required ? field.requiredMessage || 'Este campo es obligatorio' : false,
-            validate: field.validate || {},
-        });
+        const checkboxRegister = register(field.name, getRegisterOptions(field));
         const isControlledCheckbox = typeof field.checked === 'boolean';
 
         return (
@@ -355,6 +412,8 @@ const Form = ({
                     defaultChecked={isControlledCheckbox ? undefined : field.defaultChecked || false}
                     disabled={field.disabled}
                     readOnly={field.readOnly}
+                    aria-required={field.required ? 'true' : undefined}
+                    aria-invalid={errors[field.name] ? 'true' : undefined}
                     onClick={field.onClick}
                     onChange={(event) => {
                         checkboxRegister.onChange(event);
@@ -382,6 +441,7 @@ const Form = ({
     const renderField = (field, index) => {
         if (field.fieldType === 'fieldGroup') {
             const groupIcon = getIconSrc(field.icon);
+            const groupIsRequired = field.required || field.fields?.some((groupField) => groupField.required);
             const groupClassName = [
                 'form-field-group',
                 field.groupClassName || '',
@@ -396,7 +456,12 @@ const Form = ({
                                     <img src={groupIcon} alt="" />
                                 </span>
                             )}
-                            {field.label && <span className="form-field-group-title">{field.label}</span>}
+                            {field.label && (
+                                <span className="form-field-group-title">
+                                    <span>{field.label}</span>
+                                    {renderRequiredMarker({ ...field, required: groupIsRequired })}
+                                </span>
+                            )}
                         </div>
                     )}
                     <div className="form-field-group-items">
@@ -411,7 +476,7 @@ const Form = ({
 
         return (
             <div className="container_inputs" key={field.name || index}>
-                {field.label && !field.hideLabel && <label htmlFor={field.name}>{field.label}</label>}
+                {renderFieldLabel(field)}
                 {field.fieldType === 'input' && renderInput(field)}
                 {field.fieldType === 'textarea' && renderTextarea(field)}
                 {field.fieldType === 'select' && renderSelect(field)}
