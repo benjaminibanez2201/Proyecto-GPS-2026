@@ -22,6 +22,7 @@ import {
   handleErrorServer,
   handleSuccess,
 } from "../handlers/responseHandlers.js";
+import { commitProfilePhotoUpload } from "../helpers/upload.helper.js";
 
 export async function getUser(req, res) {
   try {
@@ -180,8 +181,12 @@ export async function deleteUser(req, res) {
 
 export async function updateProfile(req, res) {
   try {
-    const { body } = req;
+    const { body, file } = req;
     const { id } = req.user;
+
+    if (file) {
+      body.fotoPerfil = await commitProfilePhotoUpload(id, file);
+    }
 
     const { error: bodyError } = profileBodyValidation.validate(body);
 
@@ -260,8 +265,12 @@ export async function getProfileById(req, res) {
 
 export async function updateArrendadorProfile(req, res) {
   try {
-    const { body } = req;
+    const { body, file } = req;
     const { id, rol } = req.user;
+
+    if (file) {
+      body.fotoPerfil = await commitProfilePhotoUpload(id, file);
+    }
 
     if (rol !== "arrendador") {
       return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden acceder a esta función");

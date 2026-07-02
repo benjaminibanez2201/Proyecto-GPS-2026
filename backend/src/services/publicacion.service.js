@@ -2,11 +2,12 @@
 import { AppDataSource } from "../config/configDb.js";
 import PublicacionSchema from "../entity/publicacion.entity.js";
 import { obtenerCoordenadasArriendo } from "../helpers/geocoding.helper.js";
+import { commitPublicacionUploads } from "../helpers/upload.helper.js";
 
 // ==========================================
 // SERVICIOS DE PUBLICACIÓN
 // ==========================================
-export async function createPublicacionService(arrendadorId, body) {
+export async function createPublicacionService(arrendadorId, body, files) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
 
@@ -21,7 +22,7 @@ export async function createPublicacionService(arrendadorId, body) {
       ubicacion: body.ubicacion,
       latitud: coordenadas?.latitud ?? null,
       longitud: coordenadas?.longitud ?? null,
-      fotos: body.fotos,
+      fotos: [],
       serviciosIncluidos: body.serviciosIncluidos || [],
       distanciaCampus: body.distanciaCampus ?? null,
       reglasConvivencia: body.reglasConvivencia ?? body.rules ?? null,
@@ -29,6 +30,12 @@ export async function createPublicacionService(arrendadorId, body) {
     });
 
     await publicacionRepository.save(newPublicacion);
+
+    if (files?.fotosPublicacion?.length) {
+      const urls = await commitPublicacionUploads(newPublicacion.id, files.fotosPublicacion);
+      await publicacionRepository.update({ id: newPublicacion.id }, { fotos: urls });
+      newPublicacion.fotos = urls;
+    }
 
     return [newPublicacion, null];
   } catch (error) {
@@ -181,7 +188,7 @@ export async function obtenerPublicacionesArrendadorService(arrendadorId) {
   }
 }
 
-export async function updatePublicacionService(publicacionId, arrendadorId, body) {
+export async function updatePublicacionService(publicacionId, arrendadorId, body, files) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
     
@@ -200,13 +207,24 @@ export async function updatePublicacionService(publicacionId, arrendadorId, body
       publicacion.longitud = coordenadas?.longitud ?? null;
     }
 
-    // Mezclamos los datos nuevos
-    publicacionRepository.merge(publicacion, body);
+    const updateData = { ...body };
+
+    if (files?.fotosPublicacion?.length) {
+      const urls = await commitPublicacionUploads(publicacion.id, files.fotosPublicacion);
+      updateData.fotos = urls;
+    }
+
+    publicacionRepository.merge(publicacion, updateData);
     await publicacionRepository.save(publicacion);
 
     return [publicacion, null];
   } catch (error) {
-    return [null, "Error interno del servidor al actualizar"];
+    console.error("========== ERROR UPDATE PUBLICACION ==========");
+    console.error(error);
+    console.error(error.stack);
+    console.error("BODY:", body);
+    console.error("FILES:", files);
+    return [null, error.message];
   }
 }
 

@@ -58,12 +58,7 @@ export const publicacionBodyValidation = Joi.object({
     }),
   fotos: Joi.array()
     .items(Joi.string().uri())
-    .min(1)
-    .required()
-    .messages({
-      "any.required": "Debes agregar al menos una foto.",
-      "array.min": "Debes agregar al menos una foto.",
-    }),
+    .optional(),
   serviciosIncluidos: Joi.array()
     .items(
       Joi.string().valid("agua", "luz", "gas", "internet", "tv_cable", "calefaccion", "estacionamiento", "lavadora")
@@ -216,7 +211,7 @@ export const publicacionUpdateValidation = Joi.object({
     "number.min": "La longitud debe estar entre -180 y 180.",
     "number.max": "La longitud debe estar entre -180 y 180.",
   }),
-  fotos: Joi.array().items(Joi.string().uri()),
+  fotos: Joi.array().items(Joi.string().uri()).optional(),
   serviciosIncluidos: Joi.array().items(
     Joi.string().valid("agua", "luz", "gas", "internet", "tv_cable", "calefaccion", "estacionamiento", "lavadora")
   ),
