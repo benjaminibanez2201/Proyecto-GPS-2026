@@ -19,8 +19,8 @@
 .page-transition {
 	width: 100%;
 	min-height: 100%;
-	animation-duration: 220ms;
-	animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+	animation-duration: 320ms;
+	animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 	animation-fill-mode: both;
 	will-change: opacity, transform;
 }
@@ -39,43 +39,10 @@
 
 .page-transition--replace {
 	animation-name: pageEnterReplace;
-	animation-duration: 160ms;
+	animation-duration: 240ms;
 }
 
 @keyframes pageEnterInitial {
-	from {
-		opacity: 0;
-		transform: translate3d(0, 8px, 0);
-	}
-	to {
-		opacity: 1;
-		transform: translate3d(0, 0, 0);
-	}
-}
-
-@keyframes pageEnterForward {
-	from {
-		opacity: 0;
-		transform: translate3d(14px, 0, 0);
-	}
-	to {
-		opacity: 1;
-		transform: translate3d(0, 0, 0);
-	}
-}
-
-@keyframes pageEnterBack {
-	from {
-		opacity: 0;
-		transform: translate3d(-10px, 0, 0);
-	}
-	to {
-		opacity: 1;
-		transform: translate3d(0, 0, 0);
-	}
-}
-
-@keyframes pageEnterReplace {
 	from {
 		opacity: 0;
 		transform: translate3d(0, 6px, 0);
@@ -86,9 +53,42 @@
 	}
 }
 
+@keyframes pageEnterForward {
+	from {
+		opacity: 0;
+		transform: translate3d(8px, 0, 0);
+	}
+	to {
+		opacity: 1;
+		transform: translate3d(0, 0, 0);
+	}
+}
+
+@keyframes pageEnterBack {
+	from {
+		opacity: 0;
+		transform: translate3d(-6px, 0, 0);
+	}
+	to {
+		opacity: 1;
+		transform: translate3d(0, 0, 0);
+	}
+}
+
+@keyframes pageEnterReplace {
+	from {
+		opacity: 0;
+		transform: translate3d(0, 4px, 0);
+	}
+	to {
+		opacity: 1;
+		transform: translate3d(0, 0, 0);
+	}
+}
+
 @keyframes pageEnterReduced {
 	from {
-		opacity: 0.72;
+		opacity: 0.82;
 	}
 	to {
 		opacity: 1;
@@ -98,7 +98,7 @@
 @media (prefers-reduced-motion: reduce) {
 	.page-transition {
 		animation-name: pageEnterReduced;
-		animation-duration: 120ms;
+		animation-duration: 180ms;
 		animation-timing-function: ease-out;
 		transform: none;
 		will-change: auto;
