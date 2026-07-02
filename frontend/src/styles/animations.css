@@ -86,9 +86,20 @@
 	}
 }
 
+@keyframes pageEnterReduced {
+	from {
+		opacity: 0.72;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.page-transition {
-		animation: none;
+		animation-name: pageEnterReduced;
+		animation-duration: 120ms;
+		animation-timing-function: ease-out;
 		transform: none;
 		will-change: auto;
 	}
