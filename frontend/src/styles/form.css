@@ -307,8 +307,8 @@
     visibility: visible;
 }
 
-.form .field-label,
-.form .form-field-group-title {
+.form .field-label.has-required-hint,
+.form .form-field-group-title.has-required-hint {
 	display: inline-flex;
 	flex-direction: row;
 	align-items: baseline;
@@ -462,7 +462,7 @@ input {
 	grid-template-columns: 20px 1fr;
 	gap: 10px;
 	align-items: start;
-	color: #008080;
+	color: #003366;
 	font-weight: bold;
 	line-height: 1.35;
 	margin: 2px 0 6px;
@@ -489,7 +489,7 @@ input {
 	border: 0;
 	border-radius: 0;
 	background: transparent;
-	color: #008080;
+	color: #003366;
 	font-size: inherit;
 	font-weight: bold;
 	line-height: inherit;
@@ -501,7 +501,7 @@ input {
 .form .checkbox-label-button:hover {
 	border: 0;
 	background: transparent;
-	color: #005f5f;
+	color: #006edf;
 }
 
 .form .checkbox-field input {
@@ -510,8 +510,24 @@ input {
 	margin: 1px 0 0;
 	padding: 0;
 	border-radius: 4px;
-	accent-color: #008080;
+	accent-color: #003366;
 	background-image: none;
+}
+
+.register-container .form .checkbox-field {
+	color: #008080;
+}
+
+.register-container .form .checkbox-label-button {
+	color: #008080;
+}
+
+.register-container .form .checkbox-label-button:hover {
+	color: #005f5f;
+}
+
+.register-container .form .checkbox-field input {
+	accent-color: #008080;
 }
 
 .form .field-extra-content {

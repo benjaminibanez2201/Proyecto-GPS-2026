@@ -14,13 +14,18 @@ const Form = ({
     footerContent,
     inlineMessage,
     onSubmit,
+    reValidationMode,
+    showRequiredHints = false,
     title,
+    validateControlledCheckboxOnMount = true,
+    validationMode,
 }) => {
-    const { register, handleSubmit, formState: { errors }, getValues, setValue, trigger, watch } = useForm({
-        mode: 'onChange',
-        reValidateMode: 'onChange',
+    const formOptions = {
         shouldUnregister: true,
-    });
+        ...(validationMode ? { mode: validationMode } : {}),
+        ...(reValidationMode ? { reValidateMode: reValidationMode } : {}),
+    };
+    const { register, handleSubmit, formState: { errors }, getValues, setValue, trigger, watch } = useForm(formOptions);
     const [visiblePasswords, setVisiblePasswords] = useState({});
     const [selectedFiles, setSelectedFiles] = useState({});
     const [fileUploadProgress, setFileUploadProgress] = useState({});
@@ -43,10 +48,12 @@ const Form = ({
     useEffect(() => {
         flatFields.forEach((field) => {
             if (field.fieldType === 'checkbox' && typeof field.checked === 'boolean') {
-                setValue(field.name, field.checked, { shouldValidate: field.checked });
+                setValue(field.name, field.checked, {
+                    shouldValidate: validateControlledCheckboxOnMount || field.checked,
+                });
             }
         });
-    }, [flatFields, setValue]);
+    }, [flatFields, setValue, validateControlledCheckboxOnMount]);
 
     useEffect(() => {
         const activeFileNames = new Set(
@@ -146,7 +153,7 @@ const Form = ({
     });
 
     const renderRequiredMarker = (field) => {
-        if (!field.required || field.hideRequiredHint) return null;
+        if (!showRequiredHints || !field.required || field.hideRequiredHint) return null;
 
         return (
             <>
@@ -159,8 +166,12 @@ const Form = ({
     const renderFieldLabel = (field) => {
         if (!field.label || field.hideLabel) return null;
 
+        if (!showRequiredHints) {
+            return <label htmlFor={field.name}>{field.label}</label>;
+        }
+
         return (
-            <label className="field-label" htmlFor={field.name}>
+            <label className="field-label has-required-hint" htmlFor={field.name}>
                 <span>{field.label}</span>
                 {renderRequiredMarker(field)}
             </label>
@@ -456,12 +467,14 @@ const Form = ({
                                     <img src={groupIcon} alt="" />
                                 </span>
                             )}
-                            {field.label && (
-                                <span className="form-field-group-title">
+                            {field.label && (showRequiredHints ? (
+                                <span className="form-field-group-title has-required-hint">
                                     <span>{field.label}</span>
                                     {renderRequiredMarker({ ...field, required: groupIsRequired })}
                                 </span>
-                            )}
+                            ) : (
+                                <span className="form-field-group-title">{field.label}</span>
+                            ))}
                         </div>
                     )}
                     <div className="form-field-group-items">

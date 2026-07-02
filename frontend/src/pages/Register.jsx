@@ -95,6 +95,10 @@ const Register = () => {
         <main className="container register-container">
             <Form
                 title="Crea tu cuenta"
+                validationMode="onChange"
+                reValidationMode="onChange"
+                showRequiredHints
+                validateControlledCheckboxOnMount={false}
                 fields={[
                     {
                         label: 'Nombre completo',
