@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle, Clock, Inbox, MessageSquareText, Star, X } fro
 import { listarArriendos, crearResena } from '../services/rentalsAndReviews.service.js';
 import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
-import './historiArriendos.css';
+import '@styles/HistorialArriendos.css';
 
 export default function HistorialArriendos() {
   const [arriendos, setArriendos] = useState([]);
@@ -19,14 +19,6 @@ export default function HistorialArriendos() {
 
   const { user } = useAuth();
 
-  const colores = {
-    principal: '#008080',
-    secundario: '#e6dfd3',
-    textoOscuro: '#2c3e50',
-    blanco: '#ffffff',
-    oro: '#ffd21f',
-  };
-
   const cargarDatos = async () => {
     setLoading(true);
     const [data, err] = await listarArriendos();
@@ -35,7 +27,6 @@ export default function HistorialArriendos() {
       setLoading(false);
       return;
     }
-
     setError('');
 
     const enriched = (Array.isArray(data) ? data : []).map((r) => ({
@@ -69,19 +60,13 @@ export default function HistorialArriendos() {
 
   const handleEnviarCalificacion = async (e) => {
     e.preventDefault();
-
     if (!arriendoSeleccionado) return;
 
     const targetUserId = Number(user?.id) === arriendoSeleccionado.arrendadorId
       ? arriendoSeleccionado.estudianteId
       : arriendoSeleccionado.arrendadorId;
 
-    const payload = {
-      rentalId: arriendoSeleccionado.id,
-      targetUserId,
-      rating,
-      comment,
-    };
+    const payload = { rentalId: arriendoSeleccionado.id, targetUserId, rating, comment };
 
     try {
       setSendingReview(true);
@@ -94,7 +79,7 @@ export default function HistorialArriendos() {
 
       await showSuccessConfirm(
         'Calificación enviada',
-        'La otra persona recibirá una notificación dentro del sistema.',
+        'La otra persona recibirá una notificación.',
         'Entendido'
       );
 
@@ -116,9 +101,9 @@ export default function HistorialArriendos() {
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      <table border="0" cellPadding="15" className="historial-table">
+      <table className="historial-table">
         <thead>
-          <tr style={{ backgroundColor: colores.secundario, color: colores.textoOscuro }}>
+          <tr>
             <th>Nombre del contratante</th>
             <th>Estado de confirmación</th>
             <th>Fecha de confirmación</th>
@@ -128,15 +113,17 @@ export default function HistorialArriendos() {
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan="4" className="empty-cell">
+              <td colSpan="4" style={{ textAlign: 'center', padding: '40px' }}>
+                Cargando historial de arriendos...
+              </td>
+            </tr>
+          ) : arriendos.length === 0 ? (
+            <tr>
+              <td colSpan="4" style={{ padding: 0 }}>
                 <div className="empty-state">
-                  <div className="empty-icon">
-                    <Inbox size={28} />
-                  </div>
+                  <div className="empty-icon"><Inbox size={28} /></div>
                   <strong>No hay arriendos todavía</strong>
-                  <span className="empty-text">
-                    Cuando concretes tu primer arriendo, aparecerá aquí con sus confirmaciones y opciones para calificar.
-                  </span>
+                  <span className="empty-text">Cuando concretes tu primer arriendo, aparecerá aquí con sus opciones para calificar.</span>
                 </div>
               </td>
             </tr>
@@ -146,7 +133,7 @@ export default function HistorialArriendos() {
               : item.confirmedByEstudiante;
 
             return (
-              <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
+              <tr key={item.id}>
                 <td>
                   {item.contratanteId ? (
                     <Link to={`/perfil/${item.contratanteId}`} className="person-link">
@@ -160,55 +147,36 @@ export default function HistorialArriendos() {
                       <span>{item.contratanteNombre || '—'}</span>
                     </Link>
                   ) : (
-                    <span style={{ fontWeight: '600', color: colores.textoOscuro }}>{item.contratanteNombre || '—'}</span>
+                    <span style={{ fontWeight: '600' }}>{item.contratanteNombre || '—'}</span>
                   )}
                 </td>
                 <td>
                   {item.status === 'COMPLETED' ? (
-                    <span className="reviewed-chip">
-                      <CheckCircle size={16} /> Arriendo concretado
-                    </span>
+                    <span className="reviewed-chip"><CheckCircle size={16} /> Arriendo concretado</span>
                   ) : yaConfirme ? (
-                    <span className="waiting-chip">
-                      <Clock size={16} /> Esperando la confirmación de la otra persona...
-                    </span>
+                    <span className="waiting-chip"><Clock size={16} /> Esperando confirmación...</span>
                   ) : (
-                    <span className="waiting-chip">
-                      <MessageSquareText size={16} /> Confirma desde la conversación
-                    </span>
+                    <span className="waiting-chip"><MessageSquareText size={16} /> Confirma en conversación</span>
                   )}
                 </td>
                 <td>
                   {item.completedAt ? (
-                    <span style={{ color: colores.textoOscuro, fontWeight: 600 }}>
-                      {new Date(item.completedAt).toLocaleDateString('es-CL', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
+                    <span style={{ fontWeight: 600 }}>
+                      {new Date(item.completedAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}
                     </span>
                   ) : '—'}
                 </td>
                 <td>
                   {item.status === 'COMPLETED' && item.puedeCalificar ? (
-                    <button
-                      onClick={() => abrirModalCalificar(item)}
-                      className="calificar-button"
-                    >
-                      <span className="calificar-icon"><Star size={16} fill="#fff" /></span>
-                      <span>
-                        <strong className="calificar-title">Comparte tu opinión sobre esta persona</strong>
-                      </span>
+                    <button onClick={() => abrirModalCalificar(item)} className="calificar-button">
+                      <span><Star size={16} /></span>
+                      <span className="calificar-title">Comparte tu opinión</span>
                       <ArrowRight size={16} />
                     </button>
                   ) : item.status === 'COMPLETED' && item.miResena ? (
-                    <span className="reviewed-chip">
-                      <CheckCircle size={16} /> Ya calificaste
-                    </span>
+                    <span className="reviewed-chip"><CheckCircle size={16} /> Ya calificaste</span>
                   ) : item.status === 'COMPLETED' ? (
-                    <span className="reviewed-chip">
-                      <CheckCircle size={16} /> Arriendo concretado
-                    </span>
+                    <span className="reviewed-chip"><CheckCircle size={16} /> Arriendo concretado</span>
                   ) : (
                     <span style={{ color: '#aaa', fontSize: '13px', fontStyle: 'italic' }}>Faltan confirmaciones</span>
                   )}
@@ -219,68 +187,51 @@ export default function HistorialArriendos() {
         </tbody>
       </table>
 
+      {/* MODAL DE CALIFICACIÓN */}
       {modalAbierto && (
         <div className="modal-overlay" onClick={cerrarModalCalificacion}>
-          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <h3 className="modal-title">Comparte tu experiencia</h3>
                 <p className="modal-subtitle">Tu calificación ayuda a que otras personas tomen una decisión</p>
               </div>
-              <button type="button" onClick={cerrarModalCalificacion} className="close-button" aria-label="Cerrar modal">
+              <button type="button" onClick={cerrarModalCalificacion} className="close-button">
                 <X size={18} />
               </button>
             </div>
-
             <div className="review-context">
-              <div className="review-context-icon">
-                <MessageSquareText size={18} />
-              </div>
-              <div>
-                <p className="review-context-title">{arriendoSeleccionado?.contratanteNombre}</p>
-              </div>
+              <div className="review-context-icon"><MessageSquareText size={18} /></div>
+              <p className="review-context-title">{arriendoSeleccionado?.contratanteNombre}</p>
             </div>
-
             <form onSubmit={handleEnviarCalificacion} className="modal-form">
               <div>
                 <label className="modal-label">Tu puntuación</label>
                 <div className="star-row">
-                  {[1, 2, 3, 4, 5].map((value) => {
-                    const active = value <= rating;
-
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => setRating(value)}
-                        // Usamos template literals para asignar la clase "active" de forma dinámica
-                        className={`star-button ${active ? 'active' : ''}`}
-                        aria-label={`${value} estrellas`}
-                      >
-                        <Star size={18} fill={active ? '#f59e0b' : 'transparent'} />
-                      </button>
-                    );
-                  })}
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setRating(value)}
+                      className={`star-button ${value <= rating ? 'active' : ''}`}
+                    >
+                      <Star size={18} fill={value <= rating ? '#f59e0b' : 'transparent'} color={value <= rating ? '#f59e0b' : '#94a3b8'} />
+                    </button>
+                  ))}
                 </div>
-                <p className="rating-hint">{rating} estrella{rating === 1 ? '' : 's'} seleccionada{rating === 1 ? '' : 's'}</p>
               </div>
-
-              <label className="field">
+              <label>
                 <span className="modal-label">Comentario opcional</span>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   maxLength={1000}
-                  rows="4"
-                  placeholder="Escribe una reseña honesta y concreta..."
                   className="textarea-input"
+                  placeholder="Escribe una reseña honesta y concreta..."
                 />
               </label>
-
               <div className="footer-actions">
-                <button type="button" onClick={cerrarModalCalificacion} className="secondary-button" disabled={sendingReview}>
-                  Cancelar
-                </button>
+                <button type="button" onClick={cerrarModalCalificacion} className="secondary-button" disabled={sendingReview}>Cancelar</button>
                 <button type="submit" className="primary-button" disabled={sendingReview}>
                   {sendingReview ? 'Enviando...' : 'Enviar calificación'}
                 </button>

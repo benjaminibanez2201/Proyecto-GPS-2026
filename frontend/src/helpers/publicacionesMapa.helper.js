@@ -1,30 +1,43 @@
 const COMMUNES = [
   {
+    value: 'concepcion',
     name: 'Concepción',
     normalized: 'concepcion',
     center: { lat: -36.8277, lng: -73.0457 },
   },
   {
-    name: 'Hualpén',
-    normalized: 'hualpen',
-    center: { lat: -36.7867, lng: -73.1114 },
+    value: 'san_pedro_de_la_paz',
+    name: 'San Pedro de la Paz',
+    normalized: 'san pedro de la paz',
+    center: { lat: -36.8389, lng: -73.1049 },
   },
   {
-    name: 'Coronel',
-    normalized: 'coronel',
-    center: { lat: -37.0333, lng: -73.1400 },
-  },
-  {
+    value: 'talcahuano',
     name: 'Talcahuano',
     normalized: 'talcahuano',
     center: { lat: -36.7248, lng: -73.1168 },
   },
   {
-    name: 'San Pedro de la Paz',
-    normalized: 'san pedro de la paz',
-    center: { lat: -36.8389, lng: -73.1049 },
+    value: 'chiguayante',
+    name: 'Chiguayante',
+    normalized: 'chiguayante',
+    center: { lat: -36.9186, lng: -73.0233 },
+  },
+  {
+    value: 'hualpen',
+    name: 'Hualpén',
+    normalized: 'hualpen',
+    center: { lat: -36.7867, lng: -73.1114 },
+  },
+  {
+    value: 'penco',
+    name: 'Penco',
+    normalized: 'penco',
+    center: { lat: -36.7397, lng: -72.9975 },
   },
 ];
+
+export const COMUNAS_PERMITIDAS = COMMUNES.map(({ value, name }) => ({ value, name }));
 
 export function normalizeText(value = '') {
   return String(value)
@@ -40,6 +53,9 @@ export function getComunaPermitida(ubicacion = '') {
 }
 
 export function getPublicacionComuna(publicacion) {
+  const comunaExplicita = COMMUNES.find((commune) => commune.value === publicacion?.comuna);
+  if (comunaExplicita) return comunaExplicita;
+
   return getComunaPermitida(publicacion?.ubicacion || '');
 }
 
@@ -85,7 +101,10 @@ export async function resolvePublicationLocation(publicacion) {
     return null;
   }
 
-  const commune = getPublicacionComuna(publicacion) || COMMUNES[0];
+  const commune = getPublicacionComuna(publicacion);
+  if (!commune) {
+    return null;
+  }
 
   const latitud = Number(publicacion?.latitud);
   const longitud = Number(publicacion?.longitud);

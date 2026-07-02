@@ -29,6 +29,18 @@ const PublicacionSchema = new EntitySchema({
       length: 255,
       nullable: false,
     },
+    comuna: {
+      type: "enum",
+      enum: [
+        "concepcion",
+        "san_pedro_de_la_paz",
+        "talcahuano",
+        "chiguayante",
+        "hualpen",
+        "penco",
+      ],
+      nullable: true,
+    },
     latitud: {
       type: "numeric",
       precision: 10,
