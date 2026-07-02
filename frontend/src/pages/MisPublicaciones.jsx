@@ -4,9 +4,34 @@ import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, 
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
+import { COMUNAS_PERMITIDAS } from '@helpers/publicacionesMapa.helper.js';
 
 const accent = '#0f766e';
 const toCount = (value) => Number(value || 0);
+
+const comunaOptionsHtml = (selectedValue) => COMUNAS_PERMITIDAS
+  .map(({ value, name }) => `<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${name}</option>`)
+  .join('');
+
+const serviciosValidos = [
+  { id: 'agua', label: 'Agua' },
+  { id: 'luz', label: 'Luz' },
+  { id: 'gas', label: 'Gas' },
+  { id: 'internet', label: 'Internet' },
+  { id: 'tv_cable', label: 'TV Cable' },
+  { id: 'calefaccion', label: 'Calefacción' },
+  { id: 'estacionamiento', label: 'Estacionamiento' },
+  { id: 'lavadora', label: 'Lavadora' },
+];
+
+const serviciosCheckboxesHtml = (checkboxClass, seleccionados = []) => serviciosValidos
+  .map(({ id, label }) => `
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #334155; cursor: pointer; font-weight: 400;">
+      <input type="checkbox" class="${checkboxClass}" value="${id}" ${seleccionados.includes(id) ? 'checked' : ''} style="width: 14px; height: 14px; cursor: pointer;" />
+      ${label}
+    </label>
+  `)
+  .join('');
 
 const MisPublicaciones = () => {
   const [publicaciones, setPublicaciones] = useState([]);
@@ -73,7 +98,7 @@ const MisPublicaciones = () => {
   };
 
   const handleEditar = async (pub) => {
-    const serviciosString = Array.isArray(pub.serviciosIncluidos) ? pub.serviciosIncluidos.join(', ') : '';
+    const serviciosSeleccionados = Array.isArray(pub.serviciosIncluidos) ? pub.serviciosIncluidos : [];
 
     const { value: formValues } = await Swal.fire({
       title: 'Editar Publicación',
@@ -117,15 +142,25 @@ const MisPublicaciones = () => {
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px;">
                 <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Ubicación *</label>
-                <input id="swal-edit-ubicacion" value="${pub.ubicacion}" 
+                <input id="swal-edit-ubicacion" value="${pub.ubicacion}"
                   style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
               </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos (separados por coma)</label>
-              <input id="swal-edit-servicios" value="${serviciosString}" placeholder="Wifi, Luz, Agua, Lavandería" 
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Comuna *</label>
+              <select id="swal-edit-comuna"
+                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; width: 100%; height: 41.5px;">
+                <option value="" disabled ${pub.comuna ? '' : 'selected'}>Selecciona comuna</option>
+                ${comunaOptionsHtml(pub.comuna)}
+              </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 14px; border-radius: 12px; border: 1px solid #cbd5e1; background-color: #f8fafc;">
+                ${serviciosCheckboxesHtml('swal-edit-servicio', serviciosSeleccionados)}
+              </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -158,9 +193,10 @@ const MisPublicaciones = () => {
           const titulo = document.getElementById('swal-edit-titulo').value;
           const precioMensual = document.getElementById('swal-edit-precio').value;
           const ubicacion = document.getElementById('swal-edit-ubicacion').value;
+          const comuna = document.getElementById('swal-edit-comuna').value;
           const foto = document.getElementById('swal-edit-foto').value;
 
-          if (!titulo || !precioMensual || !ubicacion || !foto) {
+          if (!titulo || !precioMensual || !ubicacion || !comuna || !foto) {
             Swal.showValidationMessage('Por favor completa todos los campos obligatorios (*)');
             return;
           }
@@ -169,13 +205,13 @@ const MisPublicaciones = () => {
         });
       },
       preConfirm: () => {
-        const serviciosRaw = document.getElementById('swal-edit-servicios').value;
-        const serviciosIncluidos = serviciosRaw ? serviciosRaw.split(',').map(s => s.trim()) : [];
+        const serviciosIncluidos = Array.from(document.querySelectorAll('.swal-edit-servicio:checked')).map((el) => el.value);
 
         return {
           titulo: document.getElementById('swal-edit-titulo').value,
           precioMensual: parseInt(document.getElementById('swal-edit-precio').value),
           ubicacion: document.getElementById('swal-edit-ubicacion').value,
+          comuna: document.getElementById('swal-edit-comuna').value,
           fotos: [document.getElementById('swal-edit-foto').value],
           serviciosIncluidos,
           rules: document.getElementById('swal-edit-reglas').value
@@ -237,16 +273,28 @@ const MisPublicaciones = () => {
               </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Ubicación *</label>
-              <input id="swal-ubicacion" placeholder="Dirección exacta del inmueble" 
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Ubicación *</label>
+                <input id="swal-ubicacion" placeholder="Dirección exacta del inmueble"
+                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Comuna *</label>
+                <select id="swal-comuna"
+                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; width: 100%; height: 41.5px;">
+                  <option value="" disabled selected>Selecciona comuna</option>
+                  ${comunaOptionsHtml('')}
+                </select>
+              </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos (separados por coma)</label>
-              <input id="swal-servicios" placeholder="Wifi, Luz, Agua, Lavandería" 
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 14px; border-radius: 12px; border: 1px solid #cbd5e1; background-color: #f8fafc;">
+                ${serviciosCheckboxesHtml('swal-servicio')}
+              </div>
             </div>
           </div>
 
@@ -291,9 +339,10 @@ const MisPublicaciones = () => {
           const tipoInmueble = document.getElementById('swal-tipo').value;
           const precioMensual = document.getElementById('swal-precio').value;
           const ubicacion = document.getElementById('swal-ubicacion').value;
+          const comuna = document.getElementById('swal-comuna').value;
           const fotos = document.getElementById('swal-foto').value;
 
-          if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !fotos) {
+          if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !comuna || !fotos) {
             Swal.showValidationMessage('Por favor completa todos los campos obligatorios (*)');
             return;
           }
@@ -302,17 +351,17 @@ const MisPublicaciones = () => {
         });
       },
       preConfirm: () => {
-        const serviciosRaw = document.getElementById('swal-servicios').value;
-        const serviciosIncluidos = serviciosRaw ? serviciosRaw.split(',').map(s => s.trim()) : [];
+        const serviciosIncluidos = Array.from(document.querySelectorAll('.swal-servicio:checked')).map((el) => el.value);
 
-        return { 
-          titulo: document.getElementById('swal-titulo').value, 
-          tipoInmueble: document.getElementById('swal-tipo').value, 
-          precioMensual: parseInt(document.getElementById('swal-precio').value), 
-          ubicacion: document.getElementById('swal-ubicacion').value, 
-          fotos: [document.getElementById('swal-foto').value], 
-          serviciosIncluidos, 
-          reglasConvivencia: document.getElementById('swal-reglas').value 
+        return {
+          titulo: document.getElementById('swal-titulo').value,
+          tipoInmueble: document.getElementById('swal-tipo').value,
+          precioMensual: parseInt(document.getElementById('swal-precio').value),
+          ubicacion: document.getElementById('swal-ubicacion').value,
+          comuna: document.getElementById('swal-comuna').value,
+          fotos: [document.getElementById('swal-foto').value],
+          serviciosIncluidos,
+          reglasConvivencia: document.getElementById('swal-reglas').value
         };
       }
     });

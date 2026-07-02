@@ -17,7 +17,6 @@ export default function BuscarArriendos() {
   const { favoritos, handleAgregarFavorito, handleEliminarFavorito } = useFavoritos();
   const [comparacion, setComparacion] = useState([]);
   const [comparadorAbierto, setComparadorAbierto] = useState(false);
-  const [mostrarMapa, setMostrarMapa] = useState(false);
   const [filtrosAplicados, setFiltrosAplicados] = useState({});
 
   const [filtros, setFiltros] = useState({
@@ -111,7 +110,6 @@ export default function BuscarArriendos() {
       distanciaCampus: "",
       servicios: []
     });
-    setMostrarMapa(false);
     setFiltrosAplicados({});
     cargarPublicaciones({});
   };
@@ -135,7 +133,6 @@ export default function BuscarArriendos() {
         parametrosConsulta.direccionOrden = filtros.direccionOrden;
       }
 
-      setMostrarMapa(Object.keys(parametrosConsulta).length > 0);
       setFiltrosAplicados(parametrosConsulta);
       await cargarPublicaciones({ ...parametrosConsulta, pagina: 1 });
     } catch (err) {
@@ -421,7 +418,7 @@ export default function BuscarArriendos() {
 
       {!cargando && !error && (
         <>
-          {mostrarMapa && <PublicationMap publicaciones={publicacionesVisibles} />}
+          <PublicationMap publicaciones={publicacionesVisibles} />
 
           <div className="publicaciones-grid">
             {publicacionesVisibles.length > 0 ? (

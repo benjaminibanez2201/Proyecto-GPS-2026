@@ -38,6 +38,13 @@ export const publicacionBodyValidation = Joi.object({
       "string.min": "La ubicación debe tener como mínimo 5 caracteres.",
       "string.max": "La ubicación debe tener como máximo 255 caracteres.",
     }),
+  comuna: Joi.string()
+    .valid("concepcion", "san_pedro_de_la_paz", "talcahuano", "chiguayante", "hualpen", "penco")
+    .required()
+    .messages({
+      "any.required": "La comuna es obligatoria.",
+      "any.only": "La comuna debe ser una de las comunas del Gran Concepción.",
+    }),
   latitud: Joi.number()
     .min(-90)
     .max(90)
@@ -79,12 +86,14 @@ export const publicacionBodyValidation = Joi.object({
       "number.positive": "La distancia al campus debe ser positiva.",
     }),
   reglasConvivencia: Joi.string()
+    .allow("")
     .max(1000)
     .optional()
     .messages({
       "string.max": "Las reglas de convivencia no pueden superar los 1000 caracteres.",
     }),
   rules: Joi.string()
+    .allow("")
     .max(1000)
     .optional()
     .messages({
@@ -119,7 +128,7 @@ export const publicacionQueryValidation = Joi.object({
   precioMax: Joi.number()
     .integer()
     .positive()
-    .min(Joi.ref('precioMin'))
+    .min(Joi.ref("precioMin"))
     .optional()
     .messages({
       "number.base": "El precio máximo debe ser un número.",
@@ -206,6 +215,11 @@ export const publicacionUpdateValidation = Joi.object({
     "string.min": "La ubicación debe tener como mínimo 5 caracteres.",
     "string.max": "La ubicación debe tener como máximo 255 caracteres.",
   }),
+  comuna: Joi.string()
+    .valid("concepcion", "san_pedro_de_la_paz", "talcahuano", "chiguayante", "hualpen", "penco")
+    .messages({
+      "any.only": "La comuna debe ser una de las comunas del Gran Concepción.",
+    }),
   latitud: Joi.number().min(-90).max(90).messages({
     "number.base": "La latitud debe ser un número.",
     "number.min": "La latitud debe estar entre -90 y 90.",
@@ -224,17 +238,18 @@ export const publicacionUpdateValidation = Joi.object({
     "number.base": "La distancia al campus debe ser un número.",
     "number.positive": "La distancia al campus debe ser positiva.",
   }),
-  reglasConvivencia: Joi.string().max(1000).messages({
+  reglasConvivencia: Joi.string().allow("").max(1000).messages({
     "string.max": "Las reglas no pueden superar los 1000 caracteres.",
   }),
   estado: Joi.string().valid("activa", "arrendada", "disponible", "inactiva"),
 })
   .or(
-    "titulo", 
+    "titulo",
     "tipoInmueble",
-     "precioMensual", 
-     "ubicacion", 
-     "fotos", 
+     "precioMensual",
+     "ubicacion",
+     "comuna",
+     "fotos",
      "serviciosIncluidos",
       "distanciaCampus",
       "reglasConvivencia",
