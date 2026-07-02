@@ -2,7 +2,16 @@
 
 const URL_NOMINATIM = "https://nominatim.openstreetmap.org/search";
 
-export async function obtenerCoordenadasArriendo(textoUbicacion) {
+const ETIQUETAS_COMUNA = {
+  concepcion: "Concepción",
+  san_pedro_de_la_paz: "San Pedro de la Paz",
+  talcahuano: "Talcahuano",
+  chiguayante: "Chiguayante",
+  hualpen: "Hualpén",
+  penco: "Penco",
+};
+
+export async function obtenerCoordenadasArriendo(textoUbicacion, comuna) {
   if (!textoUbicacion || typeof textoUbicacion !== "string") {
     return { latitud: null, longitud: null };
   }
@@ -13,8 +22,13 @@ export async function obtenerCoordenadasArriendo(textoUbicacion) {
   }
 
   try {
+    const etiquetaComuna = ETIQUETAS_COMUNA[comuna];
+    const direccionCompleta = etiquetaComuna
+      ? `${direccionProcesada}, ${etiquetaComuna}`
+      : direccionProcesada;
+
     const consultaMapa = encodeURIComponent(
-      `${direccionProcesada}, Región del Biobío, Chile`
+      `${direccionCompleta}, Región del Biobío, Chile`
     );
 
     const urlMapa = `${URL_NOMINATIM}?format=json&q=${consultaMapa}&limit=1`;
