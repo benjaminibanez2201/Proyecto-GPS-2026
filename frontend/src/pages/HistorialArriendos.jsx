@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle, Clock, Inbox, MessageSquareText, Star, X } fro
 import { listarArriendos, crearResena } from '../services/rentalsAndReviews.service.js';
 import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
+import './historiArriendos.css';
 
 export default function HistorialArriendos() {
   const [arriendos, setArriendos] = useState([]);
@@ -105,17 +106,17 @@ export default function HistorialArriendos() {
   };
 
   return (
-    <div style={styles.page}>
-      <section style={styles.hero}>
+    <div className="historial-page">
+      <section className="historial-hero">
         <div>
-          <h2 style={styles.title}>Arriendos concretados</h2>
-          <p style={styles.subtitle}>Revisa tus arriendos, dale a confirmar y deja una calificación.</p>
+          <h2 className="hero-title">Arriendos concretados</h2>
+          <p className="hero-subtitle">Revisa tus arriendos, dale a confirmar y deja una calificación.</p>
         </div>
       </section>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      <table border="0" cellPadding="15" style={styles.table}>
+      <table border="0" cellPadding="15" className="historial-table">
         <thead>
           <tr style={{ backgroundColor: colores.secundario, color: colores.textoOscuro }}>
             <th>Nombre del contratante</th>
@@ -127,19 +128,13 @@ export default function HistorialArriendos() {
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan="3" style={styles.loadingCell}>
-                Cargando historial de arriendos...
-              </td>
-            </tr>
-          ) : arriendos.length === 0 ? (
-            <tr>
-              <td colSpan="3" style={styles.emptyCell}>
-                <div style={styles.emptyState}>
-                  <div style={styles.emptyIcon}>
+              <td colSpan="4" className="empty-cell">
+                <div className="empty-state">
+                  <div className="empty-icon">
                     <Inbox size={28} />
                   </div>
                   <strong>No hay arriendos todavía</strong>
-                  <span style={styles.emptyText}>
+                  <span className="empty-text">
                     Cuando concretes tu primer arriendo, aparecerá aquí con sus confirmaciones y opciones para calificar.
                   </span>
                 </div>
@@ -154,10 +149,10 @@ export default function HistorialArriendos() {
               <tr key={item.id} style={{ borderBottom: '1px solid #eee' }}>
                 <td>
                   {item.contratanteId ? (
-                    <Link to={`/perfil/${item.contratanteId}`} style={styles.personLink}>
-                      <div style={styles.avatar}>
+                    <Link to={`/perfil/${item.contratanteId}`} className="person-link">
+                      <div className="avatar">
                         {item.contratanteAvatar ? (
-                          <img src={item.contratanteAvatar} alt="avatar" style={styles.avatarImg} />
+                          <img src={item.contratanteAvatar} alt="avatar" className="avatar-img" />
                         ) : (
                           (item.contratanteNombre || '—').charAt(0)
                         )}
@@ -170,15 +165,15 @@ export default function HistorialArriendos() {
                 </td>
                 <td>
                   {item.status === 'COMPLETED' ? (
-                    <span style={styles.reviewedChip}>
+                    <span className="reviewed-chip">
                       <CheckCircle size={16} /> Arriendo concretado
                     </span>
                   ) : yaConfirme ? (
-                    <span style={styles.waitingChip}>
+                    <span className="waiting-chip">
                       <Clock size={16} /> Esperando la confirmación de la otra persona...
                     </span>
                   ) : (
-                    <span style={styles.waitingChip}>
+                    <span className="waiting-chip">
                       <MessageSquareText size={16} /> Confirma desde la conversación
                     </span>
                   )}
@@ -198,20 +193,20 @@ export default function HistorialArriendos() {
                   {item.status === 'COMPLETED' && item.puedeCalificar ? (
                     <button
                       onClick={() => abrirModalCalificar(item)}
-                      style={styles.calificarButton}
+                      className="calificar-button"
                     >
-                      <span style={styles.calificarIcon}><Star size={16} fill="#fff" /></span>
+                      <span className="calificar-icon"><Star size={16} fill="#fff" /></span>
                       <span>
-                        <strong style={styles.calificarTitle}>Comparte tu opinión sobre esta persona</strong>
+                        <strong className="calificar-title">Comparte tu opinión sobre esta persona</strong>
                       </span>
                       <ArrowRight size={16} />
                     </button>
                   ) : item.status === 'COMPLETED' && item.miResena ? (
-                    <span style={styles.reviewedChip}>
+                    <span className="reviewed-chip">
                       <CheckCircle size={16} /> Ya calificaste
                     </span>
                   ) : item.status === 'COMPLETED' ? (
-                    <span style={styles.reviewedChip}>
+                    <span className="reviewed-chip">
                       <CheckCircle size={16} /> Arriendo concretado
                     </span>
                   ) : (
@@ -225,31 +220,31 @@ export default function HistorialArriendos() {
       </table>
 
       {modalAbierto && (
-        <div style={styles.modalOverlay} onClick={cerrarModalCalificacion}>
-          <div style={styles.modalCard} onClick={(event) => event.stopPropagation()}>
-            <div style={styles.modalHeader}>
+        <div className="modal-overlay" onClick={cerrarModalCalificacion}>
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
               <div>
-                <h3 style={styles.modalTitle}>Comparte tu experiencia</h3>
-                <p style={styles.modalSubtitle}>Tu calificación ayuda a que otras personas tomen una decisión</p>
+                <h3 className="modal-title">Comparte tu experiencia</h3>
+                <p className="modal-subtitle">Tu calificación ayuda a que otras personas tomen una decisión</p>
               </div>
-              <button type="button" onClick={cerrarModalCalificacion} style={styles.closeButton} aria-label="Cerrar modal">
+              <button type="button" onClick={cerrarModalCalificacion} className="close-button" aria-label="Cerrar modal">
                 <X size={18} />
               </button>
             </div>
 
-            <div style={styles.reviewContext}>
-              <div style={styles.reviewContextIcon}>
+            <div className="review-context">
+              <div className="review-context-icon">
                 <MessageSquareText size={18} />
               </div>
               <div>
-                <p style={styles.reviewContextTitle}>{arriendoSeleccionado?.contratanteNombre}</p>
+                <p className="review-context-title">{arriendoSeleccionado?.contratanteNombre}</p>
               </div>
             </div>
 
-            <form onSubmit={handleEnviarCalificacion} style={styles.modalForm}>
+            <form onSubmit={handleEnviarCalificacion} className="modal-form">
               <div>
-                <label style={styles.label}>Tu puntuación</label>
-                <div style={styles.starRow}>
+                <label className="modal-label">Tu puntuación</label>
+                <div className="star-row">
                   {[1, 2, 3, 4, 5].map((value) => {
                     const active = value <= rating;
 
@@ -258,12 +253,8 @@ export default function HistorialArriendos() {
                         key={value}
                         type="button"
                         onClick={() => setRating(value)}
-                        style={{
-                          ...styles.starButton,
-                          backgroundColor: active ? '#fff7d1' : '#f8fafc',
-                          borderColor: active ? '#fbbf24' : '#e2e8f0',
-                          color: active ? '#f59e0b' : '#94a3b8',
-                        }}
+                        // Usamos template literals para asignar la clase "active" de forma dinámica
+                        className={`star-button ${active ? 'active' : ''}`}
                         aria-label={`${value} estrellas`}
                       >
                         <Star size={18} fill={active ? '#f59e0b' : 'transparent'} />
@@ -271,26 +262,26 @@ export default function HistorialArriendos() {
                     );
                   })}
                 </div>
-                <p style={styles.ratingHint}>{rating} estrella{rating === 1 ? '' : 's'} seleccionada{rating === 1 ? '' : 's'}</p>
+                <p className="rating-hint">{rating} estrella{rating === 1 ? '' : 's'} seleccionada{rating === 1 ? '' : 's'}</p>
               </div>
 
-              <label style={styles.field}>
-                <span style={styles.label}>Comentario opcional</span>
+              <label className="field">
+                <span className="modal-label">Comentario opcional</span>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   maxLength={1000}
                   rows="4"
                   placeholder="Escribe una reseña honesta y concreta..."
-                  style={styles.textarea}
+                  className="textarea-input"
                 />
               </label>
 
-              <div style={styles.footerActions}>
-                <button type="button" onClick={cerrarModalCalificacion} style={styles.secondaryButton} disabled={sendingReview}>
+              <div className="footer-actions">
+                <button type="button" onClick={cerrarModalCalificacion} className="secondary-button" disabled={sendingReview}>
                   Cancelar
                 </button>
-                <button type="submit" style={styles.primaryButton} disabled={sendingReview}>
+                <button type="submit" className="primary-button" disabled={sendingReview}>
                   {sendingReview ? 'Enviando...' : 'Enviar calificación'}
                 </button>
               </div>
@@ -301,340 +292,3 @@ export default function HistorialArriendos() {
     </div>
   );
 }
-
-const styles = {
-  page: {
-    padding: '20px 0 12px',
-    backgroundColor: '#f9f8f6',
-    minHeight: '100vh',
-    fontFamily: 'sans-serif',
-  },
-  hero: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: '16px',
-    alignItems: 'flex-start',
-    flexWrap: 'wrap',
-    padding: '20px 24px',
-    borderRadius: '24px',
-    color: '#ffffff',
-    background: 'linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%)',
-    boxShadow: '0 20px 40px rgba(11, 34, 45, 0.18)',
-    marginBottom: '18px',
-  },
-  eyebrow: {
-    margin: '0 0 6px',
-    fontSize: '12px',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.06em',
-    color: 'rgba(255,255,255,0.8)',
-  },
-  title: {
-    margin: '0 0 8px',
-    fontSize: '28px',
-    lineHeight: 1.05,
-  },
-  subtitle: {
-    margin: 0,
-    maxWidth: '68ch',
-    fontSize: '14px',
-    lineHeight: 1.6,
-    color: 'rgba(255,255,255,0.88)',
-  },
-  heroBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '10px 14px',
-    borderRadius: '999px',
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    border: '1px solid rgba(255,255,255,0.14)',
-    whiteSpace: 'nowrap',
-    fontWeight: 700,
-  },
-  table: {
-    width: '100%',
-    textAlign: 'left',
-    borderCollapse: 'collapse',
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-    overflow: 'hidden',
-  },
-  loadingCell: {
-    padding: '28px 18px',
-    textAlign: 'center',
-    color: '#6c757d',
-  },
-  emptyCell: {
-    padding: '36px 18px',
-  },
-  emptyState: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '10px',
-    textAlign: 'center',
-    color: '#2c3e50',
-  },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: '50%',
-    backgroundColor: '#f3f5f7',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#008080',
-  },
-  emptyText: {
-    maxWidth: '460px',
-    color: '#6c757d',
-    lineHeight: 1.5,
-  },
-  personLink: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    textDecoration: 'none',
-    color: '#2c3e50',
-    fontWeight: 600,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: '50%',
-    backgroundColor: '#f0f0f0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    fontWeight: 700,
-    color: '#555',
-  },
-  avatarImg: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  completedChip: {
-    color: '#28a745',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '5px',
-    fontWeight: 700,
-  },
-  waitingChip: {
-    color: '#ffc107',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '5px',
-    fontWeight: 700,
-  },
-  reviewedChip: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '10px 14px',
-    borderRadius: '999px',
-    backgroundColor: '#e6f4f1',
-    color: '#0f766e',
-    fontWeight: 700,
-    fontSize: '13px',
-  },
-  calificarButton: {
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '12px',
-    padding: '14px 16px',
-    borderRadius: '18px',
-    border: '1px solid rgba(15, 118, 110, 0.18)',
-    background: 'linear-gradient(135deg, #0f766e 0%, #0b6b7a 100%)',
-    color: '#ffffff',
-    boxShadow: '0 12px 26px rgba(15, 118, 110, 0.22)',
-    textAlign: 'left',
-  },
-  calificarIcon: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '12px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    flexShrink: 0,
-  },
-  calificarTitle: {
-    display: 'block',
-    fontSize: '14px',
-  },
-  calificarSubtext: {
-    fontSize: '12px',
-    opacity: 0.82,
-    fontWeight: 500,
-  },
-  modalOverlay: {
-    position: 'fixed',
-    inset: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.55)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '20px',
-    zIndex: 50,
-    backdropFilter: 'blur(8px)',
-  },
-  modalCard: {
-    width: 'min(560px, 100%)',
-    borderRadius: '28px',
-    background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
-    border: '1px solid rgba(15, 23, 42, 0.08)',
-    boxShadow: '0 24px 80px rgba(15, 23, 42, 0.25)',
-    padding: '24px',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: '16px',
-    alignItems: 'flex-start',
-  },
-  modalEyebrow: {
-    margin: '0 0 6px',
-    fontSize: '12px',
-    fontWeight: 800,
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-    color: '#008080',
-  },
-  modalTitle: {
-    margin: '0 0 6px',
-    fontSize: '22px',
-    color: '#0f172a',
-  },
-  modalSubtitle: {
-    margin: 0,
-    color: '#64748b',
-    fontSize: '14px',
-    lineHeight: 1.5,
-  },
-  closeButton: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#ffffff',
-    color: '#0f172a',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  reviewContext: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    marginTop: '18px',
-    padding: '14px',
-    borderRadius: '18px',
-    backgroundColor: '#eef6f5',
-    border: '1px solid rgba(15, 118, 110, 0.12)',
-  },
-  reviewContextIcon: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '14px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#008080',
-    backgroundColor: '#ffffff',
-    flexShrink: 0,
-  },
-  reviewContextTitle: {
-    margin: '0 0 4px',
-    fontSize: '15px',
-    fontWeight: 700,
-    color: '#0f172a',
-  },
-  reviewContextText: {
-    margin: 0,
-    fontSize: '13px',
-    color: '#475569',
-  },
-  modalForm: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '18px',
-    marginTop: '20px',
-  },
-  label: {
-    display: 'block',
-    marginBottom: '8px',
-    fontSize: '13px',
-    fontWeight: 700,
-    color: '#334155',
-  },
-  starRow: {
-    display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap',
-  },
-  starButton: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '14px',
-    border: '1px solid #e2e8f0',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 0,
-  },
-  ratingHint: {
-    margin: '8px 0 0',
-    fontSize: '13px',
-    color: '#64748b',
-  },
-  field: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  textarea: {
-    width: '100%',
-    padding: '14px 16px',
-    borderRadius: '16px',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#ffffff',
-    color: '#0f172a',
-    fontSize: '14px',
-    resize: 'vertical',
-    minHeight: '120px',
-    outline: 'none',
-    boxSizing: 'border-box',
-  },
-  footerActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '12px',
-    flexWrap: 'wrap',
-  },
-  secondaryButton: {
-    padding: '12px 18px',
-    borderRadius: '14px',
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#ffffff',
-    color: '#0f172a',
-    fontWeight: 700,
-  },
-  primaryButton: {
-    padding: '12px 18px',
-    borderRadius: '14px',
-    border: 'none',
-    background: 'linear-gradient(135deg, #0f766e 0%, #0b6b7a 100%)',
-    color: '#ffffff',
-    fontWeight: 700,
-    boxShadow: '0 14px 28px rgba(15, 118, 110, 0.22)',
-  },
-};
