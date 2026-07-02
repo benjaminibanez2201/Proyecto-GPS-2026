@@ -9,16 +9,17 @@ import {
   getPublicacionesPropias,
   updatePublicacion,
 } from "../controllers/publicacion.controller.js";
+import { parsePublicacionUploads } from "../middlewares/upload.middleware.js";
 
 const router = Router();
 
 router.use(authenticateJwt);
 
-router.post("/", createPublicacion); 
+router.post("/", parsePublicacionUploads, createPublicacion); 
 router.get("/", getPublicaciones);
 router.get("/mis-publicaciones", getPublicacionesPropias); 
 router.get("/:id", getPublicacionById);
-router.put("/:id", updatePublicacion); 
+router.put("/:id", parsePublicacionUploads, updatePublicacion); 
 router.delete("/:id", deletePublicacion); 
 
 export default router;

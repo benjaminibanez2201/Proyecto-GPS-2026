@@ -51,6 +51,40 @@ const registerUpload = multer({
   { maxCount: 1, name: "documentoResidencia" },
 ]);
 
+const profilePhotoUpload = multer({
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Solo se permiten imágenes JPG, PNG o WEBP"), false);
+    }
+  },
+  limits: {
+    fileSize: MAX_VERIFICATION_FILE_SIZE,
+    files: 1,
+  },
+  storage,
+}).single("fotoPerfil");
+
+const publicacionUpload = multer({
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Solo se permiten imágenes JPG, PNG o WEBP"), false);
+    }
+  },
+  limits: {
+    fileSize: MAX_VERIFICATION_FILE_SIZE,
+    files: 10,
+  },
+  storage,
+}).fields([
+  { maxCount: 10, name: "fotosPublicacion" },
+]);
+
 function formatUploadError(error) {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
@@ -76,6 +110,26 @@ export function parseRegisterUploads(req, res, next) {
       return handleErrorClient(res, 400, "Error de archivo", formatUploadError(error));
     }
 
+    return next();
+  });
+}
+
+export function parseProfilePhotoUpload(req, res, next) {
+  profilePhotoUpload(req, res, async (error) => {
+    if (error) {
+      await removeUploadedTempFiles(req.file ? { fotoPerfil: [req.file] } : {});
+      return handleErrorClient(res, 400, "Error de archivo", formatUploadError(error));
+    }
+    return next();
+  });
+}
+
+export function parsePublicacionUploads(req, res, next) {
+  publicacionUpload(req, res, async (error) => {
+    if (error) {
+      await removeUploadedTempFiles(req.files);
+      return handleErrorClient(res, 400, "Error de archivo", formatUploadError(error));
+    }
     return next();
   });
 }
