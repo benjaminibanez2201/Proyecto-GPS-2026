@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import PageTransition from '@components/PageTransition';
 import { useAuth, AuthProvider } from '@context/AuthContext';
 import { obtenerCantidadNotificacionesNoLeidas } from '@services/notificacion.service.js';
 import { obtenerConversaciones } from '@services/mensaje.service.js';
@@ -395,8 +396,13 @@ function PageRoot() {
           </div>
         </header>
 
-        <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px' }}>
-          <Outlet />
+        <main
+          className="app-content"
+          style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px' }}
+        >
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </main>
       </div>
     </div>
