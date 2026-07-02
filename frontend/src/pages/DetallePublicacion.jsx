@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { Heart, ArrowLeft, MapPin, Star, Mail, Phone, FlagTriangleRight } from 'lucide-react';
@@ -21,6 +21,14 @@ const SERVICIOS_LABELS = {
 
 function formatearServicio(servicio) {
   return SERVICIOS_LABELS[servicio] || servicio;
+}
+
+function formatPriceCLP(value) {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
 }
 
 export default function DetallePublicacion() {
@@ -175,7 +183,7 @@ export default function DetallePublicacion() {
           
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontSize: '28px', color: '#008080', fontWeight: 'bold', margin: '0' }}>
-              ${publicacion.precioMensual || 0}
+              {formatPriceCLP(publicacion.precioMensual)}
             </p>
             <span style={{ color: '#64748b', fontSize: '14px' }}>por mes</span>
           </div>
