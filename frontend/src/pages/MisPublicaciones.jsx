@@ -7,6 +7,39 @@ import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionMod
 
 const accent = '#0f766e';
 
+const SERVICIOS_VALIDOS = [
+  { id: 'agua', label: 'Agua' },
+  { id: 'luz', label: 'Luz' },
+  { id: 'gas', label: 'Gas' },
+  { id: 'internet', label: 'Internet' },
+  { id: 'tv_cable', label: 'TV Cable' },
+  { id: 'calefaccion', label: 'Calefacción' },
+  { id: 'estacionamiento', label: 'Estacionamiento' },
+  { id: 'lavadora', label: 'Lavadora' },
+];
+
+function renderServiciosCheckboxes(serviciosSeleccionados = []) {
+  const normalizados = serviciosSeleccionados.map((s) => String(s).trim().toLowerCase());
+
+  return SERVICIOS_VALIDOS.map((servicio) => `
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #334155; cursor: pointer;">
+      <input
+        type="checkbox"
+        id="swal-servicio-${servicio.id}"
+        ${normalizados.includes(servicio.id) ? 'checked' : ''}
+        style="accent-color: ${accent}; width: 15px; height: 15px; cursor: pointer;"
+      >
+      ${servicio.label}
+    </label>
+  `).join('');
+}
+
+function leerServiciosSeleccionados() {
+  return SERVICIOS_VALIDOS
+    .filter((servicio) => document.getElementById(`swal-servicio-${servicio.id}`)?.checked)
+    .map((servicio) => servicio.id);
+}
+
 const MisPublicaciones = () => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
@@ -44,7 +77,7 @@ const MisPublicaciones = () => {
   };
 
   const handleEditar = async (pub) => {
-    const serviciosString = Array.isArray(pub.serviciosIncluidos) ? pub.serviciosIncluidos.join(', ') : '';
+    const serviciosActuales = Array.isArray(pub.serviciosIncluidos) ? pub.serviciosIncluidos : [];
 
     const { value: formValues } = await Swal.fire({
       title: 'Editar Publicación',
@@ -94,9 +127,10 @@ const MisPublicaciones = () => {
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos (separados por coma)</label>
-              <input id="swal-edit-servicios" value="${serviciosString}" placeholder="Wifi, Luz, Agua, Lavandería" 
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos</label>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 12px; border-radius: 12px; border: 1px solid #cbd5e1; background-color: #f8fafc;">
+                ${renderServiciosCheckboxes(serviciosActuales)}
+              </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -140,27 +174,26 @@ const MisPublicaciones = () => {
         });
       },
       preConfirm: () => {
-        const serviciosRaw = document.getElementById('swal-edit-servicios').value;
-        const serviciosIncluidos = serviciosRaw ? serviciosRaw.split(',').map(s => s.trim()) : [];
-
         return {
           titulo: document.getElementById('swal-edit-titulo').value,
           precioMensual: parseInt(document.getElementById('swal-edit-precio').value),
           ubicacion: document.getElementById('swal-edit-ubicacion').value,
           fotos: [document.getElementById('swal-edit-foto').value],
-          serviciosIncluidos,
-          rules: document.getElementById('swal-edit-reglas').value
+          serviciosIncluidos: leerServiciosSeleccionados(),
+          reglasConvivencia: document.getElementById('swal-edit-reglas').value
         };
       },
     });
 
     if (formValues) {
-      const response = await editarPublicacion(pub.id, formValues);
-      if (response) {
-        Swal.fire({ icon: 'success', title: 'Publicación actualizada', confirmButtonColor: accent });
-        fetchPublicaciones();
+      const [publicacionActualizada, errorEdicion] = await editarPublicacion(pub.id, formValues);
+      if (errorEdicion) {
+        Swal.fire({ icon: 'error', title: 'No se pudo editar', text: errorEdicion, confirmButtonColor: accent });
+        return;
       }
-    }
+      Swal.fire({ icon: 'success', title: 'Publicación actualizada', confirmButtonColor: accent });
+      fetchPublicaciones();
+}
   };
 
   const handleCrear = async () => {
@@ -215,9 +248,10 @@ const MisPublicaciones = () => {
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos (separados por coma)</label>
-              <input id="swal-servicios" placeholder="Wifi, Luz, Agua, Lavandería" 
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos</label>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 12px; border-radius: 12px; border: 1px solid #cbd5e1; background-color: #f8fafc;">
+                ${renderServiciosCheckboxes()}
+              </div>
             </div>
           </div>
 
@@ -273,29 +307,26 @@ const MisPublicaciones = () => {
         });
       },
       preConfirm: () => {
-        const serviciosRaw = document.getElementById('swal-servicios').value;
-        const serviciosIncluidos = serviciosRaw ? serviciosRaw.split(',').map(s => s.trim()) : [];
-
         return { 
           titulo: document.getElementById('swal-titulo').value, 
           tipoInmueble: document.getElementById('swal-tipo').value, 
           precioMensual: parseInt(document.getElementById('swal-precio').value), 
           ubicacion: document.getElementById('swal-ubicacion').value, 
           fotos: [document.getElementById('swal-foto').value], 
-          serviciosIncluidos, 
+          serviciosIncluidos: leerServiciosSeleccionados(), 
           reglasConvivencia: document.getElementById('swal-reglas').value 
         };
       }
     });
 
     if (formValues) {
-      const response = await crearPublicacion(formValues);
-      if (response?.id) {
-        Swal.fire({ icon: 'success', title: '¡Publicación creada!', confirmButtonColor: accent });
-        fetchPublicaciones();
-      } else {
-        Swal.fire({ icon: 'error', title: 'Error', text: response?.message || 'No se pudo crear la publicación', confirmButtonColor: accent });
+      const [publicacionCreada, errorCreacion] = await crearPublicacion(formValues);
+      if (errorCreacion) {
+        Swal.fire({ icon: 'error', title: 'No se pudo crear', text: errorCreacion, confirmButtonColor: accent });
+        return;
       }
+      Swal.fire({ icon: 'success', title: '¡Publicación creada!', confirmButtonColor: accent });
+      fetchPublicaciones();
     }
   };
 
@@ -363,7 +394,6 @@ const MisPublicaciones = () => {
                       src={pub.fotos[0]} 
                       alt={pub.titulo} 
                       style={styles.pubImage} 
-                      // Si la URL falla o está rota, reemplaza la imagen por un fondo limpio gris
                       onError={(e) => { 
                         e.target.style.display = 'none'; 
                         e.target.nextSibling.style.display = 'flex'; 
@@ -371,7 +401,6 @@ const MisPublicaciones = () => {
                     />
                   ) : null}
                   
-                  {/* Placeholder oculto por defecto, se activa si falla la imagen anterior */}
                   <div style={{
                     ...styles.imagePlaceholder, 
                     display: pub.fotos && pub.fotos[0] && pub.fotos[0].startsWith('http') ? 'none' : 'flex'
@@ -463,15 +492,6 @@ const styles = {
   eyebrow: { margin: '0 0 6px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' },
   cardTitle: { margin: '0 0 6px', fontSize: '24px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' },
   cardSubtitle: { margin: 0, fontSize: '14px', color: '#64748b' },
-  
-  // ¡AQUÍ ESTÁ LA MAGIA! Transformamos la lista plana en un Grid de tarjetas tipo catálogo
-  
-  // Contenedor superior con fondo y badge flotante
-  
-  // Datos internos de la tarjeta
-  
-  // Sección de botones abajo pegados al borde de la tarjeta
-  // Agrega o reemplaza estos campos exactos dentro de tu constante "styles"
   pubListContainer: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',

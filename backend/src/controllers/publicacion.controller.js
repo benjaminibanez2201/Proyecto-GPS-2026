@@ -206,3 +206,4 @@ export async function removeFavorito(req, res) {
     handleErrorServer(res, 500, error.message);
   }
 }
+
