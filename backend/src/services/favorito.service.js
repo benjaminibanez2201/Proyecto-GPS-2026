@@ -10,7 +10,6 @@ export async function createFavoritoService(estudianteId, publicacionId) {
 
     const publicacion = await publicacionRepository.findOneBy({ 
       id: parseInt(publicacionId),
-      estado: "activa"
     });
 
     if (!publicacion) {

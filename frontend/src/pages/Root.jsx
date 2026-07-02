@@ -76,7 +76,8 @@ function PageRoot() {
       items: [
         { label: 'Panel Administrador', icon: Home, to: '/admin' },
         { label: 'Gestión de Usuarios', icon: Users, to: '/admin/users?estado=todos' },
-        { label: 'Publicaciones Reportadas', icon: FlagTriangleRight, disabled: true },
+        { label: 'Publicaciones Reportadas', icon: FlagTriangleRight, to: '/admin/reportes' },
+        { label: 'Auditoría', icon: History, to: '/admin/auditoria' },
       ],
     },
   };

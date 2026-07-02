@@ -1,12 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { Heart, ArrowLeft, FlagTriangleRight } from 'lucide-react';
+import { Heart, ArrowLeft, MapPin, Star, Mail, Phone, FlagTriangleRight } from 'lucide-react';
 import { getPublicacionPorId } from '../services/publicacion.service.js';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import { useAuth } from '../context/AuthContext';
 import ModalReportar from '../components/ModalReportar.jsx';
 import '@styles/basePublicaciones.css';
+
+const SERVICIOS_LABELS = {
+  agua: 'Agua',
+  luz: 'Luz',
+  gas: 'Gas',
+  internet: 'Internet',
+  tv_cable: 'TV Cable',
+  calefaccion: 'Calefacción',
+  estacionamiento: 'Estacionamiento',
+  lavadora: 'Lavadora',
+};
+
+function formatearServicio(servicio) {
+  return SERVICIOS_LABELS[servicio] || servicio;
+}
 
 export default function DetallePublicacion() {
   const { id } = useParams();
@@ -24,6 +39,7 @@ export default function DetallePublicacion() {
   const esAutorPublicacion = String(publicacion?.arrendador?.id) === String(user?.id);
 
   const idPublicacion = publicacion?.id || publicacion?._id;
+  const arrendador = publicacion?.arrendador;
 
   useEffect(() => {
     const traerDetalles = async () => {
@@ -167,7 +183,6 @@ export default function DetallePublicacion() {
 
         <hr style={{ margin: '30px 0', borderColor: '#e2e8f0', opacity: 0.5 }}/>
         
-        {/* === CONTENEDOR DE LA IMAGEN CON EL BOTÓN FLOTANTE === */}
         <div style={{ position: 'relative', marginBottom: '30px' }}>
           <img 
             src={imagenPrincipal} 
@@ -210,14 +225,33 @@ export default function DetallePublicacion() {
             </button>
           )}
         </div>
-        {/* ==================================================== */}
+
+        {fotos && fotos.length > 1 && (
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '30px', overflowX: 'auto' }}>
+            {fotos.slice(1).map((foto, index) => (
+              <img
+                key={index}
+                src={foto}
+                alt={`${publicacion.titulo || 'Arriendo'} - foto ${index + 2}`}
+                style={{ width: '140px', height: '100px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }}
+              />
+            ))}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
           <div>
             <h3 style={{ color: '#2c3e50', marginBottom: '15px' }}>Ubicación</h3>
-            <p style={{ color: '#475569', lineHeight: '1.6' }}>
-               {publicacion.ubicacion || 'Ubicación no especificada'}
+            <p style={{ color: '#475569', lineHeight: '1.6', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MapPin size={16} color="#008080" />
+              {publicacion.ubicacion || 'Ubicación no especificada'}
             </p>
+
+            {publicacion.distanciaCampus != null && (
+              <p style={{ color: '#475569', lineHeight: '1.6', marginTop: '6px' }}>
+                A <strong>{publicacion.distanciaCampus} km</strong> del campus
+              </p>
+            )}
 
             <h3 style={{ color: '#2c3e50', marginTop: '30px', marginBottom: '15px' }}>Reglas de Convivencia</h3>
             <p style={{ color: '#475569', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
@@ -225,55 +259,102 @@ export default function DetallePublicacion() {
             </p>
           </div>
 
-          <div style={{ backgroundColor: '#f8fafc', padding: '24px', borderRadius: '12px', height: 'fit-content' }}>
-            <h3 style={{ margin: '0 0 20px 0', color: '#2c3e50', fontSize: '18px' }}>Servicios Incluidos</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#475569', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {publicacion.serviciosIncluidos && publicacion.serviciosIncluidos.length > 0 ? (
-                publicacion.serviciosIncluidos.map((servicio, index) => (
-                  <li key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: '#008080' }}>✓</span> {servicio}
-                  </li>
-                ))
-              ) : (
-                <li>No se han especificado servicios</li>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+            {arrendador && (
+              <div style={{ backgroundColor: '#f8fafc', padding: '24px', borderRadius: '12px' }}>
+                <h3 style={{ margin: '0 0 16px 0', color: '#2c3e50', fontSize: '18px' }}>Propietario</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                  <img
+                    src={arrendador.fotoPerfil || 'https://via.placeholder.com/100?text=?'}
+                    alt={arrendador.nombreCompleto || 'Propietario'}
+                    style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                  />
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 'bold', color: '#2c3e50', fontSize: '15px' }}>
+                      {arrendador.nombreCompleto || 'Propietario'}
+                    </p>
+                    {arrendador.avgRating != null && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                        <Star size={14} fill="#f59e0b" color="#f59e0b" />
+                        <span style={{ fontSize: '13px', color: '#475569' }}>
+                          {Number(arrendador.avgRating).toFixed(1)}
+                          {arrendador.reviewsCount != null && (
+                            <span style={{ color: '#94a3b8' }}> ({arrendador.reviewsCount} reseñas)</span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {!esArrendador && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {arrendador.email && (
+                      <p style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#475569', margin: 0 }}>
+                        <Mail size={14} color="#008080" /> {arrendador.email}
+                      </p>
+                    )}
+                    {arrendador.telefono && (
+                      <p style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#475569', margin: 0 }}>
+                        <Phone size={14} color="#008080" /> {arrendador.telefono}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div style={{ backgroundColor: '#f8fafc', padding: '24px', borderRadius: '12px', height: 'fit-content' }}>
+              <h3 style={{ margin: '0 0 20px 0', color: '#2c3e50', fontSize: '18px' }}>Servicios Incluidos</h3>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#475569', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {publicacion.serviciosIncluidos && publicacion.serviciosIncluidos.length > 0 ? (
+                  publicacion.serviciosIncluidos.map((servicio, index) => (
+                    <li key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ color: '#008080' }}>✓</span> {formatearServicio(servicio)}
+                    </li>
+                  ))
+                ) : (
+                  <li>No se han especificado servicios</li>
+                )}
+              </ul>
+
+              {!esArrendador && (
+                <button
+                  type="button"
+                  className="confirm-btn"
+                  onClick={() => navigate(`/mensajes?publicacion=${id}`)}
+                  style={{ width: '100%', marginTop: '30px' }}
+                >
+                  Contactar al Propietario
+                </button>
               )}
-            </ul>
 
-            {!esArrendador && (
-              <button
-                type="button"
-                className="confirm-btn"
-                onClick={() => navigate(`/mensajes?publicacion=${id}`)}
-                style={{ width: '100%', marginTop: '30px' }}
-              >
-                Contactar al Propietario
-              </button>
-            )}
-
-            {!esAutorPublicacion && (
-              <button
-                type="button"
-                onClick={() => setMostrarModalReporte(true)}
-                style={{
-                  width: '100%',
-                  marginTop: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  padding: '12px 18px',
-                  borderRadius: '12px',
-                  border: '1px solid #f2c94c',
-                  backgroundColor: '#fff7db',
-                  color: '#8b6b00',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                }}
-              >
-                <FlagTriangleRight size={16} strokeWidth={2.2} />
-                Reportar publicación
-              </button>
-            )}
+              {!esAutorPublicacion && (
+                <button
+                  type="button"
+                  onClick={() => setMostrarModalReporte(true)}
+                  style={{
+                    width: '100%',
+                    marginTop: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '12px 18px',
+                    borderRadius: '12px',
+                    border: '1px solid #f2c94c',
+                    backgroundColor: '#fff7db',
+                    color: '#8b6b00',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <FlagTriangleRight size={16} strokeWidth={2.2} />
+                  Reportar publicación
+                </button>
+              )}
+            </div>
 
           </div>
         </div>

@@ -13,6 +13,7 @@ export async function getPublicaciones(filtros = {}) {
     return [response.data.data, null];
     
   } catch (error) {
+    console.log(error.response?.data?.message || 'Error al obtener las publicaciones');
     return [null, error.response?.data?.message || 'Error al obtener las publicaciones'];
   }
 }

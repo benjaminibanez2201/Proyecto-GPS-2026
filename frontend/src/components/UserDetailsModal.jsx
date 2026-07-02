@@ -15,10 +15,10 @@ const fieldLabels = {
     email: 'Correo electrónico',
     rol: 'Rol',
     estadoVerificacion: 'Estado de verificación',
-    comentarioVerificacion: 'Comentario de revision',
+    comentarioVerificacion: 'Comentario de revisión',
     motivoRechazo: 'Motivo de rechazo',
     solicitudAntecedentes: 'Antecedentes solicitados',
-    verificacionRevisadaEn: 'Fecha de revision',
+    verificacionRevisadaEn: 'Fecha de revisión',
     verificacionRevisadaPorId: 'Revisado por',
     telefono: 'Teléfono',
     universidad: 'Universidad',
@@ -44,12 +44,89 @@ const requiredVerificationFields = {
     arrendador: ['documentoVerificacion', 'documentoVerificacionReverso', 'documentoResidencia', 'fotoPerfil'],
 };
 
+const identityDocumentFields = [
+    'documentoVerificacion',
+    'documentoVerificacionReverso',
+    'carnetIdentidadFrontal',
+    'carnetIdentidadReverso',
+];
+
+const identityQuickRejectionReasons = [
+    {
+        label: 'Foto poco visible',
+        buildComment: (document) => `${document.label}: foto poco visible.`,
+    },
+    {
+        label: 'Expirado',
+        buildComment: (document) => `${document.label}: documento expirado.`,
+    },
+    {
+        label: 'Persona no coincide',
+        buildComment: (document) => `${document.label}: la persona del documento no coincide con los datos de la cuenta.`,
+    },
+];
+
+const profilePhotoQuickRejectionReasons = [
+    {
+        label: 'Foto poco visible',
+        buildComment: (document) => `${document.label}: foto poco visible.`,
+    },
+    {
+        label: 'Persona no coincide',
+        buildComment: (document) => `${document.label}: la persona de la foto no coincide con los datos de la cuenta.`,
+    },
+    {
+        label: 'No corresponde',
+        buildComment: (document) => `${document.label}: el archivo no corresponde a una foto de perfil.`,
+    },
+];
+
+const generalQuickRejectionReasons = [
+    {
+        label: 'Poco legible',
+        buildComment: (document) => `${document.label}: documento poco legible.`,
+    },
+    {
+        label: 'No vigente',
+        buildComment: (document) => `${document.label}: documento no vigente.`,
+    },
+    {
+        label: 'No corresponde',
+        buildComment: (document) => `${document.label}: el archivo no corresponde al antecedente solicitado.`,
+    },
+];
+
+function getQuickReasonsForDocument(document) {
+    if (document.field === 'fotoPerfil') return profilePhotoQuickRejectionReasons;
+    if (identityDocumentFields.includes(document.field)) return identityQuickRejectionReasons;
+    return generalQuickRejectionReasons;
+}
+
 function formatValue(value) {
     if (value === null || value === undefined || value === '') {
         return 'No registrado';
     }
 
     return value;
+}
+
+function getFileExtension(filename = '') {
+    return filename.split('.').pop()?.toLowerCase() || '';
+}
+
+function isImagePreview(preview) {
+    const contentType = (preview.contentType || '').toLowerCase();
+    const extension = getFileExtension(preview.filename);
+
+    return contentType.startsWith('image/')
+        || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'].includes(extension);
+}
+
+function isPdfPreview(preview) {
+    const contentType = (preview.contentType || '').toLowerCase();
+    const extension = getFileExtension(preview.filename);
+
+    return contentType.includes('application/pdf') || extension === 'pdf';
 }
 
 function PdfFilePreview({ preview }) {
@@ -100,7 +177,7 @@ function PdfFilePreview({ preview }) {
                     pageWrap.style.gap = '8px';
                     pageWrap.style.marginBottom = pageNumber === pdf.numPages ? '0' : '18px';
 
-                    pageLabel.textContent = `Pagina ${pageNumber} de ${pdf.numPages}`;
+                    pageLabel.textContent = `Página ${pageNumber} de ${pdf.numPages}`;
                     pageLabel.style.alignSelf = 'flex-start';
                     pageLabel.style.color = '#64748b';
                     pageLabel.style.fontSize = '12px';
@@ -178,7 +255,7 @@ function PdfFilePreview({ preview }) {
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '10px' }}>
                 <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 700 }}>
-                    {isRendering ? 'Cargando PDF...' : 'Previsualizacion PDF'}
+                    {isRendering ? 'Cargando PDF...' : 'Previsualización PDF'}
                 </span>
                 <button
                     type="button"
@@ -198,7 +275,7 @@ function PdfFilePreview({ preview }) {
             </div>
             <div
                 ref={pagesRef}
-                aria-label={`Previsualizacion de ${preview.filename}`}
+                aria-label={`Previsualización de ${preview.filename}`}
                 style={{
                     width: '100%',
                     maxHeight: isExpanded ? 'calc(100vh - 138px)' : '360px',
@@ -280,10 +357,14 @@ function ImageFilePreview({ preview }) {
                 aria-label={`Ampliar ${preview.filename}`}
                 title="Ampliar imagen"
                 style={{
-                    border: 'none',
+                    display: 'block',
+                    width: 'min(320px, 100%)',
+                    border: '1px solid #d7eeee',
+                    borderRadius: '10px',
                     padding: 0,
-                    backgroundColor: 'transparent',
+                    backgroundColor: '#f8fafc',
                     cursor: 'zoom-in',
+                    overflow: 'hidden',
                     textAlign: 'left',
                 }}
             >
@@ -291,12 +372,11 @@ function ImageFilePreview({ preview }) {
                     src={preview.url}
                     alt={preview.filename}
                     style={{
-                        width: 'min(240px, 100%)',
-                        maxHeight: '180px',
-                        objectFit: 'cover',
-                        borderRadius: '8px',
-                        border: '1px solid #d7eeee',
+                        width: '100%',
+                        height: '180px',
+                        objectFit: 'contain',
                         display: 'block',
+                        backgroundColor: '#ffffff',
                     }}
                 />
             </button>
@@ -482,16 +562,21 @@ function VerificationFilePreview({ value }) {
         return <span>Cargando archivo...</span>;
     }
 
-    const isImage = preview.contentType?.startsWith('image/');
-    const isPdf = preview.contentType === 'application/pdf';
+    const isImage = isImagePreview(preview);
+    const isPdf = isPdfPreview(preview);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start', width: '100%' }}>
             {isImage && (
                 <ImageFilePreview preview={preview} />
             )}
             {isPdf && (
                 <PdfFilePreview preview={preview} />
+            )}
+            {!isImage && !isPdf && (
+                <span style={{ color: '#b45309', fontSize: '13px', fontWeight: 700 }}>
+                    Vista previa no disponible para este tipo de archivo.
+                </span>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '100%' }}>
                 <span style={{ color: '#0f766e', fontSize: '12px', fontWeight: 800 }}>
@@ -509,6 +594,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
     const [reviewComment, setReviewComment] = useState('');
     const [reviewError, setReviewError] = useState('');
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const reviewCommentRef = useRef(null);
 
     useEffect(() => {
         if (!show) return;
@@ -539,8 +625,24 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
     }));
     const hasMissingRequiredDocs = requiredDocuments.some((document) => !document.isPresent);
     const canReview = Boolean(onVerificationAction) && ['estudiante', 'arrendador'].includes(normalizedRole);
+    const hasPendingInfoRequest = Boolean(String(user?.solicitudAntecedentes || '').trim());
+    const shouldShowVerificationReview = canReview && normalizedStatus === 'pendiente' && !hasPendingInfoRequest;
+    const quickReasonDocuments = requiredDocuments.filter((document) => document.isPresent);
+
+    const applyQuickReason = (comment, keepCursor = false) => {
+        setReviewComment((current) => {
+            if (keepCursor) return `${current}${comment}`;
+            const trimmed = current.trim();
+            return trimmed ? `${trimmed}\n${comment}` : comment;
+        });
+        setReviewError('');
+        requestAnimationFrame(() => {
+            reviewCommentRef.current?.focus();
+        });
+    };
+
     const submitVerificationAction = async (actionType) => {
-        if (!canReview) return;
+        if (!shouldShowVerificationReview) return;
 
         const trimmedComment = reviewComment.trim();
         let payload = null;
@@ -571,7 +673,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
 
         if (actionType === 'request-info') {
             if (!trimmedComment) {
-                setReviewError('Indica que antecedentes adicionales debe enviar el usuario.');
+                setReviewError('Indica qué antecedentes adicionales debe enviar el usuario.');
                 return;
             }
 
@@ -590,7 +692,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
             await onVerificationAction(user, payload);
             setReviewComment('');
         } catch (error) {
-            setReviewError(error?.message || 'No se pudo completar la revision.');
+            setReviewError(error?.message || 'No se pudo completar la revisión.');
         } finally {
             setIsSubmittingReview(false);
         }
@@ -629,6 +731,67 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
         >
             <style>
                 {`
+                    .verification-quick-reasons {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                        margin: 0 0 14px;
+                        padding: 12px;
+                        border-radius: 12px;
+                        background: #ffffff;
+                        border: 1px solid #dbeafe;
+                    }
+
+                    .verification-quick-reasons__title {
+                        color: #334155;
+                        font-size: 12px;
+                        font-weight: 800;
+                    }
+
+                    .verification-quick-reasons__row {
+                        display: grid;
+                        grid-template-columns: minmax(130px, 0.65fr) minmax(0, 1fr);
+                        gap: 8px;
+                        align-items: start;
+                    }
+
+                    .verification-quick-reasons__doc {
+                        color: #0f766e;
+                        font-size: 12px;
+                        font-weight: 800;
+                        line-height: 1.35;
+                    }
+
+                    .verification-quick-reasons__actions {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 6px;
+                    }
+
+                    .verification-quick-reasons__chip {
+                        border: 1px solid #99d7d2;
+                        border-radius: 999px;
+                        padding: 5px 9px;
+                        background: #f8fbfb;
+                        color: #0f766e;
+                        font-size: 12px;
+                        font-weight: 800;
+                        cursor: pointer;
+                    }
+
+                    .verification-quick-reasons__chip:hover,
+                    .verification-quick-reasons__chip:focus-visible {
+                        border-color: #0f766e;
+                        background: #e7f6f2;
+                        outline: none;
+                    }
+
+                    @media (max-width: 620px) {
+                        .verification-quick-reasons__row {
+                            grid-template-columns: 1fr;
+                        }
+                    }
+
                     .${modalScrollClassName} {
                         scrollbar-width: thin;
                         scrollbar-color: rgba(15, 118, 110, 0.55) transparent;
@@ -753,12 +916,12 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                         </section>
 
                         <section style={{ padding: '24px 32px 56px', backgroundColor: '#ffffff', borderBottomLeftRadius: '22px', borderBottomRightRadius: '22px' }}>
-                            {canReview && (
+                            {shouldShowVerificationReview && (
                                 <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '14px', border: '1px solid #d7eeee', backgroundColor: '#f8fafc' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '12px' }}>
                                         <div>
                                             <p style={{ margin: '0 0 6px', color: '#0f766e', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                                Revision RF13
+                                                Revisión de antecedentes
                                             </p>
                                             <h3 style={{ margin: 0, color: '#0f172a', fontSize: '18px', lineHeight: 1.25 }}>
                                                 Documentos de {normalizedRole}
@@ -791,16 +954,51 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                         ))}
                                     </div>
 
+                                    {quickReasonDocuments.length > 0 && (
+                                        <div className="verification-quick-reasons">
+                                            <span className="verification-quick-reasons__title">
+                                                Motivos sugeridos
+                                            </span>
+                                            {quickReasonDocuments.map((document) => (
+                                                <div key={`quick-${document.field}`} className="verification-quick-reasons__row">
+                                                    <span className="verification-quick-reasons__doc">
+                                                        {document.label}
+                                                    </span>
+                                                    <div className="verification-quick-reasons__actions">
+                                                        {getQuickReasonsForDocument(document).map((reason) => (
+                                                            <button
+                                                                key={`${document.field}-${reason.label}`}
+                                                                type="button"
+                                                                className="verification-quick-reasons__chip"
+                                                                onClick={() => applyQuickReason(reason.buildComment(document))}
+                                                            >
+                                                                {reason.label}
+                                                            </button>
+                                                        ))}
+                                                        <button
+                                                            type="button"
+                                                            className="verification-quick-reasons__chip"
+                                                            onClick={() => applyQuickReason(`${document.label}: `, true)}
+                                                        >
+                                                            Otro
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     <label style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginBottom: '12px' }}>
                                         <span style={{ color: '#334155', fontSize: '13px', fontWeight: 800 }}>
                                             Comentario para rechazo o solicitud de antecedentes
                                         </span>
                                         <textarea
+                                            ref={reviewCommentRef}
                                             value={reviewComment}
                                             onChange={(event) => setReviewComment(event.target.value)}
                                             rows={4}
                                             maxLength={1000}
-                                            placeholder="Ej: El documento esta borroso; por favor envia una imagen legible del reverso del carnet."
+                                            placeholder="Ej: El documento está borroso; por favor envía una imagen legible del reverso del carnet."
                                             style={{
                                                 width: '100%',
                                                 resize: 'vertical',
@@ -826,15 +1024,15 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                         <button
                                             type="button"
                                             onClick={() => submitVerificationAction('approve')}
-                                            disabled={isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado'}
+                                            disabled={isSubmittingReview || hasMissingRequiredDocs}
                                             style={{
                                                 border: 'none',
                                                 borderRadius: '10px',
                                                 padding: '10px 14px',
                                                 backgroundColor: '#0f766e',
                                                 color: '#ffffff',
-                                                cursor: isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado' ? 'not-allowed' : 'pointer',
-                                                opacity: isSubmittingReview || hasMissingRequiredDocs || normalizedStatus === 'aprobado' ? 0.55 : 1,
+                                                cursor: isSubmittingReview || hasMissingRequiredDocs ? 'not-allowed' : 'pointer',
+                                                opacity: isSubmittingReview || hasMissingRequiredDocs ? 0.55 : 1,
                                                 fontWeight: 800,
                                             }}
                                         >
@@ -860,15 +1058,15 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                         <button
                                             type="button"
                                             onClick={() => submitVerificationAction('request-info')}
-                                            disabled={isSubmittingReview || normalizedStatus === 'aprobado'}
+                                            disabled={isSubmittingReview}
                                             style={{
                                                 border: '1px solid #0f766e',
                                                 borderRadius: '10px',
                                                 padding: '10px 14px',
                                                 backgroundColor: '#ffffff',
                                                 color: '#0f766e',
-                                                cursor: isSubmittingReview || normalizedStatus === 'aprobado' ? 'not-allowed' : 'pointer',
-                                                opacity: isSubmittingReview || normalizedStatus === 'aprobado' ? 0.55 : 1,
+                                                cursor: isSubmittingReview ? 'not-allowed' : 'pointer',
+                                                opacity: isSubmittingReview ? 0.55 : 1,
                                                 fontWeight: 800,
                                             }}
                                         >
@@ -895,11 +1093,11 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                                 ? documentFieldLabels[field]
                                                 : fieldLabels[field] || field}
                                         </span>
-                                        <span style={{ fontSize: '14px', lineHeight: 1.5, color: '#0f172a', wordBreak: 'break-word' }}>
+                                        <div style={{ fontSize: '14px', lineHeight: 1.5, color: '#0f172a', wordBreak: 'break-word', minWidth: 0 }}>
                                             {field === 'documentoResidencia' || field === 'documentoVerificacion' || field === 'documentoVerificacionReverso' || field === 'carnetIdentidadFrontal' || field === 'carnetIdentidadReverso' || field === 'fotoPerfil'
                                                 ? <VerificationFilePreview value={user?.[field]} />
                                                 : formatValue(user?.[field])}
-                                        </span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

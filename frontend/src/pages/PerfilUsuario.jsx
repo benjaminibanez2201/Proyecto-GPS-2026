@@ -68,7 +68,7 @@ export default function PerfilUsuario() {
               key={i}
               size={20}
               strokeWidth={2}
-              // Si es llena, se pinta con tu color #ffd21f. Si es vacía, el fondo es transparente.
+              // Si es llena, se pinta con color #ffd21f. Si es vacía, el fondo es transparente.
               fill={esLlena ? colores.oro : 'transparent'}
               // El borde de la estrella toma el color oro si está llena, o un gris suave si está vacía
               color={esLlena ? colores.oro : '#d9d9d9'}
@@ -132,7 +132,7 @@ export default function PerfilUsuario() {
             border: `4px solid ${colores.blanco}`,
             boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
           }}>
-            {usuario?.nombre.charAt(0)}
+            {usuario?.nombre?.charAt(0)?.toUpperCase()}
           </div>
           <h2 style={{ margin: '0 0 5px 0', fontSize: '24px' }}>{usuario?.nombre}</h2>
           <span style={{
@@ -141,7 +141,8 @@ export default function PerfilUsuario() {
             padding: '4px 12px',
             borderRadius: '12px',
             fontSize: '12px',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            textTransform: 'uppercase'
           }}>{usuario?.rol}</span>
         </div>
 

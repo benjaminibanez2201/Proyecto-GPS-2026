@@ -1,8 +1,10 @@
 "use strict";
 import User from "../entity/user.entity.js";
+import AuditoriaAdmin from "../entity/auditoria.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
 import { removeVerificationUploadsForUser } from "../helpers/upload.helper.js";
+import { createEmailVerificationData } from "./auth.service.js";
 import {
   sendAccountApprovedEmail,
   sendAccountRejectedEmail,
@@ -53,7 +55,7 @@ async function notifyVerificationResult(user, estadoVerificacion, reviewData) {
 
   if (estadoVerificacion === "aprobado") {
     tipo = "verificacion_aprobada";
-    mensaje = "Tu cuenta fue aprobada. Ya puedes usar ArriendU.";
+    mensaje = "Tu cuenta fue aprobada. Confirma tu correo para activar el acceso.";
     sendEmail = () => sendAccountApprovedEmail(user);
   } else if (estadoVerificacion === "rechazado") {
     tipo = "verificacion_rechazada";
@@ -245,6 +247,7 @@ export async function updateUserVerificationStatusService(query, reviewPayload, 
     );
 
     const userRepository = AppDataSource.getRepository(User);
+    const auditoriaRepository = AppDataSource.getRepository(AuditoriaAdmin);
 
     const userFound = await userRepository.findOne({
       where: [{ id: id }, { rut: rut }, { email: email }],
@@ -285,6 +288,15 @@ export async function updateUserVerificationStatusService(query, reviewPayload, 
       verificacionRevisadaEn: new Date(),
       verificacionRevisadaPorId: reviewerId,
       updatedAt: new Date(),
+      ...(estadoVerificacion === "aprobado" && !userFound.emailVerificado
+        ? createEmailVerificationData()
+        : {}),
+      ...(estadoVerificacion !== "aprobado"
+        ? {
+          emailVerificacionExpires: null,
+          emailVerificacionToken: null,
+        }
+        : {}),
     };
 
     await userRepository.update(
@@ -301,6 +313,29 @@ export async function updateUserVerificationStatusService(query, reviewPayload, 
     }
 
     const { password, ...userUpdated } = userData;
+
+    if (reviewerId) {
+      let accionAuditoria = "REVISAR_VERIFICACION";
+      if (estadoVerificacion === "aprobado") {
+        accionAuditoria = "APROBAR_DOCUMENTOS";
+      } else if (estadoVerificacion === "rechazado") {
+        accionAuditoria = "RECHAZAR_DOCUMENTOS";
+      } else if (hasInfoRequest) {
+        accionAuditoria = "SOLICITAR_ANTECEDENTES";
+      }
+
+      try {
+        const registroAuditoria = auditoriaRepository.create({
+          accion: accionAuditoria,
+          usuarioAfectadoId: userFound.id,
+          usuarioAfectadoEmail: userFound.email,
+          adminResponsable: { id: reviewerId },
+        });
+        await auditoriaRepository.save(registroAuditoria);
+      } catch (auditoriaError) {
+        console.error("Error al registrar auditoria de verificacion:", auditoriaError);
+      }
+    }
 
     try {
       const notificationResult = await notifyVerificationResult(userUpdated, estadoVerificacion, {
@@ -321,11 +356,12 @@ export async function updateUserVerificationStatusService(query, reviewPayload, 
   }
 }
 
-export async function deleteUserService(query) {
+export async function deleteUserService(query, adminId) {
   try {
     const { id, rut, email } = query;
 
     const userRepository = AppDataSource.getRepository(User);
+    const auditoriaRepository = AppDataSource.getRepository(AuditoriaAdmin);
 
     const userFound = await userRepository.findOne({
       where: [{ id: id }, { rut: rut }, { email: email }],
@@ -335,6 +371,15 @@ export async function deleteUserService(query) {
 
     if (userFound.rol === "admin") {
       return [null, "No se puede eliminar un usuario con rol de administrador"];
+    }
+    if (adminId) {
+      const registroAuditoria = auditoriaRepository.create({
+        accion: "ELIMINAR",
+        usuarioAfectadoId: userFound.id,
+        usuarioAfectadoEmail: userFound.email,
+        adminResponsable: { id: adminId }
+      });
+      await auditoriaRepository.save(registroAuditoria);
     }
 
     const userDeleted = await userRepository.remove(userFound);
@@ -353,9 +398,19 @@ export async function updateProfileService(id, body) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
-    const userFound = await userRepository.findOne({ where: { id } });
+    const userFound = await userRepository.findOne({ 
+      where: { id },
+      select: ['id', 'nombreCompleto', 'universidad', 'carrera', 'telefono', 'fotoPerfil', 'password', 'email']
+    });
 
     if (!userFound) return [null, "Usuario no encontrado"];
+
+    if (body.email && body.email !== userFound.email) {
+      const existingEmail = await userRepository.findOne({ where: { email: body.email } });
+      if (existingEmail && existingEmail.id !== userFound.id) {
+        return [null, "El correo ya está en uso por otro usuario"];
+      }
+    }
 
     const dataToUpdate = {
       ...(body.nombreCompleto && { nombreCompleto: body.nombreCompleto }),
@@ -363,14 +418,41 @@ export async function updateProfileService(id, body) {
       ...(body.carrera && { carrera: body.carrera }),
       ...(body.telefono && { telefono: body.telefono }),
       ...(body.fotoPerfil && { fotoPerfil: body.fotoPerfil }),
+      ...(body.email && { email: body.email }),
       updatedAt: new Date(),
     };
+
+    if (body.newPassword && body.newPassword.trim() !== '') {
+      dataToUpdate.password = await encryptPassword(body.newPassword);
+    }
 
     await userRepository.update({ id: userFound.id }, dataToUpdate);
 
     const userData = await userRepository.findOne({ where: { id: userFound.id } });
 
     if (!userData) return [null, "Usuario no encontrado despues de actualizar"];
+
+    if (body.newPassword) {
+      try {
+        await sendCredentialChangedEmail(
+          { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
+          ['password']
+        );
+      } catch (emailError) {
+        console.error("Error al enviar correo de aviso:", emailError);
+      }
+    }
+
+    if (body.email && body.email !== userFound.email) {
+      try {
+        await sendCredentialChangedEmail(
+          { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
+          ['email']
+        );
+      } catch (emailError) {
+        console.error("Error al enviar correo de aviso:", emailError);
+      }
+    }
 
     const { password, ...userUpdated } = userData;
 
@@ -404,12 +486,22 @@ export async function updateArrendadorProfileService(id, body) {
 
     const userFound = await userRepository.findOne({ 
       where: { id },
-      select: ['id', 'nombreCompleto', 'email', 'telefono', 'fotoPerfil', 'rol', 'estadoVerificacion']
+      select: ['id', 'nombreCompleto', 'email', 'telefono', 'fotoPerfil', 'rol', 'estadoVerificacion', 'password']
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];
 
-    if (body.email) {
+    if ((body.email && body.email !== userFound.email) || body.newPassword) {
+      if (!body.passwordActual) {
+        return [null, "Se requiere la contraseña actual para cambiar las credenciales"];
+      }
+      const isMatch = await comparePassword(body.passwordActual, userFound.password);
+      if (!isMatch) return [null, "Contraseña incorrecta"];
+    }
+
+    delete body.passwordActual;
+
+    if (body.email && body.email !== userFound.email) {
       const existingEmail = await userRepository.findOne({ where: { email: body.email } });
 
       if (existingEmail && existingEmail.id !== userFound.id) {
@@ -425,6 +517,10 @@ export async function updateArrendadorProfileService(id, body) {
       updatedAt: new Date(),
     };
 
+    if (body.newPassword && body.newPassword.trim() !== '') {
+      dataToUpdate.password = await encryptPassword(body.newPassword);
+    }
+
     await userRepository.update({ id: userFound.id }, dataToUpdate);
 
     const userData = await userRepository.findOne({ where: { id: userFound.id } });
@@ -433,15 +529,22 @@ export async function updateArrendadorProfileService(id, body) {
 
     const { password, ...userUpdated } = userData;
 
-    console.log("body.email:", body.email);
-    console.log("userFound.email:", userFound.email);
     if (body.email && body.email !== userFound.email) {
       try {
-        console.log("Enviando correo de aviso a:", userFound.email);
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
-          ['email'],
-          console.log("correo enviado a", userFound.email)
+          ['email']
+        );
+      } catch (emailError) {
+        console.error("Error al enviar correo de aviso:", emailError);
+      }
+    }
+
+    if (body.newPassword) {
+      try {
+        await sendCredentialChangedEmail(
+          { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
+          ['password']
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
@@ -474,5 +577,43 @@ export async function verifyPasswordService(id, password) {
   } catch (error) {
     console.error("Error al verificar contraseña:", error);
     return [null, "Error interno del servidor"];
+  }
+}
+
+export async function toggleUserStatusService(adminId, usuarioId, nuevoEstado) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+    const auditoriaRepository = AppDataSource.getRepository(AuditoriaAdmin);
+
+    const userFound = await userRepository.findOneBy({ id: parseInt(usuarioId) });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+    
+    if (userFound.rol === "admin") {
+      return [null, "No puedes modificar el estado de otro administrador."];
+    }
+
+    userFound.estadoCuenta = nuevoEstado;
+    await userRepository.save(userFound);
+
+    const registroAuditoria = auditoriaRepository.create({
+      accion: nuevoEstado === "suspendido" ? "BLOQUEAR" : "DESBLOQUEAR",
+      usuarioAfectadoId: userFound.id,
+      usuarioAfectadoEmail: userFound.email,
+      adminResponsable: { id: adminId }
+    });
+    await auditoriaRepository.save(registroAuditoria);
+
+    const { password, ...userData } = userFound;
+    return [userData, null];
+  } catch (error) {
+    console.error("toggleUserStatusService error:", {
+      adminId,
+      usuarioId,
+      nuevoEstado,
+      message: error?.message,
+      stack: error?.stack,
+    });
+    return [null, error?.message || "Error interno del servidor al actualizar estado"];
   }
 }

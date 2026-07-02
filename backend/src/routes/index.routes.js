@@ -11,6 +11,7 @@ import notificacionRoutes from "./notificacion.routes.js";
 import publicacionRoutes from "./publicacion.routes.js";
 import uploadRoutes from "./upload.routes.js";
 import favoritoRoutes from "./favorito.route.js";
+import auditoriaRoutes from "./auditoria.routes.js";
 
 const router = Router();
 router
@@ -25,5 +26,6 @@ router
     .use("/publicacion", publicacionRoutes)
     .use("/uploads", uploadRoutes)
     .use("/favoritos", favoritoRoutes);
+    router.use("/auditoria", auditoriaRoutes);
 
 export default router;
