@@ -49,8 +49,18 @@ export async function listarPublicacionesReportadas() {
     const result = Array.from(map.values()).map((item) => ({
       publicacion: item.publicacion,
       cantidadReportes: item.reportes.length,
-      motivos: item.reportes.map((x) => x.motivo),
-      fechas: item.reportes.map((x) => x.createdAt),
+      reportes: item.reportes.map((x) => ({
+        id: x.id,
+        motivo: x.motivo,
+        estado: x.estado,
+        accion: x.accion,
+        createdAt: x.createdAt,
+        reporter: x.reporter ? {
+          id: x.reporter.id,
+          nombreCompleto: x.reporter.nombreCompleto,
+          email: x.reporter.email,
+        } : null,
+      })),
       estadoActual: "pendiente",
     }));
 
