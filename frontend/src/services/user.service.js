@@ -107,18 +107,18 @@ export async function eliminarPublicacion(id) {
 export async function editarPublicacion(id, data) {
     try {
         const response = await axios.put(`/publicacion/${id}`, data);
-        return response.data.data;
+        return [response.data.data, null];
     } catch (error) {
-        return error.response.data;
+        return [null, error.response?.data?.message || 'Error al editar la publicación'];
     }
 }
 
 export async function crearPublicacion(data) {
     try {
         const response = await axios.post('/publicacion/', data);
-        return response.data.data;
+        return [response.data.data, null];
     } catch (error) {
-        return error.response.data;
+        return [null, error.response?.data?.message || 'Error al crear la publicación'];
     }
 }
 

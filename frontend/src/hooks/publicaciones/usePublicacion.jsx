@@ -5,6 +5,11 @@ export function usePublicaciones() {
   const [publicaciones, setPublicaciones] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
+  const [paginacion, setPaginacion] = useState({
+    paginaActual: 1,
+    totalPaginas: 1,
+    total: 0,
+  });
 
   const cargarPublicaciones = useCallback(async (filtros = {}) => {
     setCargando(true);
@@ -15,10 +20,16 @@ export function usePublicaciones() {
     if (errorRespuesta) {
       setError({ message: errorRespuesta, ts: Date.now() });
       setPublicaciones([]);
+      setPaginacion({ paginaActual: 1, totalPaginas: 1, total: 0 });
     } else {
       const listaArriendos = data?.data || (Array.isArray(data) ? data : []);
 
       setPublicaciones(listaArriendos);
+      setPaginacion({
+        paginaActual: data?.paginaActual || 1,
+        totalPaginas: data?.totalPaginas || 1,
+        total: data?.total || 0,
+      });
     }
 
     setCargando(false);
@@ -32,6 +43,7 @@ export function usePublicaciones() {
     publicaciones,
     cargando,
     error,
+    paginacion,
     cargarPublicaciones
   };
 }
