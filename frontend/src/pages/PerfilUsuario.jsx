@@ -195,23 +195,6 @@ export default function PerfilUsuario() {
           )}
         </div>
 
-        <div style={{ padding: '0 30px 30px 30px', textAlign: 'center' }}>
-          <button style={{
-            backgroundColor: colores.principal,
-            color: colores.blanco,
-            border: 'none',
-            padding: '12px 30px',
-            borderRadius: '6px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(0,128,128,0.2)',
-            width: '100%'
-          }}>
-            Iniciar contacto interno
-          </button>
-        </div>
-
       </div>
     </div>
   );

@@ -12,13 +12,14 @@ export async function createPublicacionService(arrendadorId, body) {
 
     const coordenadas = body.latitud != null && body.longitud != null
       ? { latitud: body.latitud, longitud: body.longitud }
-      : await obtenerCoordenadasArriendo(body.ubicacion);
+      : await obtenerCoordenadasArriendo(body.ubicacion, body.comuna);
 
     const newPublicacion = publicacionRepository.create({
       titulo: body.titulo,
       tipoInmueble: body.tipoInmueble,
       precioMensual: body.precioMensual,
       ubicacion: body.ubicacion,
+      comuna: body.comuna,
       latitud: coordenadas?.latitud ?? null,
       longitud: coordenadas?.longitud ?? null,
       fotos: body.fotos,
@@ -76,7 +77,7 @@ export async function getPublicacionesService(filtros) {
     }
 
     if (servicios) {
-      const serviciosArray = Array.isArray(servicios) ? servicios : servicios.split(',');
+      const serviciosArray = Array.isArray(servicios) ? servicios : servicios.split(",");
       serviciosArray.forEach((servicio, index) => {
         query.andWhere(`:servicio${index} = ANY(publicacion.serviciosIncluidos)`, {
           [`servicio${index}`]: servicio
@@ -95,6 +96,7 @@ export async function getPublicacionesService(filtros) {
       "publicacion.precioMensual",
       "publicacion.tipoInmueble",
       "publicacion.ubicacion",
+      "publicacion.comuna",
       "publicacion.latitud",
       "publicacion.longitud",
       "publicacion.fotos",
@@ -136,6 +138,7 @@ export async function getPublicacionDetalleService(id) {
         "publicacion.precioMensual",
         "publicacion.tipoInmueble",
         "publicacion.ubicacion",
+        "publicacion.comuna",
         "publicacion.fotos",
         "publicacion.serviciosIncluidos", 
         "publicacion.distanciaCampus",  
@@ -191,10 +194,17 @@ export async function updatePublicacionService(publicacionId, arrendadorId, body
 
     if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];
 
-    if (body.ubicacion && (body.ubicacion !== publicacion.ubicacion || body.latitud == null || body.longitud == null)) {
+    const comunaCambio = body.comuna && body.comuna !== publicacion.comuna;
+    const faltanCoordenadas = body.latitud == null || body.longitud == null;
+    const ubicacionEnBody = body.ubicacion && (body.ubicacion !== publicacion.ubicacion || faltanCoordenadas);
+
+    if (ubicacionEnBody || comunaCambio) {
+      const direccion = body.ubicacion ?? publicacion.ubicacion;
+      const comuna = body.comuna ?? publicacion.comuna;
+
       const coordenadas = body.latitud != null && body.longitud != null
         ? { latitud: body.latitud, longitud: body.longitud }
-        : await obtenerCoordenadasArriendo(body.ubicacion);
+        : await obtenerCoordenadasArriendo(direccion, comuna);
 
       publicacion.latitud = coordenadas?.latitud ?? null;
       publicacion.longitud = coordenadas?.longitud ?? null;
