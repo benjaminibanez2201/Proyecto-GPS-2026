@@ -307,6 +307,30 @@
     visibility: visible;
 }
 
+.form .field-label.has-required-hint,
+.form .form-field-group-title.has-required-hint {
+	display: inline-flex;
+	flex-direction: row;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 4px;
+	width: auto;
+}
+
+.form .field-required-asterisk {
+	color: #dc2626;
+	font-size: 15px;
+	font-weight: 800;
+	line-height: 1;
+}
+
+.form .field-required-text {
+	color: #64748b;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+}
+
 .container {
 	height: 100vh;
 	background: linear-gradient(90deg, #008080, #005f5f); /*Color principal para login (gradiente)*/
@@ -488,6 +512,22 @@ input {
 	border-radius: 4px;
 	accent-color: #003366;
 	background-image: none;
+}
+
+.register-container .form .checkbox-field {
+	color: #008080;
+}
+
+.register-container .form .checkbox-label-button {
+	color: #008080;
+}
+
+.register-container .form .checkbox-label-button:hover {
+	color: #005f5f;
+}
+
+.register-container .form .checkbox-field input {
+	accent-color: #008080;
 }
 
 .form .field-extra-content {

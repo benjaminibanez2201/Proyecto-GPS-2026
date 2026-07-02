@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { validate as validateRut } from 'rut.js';
 import { register } from '@services/auth.service.js';
 import Form from '@components/Form';
 import useRegister from '@hooks/auth/useRegister.jsx';
@@ -14,6 +15,10 @@ const MAX_PROFILE_PHOTO_SIZE = 8 * 1024 * 1024;
 const MAX_VERIFICATION_DOCUMENT_SIZE = 8 * 1024 * 1024;
 const PROFILE_PHOTO_TYPES = ['image/jpeg', 'image/png'];
 const VERIFICATION_DOCUMENT_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+
+const validateRutValue = (value) => (
+    validateRut(String(value || '').trim()) || 'El RUT ingresado no es válido'
+);
 
 const validateFile = (allowedTypes, maxSize, formatMessage) => (value) => {
     const file = value?.[0];
@@ -90,6 +95,10 @@ const Register = () => {
         <main className="container register-container">
             <Form
                 title="Crea tu cuenta"
+                validationMode="onChange"
+                reValidationMode="onChange"
+                showRequiredHints
+                validateControlledCheckboxOnMount={false}
                 fields={[
                     {
                         label: 'Nombre completo',
@@ -126,6 +135,9 @@ const Register = () => {
                         pattern: patternRut,
                         patternMessage: 'Debe ser xx.xxx.xxx-x o xxxxxxxx-x',
                         required: true,
+                        validate: {
+                            validRut: validateRutValue,
+                        },
                         errorMessageData: errorRut,
                         onChange: (e) => handleInputChange('rut', e.target.value),
                     },
@@ -140,6 +152,18 @@ const Register = () => {
                         maxLength: 50,
                         pattern: patternPassword,
                         patternMessage: 'Debe contener al menos una mayúscula, un número y un carácter especial.',
+                    },
+                    {
+                        label: 'Confirmar contraseña',
+                        name: 'confirmPassword',
+                        placeholder: '**********',
+                        fieldType: 'input',
+                        type: 'password',
+                        required: true,
+                        minLength: 8,
+                        maxLength: 50,
+                        matchField: 'password',
+                        matchMessage: 'Las contraseñas no coinciden',
                     },
                     {
                         label: 'Tipo de cuenta',
