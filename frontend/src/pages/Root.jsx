@@ -1,7 +1,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import {
   Home,
   User,
@@ -33,6 +33,7 @@ function Root() {
 function PageRoot() {
   const navigate = useNavigate();
   const location = useLocation();
+  const outlet = useOutlet();
   const { user } = useAuth();
   const userRole = (user?.rol || '').toString().toLowerCase();
   const normalizedRole = userRole === 'admin' ? 'administrador' : userRole;
@@ -86,10 +87,12 @@ function PageRoot() {
   const menu = menus[normalizedRole] || menus.estudiante;
   const unreadMessagesBadge = menu.items.some((item) => item.label === 'Mensajes') ? unreadMessagesCount : 0;
   const handleBannerClick = () => {
-    navigate(normalizedRole === 'administrador' ? '/admin' : '/home');
+    const destination = normalizedRole === 'administrador' ? '/admin' : '/home';
+    if (location.pathname === destination) return;
+    navigate(destination);
   };
 
-  const getSidebarItemStyle = ({ active = false, hovered = false, disabled = false }) => {
+  const getSidebarItemStyle = ({ active = false, hovered = false, disabled = false, current = false }) => {
     const highlight = active || hovered;
 
     return {
@@ -100,10 +103,31 @@ function PageRoot() {
       transform: highlight ? 'translateY(-1px)' : 'translateY(0)',
       transition: 'background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
       opacity: disabled ? 0.6 : 1,
-      cursor: disabled ? 'not-allowed' : 'pointer',
+      cursor: disabled ? 'not-allowed' : current ? 'default' : 'pointer',
       justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
       padding: isSidebarCollapsed ? '12px 10px' : '12px',
     };
+  };
+
+  const getPathnameFromTo = (to) => {
+    const [pathname] = String(to || '').split('?');
+    return pathname.startsWith('/') ? pathname : `/${pathname}`;
+  };
+
+  const isSidebarItemCurrent = (item) => {
+    if (!item?.to) return false;
+
+    if (item.to.startsWith('/admin/users')) {
+      return location.pathname === '/admin/users';
+    }
+
+    return location.pathname === getPathnameFromTo(item.to);
+  };
+
+  const preventCurrentSectionNavigation = (event, item) => {
+    if (isSidebarItemCurrent(item)) {
+      event.preventDefault();
+    }
   };
 
   const isSidebarItemActive = (item, routerIsActive) => {
@@ -118,6 +142,7 @@ function PageRoot() {
     const Icon = item.icon;
     const hoverKey = item.label;
     const messageBadgeCount = item.label === 'Mensajes' ? unreadMessagesBadge : 0;
+    const current = isSidebarItemCurrent(item);
 
     if (item.disabled) {
       return (
@@ -141,12 +166,15 @@ function PageRoot() {
       <NavLink
         key={item.label}
         to={item.to}
+        onClick={(event) => preventCurrentSectionNavigation(event, item)}
         onMouseEnter={() => setHoveredItem(hoverKey)}
         onMouseLeave={() => setHoveredItem(null)}
         style={({ isActive }) => getSidebarItemStyle({
           active: isSidebarItemActive(item, isActive),
           hovered: hoveredItem === hoverKey,
+          current,
         })}
+        aria-disabled={current}
         end
       >
         <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -215,6 +243,9 @@ function PageRoot() {
     refreshUnreadCount();
     refreshUnreadMessagesCount();
   }, [refreshUnreadCount, refreshUnreadMessagesCount, location.pathname]);
+
+  const notificationsItem = { to: '/notificaciones' };
+  const isNotificationsCurrent = isSidebarItemCurrent(notificationsItem);
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: 'sans-serif' }}>
@@ -303,9 +334,15 @@ function PageRoot() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <NavLink
             to="/notificaciones"
+            onClick={(event) => preventCurrentSectionNavigation(event, notificationsItem)}
             onMouseEnter={() => setHoveredItem('notificaciones')}
             onMouseLeave={() => setHoveredItem(null)}
-            style={({ isActive }) => getSidebarItemStyle({ active: isActive, hovered: hoveredItem === 'notificaciones' })}
+            style={({ isActive }) => getSidebarItemStyle({
+              active: isActive,
+              hovered: hoveredItem === 'notificaciones',
+              current: isNotificationsCurrent,
+            })}
+            aria-disabled={isNotificationsCurrent}
             end
           >
             <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -400,9 +437,7 @@ function PageRoot() {
           className="app-content"
           style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px' }}
         >
-          <PageTransition>
-            <Outlet />
-          </PageTransition>
+          <PageTransition>{outlet}</PageTransition>
         </main>
       </div>
     </div>
