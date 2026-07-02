@@ -6,6 +6,37 @@ import { obtenerPublicacionesReportadas, resolverPublicacionReportada } from '@s
 
 const accent = '#008080';
 
+const motivoLabels = {
+  fraude_sospechoso: 'Fraude/Sospechoso',
+  contenido_inapropiado: 'Contenido inapropiado',
+  informacion_falsa: 'Información falsa',
+  spam: 'Spam',
+  otro: 'Otro',
+};
+
+const accionLabels = {
+  mantener: 'Mantener activa',
+  desactivar: 'Desactivar',
+  reactivar: 'Reactivar',
+  mantenida: 'Mantener activa',
+  desactivada: 'Desactivada',
+  reactivada: 'Reactivada',
+  sin_accion: 'Sin acción',
+};
+
+const estadoLabels = {
+  pendiente: 'Pendiente',
+  revisado: 'Revisado',
+};
+
+const formatLabel = (value, mapping) => {
+  if (!value) return 'Sin dato';
+  return mapping[value] || value
+    .toString()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 const formatDate = (value) => {
   if (!value) return 'Sin fecha';
   return new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
@@ -108,11 +139,15 @@ const AdminReportes = () => {
         <div style={styles.list}>
           {reportes.map((item) => {
             const publicacion = item.publicacion || {};
+            const reportesDetalle = Array.isArray(item.reportes) ? item.reportes : [];
             return (
               <article key={publicacion.id} style={styles.reportCard}>
                 <div style={styles.reportHeader}>
                   <div>
-                    <p style={styles.eyebrow}>#{publicacion.id} · {publicacion.tipoInmueble || 'Publicación'}</p>
+                    <div style={styles.badgeRow}>
+                      <span style={styles.reportCountBadge}>{item.cantidadReportes}</span>
+                      <p style={styles.eyebrow}>{publicacion.tipoInmueble || 'Publicación'}</p>
+                    </div>
                     <h3 style={styles.cardTitle}>{publicacion.titulo || 'Sin título'}</h3>
                     <p style={styles.cardSubtitle}>{publicacion.ubicacion || 'Sin ubicación'}</p>
                     <p style={styles.cardSubtitle}>
@@ -130,12 +165,29 @@ const AdminReportes = () => {
 
                 <div style={styles.reportMeta}>
                   <strong>{item.cantidadReportes} reporte(s)</strong>
-                  <span>Último: {formatDate(item.fechas?.[0])}</span>
+                  <span>Último: {formatDate(reportesDetalle[0]?.createdAt)}</span>
                 </div>
 
-                <div style={styles.reasons}>
-                  {(item.motivos || []).map((motivo, index) => (
-                    <p key={`${publicacion.id}-${index}`} style={styles.reason}>{motivo}</p>
+                <div style={styles.reportesDetalleList}>
+                  {reportesDetalle.map((reporte, index) => (
+                    <article key={`${publicacion.id}-${reporte.id || index}`} style={styles.reporteDetalleCard}>
+                      <div style={styles.reporteDetalleHeader}>
+                        <strong>Reporte {index + 1}</strong>
+                        <span style={styles.reporteDetalleDate}>{formatDate(reporte.createdAt)}</span>
+                      </div>
+                      <p style={styles.reporteDetalleText}>
+                        <strong>Motivo:</strong> {formatLabel(reporte.motivo, motivoLabels)}
+                      </p>
+                      <p style={styles.reporteDetalleText}>
+                        <strong>Acción:</strong> {formatLabel(reporte.accion, accionLabels)}
+                      </p>
+                      <p style={styles.reporteDetalleText}>
+                        <strong>Estado:</strong> {formatLabel(reporte.estado, estadoLabels)}
+                      </p>
+                      <p style={styles.reporteDetalleText}>
+                        <strong>Reportado por:</strong> {reporte.reporter?.nombreCompleto || reporte.reporter?.email || 'Sin dato'}
+                      </p>
+                    </article>
                   ))}
                 </div>
 
@@ -179,13 +231,18 @@ const styles = {
   list: { display: 'grid', gap: '14px' },
   reportCard: { border: '1px solid #e2e8f0', borderRadius: '18px', padding: '18px', backgroundColor: '#f8fafc' },
   reportHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' },
+  badgeRow: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' },
+  reportCountBadge: { minWidth: '32px', height: '32px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '999px', backgroundColor: accent, color: '#fff', fontSize: '13px', fontWeight: 800 },
   eyebrow: { margin: '0 0 6px', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: accent },
   cardTitle: { margin: '0 0 6px', fontSize: '20px', color: '#0f172a' },
   cardSubtitle: { margin: '0 0 4px', fontSize: '14px', color: '#64748b' },
   statusBadge: { borderRadius: '999px', padding: '6px 10px', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap' },
   reportMeta: { display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '12px', color: '#334155', fontSize: '13px' },
-  reasons: { display: 'grid', gap: '8px', marginTop: '12px' },
-  reason: { margin: 0, padding: '10px 12px', borderRadius: '12px', backgroundColor: '#fff', color: '#334155', border: '1px solid #e2e8f0' },
+  reportesDetalleList: { display: 'grid', gap: '10px', marginTop: '12px' },
+  reporteDetalleCard: { borderRadius: '14px', padding: '12px 14px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0' },
+  reporteDetalleHeader: { display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center', marginBottom: '8px' },
+  reporteDetalleDate: { fontSize: '12px', color: '#64748b', fontWeight: 600 },
+  reporteDetalleText: { margin: '0 0 6px', color: '#334155', fontSize: '13px', lineHeight: 1.5 },
   actions: { display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '14px' },
   actionButton: { display: 'inline-flex', alignItems: 'center', gap: '6px', border: 'none', borderRadius: '10px', padding: '10px 14px', backgroundColor: accent, color: '#fff', fontWeight: 700, cursor: 'pointer' },
   dangerButton: { backgroundColor: '#dc2626' },

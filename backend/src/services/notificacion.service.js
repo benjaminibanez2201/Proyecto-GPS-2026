@@ -121,6 +121,28 @@ export async function marcarTodasNotificacionesLeidasService(userId) {
     }
 }
 
+export async function marcarNotificacionesPorTargetLeidasService(userId, targetType, targetId) {
+    try {
+        const notificacionRepository = AppDataSource.getRepository(Notificacion);
+
+        const result = await notificacionRepository
+            .createQueryBuilder()
+            .update()
+            .set({ leida: true, readAt: () => "CURRENT_TIMESTAMP" })
+            .where("\"userId\" = :userId AND \"targetType\" = :targetType AND \"targetId\" = :targetId AND leida = false", {
+                userId,
+                targetType,
+                targetId,
+            })
+            .execute();
+
+        return [result, null];
+    } catch (error) {
+        console.error("Error al marcar notificaciones por target como leídas:", error);
+        return [null, "Error interno del servidor"];
+    }
+}
+
 // retornar el conteo de notificaciones no leídas para un usuario
 export async function getNotificacionesNoLeidasCountService(userId) {
     try {

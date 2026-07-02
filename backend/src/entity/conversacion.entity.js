@@ -24,6 +24,16 @@ const ConversacionSchema = new EntitySchema({
       default: 0,
       nullable: false,
     },
+    ocultadaPorArrendador: {
+      type: "boolean",
+      default: false,
+      nullable: false,
+    },
+    ocultadaPorEstudiante: {
+      type: "boolean",
+      default: false,
+      nullable: false,
+    },
     createdAt: {
       type: "timestamp with time zone",
       default: () => "CURRENT_TIMESTAMP",
