@@ -44,6 +44,12 @@ const UserSchema = new EntitySchema({
       default: "pendiente",
       nullable: false,
     },
+    estadoCuenta:{ 
+      type: "enum",
+      enum: ["activo", "suspendido"],
+      default: "activo",
+      nullable: false,
+    },
     comentarioVerificacion: {
       type: "varchar",
       length: 1000,
@@ -119,6 +125,24 @@ const UserSchema = new EntitySchema({
     terminosVersion: {
       type: "varchar",
       length: 20,
+      nullable: true,
+    },
+    emailVerificado: {
+      type: "boolean",
+      default: true,
+      nullable: false,
+    },
+    emailVerificadoEn: {
+      type: "timestamp with time zone",
+      nullable: true,
+    },
+    emailVerificacionToken: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+    },
+    emailVerificacionExpires: {
+      type: "timestamp with time zone",
       nullable: true,
     },
     resetPasswordToken: {

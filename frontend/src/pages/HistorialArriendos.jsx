@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Clock, Inbox, MessageSquareText, Star, X } from 'lucide-react';
-import { listarArriendos, confirmarArriendo, crearResena } from '../services/rentalsAndReviews.service.js';
+import { listarArriendos, crearResena } from '../services/rentalsAndReviews.service.js';
 import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -11,7 +11,6 @@ export default function HistorialArriendos() {
   const [loading, setLoading] = useState(true);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [arriendoSeleccionado, setArriendoSeleccionado] = useState(null);
-  const [loadingConfirmId, setLoadingConfirmId] = useState(null);
   const [sendingReview, setSendingReview] = useState(false);
 
   const [rating, setRating] = useState(5);
@@ -54,23 +53,6 @@ export default function HistorialArriendos() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  const handleConfirmar = async (id) => {
-    try {
-      setLoadingConfirmId(id);
-      const [, err] = await confirmarArriendo(id);
-      if (err) {
-        showErrorAlert('Error', err);
-      } else {
-        await showSuccessConfirm('¡Felicitaciones!', 'Se ha confirmado el arriendo.', 'OK');
-        cargarDatos();
-      }
-    } catch {
-      showErrorAlert('Error', 'Ocurrió un error al confirmar el arriendo');
-    } finally {
-      setLoadingConfirmId(null);
-    }
-  };
-
   const abrirModalCalificar = (arriendo) => {
     setArriendoSeleccionado(arriendo);
     setModalAbierto(true);
@@ -111,7 +93,7 @@ export default function HistorialArriendos() {
 
       await showSuccessConfirm(
         'Calificación enviada',
-        'La contraparte recibirá una notificación dentro del sistema.',
+        'La otra persona recibirá una notificación dentro del sistema.',
         'Entendido'
       );
 
@@ -137,7 +119,8 @@ export default function HistorialArriendos() {
         <thead>
           <tr style={{ backgroundColor: colores.secundario, color: colores.textoOscuro }}>
             <th>Nombre del contratante</th>
-            <th>Acciones de Confirmación</th>
+            <th>Estado de confirmación</th>
+            <th>Fecha de confirmación</th>
             <th>Evaluación mutua</th>
           </tr>
         </thead>
@@ -192,17 +175,24 @@ export default function HistorialArriendos() {
                     </span>
                   ) : yaConfirme ? (
                     <span style={styles.waitingChip}>
-                      <Clock size={16} /> Esperando otra parte
+                      <Clock size={16} /> Esperando la confirmación de la otra persona...
                     </span>
                   ) : (
-                    <button
-                      onClick={() => handleConfirmar(item.id)}
-                      className="confirm-btn"
-                      disabled={loadingConfirmId === item.id}
-                    >
-                      {loadingConfirmId === item.id ? 'Confirmando...' : 'Confirmar arriendo'}
-                    </button>
+                    <span style={styles.waitingChip}>
+                      <MessageSquareText size={16} /> Confirma desde la conversación
+                    </span>
                   )}
+                </td>
+                <td>
+                  {item.completedAt ? (
+                    <span style={{ color: colores.textoOscuro, fontWeight: 600 }}>
+                      {new Date(item.completedAt).toLocaleDateString('es-CL', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  ) : '—'}
                 </td>
                 <td>
                   {item.status === 'COMPLETED' && item.puedeCalificar ? (
@@ -212,8 +202,7 @@ export default function HistorialArriendos() {
                     >
                       <span style={styles.calificarIcon}><Star size={16} fill="#fff" /></span>
                       <span>
-                        <strong style={styles.calificarTitle}>Calificar contraparte</strong>
-                        <small style={styles.calificarSubtext}>Deja una opinión sobre el arriendo</small>
+                        <strong style={styles.calificarTitle}>Comparte tu opinión sobre esta persona</strong>
                       </span>
                       <ArrowRight size={16} />
                     </button>
@@ -240,7 +229,6 @@ export default function HistorialArriendos() {
           <div style={styles.modalCard} onClick={(event) => event.stopPropagation()}>
             <div style={styles.modalHeader}>
               <div>
-                <p style={styles.modalEyebrow}>Calificación</p>
                 <h3 style={styles.modalTitle}>Comparte tu experiencia</h3>
                 <p style={styles.modalSubtitle}>Tu calificación ayuda a que otras personas tomen una decisión</p>
               </div>
@@ -254,7 +242,7 @@ export default function HistorialArriendos() {
                 <MessageSquareText size={18} />
               </div>
               <div>
-                <p style={styles.reviewContextTitle}>{arriendoSeleccionado?.contratanteNombre || 'Contraparte'}</p>
+                <p style={styles.reviewContextTitle}>{arriendoSeleccionado?.contratanteNombre}</p>
               </div>
             </div>
 
