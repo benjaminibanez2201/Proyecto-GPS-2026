@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, UserRound, Sparkles, CheckCircle } from 'lucide-react';
+import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, UserRound, Sparkles, CheckCircle, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
 import {
+  eliminarConversacion,
   enviarMensajeAPublicacion,
   obtenerConversaciones,
   obtenerDetalleConversacion,
@@ -75,6 +76,13 @@ function getOtherParticipant(conversacion, userId, userRole) {
 function getConversationTitle(conversacion) {
   if (!conversacion?.publicacion) return 'Conversación';
   return conversacion.publicacion.titulo || `Publicación #${conversacion.publicacion.id}`;
+}
+
+function isCurrentUsersMessage(message, userId) {
+  const senderId = Number(message?.remitente?.id ?? message?.remitenteId);
+  const currentUserId = Number(userId);
+
+  return !Number.isNaN(senderId) && !Number.isNaN(currentUserId) && senderId === currentUserId;
 }
 
 export default function Mensajes() {
@@ -326,6 +334,41 @@ export default function Mensajes() {
     }
   };
 
+  const handleDeleteConversation = async (conversation) => {
+    if (!conversation?.id) return;
+
+    const confirmation = await Swal.fire({
+      title: '¿Ocultar conversación?',
+      text: 'Solo se ocultará para ti. El otro participante seguirá viéndola.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, ocultar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    const [, errorResponse] = await eliminarConversacion(conversation.id);
+
+    if (errorResponse) {
+      await Swal.fire('No se pudo ocultar', errorResponse, 'error');
+      return;
+    }
+
+    await Swal.fire('Conversación ocultada', 'El chat se ocultó solo para tu cuenta.', 'success');
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('conversacion');
+    setSearchParams(nextParams);
+
+    setSelectedConversationId(null);
+    setSelectedConversation(null);
+    setMessages([]);
+    await fetchConversations();
+  };
+
   const handleConfirmRental = async () => {
     if (!selectedConversation?.publicacion?.id || !selectedConversation?.arrendador?.id || !selectedConversation?.estudiante?.id) {
       await Swal.fire('No se puede aceptar', 'Esta conversación no tiene la información suficiente para aceptar el arriendo.', 'warning');
@@ -416,27 +459,38 @@ export default function Mensajes() {
               const unreadCount = getUnreadConversationBadgeCount(conversation, userRole);
 
               return (
-                <button
-                  key={conversation.id}
-                  type="button"
-                  className={`mensajes-list-item ${isSelected ? 'is-selected' : ''}`}
-                  onClick={() => handleSelectConversation(conversation.id)}
-                >
-                  <div className="mensajes-avatar">
-                    <UserRound size={18} />
-                  </div>
-                  <div className="mensajes-list-item__body">
-                    <div className="mensajes-list-item__top">
-                      <strong>{otherParticipant?.nombreCompleto || 'Sin nombre'}</strong>
-                      {unreadCount > 0 && <span className="mensajes-badge mensajes-badge--unread">{unreadCount}</span>}
+                <div key={conversation.id} className="mensajes-list-item-wrap">
+                  <button
+                    type="button"
+                    className={`mensajes-list-item ${isSelected ? 'is-selected' : ''}`}
+                    onClick={() => handleSelectConversation(conversation.id)}
+                  >
+                    <div className="mensajes-avatar">
+                      <UserRound size={18} />
                     </div>
-                    <span className="mensajes-list-item__title">{getConversationTitle(conversation)}</span>
-                    <span className="mensajes-list-item__meta">
-                      {conversation?.publicacion?.ubicacion || 'Sin ubicación'}
-                    </span>
-                    <span className="mensajes-list-item__date">{formatDate(conversation?.ultimaFechaMensaje || conversation?.updatedAt)}</span>
-                  </div>
-                </button>
+                    <div className="mensajes-list-item__body">
+                      <div className="mensajes-list-item__top">
+                        <strong>{otherParticipant?.nombreCompleto || 'Sin nombre'}</strong>
+                        {unreadCount > 0 && <span className="mensajes-badge mensajes-badge--unread">{unreadCount}</span>}
+                      </div>
+                      <span className="mensajes-list-item__title">{getConversationTitle(conversation)}</span>
+                      <span className="mensajes-list-item__meta">
+                        {conversation?.publicacion?.ubicacion || 'Sin ubicación'}
+                      </span>
+                      <span className="mensajes-list-item__date">{formatDate(conversation?.ultimaFechaMensaje || conversation?.updatedAt)}</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="mensajes-list-delete-btn"
+                    onClick={() => handleDeleteConversation(conversation)}
+                    title="Ocultar conversación"
+                    aria-label="Ocultar conversación"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -508,6 +562,9 @@ export default function Mensajes() {
                     <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${selectedConversation?.publicacion?.id}`)}>
                       Ver publicación
                     </button>
+                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--danger" onClick={() => handleDeleteConversation(selectedConversation)}>
+                      Ocultar chat
+                    </button>
                     {shouldShowConfirmRentalButton && (
                       <button type="button" className="mensajes-send-btn" onClick={handleConfirmRental} disabled={loadingRentalConfirmation}>
                         {loadingRentalConfirmation ? (
@@ -536,7 +593,7 @@ export default function Mensajes() {
                       <div className="mensajes-empty mensajes-empty--detail">Todavía no hay mensajes en esta conversación.</div>
                     ) : (
                       messages.map((message, index) => {
-                        const isMine = String(message?.remitente?.id) === String(user?.id);
+                        const isMine = isCurrentUsersMessage(message, user?.id);
                         const previousMessage = messages[index - 1];
                         const showSenderName = !previousMessage || !isSameSender(previousMessage, message);
                         const showDateSeparator = !previousMessage || !isSameDay(previousMessage?.createdAt, message?.createdAt);

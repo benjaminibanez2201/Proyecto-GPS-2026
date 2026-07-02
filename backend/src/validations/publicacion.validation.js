@@ -100,10 +100,10 @@ export const publicacionBodyValidation = Joi.object({
       "string.max": "Las reglas de convivencia no pueden superar los 1000 caracteres.",
     }),
   estado: Joi.string()
-    .valid("activa", "arrendada")
+    .valid("activa", "arrendada", "disponible", "inactiva")
     .optional()
     .messages({
-      "any.only": "El estado debe ser activa o arrendada.",
+      "any.only": "El estado debe ser activa, arrendada, disponible o inactiva.",
     }),
 }).unknown(false).messages({
   "object.unknown": "No se permiten propiedades adicionales.",
@@ -241,7 +241,7 @@ export const publicacionUpdateValidation = Joi.object({
   reglasConvivencia: Joi.string().allow("").max(1000).messages({
     "string.max": "Las reglas no pueden superar los 1000 caracteres.",
   }),
-  estado: Joi.string().valid("activa", "arrendada"),
+  estado: Joi.string().valid("activa", "arrendada", "disponible", "inactiva"),
 })
   .or(
     "titulo",

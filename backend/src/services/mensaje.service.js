@@ -70,6 +70,14 @@ export async function enviarMensaje({ conversacionId = null, id_publicacion = nu
       return [null, "Faltan parámetros para crear el mensaje"];
     }
 
+    if (Number(conversacion.estudiante?.id) === Number(remitenteId)) {
+      conversacion.ocultadaPorEstudiante = false;
+    }
+
+    if (Number(conversacion.arrendador?.id) === Number(remitenteId)) {
+      conversacion.ocultadaPorArrendador = false;
+    }
+
     const nuevoMensaje = repositorioMensaje.create({
       contenido,
       conversacion,

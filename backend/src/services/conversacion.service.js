@@ -72,13 +72,13 @@ export async function obtenerConversacionesDeUsuario(usuario) {
 
     if (usuario.rol === "arrendador") {
       conversaciones = await repositorioConversacion.find({
-        where: { arrendador: { id: usuario.id } },
+        where: { arrendador: { id: usuario.id }, ocultadaPorArrendador: false },
         relations: ["publicacion", "estudiante", "arrendador"],
         order: { ultimaFechaMensaje: "DESC" },
       });
     } else {
       conversaciones = await repositorioConversacion.find({
-        where: { estudiante: { id: usuario.id } },
+        where: { estudiante: { id: usuario.id }, ocultadaPorEstudiante: false },
         relations: ["publicacion", "estudiante", "arrendador"],
         order: { ultimaFechaMensaje: "DESC" },
       });
@@ -137,10 +137,43 @@ export async function marcarConversacionLeidaParaUsuario(conversacionId, usuario
   }
 }
 
+export async function eliminarConversacionPorUsuario(conversacionId, usuarioId) {
+  try {
+    const repositorioConversacion = AppDataSource.getRepository(Conversacion);
+
+    const conversacion = await repositorioConversacion.findOne({
+      where: { id: conversacionId },
+      relations: ["estudiante", "arrendador"],
+    });
+
+    if (!conversacion) return [null, "Conversación no encontrada"];
+
+    const esParticipante = Number(conversacion.estudiante?.id) === Number(usuarioId)
+      || Number(conversacion.arrendador?.id) === Number(usuarioId);
+
+    if (!esParticipante) return [null, "No tienes permiso para eliminar esta conversación"];
+
+    if (Number(conversacion.arrendador?.id) === Number(usuarioId)) {
+      conversacion.ocultadaPorArrendador = true;
+    }
+
+    if (Number(conversacion.estudiante?.id) === Number(usuarioId)) {
+      conversacion.ocultadaPorEstudiante = true;
+    }
+
+    await repositorioConversacion.save(conversacion);
+    return [true, null];
+  } catch (error) {
+    console.error("Error eliminarConversacionPorUsuario:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
 export default {
   buscarConversacionPorPublicacionYEstudiante,
   crearConversacion,
   obtenerConversacionesDeUsuario,
   obtenerConversacionPorId,
   marcarConversacionLeidaParaUsuario,
+  eliminarConversacionPorUsuario,
 };
