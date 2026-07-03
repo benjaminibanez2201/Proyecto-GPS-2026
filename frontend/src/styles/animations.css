@@ -15,3 +15,126 @@
 		transform: scaleX(1);
 	}
 }
+
+.page-transition {
+	width: 100%;
+	min-height: 100%;
+	animation-duration: 360ms;
+	animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+	animation-fill-mode: both;
+	will-change: opacity, transform;
+}
+
+.page-transition--enter.page-transition--initial {
+	animation-name: pageEnterInitial;
+}
+
+.page-transition--enter.page-transition--forward {
+	animation-name: pageEnterForward;
+}
+
+.page-transition--enter.page-transition--back {
+	animation-name: pageEnterBack;
+}
+
+.page-transition--enter.page-transition--replace {
+	animation-name: pageEnterReplace;
+	animation-duration: 240ms;
+}
+
+.page-transition--exit {
+	animation-name: pageExit;
+	animation-duration: 160ms;
+	animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes pageEnterInitial {
+	from {
+		opacity: 0;
+		transform: translate3d(0, 6px, 0);
+	}
+	to {
+		opacity: 1;
+		transform: translate3d(0, 0, 0);
+	}
+}
+
+@keyframes pageEnterForward {
+	from {
+		opacity: 0;
+		transform: translate3d(8px, 0, 0);
+	}
+	to {
+		opacity: 1;
+		transform: translate3d(0, 0, 0);
+	}
+}
+
+@keyframes pageEnterBack {
+	from {
+		opacity: 0;
+		transform: translate3d(-6px, 0, 0);
+	}
+	to {
+		opacity: 1;
+		transform: translate3d(0, 0, 0);
+	}
+}
+
+@keyframes pageEnterReplace {
+	from {
+		opacity: 0;
+		transform: translate3d(0, 4px, 0);
+	}
+	to {
+		opacity: 1;
+		transform: translate3d(0, 0, 0);
+	}
+}
+
+@keyframes pageExit {
+	from {
+		opacity: 1;
+		transform: translate3d(0, 0, 0);
+	}
+	to {
+		opacity: 0.34;
+		transform: translate3d(0, 2px, 0);
+	}
+}
+
+@keyframes pageEnterReduced {
+	from {
+		opacity: 0.42;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes pageExitReduced {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0.28;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.page-transition.page-transition--enter {
+		animation-name: pageEnterReduced;
+		animation-duration: 320ms;
+		animation-timing-function: ease-out;
+		transform: none;
+		will-change: auto;
+	}
+
+	.page-transition.page-transition--exit {
+		animation-name: pageExitReduced;
+		animation-duration: 160ms;
+		animation-timing-function: ease-in;
+		transform: none;
+		will-change: auto;
+	}
+}

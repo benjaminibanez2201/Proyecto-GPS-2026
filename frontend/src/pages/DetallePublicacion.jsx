@@ -59,6 +59,14 @@ function formatearServicio(servicio) {
   return SERVICIOS_LABELS[servicio] || servicio;
 }
 
+function formatPriceCLP(value) {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+}
+
 export default function DetallePublicacion() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -239,7 +247,7 @@ export default function DetallePublicacion() {
           
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontSize: '28px', color: '#008080', fontWeight: 'bold', margin: '0' }}>
-              ${publicacion.precioMensual || 0}
+              {formatPriceCLP(publicacion.precioMensual)}
             </p>
             <span style={{ color: '#64748b', fontSize: '14px' }}>por mes</span>
           </div>
