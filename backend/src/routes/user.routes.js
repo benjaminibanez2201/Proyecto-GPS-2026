@@ -8,6 +8,7 @@ import {
   getUsers,
   updateUser,
   updateUserVerificationStatus,
+  toggleUserStatus,
 } from "../controllers/user.controller.js";
 
 const router = Router();
@@ -21,6 +22,7 @@ router
   .get("/detail/", getUser)
   .patch("/detail/verification", updateUserVerificationStatus)
   .patch("/detail/", updateUser)
+  .patch("/detail/status", toggleUserStatus)
   .delete("/detail/", deleteUser);
 
 export default router;

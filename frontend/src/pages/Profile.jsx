@@ -8,23 +8,48 @@ import {
   updateArrendadorProfile, 
   verifyPassword,
 } from '@services/user.service.js';
+import { forgotPassword } from '@services/auth.service.js';
 import { useAuth } from '@context/AuthContext';
-import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight, Image, GraduationCap, BookOpen, Mail, Lock, Phone } from 'lucide-react'; 
+import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
+import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight, FlagTriangleRight, Image, GraduationCap, BookOpen, Mail, Phone } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const accent = '#0f766e';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate(); 
   const [profileData, setProfileData] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const { register, handleSubmit, setValue } = useForm();
+  const { register, handleSubmit, setValue, watch, trigger, formState: { errors } } = useForm({ mode: 'onChange' });
+  const emailValue = watch('email');
   const [cantidadPublicaciones, setCantidadPublicaciones] = useState(0); 
+  const [fotoSeleccionada, setFotoSeleccionada] = useState(null);
+  const [fotoPreview, setFotoPreview] = useState(null);
+  const [isSendingPasswordResetEmail, setIsSendingPasswordResetEmail] = useState(false);
+
 
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    trigger('confirmEmail');
+  }, [emailValue, trigger]);
+
+  useEffect(() => {
+    if (!fotoSeleccionada) {
+      setFotoPreview(null);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(fotoSeleccionada);
+    setFotoPreview(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [fotoSeleccionada]);
 
   const fetchProfile = async () => {
     const data = await getProfile();
@@ -36,7 +61,7 @@ const Profile = () => {
       setValue('telefono', data.telefono || '');
       setValue('fotoPerfil', data.fotoPerfil || '');
       setValue('email', data.email || '');
-      setValue('newPassword', '');
+      setValue('confirmEmail', '');
 
       if (data.rol === 'arrendador') {
         const pubs = await getMisPublicaciones();
@@ -48,17 +73,13 @@ const Profile = () => {
   };
 
   const onSubmit = async (data) => {
-  const filteredData = Object.fromEntries(
-    Object.entries(data).filter(([, v]) => v !== '')
-  );
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([key, value]) => value !== '' && key !== 'confirmEmail')
+    );
 
     const cambiaEmail = filteredData.email && filteredData.email !== profileData?.email;
-    const cambiaPassword = filteredData.newPassword && filteredData.newPassword.trim() !== '';
 
-    console.log("cambiaPassword:", cambiaPassword);
-    console.log("filteredData:", filteredData);
-
-    if (cambiaEmail || cambiaPassword) {
+    if (cambiaEmail) {
       const { value: passwordActual } = await Swal.fire({
         title: 'Confirmación de Seguridad',
         text: 'Por seguridad, ingresa tu contraseña actual para confirmar los cambios.',
@@ -86,51 +107,116 @@ const Profile = () => {
         return;
       }
 
-      if (cambiaEmail || (cambiaPassword && profileData?.rol === 'arrendador')) {
-        filteredData.passwordActual = passwordActual;
+      filteredData.passwordActual = passwordActual;
+    }
+
+    const formData = new FormData();
+
+    Object.entries(filteredData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value);
       }
-}
+    });
 
-    const response = profileData?.rol === 'arrendador'
-      ? await updateArrendadorProfile(filteredData)
-      : await updateProfile(filteredData);
+    if (fotoSeleccionada) {
+      formData.append('fotoPerfil', fotoSeleccionada);
+    }
 
-    if (response) {
-      if (cambiaEmail || cambiaPassword) {
-        await Swal.fire({
-          icon: 'success',
-          title: '¡Credenciales actualizadas!',
-          text: 'Tus datos fueron cambiados. Debes iniciar sesión nuevamente.',
-          confirmButtonColor: accent,
-        });
-        sessionStorage.removeItem('usuario');
-        navigate('/auth');
+    try {
+      const response = profileData?.rol === 'arrendador'
+        ? await updateArrendadorProfile(formData)
+        : await updateProfile(formData);
+      if (response && !response?.message && response?.status !== 'Error') {
+        if (cambiaEmail) {
+          await Swal.fire({
+            icon: 'success',
+            title: '¡Credenciales actualizadas!',
+            text: 'Tus datos fueron cambiados. Debes iniciar sesión nuevamente.',
+            confirmButtonColor: accent,
+          });
+          sessionStorage.removeItem('usuario');
+          navigate('/auth');
+        } else {
+          await Swal.fire({
+            icon: 'success',
+            title: '¡Perfil actualizado!',
+            text: 'Tus datos han sido guardados correctamente.',
+            confirmButtonColor: accent,
+          });
+          updateUser(response);
+          setFotoSeleccionada(null);
+          setEditMode(false);
+          fetchProfile();
+        }
       } else {
-        Swal.fire({
-          icon: 'success',
-          title: '¡Perfil actualizado!',
-          text: 'Tus datos han sido guardados correctamente.',
-          confirmButtonColor: accent,
+        Swal.fire({ 
+          icon: 'error', 
+          title: 'Error al actualizar', 
+          text: response?.message || response?.details || 'El servidor rechazó los datos proporcionados.', 
+          confirmButtonColor: accent 
         });
-        setEditMode(false);
-        fetchProfile();
+      }
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'Error de Red', text: 'No se pudo conectar con el servidor.', confirmButtonColor: accent });
+    };
+  };
+
+  const handleSendPasswordResetLink = async () => {
+    if (!profileData?.email) {
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se encontró un correo válido en tu perfil.', confirmButtonColor: accent });
+      return;
+    }
+
+    if (editMode && emailValue && profileData?.email && emailValue !== profileData.email) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Correo pendiente',
+        text: 'Has cambiado tu correo en el formulario. Guarda los cambios antes de enviar el enlace de restablecimiento.',
+        confirmButtonColor: accent,
+      });
+      return;
+    }
+
+    const confirmacion = await Swal.fire({
+      title: '¿Seguro que quieres cambiar tu contraseña?',
+      text: 'Te enviaremos un enlace de recuperación seguro a tu correo registrado.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: accent,
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, enviar enlace',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
+    setIsSendingPasswordResetEmail(true);
+      try {
+        const payload = await forgotPassword(profileData.email);
+        if (payload?.status === 'Success') {
+          Swal.fire({ icon: 'success', title: 'Enlace enviado', text: 'Revisa tu correo para restablecer la contraseña.', confirmButtonColor: accent });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: payload?.details || payload?.message || 'No se pudo enviar el enlace de restablecimiento.', confirmButtonColor: accent });
+        }
+      } catch (error) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo enviar el enlace de restablecimiento.', confirmButtonColor: accent });
+      } finally {
+        setIsSendingPasswordResetEmail(false);
       }
     }
-  };
 
   const fields = [
     { label: 'Nombre completo', field: 'nombreCompleto', placeholder: 'Tu nombre completo', icon: UserCircle2 },
-    { label: 'Foto de perfil (URL)', field: 'fotoPerfil', placeholder: 'https://...', icon: Image },
     ...(profileData?.rol === 'estudiante' ? [
       { label: 'Universidad', field: 'universidad', placeholder: 'Tu universidad', icon: GraduationCap },
       { label: 'Carrera', field: 'carrera', placeholder: 'Tu carrera', icon: BookOpen },
-      { label: 'Correo', field: 'email', placeholder: 'tucorreo@gmail.com', icon: Mail },
-      { label: 'Nueva contraseña', field: 'newPassword', placeholder: 'Mínimo 8 caracteres', type: 'password', icon: Lock },
+      { label: 'Correo', field: 'email', placeholder: 'ejemplo@gmail.com', icon: Mail },
+      { label: 'Confirmar correo', field: 'confirmEmail', placeholder: 'Repite tu correo', type: 'email', icon: Mail },
     ] : []),
     ...(profileData?.rol === 'arrendador' ? [
       { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678', icon: Phone },
-      { label: 'Correo', field: 'email', placeholder: 'tucorreo@gmail.com', icon: Mail },
-      { label: 'Nueva contraseña', field: 'newPassword', placeholder: 'Mínimo 8 caracteres', type: 'password', icon: Lock },
+      { label: 'Correo', field: 'email', placeholder: 'ejemplo@gmail.com', icon: Mail },
+      { label: 'Confirmar correo', field: 'confirmEmail', placeholder: 'Repite tu correo', type: 'email', icon: Mail },
     ] : [])
   ];
 
@@ -153,7 +239,7 @@ const Profile = () => {
         <div style={styles.heroContent}>
           <div style={{ ...styles.avatarWrap, cursor: editMode ? 'pointer' : 'default' }}>
             {profileData?.fotoPerfil
-              ? <img src={profileData.fotoPerfil} alt="avatar" style={styles.avatar} />
+              ? <img src={resolveFileUrl(profileData.fotoPerfil)} alt="avatar" style={styles.avatar} />
               : <div style={styles.avatarPlaceholder}>
                   {profileData?.nombreCompleto?.charAt(0).toUpperCase() || '?'}
                 </div>
@@ -272,25 +358,104 @@ const Profile = () => {
         {editMode ? (
           <form onSubmit={handleSubmit(onSubmit)} style={styles.form}>
             <div style={styles.grid}>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Foto de perfil</label>
+                <div style={styles.fileUploadBox}>
+                  <label htmlFor="perfil-file" style={styles.fileUploadButton}>
+                    Seleccionar archivo
+                  </label>
+                  <input
+                    id="perfil-file"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setFotoSeleccionada(e.target.files?.[0] || null)}
+                    style={styles.hiddenInput}
+                  />
+                  <span style={styles.fileUploadText}>
+                    {fotoSeleccionada ? fotoSeleccionada.name : 'Ningún archivo seleccionado'}
+                  </span>
+                </div>
+                {fotoPreview && (
+                  <div style={styles.previewContainer}>
+                    <img src={fotoPreview} alt="Vista previa foto de perfil" style={styles.previewImage} />
+                  </div>
+                )}
+              </div>
               {fields.map(({ label, field, placeholder, type, icon: Icon }) => (
                 <div key={field} style={styles.fieldGroup}>
                   <label style={styles.label}>{label}</label>
                   <div style={styles.inputWrap}>
                     {Icon && <Icon size={16} strokeWidth={2} style={styles.inputIcon} />}
                     <input
-                      {...register(field)}
+                      {...register(field, (() => {
+                        if (field === 'nombreCompleto') {
+                          return {
+                            required: 'El nombre completo es obligatorio',
+                            minLength: { value: 15, message: 'El nombre completo debe tener al menos 15 caracteres' },
+                            maxLength: { value: 50, message: 'El nombre completo debe tener máximo 50 caracteres' },
+                            pattern: { value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, message: 'Solo puede contener letras y espacios' },
+                          };
+                        }
+                        if (field === 'universidad' || field === 'carrera') {
+                          return {
+                            minLength: { value: 3, message: 'Debe tener al menos 3 caracteres' },
+                            maxLength: { value: 255, message: 'Debe tener máximo 255 caracteres' },
+                          };
+                        }
+                        if (field === 'telefono') {
+                          return {
+                            pattern: { value: /^\+?[\d\s\-]{7,20}$/, message: 'Formato de teléfono inválido' },
+                          };
+                        }
+                        if (field === 'email') {
+                          return {
+                            required: 'El correo es obligatorio',
+                            pattern: {
+                              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                              message: 'Ingresa un correo válido',
+                            },
+                          };
+                        }
+                        if (field === 'confirmEmail') {
+                          return {
+                            required: emailValue !== profileData?.email ? 'Debes confirmar el correo' : false,
+                            validate: (value) => {
+                              if (emailValue !== profileData?.email) {
+                                return value === emailValue || 'Los correos no coinciden';
+                              }
+                              return true;
+                            },
+                          };
+                        }
+                        return undefined;
+                      })())}
                       placeholder={placeholder}
                       type={type || 'text'}
                       style={styles.inputWithIcon}
                     />
                   </div>
+                  {errors[field] && (
+                    <span style={{ color: '#dc2626', fontSize: '12px', marginTop: '6px' }}>
+                      {errors[field].message}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
-            <button type="submit" style={styles.button}>
-              <Save size={16} strokeWidth={2.2} />
-              Guardar cambios
-            </button>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+              <button type="submit" style={styles.button}>
+                <Save size={16} strokeWidth={2.2} />
+                Guardar cambios
+              </button>
+              <button
+                type="button"
+                onClick={handleSendPasswordResetLink}
+                disabled={isSendingPasswordResetEmail}
+                style={styles.secondaryButton}
+              >
+                {isSendingPasswordResetEmail ? 'Enviando enlace...' : 'Enviar enlace de cambio de contraseña'}
+              </button>
+            </div>
           </form>
         ) : (
           <div style={styles.dataGrid}>
@@ -334,6 +499,26 @@ const Profile = () => {
               style={{ ...styles.button, padding: '12px 20px' }}
             >
               Gestionar mis publicaciones
+            </button>
+          </div>
+        </section>
+      )}
+
+      {!editMode && (
+        <section style={styles.card}>
+          <div style={styles.reportsCard}>
+            <div style={styles.reportsIconWrap}>
+              <FlagTriangleRight size={24} strokeWidth={2.1} />
+            </div>
+            <div style={styles.reviewsCopy}>
+              <h3 style={styles.reviewsTitle}>Mis reportes</h3>
+              <p style={styles.reviewsText}>
+                Revisa las denuncias que has enviado desde el detalle de una publicación y sigue su estado.
+              </p>
+            </div>
+            <button type="button" onClick={() => navigate('/profile/reportes')} style={styles.reviewsButton}>
+              Ver mis reportes
+              <ChevronRight size={16} strokeWidth={2.4} />
             </button>
           </div>
         </section>
@@ -431,6 +616,62 @@ const styles = {
     width: '100%',
     boxSizing: 'border-box',
   },
+  hiddenInput: {
+    display: 'none',
+  },
+  fileUploadBox: {
+    display: 'grid',
+    gridTemplateColumns: 'min-content 1fr',
+    gap: '10px',
+    alignItems: 'center',
+    width: '100%',
+  },
+  fileUploadButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '10px 14px',
+    borderRadius: '12px',
+    backgroundColor: accent,
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: '13px',
+    cursor: 'pointer',
+    border: 'none',
+    whiteSpace: 'nowrap',
+    height: '20px',
+    width: 'fit-content',
+  },
+  fileUploadText: {
+    fontSize: '12px',
+    color: '#475569',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    minHeight: '42px',
+    flex: 1,
+    minWidth: '0',
+    display: 'inline-flex',
+    alignItems: 'center',
+    boxSizing: 'border-box',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  previewContainer: {
+    marginTop: '14px',
+    borderRadius: '18px',
+    overflow: 'hidden',
+    border: '1px solid #e2e8f0',
+    backgroundColor: '#f8fafc',
+  },
+  previewImage: {
+    width: '100%',
+    height: '170px',
+    objectFit: 'cover',
+    display: 'block',
+  },
   card: {
     borderRadius: '22px', padding: '28px', backgroundColor: '#ffffff',
     border: '1px solid rgba(15, 23, 42, 0.06)', boxShadow: '0 12px 30px rgba(15, 23, 42, 0.07)',
@@ -463,12 +704,35 @@ const styles = {
     padding: '12px 24px', borderRadius: '12px', backgroundColor: accent,
     color: '#fff', fontWeight: '700', fontSize: '14px', border: 'none', cursor: 'pointer',
   },
+  secondaryButton: {
+    alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    padding: '12px 20px', borderRadius: '12px', border: '1px solid #cbd5e1',
+    backgroundColor: '#f8fafc', color: '#0f172a', fontWeight: '700', fontSize: '14px', cursor: 'pointer',
+  },
   reviewsCard: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '16px',
     flexWrap: 'wrap',
+  },
+  reportsCard: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '16px',
+    flexWrap: 'wrap',
+  },
+  reportsIconWrap: {
+    width: '58px',
+    height: '58px',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff4d6',
+    color: '#b08900',
+    flexShrink: 0,
   },
   reviewsIconWrap: {
     width: '58px',

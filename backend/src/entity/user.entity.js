@@ -44,6 +44,12 @@ const UserSchema = new EntitySchema({
       default: "pendiente",
       nullable: false,
     },
+    estadoCuenta:{ 
+      type: "enum",
+      enum: ["activo", "suspendido"],
+      default: "activo",
+      nullable: false,
+    },
     comentarioVerificacion: {
       type: "varchar",
       length: 1000,

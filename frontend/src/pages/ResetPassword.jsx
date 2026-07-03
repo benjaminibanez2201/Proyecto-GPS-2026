@@ -73,8 +73,8 @@ const ResetPassword = () => {
                                     const ok = await handleUpdateClick();
                                     if (ok) {
                                         await showSuccessConfirm(
-                                            "Contrasena actualizada",
-                                            "La contrasena fue actualizada exitosamente."
+                                            "Contraseña actualizada",
+                                            "La contraseña fue actualizada exitosamente."
                                         );
                                         goToLogin();
                                     }

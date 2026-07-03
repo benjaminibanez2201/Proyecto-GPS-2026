@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft } from 'lucide-react';
 import { obtenerResenasUsuario, obtenerPerfilUsuario } from '../services/rentalsAndReviews.service.js';
+import AvatarCirculo from '../components/AvatarCirculo.jsx';
+import { decodePublicId } from '../helpers/publicId.helper.js';
 
 export default function PerfilUsuario() {
-  const { id } = useParams();
+  const { id: idParam } = useParams();
+  const id = decodePublicId(idParam);
   const navigate = useNavigate();
 
   const [usuario, setUsuario] = useState(null);
@@ -48,7 +51,12 @@ export default function PerfilUsuario() {
       }
     };
 
-    if (id) cargarPerfilYResenas();
+    if (id != null) {
+      cargarPerfilYResenas();
+    } else {
+      setError('No se encontró este perfil');
+      setLoading(false);
+    }
   }, [id]);
 
   if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Cargando perfil...</div>;
@@ -89,22 +97,10 @@ export default function PerfilUsuario() {
     }}>
       <button
         onClick={() => navigate(-1)}
-        style={{
-          backgroundColor: 'transparent',
-          border: `2px solid ${colores.principal}`,
-          color: colores.principal,
-          padding: '8px 16px',
-          borderRadius: '20px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          marginBottom: '20px',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}
+        className="back-pill-button"
       >
         <ArrowLeft size={16} strokeWidth={2.5} />
-        Volver a la vista anterior
+        Volver
       </button>
 
       <div style={{
@@ -117,22 +113,8 @@ export default function PerfilUsuario() {
       }}>
 
         <div style={{ backgroundColor: colores.secundario, padding: '40px', textAlign: 'center' }}>
-          <div style={{
-            width: '100px',
-            height: '100px',
-            borderRadius: '50%',
-            backgroundColor: colores.principal,
-            color: colores.blanco,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '32px',
-            fontWeight: 'bold',
-            margin: '0 auto 15px auto',
-            border: `4px solid ${colores.blanco}`,
-            boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-          }}>
-            {usuario?.nombre?.charAt(0)?.toUpperCase()}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+            <AvatarCirculo nombre={usuario?.nombre} foto={usuario?.avatar} size={100} />
           </div>
           <h2 style={{ margin: '0 0 5px 0', fontSize: '24px' }}>{usuario?.nombre}</h2>
           <span style={{
@@ -157,7 +139,7 @@ export default function PerfilUsuario() {
             <h4 style={{ margin: '0 0 5px 0', color: '#7f8c8d' }}>Calificación promedio</h4>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '18px', fontWeight: 'bold' }}>
               {renderComponenteEstrellas(usuario?.avgRating)}
-              <span>({usuario?.avgRating})</span>
+              <span>({Number(usuario?.avgRating || 0).toFixed(1)})</span>
             </div>
           </div>
           <div>
@@ -183,33 +165,18 @@ export default function PerfilUsuario() {
                   borderLeft: `4px solid ${colores.principal}`,
                   boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: resena.comment ? '8px' : '0' }}>
                     {renderComponenteEstrellas(resena.rating)}
                   </div>
-                  <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
-                    {resena.comment || <span style={{ color: '#aaa', fontStyle: 'italic' }}>Sin comentarios de texto.</span>}
-                  </p>
+                  {resena.comment && (
+                    <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
+                      {resena.comment}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
           )}
-        </div>
-
-        <div style={{ padding: '0 30px 30px 30px', textAlign: 'center' }}>
-          <button style={{
-            backgroundColor: colores.principal,
-            color: colores.blanco,
-            border: 'none',
-            padding: '12px 30px',
-            borderRadius: '6px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(0,128,128,0.2)',
-            width: '100%'
-          }}>
-            Iniciar contacto interno
-          </button>
         </div>
 
       </div>

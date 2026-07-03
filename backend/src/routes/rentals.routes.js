@@ -1,8 +1,18 @@
 "use strict";
 import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
-import { confirmarArriendo, crearArriendo, obtenerArriendo } from "../controllers/rentals.controller.js";
-import { actualizarArriendo, eliminarArriendo, listarArriendos } from "../controllers/rentals.controller.js";
+import {
+  anularArriendo,
+  confirmarArriendo,
+  crearArriendo,
+  finalizarArriendoPorPublicacion,
+  obtenerArriendo,
+} from "../controllers/rentals.controller.js";
+import {
+  actualizarArriendo,
+  eliminarArriendo,
+  listarArriendos,
+} from "../controllers/rentals.controller.js";
 
 const router = Router();
 
@@ -17,5 +27,7 @@ router.put("/:id", actualizarArriendo);
 router.delete("/:id", eliminarArriendo);
 //confirmacion del arriendo
 router.post("/:id/confirm", confirmarArriendo);
+router.post("/:id/cancel", anularArriendo);
+router.post("/publicacion/:publicacionId/finalizar", finalizarArriendoPorPublicacion);
 
 export default router;

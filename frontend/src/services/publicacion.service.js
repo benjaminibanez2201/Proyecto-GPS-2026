@@ -13,6 +13,7 @@ export async function getPublicaciones(filtros = {}) {
     return [response.data.data, null];
     
   } catch (error) {
+    console.log(error.response?.data?.message || 'Error al obtener las publicaciones');
     return [null, error.response?.data?.message || 'Error al obtener las publicaciones'];
   }
 }
@@ -43,5 +44,14 @@ export async function getMisPublicaciones() {
     return [response.data.data, null];
   } catch (error) {
     return [null, error.response?.data?.message || 'Error al obtener tus publicaciones'];
+  }
+}
+
+export async function getEstadisticasPublicacion(idPublicacion) {
+  try {
+    const response = await axios.get(`/publicaciones/${idPublicacion}/estadisticas`);
+    return [response.data.data ?? response.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || 'Error al obtener las estadísticas de la publicación'];
   }
 }

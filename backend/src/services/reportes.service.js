@@ -49,14 +49,51 @@ export async function listarPublicacionesReportadas() {
     const result = Array.from(map.values()).map((item) => ({
       publicacion: item.publicacion,
       cantidadReportes: item.reportes.length,
-      motivos: item.reportes.map((x) => x.motivo),
-      fechas: item.reportes.map((x) => x.createdAt),
+      reportes: item.reportes.map((x) => ({
+        id: x.id,
+        motivo: x.motivo,
+        estado: x.estado,
+        accion: x.accion,
+        createdAt: x.createdAt,
+        reporter: x.reporter ? {
+          id: x.reporter.id,
+          nombreCompleto: x.reporter.nombreCompleto,
+          email: x.reporter.email,
+        } : null,
+      })),
       estadoActual: "pendiente",
     }));
 
     return [result, null];
   } catch (error) {
     console.error("Error listarPublicacionesReportadas:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function listarReportesDeUsuario(reporterId) {
+  try {
+    const repoReport = AppDataSource.getRepository(ReportePublicacion);
+
+    const reportes = await repoReport.find({
+      where: { reporter: { id: reporterId } },
+      relations: ["publicacion", "publicacion.arrendador"],
+      order: { createdAt: "DESC" },
+    });
+
+    const result = reportes.map((reporte) => ({
+      id: reporte.id,
+      motivo: reporte.motivo,
+      estado: reporte.estado,
+      accion: reporte.accion,
+      createdAt: reporte.createdAt,
+      resolvedAt: reporte.resolvedAt,
+      publicacion: reporte.publicacion,
+    }));
+
+    return [result, null];
+  } catch (error) {
+    console.error("Error listarReportesDeUsuario:", error);
     return [null, "Error interno del servidor"];
   }
 }
@@ -97,10 +134,15 @@ export async function resolverReporte(id_publicacion, administradorId, accion, o
       relations: ["arrendador"] });
     if (!publicacion) return [null, "Publicación no encontrada"];
 
-    if (!["mantener", "desactivar"].includes(accion)) return [null, "Acción inválida"];
+    if (!["mantener", "desactivar", "reactivar"].includes(accion)) return [null, "Acción inválida"];
 
     if (accion === "desactivar") {
       publicacion.estado = "inactiva";
+      await repoPublicacion.save(publicacion);
+    }
+
+    if (accion === "reactivar") {
+      publicacion.estado = "activa";
       await repoPublicacion.save(publicacion);
     }
 
@@ -109,7 +151,11 @@ export async function resolverReporte(id_publicacion, administradorId, accion, o
       estado: "pendiente" } });
     for (const r of pendientes) {
       r.estado = "revisado";
-      r.accion = accion === "mantener" ? "mantenida" : "desactivada";
+      r.accion = accion === "mantener"
+        ? "mantenida"
+        : accion === "desactivar"
+          ? "desactivada"
+          : "reactivada";
       r.resolvedAt = new Date();
       await repoReport.save(r);
     }
@@ -122,10 +168,16 @@ export async function resolverReporte(id_publicacion, administradorId, accion, o
 
     const arrendador = publicacion.arrendador;
     if (arrendador && arrendador.id) {
-      const tipo = accion === "desactivar" ? "publicacion_desactivada" : "reporte_descartado";
+      const tipo = accion === "desactivar"
+        ? "publicacion_desactivada"
+        : accion === "reactivar"
+          ? "publicacion_reactivada"
+          : "reporte_descartado";
       const mensaje = accion === "desactivar"
         ? `Tu publicación ha sido desactivada tras revisión: ${observacion || "Sin observaciones"}`
-        : "Tu publicación se mantiene activa tras revisión de reportes.";
+        : accion === "reactivar"
+          ? `Tu publicación ha sido reactivada por el administrador${observacion ? `: ${observacion}` : "."}`
+          : "Tu publicación se mantiene activa tras revisión de reportes.";
 
       await createNotificacionService({ 
         userId: arrendador.id, tipo, mensaje, 
@@ -140,4 +192,4 @@ export async function resolverReporte(id_publicacion, administradorId, accion, o
   }
 }
 
-export default { crearReporte, listarPublicacionesReportadas, obtenerDetalleReporte, resolverReporte };
+export default { crearReporte, listarPublicacionesReportadas, listarReportesDeUsuario, obtenerDetalleReporte, resolverReporte };

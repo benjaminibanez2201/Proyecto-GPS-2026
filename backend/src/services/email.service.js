@@ -10,6 +10,7 @@ import {
   FRONTEND_URL,
 } from "../config/configEnv.js";
 import { renderEmailTemplate } from "../helpers/emailTemplate.helper.js";
+import { encodePublicId } from "../helpers/publicId.helper.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,8 +37,38 @@ function normalizeBaseUrl(url = "http://localhost:5173") {
   return url.replace(/\/$/, "");
 }
 
+function buildPublicBackendUrl() {
+  if (process.env.BACKEND_URL) {
+    return normalizeBaseUrl(process.env.BACKEND_URL);
+  }
+
+  const frontendUrl = normalizeBaseUrl(FRONTEND_URL);
+  const isLocalFrontend = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(frontendUrl);
+
+  if (!isLocalFrontend) {
+    try {
+      const publicBackendUrl = new URL(frontendUrl);
+      const frontendPort = Number(publicBackendUrl.port);
+
+      publicBackendUrl.pathname = "";
+      publicBackendUrl.search = "";
+      publicBackendUrl.hash = "";
+
+      if (frontendPort > 1) {
+        publicBackendUrl.port = String(frontendPort - 1);
+      }
+
+      return normalizeBaseUrl(publicBackendUrl.toString());
+    } catch {
+      return frontendUrl;
+    }
+  }
+
+  return normalizeBaseUrl(BACKEND_URL);
+}
+
 function buildEmailConfirmationUrl(token) {
-  return `${normalizeBaseUrl(BACKEND_URL)}/auth/confirm-email/${encodeURIComponent(token)}`;
+  return `${buildPublicBackendUrl()}/auth/confirm-email/${encodeURIComponent(token)}`;
 }
 
 function getBrandAttachments() {
@@ -78,6 +109,7 @@ export async function sendAccountApprovedEmail(user) {
     to: user.email,
     subject: "Confirma tu correo para activar tu cuenta ArriendU",
     template: "account-approved",
+    attachments: getBrandAttachments(),
     data: {
       confirmEmailUrl,
       loginUrl: `${normalizeBaseUrl(FRONTEND_URL)}/auth`,
@@ -143,9 +175,7 @@ export async function sendRentalCompleteEmail(rental) {
   try {
     const transporter = createTransporter();
     const baseUrl = normalizeBaseUrl(FRONTEND_URL);
-    const idPublicacion = rental.publicacionId || rental.publicacion?.id || rental.id;
-    const rentalUrl = `${baseUrl}/publicacion/${idPublicacion}`;
-    const nextPath = `/publicacion/${idPublicacion}`;
+    const nextPath = `/arriendo/${encodePublicId(rental.id)}`;
     const loginWithNextUrl = `${baseUrl}/auth?next=${encodeURIComponent(nextPath)}`;
     const greetingNameArrendador = rental.arrendador?.nombreCompleto || "Arrendador";
     const greetingNameEstudiante = rental.estudiante?.nombreCompleto || "Estudiante";
@@ -258,9 +288,9 @@ export async function sendRentalCompleteEmail(rental) {
 }
 
 export async function sendCredentialChangedEmail(user, tiposCambio = []) {
-  const descripcion = tiposCambio.includes('email')
-    ? 'tu correo electrónico de acceso'
-    : 'tu contraseña';
+  const descripcion = tiposCambio.includes("email")
+    ? "tu correo electrónico de acceso"
+    : "tu contraseña";
 
   return sendTemplateEmail({
     to: user.email, // se envía al correo anterior

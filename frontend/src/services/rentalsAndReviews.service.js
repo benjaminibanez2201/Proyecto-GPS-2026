@@ -10,6 +10,16 @@ export async function listarArriendos() {
   }
 }
 
+// Crear arriendo
+export async function createArriendo(data) {
+  try {
+    const response = await axios.post('/rentals', data);
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || "Error al crear arriendo"];
+  }
+}
+
 // Confirmar arriendo
 export async function confirmarArriendo(id) {
   try {
@@ -17,6 +27,36 @@ export async function confirmarArriendo(id) {
     return [response.data.data, null];
   } catch (error) {
     return [null, error.response?.data?.message || "Error al confirmar arriendo"];
+  }
+}
+
+// Anular arriendo
+export async function anularArriendo(id) {
+  try {
+    const response = await axios.post(`/rentals/${id}/cancel`);
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || "Error al anular arriendo"];
+  }
+}
+
+// Obtener detalle de un arriendo (con la publicación incluida)
+export async function obtenerArriendoPorId(id) {
+  try {
+    const response = await axios.get(`/rentals/${id}`);
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || "Error al cargar el arriendo"];
+  }
+}
+
+// Marcar un arriendo como finalizado (libera la publicación)
+export async function finalizarArriendoPorPublicacion(publicacionId) {
+  try {
+    const response = await axios.post(`/rentals/publicacion/${publicacionId}/finalizar`);
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || "Error al finalizar el arriendo"];
   }
 }
 
@@ -40,7 +80,7 @@ export async function obtenerResenasUsuario(userId) {
   }
 }
 
-export async function obtenerResenasRecibidas(userId) {
+export async function obtenerResenasRecibidas() {
   try {
     const response = await axios.get('/reviews/received');
     return [response.data.data, null];

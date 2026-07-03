@@ -2,9 +2,11 @@
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import {
   actualizarArriendoServicio,
+  anularArriendoServicio,
   confirmarArriendoServicio,
   crearArriendoServicio,
   eliminarArriendoServicio,
+  finalizarArriendoPorPublicacionServicio,
   listarArriendosServicio,
   obtenerArriendoPorIdServicio,
 } from "../services/rentals.service.js";
@@ -24,7 +26,24 @@ export async function obtenerArriendo(req, res) {
     const { id } = req.params;
     const [data, error] = await obtenerArriendoPorIdServicio(Number(id));
     if (error) return handleErrorClient(res, 404, error);
+
+    const userId = Number(req.user.id);
+    const esParticipante = userId === Number(data.arrendadorId) || userId === Number(data.estudianteId);
+    if (!esParticipante) return handleErrorClient(res, 403, "No autorizado para ver este arriendo");
+
     return handleSuccess(res, 200, "Arriendo obtenido", data);
+  } catch (error) {
+    return handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function finalizarArriendoPorPublicacion(req, res) {
+  try {
+    const { publicacionId } = req.params;
+    const arrendadorId = req.user.id;
+    const [data, error] = await finalizarArriendoPorPublicacionServicio(Number(publicacionId), arrendadorId);
+    if (error) return handleErrorClient(res, 400, error);
+    return handleSuccess(res, 200, "Arriendo finalizado", data);
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
@@ -48,6 +67,18 @@ export async function listarArriendos(req, res) {
     const [data, error] = await listarArriendosServicio(userId); // Le pasamos el ID
     if (error) return handleErrorClient(res, 400, error);
     return handleSuccess(res, 200, "Lista de arriendos", data);
+  } catch (error) {
+    return handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function anularArriendo(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const [data, error] = await anularArriendoServicio(Number(id), userId);
+    if (error) return handleErrorClient(res, 400, error);
+    return handleSuccess(res, 200, "Arriendo anulado", data);
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }

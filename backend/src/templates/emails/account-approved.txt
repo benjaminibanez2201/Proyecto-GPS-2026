@@ -1,6 +1,6 @@
 Hola {{ nombreCompleto }},
 
-Tu cuenta fue aprobada. Para activar el acceso, confirma primero que este correo te pertenece.
+Tu cuenta fue aprobada. Para activar el acceso a ArriendU, confirma primero que este correo te pertenece.
 
 Confirma tu correo aqui:
 {{ confirmEmailUrl }}

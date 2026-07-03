@@ -10,7 +10,6 @@ export async function createFavoritoService(estudianteId, publicacionId) {
 
     const publicacion = await publicacionRepository.findOneBy({ 
       id: parseInt(publicacionId),
-      estado: "activa"
     });
 
     if (!publicacion) {
@@ -34,6 +33,12 @@ export async function createFavoritoService(estudianteId, publicacionId) {
     });
 
     await favoritoRepository.save(nuevoFavorito);
+    await publicacionRepository
+      .createQueryBuilder()
+      .update(PublicacionSchema)
+      .set({ contadorFavoritos: () => '"contadorFavoritos" + 1' })
+      .where('id = :id', { id: parseInt(publicacionId) })
+      .execute();
 
     return [nuevoFavorito, null];
   } catch (error) {
@@ -54,6 +59,13 @@ export async function deleteFavoritoService(estudianteId, publicacionId) {
     if (resultado.affected === 0) {
       return [null, "La publicación no estaba en tus favoritos o ya fue eliminada."];
     }
+
+    await AppDataSource.getRepository(PublicacionSchema)
+      .createQueryBuilder()
+      .update(PublicacionSchema)
+      .set({ contadorFavoritos: () => 'GREATEST("contadorFavoritos" - 1, 0)' })
+      .where('id = :id', { id: parseInt(publicacionId) })
+      .execute();
 
     return [true, null];
   } catch (error) {

@@ -1,6 +1,7 @@
 import axios from './root.service.js';
 import cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
+import { getProfile } from './user.service.js';
 
 export async function login(dataUser) {
     try {
@@ -24,6 +25,12 @@ export async function login(dataUser) {
             sessionStorage.setItem('usuario', JSON.stringify(userData));
             axios.defaults.headers.common['Authorization'] = `Bearer ${data.data.token}`;
             cookies.set('jwt-auth', data.data.token, { path: '/' });
+
+            const profile = await getProfile();
+            if (profile?.fotoPerfil) {
+                sessionStorage.setItem('usuario', JSON.stringify({ ...userData, fotoPerfil: profile.fotoPerfil }));
+            }
+
             return response.data;
         }
     } catch (error) {

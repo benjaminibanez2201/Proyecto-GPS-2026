@@ -29,12 +29,52 @@ const PublicacionSchema = new EntitySchema({
       length: 255,
       nullable: false,
     },
+    comuna: {
+      type: "enum",
+      enum: [
+        "concepcion",
+        "san_pedro_de_la_paz",
+        "talcahuano",
+        "chiguayante",
+        "hualpen",
+        "penco",
+      ],
+      nullable: true,
+    },
+    latitud: {
+      type: "numeric",
+      precision: 10,
+      scale: 8,
+      nullable: true,
+    },
+    longitud: {
+      type: "numeric",
+      precision: 10,
+      scale: 8,
+      nullable: true,
+    },
     fotos: {
       type: "simple-array",
       nullable: true,
     },
     serviciosIncluidos: {
-      type: "simple-array",
+      type: "enum",
+      enum: [
+        "agua", 
+        "luz", 
+        "gas", 
+        "internet", 
+        "tv_cable", 
+        "calefaccion", 
+        "estacionamiento", 
+        "lavadora"
+      ],
+      array: true,
+      default: [],
+      nullable: true,
+    },
+    distanciaCampus: {
+      type: "int",
       nullable: true,
     },
     reglasConvivencia: {
@@ -58,7 +98,7 @@ const PublicacionSchema = new EntitySchema({
     },
     estado: {
       type: "enum",
-      enum: ["activa", "inactiva"],
+      enum: ["activa", "arrendada", "disponible", "inactiva"],
       default: "activa",
       nullable: false,
     },
@@ -87,6 +127,11 @@ const PublicacionSchema = new EntitySchema({
       onDelete: "CASCADE",
     },
   },
+  ocultadaPorArrendador: {
+  type: "boolean",
+  default: false,
+  nullable: false,
+},
 });
 
 export default PublicacionSchema;

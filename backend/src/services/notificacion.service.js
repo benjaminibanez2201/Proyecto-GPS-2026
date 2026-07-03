@@ -20,6 +20,21 @@ export async function createNotificacionService(data) {
     }
 }
 
+export async function existeNotificacionService({ userId, tipo, targetType, targetId }) {
+    try {
+        const notificacionRepository = AppDataSource.getRepository(Notificacion);
+
+        const notificacion = await notificacionRepository.findOne({
+            where: { userId, tipo, targetType, targetId },
+        });
+
+        return [Boolean(notificacion), null];
+    } catch (error) {
+        console.error("Error al verificar la notificaciÃ³n:", error);
+        return [null, "Error interno del servidor"];
+    }
+}
+
 export async function getNotificacionesByUserIdService(userId, options = {}) {
     try {
         const notificacionRepository = AppDataSource.getRepository(Notificacion);
@@ -102,6 +117,28 @@ export async function marcarTodasNotificacionesLeidasService(userId) {
         return [result, null];
     } catch (error) {
         console.error("Error al marcar todas las notificaciones como leídas:", error);
+        return [null, "Error interno del servidor"];
+    }
+}
+
+export async function marcarNotificacionesPorTargetLeidasService(userId, targetType, targetId) {
+    try {
+        const notificacionRepository = AppDataSource.getRepository(Notificacion);
+
+        const result = await notificacionRepository
+            .createQueryBuilder()
+            .update()
+            .set({ leida: true, readAt: () => "CURRENT_TIMESTAMP" })
+            .where("\"userId\" = :userId AND \"targetType\" = :targetType AND \"targetId\" = :targetId AND leida = false", {
+                userId,
+                targetType,
+                targetId,
+            })
+            .execute();
+
+        return [result, null];
+    } catch (error) {
+        console.error("Error al marcar notificaciones por target como leídas:", error);
         return [null, "Error interno del servidor"];
     }
 }

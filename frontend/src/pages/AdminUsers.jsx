@@ -6,7 +6,11 @@ import UserDetailsModal from '@components/UserDetailsModal';
 import useUsers from '@hooks/users/useGetUsers.jsx';
 import useEditUser from '@hooks/users/useEditUser';
 import useDeleteUser from '@hooks/users/useDeleteUser';
+import useToggleStatus from '@hooks/users/useToggleStatus';
 import { useAuth } from '@context/AuthContext';
+import { formatPostUpdate } from '@helpers/formatData.js';
+import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
+import { updateUserVerificationStatus } from '@services/user.service.js';
 import '@styles/users.css';
 
 const AdminUsers = () => {
@@ -34,6 +38,7 @@ const AdminUsers = () => {
     } = useEditUser(setUsers);
 
     const { handleDelete } = useDeleteUser(fetchUsers, setDataUser);
+    const { handleToggleStatus } = useToggleStatus(fetchUsers, setDataUser);
 
     const handleSelectionChange = useCallback((selectedUsers) => {
         setDataUser(selectedUsers);
@@ -43,6 +48,38 @@ const AdminUsers = () => {
         setSelectedUser(userData);
         setIsDetailsOpen(true);
     }, []);
+
+    const handleVerificationAction = useCallback(async (targetUser, payload) => {
+        const updatedUser = await updateUserVerificationStatus(targetUser, payload);
+
+        if (!updatedUser?.id) {
+            const errorMessage = updatedUser?.details || updatedUser?.message || 'No se pudo actualizar la revisión';
+            showErrorAlert('Revisión no actualizada', errorMessage);
+            throw new Error(errorMessage);
+        }
+
+        const formattedUser = formatPostUpdate(updatedUser);
+        setUsers((prevUsers) => prevUsers.map((currentUser) => (
+            currentUser.id === formattedUser.id ? formattedUser : currentUser
+        )));
+        setSelectedUser(formattedUser);
+
+        const requiresEmail = payload.estadoVerificacion !== 'pendiente' || Boolean(payload.solicitudAntecedentes);
+        let actionMessage = 'La revisión fue guardada correctamente.';
+
+        if (requiresEmail && updatedUser.avisoCorreoEnviado === false) {
+            actionMessage = 'La revisión se guardó, pero no se pudo enviar el correo automáticamente.';
+        } else if (payload.estadoVerificacion === 'aprobado') {
+            actionMessage = 'La cuenta fue aprobada y se avisó al usuario.';
+        } else if (payload.estadoVerificacion === 'rechazado') {
+            actionMessage = 'La cuenta fue rechazada con comentario y se avisó al usuario.';
+        } else if (payload.solicitudAntecedentes) {
+            actionMessage = 'Se solicitaron antecedentes adicionales por correo.';
+        }
+
+        showSuccessAlert('Revisión actualizada', actionMessage);
+        return formattedUser;
+    }, [setUsers]);
 
     const handleAdvancedFilterChange = useCallback((field) => (event) => {
         const { value } = event.target;
@@ -95,6 +132,22 @@ const AdminUsers = () => {
                 return `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:${colors[normalized] || '#334155'}1a;color:${colors[normalized] || '#334155'};font-weight:700;font-size:12px;">${value || 'Pendiente'}</span>`;
             },
         },
+        {
+            title: 'Acceso',
+            field: 'estadoCuenta',
+            minWidth: 120,
+            widthGrow: 1,
+            responsive: 1,
+            formatter: (cell) => {
+                const value = cell.getValue();
+                const isBlocked = value === 'suspendido';
+                const bgColor = isBlocked ? '#fef2f2' : '#f0fdf4';
+                const textColor = isBlocked ? '#ef4444' : '#16a34a';
+                const label = isBlocked ? 'Bloqueado' : 'Activo';
+
+                return `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:${bgColor};color:${textColor};font-weight:700;font-size:12px;">${label}</span>`;
+            },
+        },
         { title: 'Creado', field: 'createdAt', minWidth: 120, widthGrow: 1, responsive: 2 },
         {
             title: 'Ver',
@@ -107,7 +160,7 @@ const AdminUsers = () => {
             formatter: () => '<button type="button" class="table-view-button">Ver</button>',
             cellClick: (e, cell) => handleViewUser(cell.getRow().getData()),
         },
-    ]), []);
+    ]), [handleToggleStatus, handleViewUser]);
 
     const colores = {
         principal: '#008080',
@@ -177,6 +230,18 @@ const AdminUsers = () => {
                         </button>
                         <button type="button" onClick={handleClickUpdate} disabled={dataUser.length === 0} style={styles.actionButton}>
                             Editar selección
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleToggleStatus(dataUser)}
+                            disabled={dataUser.length !== 1}
+                            style={styles.actionButton}
+                        >
+                            {dataUser.length === 1 && dataUser[0]?.estadoCuenta === 'suspendido'
+                                ? 'Reactivar selección'
+                                : dataUser.length === 1
+                                    ? 'Suspender selección'
+                                    : 'Cambiar acceso'}
                         </button>
                         <button
                             type="button"
@@ -287,7 +352,12 @@ const AdminUsers = () => {
             </section>
 
             <Popup show={isPopupOpen} setShow={setIsPopupOpen} data={dataUser} action={handleUpdate} />
-            <UserDetailsModal show={isDetailsOpen} setShow={setIsDetailsOpen} user={selectedUser} />
+            <UserDetailsModal
+                show={isDetailsOpen}
+                setShow={setIsDetailsOpen}
+                user={selectedUser}
+                onVerificationAction={handleVerificationAction}
+            />
         </div>
     );
 };

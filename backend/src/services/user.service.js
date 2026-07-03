@@ -1,5 +1,6 @@
 "use strict";
 import User from "../entity/user.entity.js";
+import AuditoriaAdmin from "../entity/auditoria.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
 import { removeVerificationUploadsForUser } from "../helpers/upload.helper.js";
@@ -246,6 +247,7 @@ export async function updateUserVerificationStatusService(query, reviewPayload, 
     );
 
     const userRepository = AppDataSource.getRepository(User);
+    const auditoriaRepository = AppDataSource.getRepository(AuditoriaAdmin);
 
     const userFound = await userRepository.findOne({
       where: [{ id: id }, { rut: rut }, { email: email }],
@@ -312,6 +314,29 @@ export async function updateUserVerificationStatusService(query, reviewPayload, 
 
     const { password, ...userUpdated } = userData;
 
+    if (reviewerId) {
+      let accionAuditoria = "REVISAR_VERIFICACION";
+      if (estadoVerificacion === "aprobado") {
+        accionAuditoria = "APROBAR_DOCUMENTOS";
+      } else if (estadoVerificacion === "rechazado") {
+        accionAuditoria = "RECHAZAR_DOCUMENTOS";
+      } else if (hasInfoRequest) {
+        accionAuditoria = "SOLICITAR_ANTECEDENTES";
+      }
+
+      try {
+        const registroAuditoria = auditoriaRepository.create({
+          accion: accionAuditoria,
+          usuarioAfectadoId: userFound.id,
+          usuarioAfectadoEmail: userFound.email,
+          adminResponsable: { id: reviewerId },
+        });
+        await auditoriaRepository.save(registroAuditoria);
+      } catch (auditoriaError) {
+        console.error("Error al registrar auditoria de verificacion:", auditoriaError);
+      }
+    }
+
     try {
       const notificationResult = await notifyVerificationResult(userUpdated, estadoVerificacion, {
         motivoRechazo,
@@ -331,11 +356,12 @@ export async function updateUserVerificationStatusService(query, reviewPayload, 
   }
 }
 
-export async function deleteUserService(query) {
+export async function deleteUserService(query, adminId) {
   try {
     const { id, rut, email } = query;
 
     const userRepository = AppDataSource.getRepository(User);
+    const auditoriaRepository = AppDataSource.getRepository(AuditoriaAdmin);
 
     const userFound = await userRepository.findOne({
       where: [{ id: id }, { rut: rut }, { email: email }],
@@ -345,6 +371,15 @@ export async function deleteUserService(query) {
 
     if (userFound.rol === "admin") {
       return [null, "No se puede eliminar un usuario con rol de administrador"];
+    }
+    if (adminId) {
+      const registroAuditoria = auditoriaRepository.create({
+        accion: "ELIMINAR",
+        usuarioAfectadoId: userFound.id,
+        usuarioAfectadoEmail: userFound.email,
+        adminResponsable: { id: adminId }
+      });
+      await auditoriaRepository.save(registroAuditoria);
     }
 
     const userDeleted = await userRepository.remove(userFound);
@@ -542,5 +577,43 @@ export async function verifyPasswordService(id, password) {
   } catch (error) {
     console.error("Error al verificar contraseña:", error);
     return [null, "Error interno del servidor"];
+  }
+}
+
+export async function toggleUserStatusService(adminId, usuarioId, nuevoEstado) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+    const auditoriaRepository = AppDataSource.getRepository(AuditoriaAdmin);
+
+    const userFound = await userRepository.findOneBy({ id: parseInt(usuarioId) });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+    
+    if (userFound.rol === "admin") {
+      return [null, "No puedes modificar el estado de otro administrador."];
+    }
+
+    userFound.estadoCuenta = nuevoEstado;
+    await userRepository.save(userFound);
+
+    const registroAuditoria = auditoriaRepository.create({
+      accion: nuevoEstado === "suspendido" ? "BLOQUEAR" : "DESBLOQUEAR",
+      usuarioAfectadoId: userFound.id,
+      usuarioAfectadoEmail: userFound.email,
+      adminResponsable: { id: adminId }
+    });
+    await auditoriaRepository.save(registroAuditoria);
+
+    const { password, ...userData } = userFound;
+    return [userData, null];
+  } catch (error) {
+    console.error("toggleUserStatusService error:", {
+      adminId,
+      usuarioId,
+      nuevoEstado,
+      message: error?.message,
+      stack: error?.stack,
+    });
+    return [null, error?.message || "Error interno del servidor al actualizar estado"];
   }
 }

@@ -2,7 +2,10 @@
 import Mensaje from "../entity/mensaje.entity.js";
 import Conversacion from "../entity/conversacion.entity.js";
 import { AppDataSource } from "../config/configDb.js";
-import { createNotificacionService } from "./notificacion.service.js";
+import {
+  createNotificacionService,
+  existeNotificacionService,
+} from "./notificacion.service.js";
 import {
   buscarConversacionPorPublicacionYEstudiante,
   crearConversacion,
@@ -14,10 +17,7 @@ function getMessageNotificationData(conversacion, remitenteId) {
   const senderId = Number(remitenteId);
 
   if (senderId === estudianteId) {
-    const alreadyHadUnreadMessages = Number(conversacion.noLeidosArrendador || 0) > 0;
-
     return {
-      shouldNotify: !alreadyHadUnreadMessages,
       userId: arrendadorId,
       senderName: conversacion.estudiante?.nombreCompleto || "un estudiante",
       targetId: conversacion.id,
@@ -25,10 +25,7 @@ function getMessageNotificationData(conversacion, remitenteId) {
   }
 
   if (senderId === arrendadorId) {
-    const alreadyHadUnreadMessages = Number(conversacion.noLeidosEstudiante || 0) > 0;
-
     return {
-      shouldNotify: !alreadyHadUnreadMessages,
       userId: estudianteId,
       senderName: conversacion.arrendador?.nombreCompleto || "un arrendador",
       targetId: conversacion.id,
@@ -73,6 +70,14 @@ export async function enviarMensaje({ conversacionId = null, id_publicacion = nu
       return [null, "Faltan parámetros para crear el mensaje"];
     }
 
+    if (Number(conversacion.estudiante?.id) === Number(remitenteId)) {
+      conversacion.ocultadaPorEstudiante = false;
+    }
+
+    if (Number(conversacion.arrendador?.id) === Number(remitenteId)) {
+      conversacion.ocultadaPorArrendador = false;
+    }
+
     const nuevoMensaje = repositorioMensaje.create({
       contenido,
       conversacion,
@@ -95,15 +100,25 @@ export async function enviarMensaje({ conversacionId = null, id_publicacion = nu
 
     await repositorioConversacion.save(conversacion);
 
-    if (notificationData?.shouldNotify && notificationData.userId) {
+    if (notificationData?.userId) {
       try {
-        await createNotificacionService({
+        const notificationPayload = {
           userId: notificationData.userId,
           tipo: "MESSAGE_RECEIVED",
           mensaje: `Recibiste un nuevo mensaje de ${notificationData.senderName}`,
           targetType: "conversation",
           targetId: notificationData.targetId,
+        };
+
+        const [notificacionExistente, errorVerificacion] = await existeNotificacionService({
+          userId: notificationPayload.userId,
+          tipo: notificationPayload.tipo,
+          targetType: notificationPayload.targetType,
+          targetId: notificationPayload.targetId,
         });
+
+        if (errorVerificacion) throw new Error(errorVerificacion);
+        if (!notificacionExistente) await createNotificacionService(notificationPayload);
       } catch (notifError) {
         console.error("Error creando notificaciÃ³n de mensaje:", notifError);
       }
