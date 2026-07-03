@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
 import { COMUNAS_PERMITIDAS } from '@helpers/publicacionesMapa.helper.js';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
+import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 const toCount = (value) => Number(value || 0);
@@ -601,7 +602,7 @@ const MisPublicaciones = () => {
 
   const irAlDetalle = (pub) => {
     if (!pub?.id) return;
-    navigate(`/publicacion/${pub.id}`);
+    navigate(`/publicacion/${encodePublicId(pub.id)}`);
   };
 
   return (
@@ -616,9 +617,6 @@ const MisPublicaciones = () => {
             <p style={styles.heroSubtitle}>Gestiona los inmuebles que has subido a la plataforma.</p>
           </div>
         </div>
-        <button onClick={handleCrear} style={styles.button}>
-          <span>Publicar Inmueble</span>
-        </button>
       </section>
 
       <section style={styles.statsBand}>
@@ -649,8 +647,13 @@ const MisPublicaciones = () => {
 
       <section style={styles.card}>
         <header style={styles.cardHeader}>
-          <h2 style={styles.cardTitle}>Tus propiedades publicadas</h2>
-          <p style={styles.cardSubtitle}>Aquí aparecen todas las publicaciones que has creado.</p>
+          <div>
+            <h2 style={styles.cardTitle}>Tus propiedades publicadas</h2>
+            <p style={styles.cardSubtitle}>Aquí aparecen todas las publicaciones que has creado.</p>
+          </div>
+          <button onClick={handleCrear} style={styles.button}>
+            <span>Publicar Inmueble</span>
+          </button>
         </header>
 
         {publicaciones.length === 0 ? (
@@ -700,16 +703,18 @@ const MisPublicaciones = () => {
                   }}>
                     {pub.estado}
                   </span>
-                  <button onClick={() => abrirEstadisticas(pub)} style={styles.btnStats}>
-                    <BarChart3 size={14} strokeWidth={2.2} />
-                    Estadísticas
-                  </button>
+                  <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {pub.fotos && pub.fotos.length > 1 && (
+                      <button onClick={() => abrirGaleria(pub)} style={styles.btnStats}>
+                        Ver fotos ({pub.fotos.length})
+                      </button>
+                    )}
+                    <button onClick={() => abrirEstadisticas(pub)} style={styles.btnStats}>
+                      <BarChart3 size={14} strokeWidth={2.2} />
+                      Estadísticas
+                    </button>
+                  </div>
                 </div>
-                {pub.fotos && pub.fotos.length > 1 && (
-                  <button onClick={() => abrirGaleria(pub)} style={{...styles.btnStats, right: '80px', position: 'absolute', top: '8px'}}>
-                    Ver fotos ({pub.fotos.length})
-                  </button>
-                )}
                 
                 {/* Bloque de Textos */}
                 <div style={styles.infoContainer}>
@@ -794,10 +799,10 @@ const styles = {
   heroTitle: { margin: '0 0 4px', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.02em' },
   heroSubtitle: { margin: 0, fontSize: '14px', color: '#ccfbf1' },
   button: {
-    display: 'flex', alignItems: 'center', gap: '8px',
-    padding: '12px 24px', borderRadius: '14px', backgroundColor: '#ffffff',
-    color: '#0f766e', fontWeight: '700', fontSize: '14px', border: 'none', cursor: 'pointer',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', transition: 'all 0.2s',
+    display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0,
+    padding: '12px 24px', borderRadius: '14px', backgroundColor: '#0f766e',
+    color: '#ffffff', fontWeight: '700', fontSize: '14px', border: 'none', cursor: 'pointer',
+    boxShadow: '0 10px 15px -3px rgba(15, 118, 110, 0.25)', transition: 'all 0.2s',
   },
   statsBand: {
     borderRadius: '24px',
@@ -885,7 +890,14 @@ const styles = {
     borderRadius: '24px', padding: '32px', backgroundColor: '#ffffff',
     border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(15, 23, 42, 0.03)',
   },
-  cardHeader: { marginBottom: '28px' },
+  cardHeader: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: '20px',
+    flexWrap: 'wrap',
+    marginBottom: '28px',
+  },
   eyebrow: { margin: '0 0 6px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' },
   cardTitle: { margin: '0 0 6px', fontSize: '24px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' },
   cardSubtitle: { margin: 0, fontSize: '14px', color: '#64748b' },
@@ -927,7 +939,7 @@ const styles = {
   stateBadge: {
     position: 'absolute',
     top: '12px',
-    right: '12px',
+    left: '12px',
     fontSize: '11px',
     fontWeight: '700',
     padding: '4px 10px',

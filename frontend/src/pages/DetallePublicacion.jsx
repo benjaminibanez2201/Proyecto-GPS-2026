@@ -6,25 +6,10 @@ import { getPublicacionPorId } from '../services/publicacion.service.js';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import { useAuth } from '../context/AuthContext';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
+import { decodePublicId, encodePublicId } from '@helpers/publicId.helper.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import ModalReportar from '../components/ModalReportar.jsx';
 import '@styles/basePublicaciones.css';
-
-const backButtonStyle = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '8px',
-  width: 'fit-content',
-  color: '#0f766e',
-  fontWeight: 600,
-  padding: '10px 14px',
-  borderRadius: '999px',
-  backgroundColor: '#ffffff',
-  border: '1px solid rgba(15, 118, 110, 0.25)',
-  boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
-  cursor: 'pointer',
-  marginBottom: '20px',
-};
 
 const carouselArrowStyle = {
   position: 'absolute',
@@ -68,7 +53,8 @@ function formatPriceCLP(value) {
 }
 
 export default function DetallePublicacion() {
-  const { id } = useParams();
+  const { id: idParam } = useParams();
+  const id = decodePublicId(idParam);
   const navigate = useNavigate();
   const [publicacion, setPublicacion] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -89,6 +75,12 @@ export default function DetallePublicacion() {
 
   useEffect(() => {
     const traerDetalles = async () => {
+      if (id == null) {
+        setError('No se encontró esta publicación.');
+        setCargando(false);
+        return;
+      }
+
       setCargando(true);
       const [data, errorRespuesta] = await getPublicacionPorId(id);
       
@@ -187,7 +179,7 @@ export default function DetallePublicacion() {
       <div className="home-container">
         <button
           onClick={() => navigate(-1)}
-          style={backButtonStyle}
+          className="back-pill-button"
         >
           <ArrowLeft size={18} /> Volver
         </button>
@@ -218,7 +210,7 @@ export default function DetallePublicacion() {
     <div className="home-container">
       <button
         onClick={() => navigate(-1)}
-        style={backButtonStyle}
+        className="back-pill-button"
       >
         <ArrowLeft size={18} /> Volver
       </button>
@@ -402,7 +394,7 @@ export default function DetallePublicacion() {
                 <button
                   type="button"
                   className="confirm-btn"
-                  onClick={() => navigate(`/mensajes?publicacion=${id}`)}
+                  onClick={() => navigate(`/mensajes?publicacion=${encodePublicId(id)}`)}
                   style={{ width: '100%', marginTop: '30px' }}
                 >
                   Contactar al Propietario

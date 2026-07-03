@@ -3,7 +3,7 @@ import { usePublicaciones } from '../hooks/publicaciones/usePublicacion';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import ComparadorPublicacionesModal from '../components/ComparadorPublicacionesModal';
 import PublicacionCard from '../components/PublicacionCard';
-import { Search } from 'lucide-react'; 
+import { Search, Map } from 'lucide-react';
 import PublicationMap from '@components/PublicationMap';
 import Swal from 'sweetalert2';
 import '@styles/basePublicaciones.css';
@@ -18,6 +18,7 @@ export default function BuscarArriendos() {
   const [comparacion, setComparacion] = useState([]);
   const [comparadorAbierto, setComparadorAbierto] = useState(false);
   const [filtrosAplicados, setFiltrosAplicados] = useState({});
+  const [mostrarMapa, setMostrarMapa] = useState(false);
 
   const [filtros, setFiltros] = useState({
     titulo: "",
@@ -418,7 +419,18 @@ export default function BuscarArriendos() {
 
       {!cargando && !error && (
         <>
-          <PublicationMap publicaciones={publicacionesVisibles} />
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: mostrarMapa ? '0' : '20px' }}>
+            <button
+              type="button"
+              onClick={() => setMostrarMapa((prev) => !prev)}
+              className={`map-toggle-button${mostrarMapa ? ' map-toggle-button--active' : ''}`}
+            >
+              <Map size={16} />
+              {mostrarMapa ? 'Ocultar mapa' : 'Ver en el mapa'}
+            </button>
+          </div>
+
+          {mostrarMapa && <PublicationMap publicaciones={publicacionesVisibles} />}
 
           <div className="publicaciones-grid">
             {publicacionesVisibles.length > 0 ? (

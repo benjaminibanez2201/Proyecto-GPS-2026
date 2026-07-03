@@ -1,26 +1,29 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, CalendarCheck, CheckCircle, Archive, XCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, CalendarCheck, CheckCircle, Archive, XCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { obtenerArriendoPorId } from '../services/rentalsAndReviews.service.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { resolveFileUrl } from '../helpers/resolveFileUrl.js';
+import { decodePublicId } from '../helpers/publicId.helper.js';
 import AvatarCirculo from '../components/AvatarCirculo.jsx';
 import '@styles/detalleArriendo.css';
 
-const backButtonStyle = {
-  display: 'inline-flex',
+const carouselArrowStyle = {
+  position: 'absolute',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  zIndex: 10,
+  background: 'rgba(255, 255, 255, 0.9)',
+  border: 'none',
+  borderRadius: '50%',
+  width: '40px',
+  height: '40px',
+  display: 'flex',
   alignItems: 'center',
-  gap: '8px',
-  width: 'fit-content',
-  color: '#0f766e',
-  fontWeight: 600,
-  padding: '10px 14px',
-  borderRadius: '999px',
-  backgroundColor: '#ffffff',
-  border: '1px solid rgba(15, 118, 110, 0.25)',
-  boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
+  justifyContent: 'center',
   cursor: 'pointer',
-  marginBottom: '20px',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+  color: '#0f172a',
 };
 
 const SERVICIOS_LABELS = {
@@ -45,12 +48,15 @@ const ESTADO_META = {
 };
 
 export default function DetalleArriendo() {
-  const { id } = useParams();
+  const { id: idParam } = useParams();
+  const id = decodePublicId(idParam);
   const navigate = useNavigate();
   const { user } = useAuth();
   const [arriendo, setArriendo] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+  const [fotoActivaIndex, setFotoActivaIndex] = useState(0);
+  const [lightboxAbierto, setLightboxAbierto] = useState(false);
 
   useEffect(() => {
     const cargarArriendo = async () => {
@@ -65,8 +71,32 @@ export default function DetalleArriendo() {
       setCargando(false);
     };
 
-    if (id) cargarArriendo();
+    if (id != null) {
+      cargarArriendo();
+    } else {
+      setError('No se encontró este arriendo.');
+      setCargando(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    if (!lightboxAbierto) return undefined;
+
+    const totalFotosLightbox = arriendo?.publicacion?.fotos?.length || 0;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setLightboxAbierto(false);
+      if (e.key === 'ArrowRight' && totalFotosLightbox > 1) {
+        setFotoActivaIndex((prev) => (prev + 1) % totalFotosLightbox);
+      }
+      if (e.key === 'ArrowLeft' && totalFotosLightbox > 1) {
+        setFotoActivaIndex((prev) => (prev - 1 + totalFotosLightbox) % totalFotosLightbox);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxAbierto, arriendo]);
 
   if (cargando) {
     return <div className="detalle-arriendo-estado">Cargando arriendo...</div>;
@@ -75,7 +105,7 @@ export default function DetalleArriendo() {
   if (error || !arriendo) {
     return (
       <div className="detalle-arriendo-page">
-        <button onClick={() => navigate(-1)} style={backButtonStyle}>
+        <button onClick={() => navigate(-1)} className="back-pill-button">
           <ArrowLeft size={18} /> Volver
         </button>
         <div className="detalle-arriendo-estado detalle-arriendo-estado--error">
@@ -87,7 +117,8 @@ export default function DetalleArriendo() {
 
   const publicacion = arriendo.publicacion || {};
   const fotos = publicacion.fotos || [];
-  const imagenPrincipal = fotos[0] ? resolveFileUrl(fotos[0]) : 'https://via.placeholder.com/800x400?text=Sin+Imagen';
+  const fotosResueltas = fotos.length > 0 ? fotos.map(resolveFileUrl) : [];
+  const imagenActiva = fotosResueltas[fotoActivaIndex] || fotosResueltas[0] || 'https://via.placeholder.com/800x400?text=Sin+Imagen';
   const esArrendador = Number(user?.id) === Number(arriendo.arrendadorId);
   const otraPersona = esArrendador ? arriendo.estudiante : arriendo.arrendador;
   const estadoMeta = ESTADO_META[arriendo.status] || ESTADO_META.COMPLETED;
@@ -96,9 +127,19 @@ export default function DetalleArriendo() {
     ? new Date(arriendo.completedAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })
     : 'Fecha no disponible';
 
+  const irFotoSiguiente = (e) => {
+    if (e) e.stopPropagation();
+    setFotoActivaIndex((prev) => (prev + 1) % fotosResueltas.length);
+  };
+
+  const irFotoAnterior = (e) => {
+    if (e) e.stopPropagation();
+    setFotoActivaIndex((prev) => (prev - 1 + fotosResueltas.length) % fotosResueltas.length);
+  };
+
   return (
     <div className="detalle-arriendo-page">
-      <button onClick={() => navigate(-1)} style={backButtonStyle}>
+      <button onClick={() => navigate(-1)} className="back-pill-button">
         <ArrowLeft size={18} /> Volver
       </button>
 
@@ -116,12 +157,46 @@ export default function DetalleArriendo() {
           </div>
         </div>
 
-        <img src={imagenPrincipal} alt={publicacion.titulo || 'Arriendo'} className="detalle-arriendo-imagen" />
+        <div style={{ position: 'relative' }}>
+          <img
+            src={imagenActiva}
+            alt={publicacion.titulo || 'Arriendo'}
+            className="detalle-arriendo-imagen"
+            onClick={() => fotosResueltas.length > 0 && setLightboxAbierto(true)}
+            style={{ cursor: fotosResueltas.length > 0 ? 'zoom-in' : 'default' }}
+          />
 
-        {fotos.length > 1 && (
+          {fotosResueltas.length > 1 && (
+            <>
+              <button type="button" onClick={irFotoAnterior} style={{ ...carouselArrowStyle, left: '16px' }} title="Foto anterior">
+                <ChevronLeft size={22} />
+              </button>
+              <button type="button" onClick={irFotoSiguiente} style={{ ...carouselArrowStyle, right: '16px' }} title="Foto siguiente">
+                <ChevronRight size={22} />
+              </button>
+              <span style={{ position: 'absolute', bottom: '46px', right: '16px', backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff', padding: '4px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 'bold' }}>
+                {fotoActivaIndex + 1} / {fotosResueltas.length}
+              </span>
+            </>
+          )}
+        </div>
+
+        {fotosResueltas.length > 1 && (
           <div className="detalle-arriendo-galeria">
-            {fotos.slice(1).map((foto, index) => (
-              <img key={foto} src={resolveFileUrl(foto)} alt={`Foto ${index + 2}`} className="detalle-arriendo-galeria-img" />
+            {fotosResueltas.map((foto, index) => (
+              <img
+                key={foto}
+                src={foto}
+                alt={`Foto ${index + 1}`}
+                onClick={() => setFotoActivaIndex(index)}
+                className="detalle-arriendo-galeria-img"
+                style={{
+                  cursor: 'pointer',
+                  border: index === fotoActivaIndex ? '3px solid #008080' : '3px solid transparent',
+                  opacity: index === fotoActivaIndex ? 1 : 0.7,
+                  transition: 'opacity 0.15s ease, border-color 0.15s ease',
+                }}
+              />
             ))}
           </div>
         )}
@@ -168,6 +243,80 @@ export default function DetalleArriendo() {
           </div>
         </div>
       </div>
+
+      {lightboxAbierto && fotosResueltas.length > 0 && (
+        <div
+          onClick={() => setLightboxAbierto(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setLightboxAbierto(false)}
+            title="Cerrar"
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              border: 'none',
+              background: 'rgba(255,255,255,0.15)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <X size={22} />
+          </button>
+
+          {fotosResueltas.length > 1 && (
+            <button
+              type="button"
+              onClick={irFotoAnterior}
+              title="Foto anterior"
+              style={{ ...carouselArrowStyle, left: '24px', background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+            >
+              <ChevronLeft size={28} />
+            </button>
+          )}
+
+          <img
+            src={imagenActiva}
+            alt={publicacion.titulo || 'Arriendo'}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: '8px' }}
+          />
+
+          {fotosResueltas.length > 1 && (
+            <button
+              type="button"
+              onClick={irFotoSiguiente}
+              title="Foto siguiente"
+              style={{ ...carouselArrowStyle, right: '24px', background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+            >
+              <ChevronRight size={28} />
+            </button>
+          )}
+
+          {fotosResueltas.length > 1 && (
+            <span style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
+              {fotoActivaIndex + 1} / {fotosResueltas.length}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
