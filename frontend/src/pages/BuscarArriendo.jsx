@@ -486,7 +486,7 @@ const styles = {
   hero: {
     borderRadius: '24px',
     padding: '24px 28px',
-    background: 'linear-gradient(135deg, #0f766e 0%, #0b6b7a 45%, #163d4f 100%)',
+    background: 'linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%)',
     color: '#fff',
     boxShadow: '0 20px 40px rgba(11, 34, 45, 0.18)',
   },
