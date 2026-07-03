@@ -4,6 +4,7 @@ import { Heart, MapPin, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import ComparadorPublicacionesModal from '@components/ComparadorPublicacionesModal';
 import { eliminarFavorito, getMisFavoritos } from '@services/user.service.js';
+import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
 
 const accent = '#0f766e';
 
@@ -164,8 +165,8 @@ const MisFavoritos = () => {
               const publicacionId = publicacion.id_publicacion || publicacion.id;
               
               const fallbackImage = 'https://via.placeholder.com/400x250?text=Imagen+no+disponible';
-              const imagenPrincipal = publicacion.fotos && publicacion.fotos.length > 0 
-                ? publicacion.fotos[0] 
+              const imagenPrincipal = publicacion.fotos && publicacion.fotos.length > 0
+                ? resolveFileUrl(publicacion.fotos[0])
                 : fallbackImage;
 
               return (
@@ -265,6 +266,7 @@ const styles = {
     height: '52px',
     borderRadius: '16px',
     backgroundColor: 'rgba(255,255,255,0.15)',
+    border: '3px solid rgba(255,255,255,0.4)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

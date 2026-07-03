@@ -500,6 +500,7 @@ const styles = {
     height: '52px',
     borderRadius: '16px',
     backgroundColor: 'rgba(255,255,255,0.15)',
+    border: '3px solid rgba(255,255,255,0.4)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

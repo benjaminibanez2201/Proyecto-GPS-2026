@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, CalendarCheck, CheckCircle, Archive, XCircle } from 'lucide-react';
 import { obtenerArriendoPorId } from '../services/rentalsAndReviews.service.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { resolveFileUrl } from '../helpers/resolveFileUrl.js';
 import AvatarCirculo from '../components/AvatarCirculo.jsx';
 import '@styles/detalleArriendo.css';
 
@@ -86,7 +87,7 @@ export default function DetalleArriendo() {
 
   const publicacion = arriendo.publicacion || {};
   const fotos = publicacion.fotos || [];
-  const imagenPrincipal = fotos[0] || 'https://via.placeholder.com/800x400?text=Sin+Imagen';
+  const imagenPrincipal = fotos[0] ? resolveFileUrl(fotos[0]) : 'https://via.placeholder.com/800x400?text=Sin+Imagen';
   const esArrendador = Number(user?.id) === Number(arriendo.arrendadorId);
   const otraPersona = esArrendador ? arriendo.estudiante : arriendo.arrendador;
   const estadoMeta = ESTADO_META[arriendo.status] || ESTADO_META.COMPLETED;
@@ -120,7 +121,7 @@ export default function DetalleArriendo() {
         {fotos.length > 1 && (
           <div className="detalle-arriendo-galeria">
             {fotos.slice(1).map((foto, index) => (
-              <img key={foto} src={foto} alt={`Foto ${index + 2}`} className="detalle-arriendo-galeria-img" />
+              <img key={foto} src={resolveFileUrl(foto)} alt={`Foto ${index + 2}`} className="detalle-arriendo-galeria-img" />
             ))}
           </div>
         )}
