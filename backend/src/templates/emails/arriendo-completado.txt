@@ -1,0 +1,7 @@
+Hola {{name}},
+
+Tu arriendo con {{otherName}} ha sido confirmado. Gracias por usar ArriendU.
+
+
+Saludos,
+Soporte ArriendU

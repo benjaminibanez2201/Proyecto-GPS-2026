@@ -1,20 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { showErrorAlert } from '@helpers/sweetAlert.js';
 
 const useLogin = () => {
-    const [errorEmail, setErrorEmail] = useState('');
-    const [errorPassword, setErrorPassword] = useState('');
     const [inputData, setInputData] = useState({ email: '', password: '' });
 
-    useEffect(() => {
-        if (inputData.email) setErrorEmail('');
-        if (inputData.password) setErrorPassword('');
-    }, [inputData.email, inputData.password]);
+    const normalizeError = (dataMessage) => {
+        if (typeof dataMessage === 'string') {
+            return {
+                dataInfo: 'auth',
+                message: dataMessage,
+            };
+        }
+
+        if (dataMessage && typeof dataMessage === 'object') {
+            return {
+                dataInfo: dataMessage.dataInfo || 'auth',
+                message: dataMessage.message || 'Credenciales incorrectas',
+            };
+        }
+
+        return {
+            dataInfo: 'auth',
+            message: 'Credenciales incorrectas',
+        };
+    };
 
     const errorData = (dataMessage) => {
-        if (dataMessage.dataInfo === 'email') {
-            setErrorEmail(dataMessage.message);
-        } else if (dataMessage.dataInfo === 'password') {
-            setErrorPassword(dataMessage.message);
+        const normalizedError = normalizeError(dataMessage);
+
+        if (normalizedError.dataInfo === 'auth' || normalizedError.dataInfo === 'email' || normalizedError.dataInfo === 'password') {
+            showErrorAlert('Credenciales incorrectas', normalizedError.message);
+        } else if (normalizedError.dataInfo === 'estadoCuenta') {
+            showErrorAlert('Cuenta suspendida\n', normalizedError.message);
+        } else if (normalizedError.dataInfo === 'estadoVerificacion') {
+            showErrorAlert('Cuenta no disponible', normalizedError.message);
+        } else {
+            showErrorAlert('Credenciales incorrectas', normalizedError.message);
         }
     };
 
@@ -26,8 +47,6 @@ const useLogin = () => {
     };
 
     return {
-        errorEmail,
-        errorPassword,
         inputData,
         errorData,
         handleInputChange,

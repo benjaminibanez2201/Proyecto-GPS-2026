@@ -1,0 +1,126 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Deploy (parte GitHub) — crea tag + GitHub Release
+#
+#  Como el servidor de la UBB está detrás de VPN, GitHub Actions NO puede
+#  conectarse por SSH. Por eso este workflow se limita a:
+#    1. Detectar la nueva versión (leyendo backend/package.json)
+#    2. Crear el tag vX.Y.Z
+#    3. Publicar el GitHub Release con las notas del CHANGELOG
+#
+#  El servidor de la UBB hace polling cada 2 min con `scripts/auto-deploy.sh`
+#  y, cuando detecta un tag nuevo, ejecuta `scripts/deploy.sh` localmente.
+# ─────────────────────────────────────────────────────────────────────────────
+name: Deploy
+
+on:
+  push:
+    branches: [production]
+
+permissions:
+  contents: write  # crear tag y release
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Tag + GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar identidad de git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # ───── 1. Leer versión de package.json ─────
+      - name: Leer versión
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./backend/package.json').version")
+          TAG="v${VERSION}"
+          echo "Versión a publicar: $TAG"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      # ───── 2. Crear tag si no existe ─────
+      - name: Crear tag ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "El tag $TAG ya existe — se omite la creación."
+          else
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
+          fi
+
+      # ───── 3. Extraer notas del CHANGELOG ─────
+      - name: Extraer notas del CHANGELOG
+        id: notes
+        shell: bash
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ ! -f CHANGELOG.md ]; then
+            NOTES="Release ${TAG}"
+          else
+            NOTES=$(awk -v tag="## ${TAG}" '
+              $0 ~ "^"tag" " || $0 == tag { found=1; next }
+              found && /^## v[0-9]+\.[0-9]+\.[0-9]+/ { exit }
+              found { print }
+            ' CHANGELOG.md)
+            if [ -z "$NOTES" ]; then
+              NOTES="Release ${TAG} (no se encontró sección en CHANGELOG.md)"
+            fi
+          fi
+          {
+            echo "notes<<EOF"
+            echo "$NOTES"
+            echo
+            echo "---"
+            echo "_Este release dispara el deploy automático en el servidor UBB"
+            echo "(polling cada 2 minutos vía \`scripts/auto-deploy.sh\`)._"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # ───── 4. Crear GitHub Release ─────
+      - name: Crear GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          NOTES: ${{ steps.notes.outputs.notes }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "El release $TAG ya existe — se actualizan las notas."
+            gh release edit "$TAG" --title "ArriendU $TAG" --notes "$NOTES"
+          else
+            gh release create "$TAG" \
+              --title "ArriendU $TAG" \
+              --notes "$NOTES" \
+              --target production
+          fi
+
+      - name: Resumen
+        if: always()
+        run: |
+          {
+            echo "## Release ${{ steps.version.outputs.tag }} publicado"
+            echo
+            echo "El servidor UBB (\`146.83.198.35:1207\`) lo detectará en el próximo polling (≤ 2 min)"
+            echo "y ejecutará \`scripts/deploy.sh ${{ steps.version.outputs.tag }}\` automáticamente."
+            echo
+            echo "Logs del deploy en el servidor: \`/var/log/arriendu-deploy.log\`"
+          } >> "$GITHUB_STEP_SUMMARY"
