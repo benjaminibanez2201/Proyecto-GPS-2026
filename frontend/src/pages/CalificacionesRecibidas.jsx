@@ -123,9 +123,11 @@ export default function CalificacionesRecibidas() {
                   <div className="stars-wrap">{renderStars(resena.rating)}</div>
                 </div>
 
-                <div className="comment-box">
-                  <p className="comment-text">{resena.comment || 'Sin comentarios de texto.'}</p>
-                </div>
+                {resena.comment && (
+                  <div className="comment-box">
+                    <p className="comment-text">{resena.comment}</p>
+                  </div>
+                )}
 
                 <div className="card-footer">
                   <Link to={`/perfil/${resena.author?.id}`} className="profile-link">

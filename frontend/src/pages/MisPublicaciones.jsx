@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion } from '@services/user.service.js';
-import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, TrendingUp } from 'lucide-react';
-import axios from '@services/root.service.js';
+import { finalizarArriendoPorPublicacion } from '@services/rentalsAndReviews.service.js';
+import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, RotateCcw, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
@@ -12,26 +12,6 @@ const toCount = (value) => Number(value || 0);
 
 const comunaOptionsHtml = (selectedValue) => COMUNAS_PERMITIDAS
   .map(({ value, name }) => `<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${name}</option>`)
-  .join('');
-
-const serviciosValidos = [
-  { id: 'agua', label: 'Agua' },
-  { id: 'luz', label: 'Luz' },
-  { id: 'gas', label: 'Gas' },
-  { id: 'internet', label: 'Internet' },
-  { id: 'tv_cable', label: 'TV Cable' },
-  { id: 'calefaccion', label: 'Calefacción' },
-  { id: 'estacionamiento', label: 'Estacionamiento' },
-  { id: 'lavadora', label: 'Lavadora' },
-];
-
-const serviciosCheckboxesHtml = (checkboxClass, seleccionados = []) => serviciosValidos
-  .map(({ id, label }) => `
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #334155; cursor: pointer; font-weight: 400;">
-      <input type="checkbox" class="${checkboxClass}" value="${id}" ${seleccionados.includes(id) ? 'checked' : ''} style="width: 14px; height: 14px; cursor: pointer;" />
-      ${label}
-    </label>
-  `)
   .join('');
 
 const servicioOptions = [
@@ -50,7 +30,6 @@ const MisPublicaciones = () => {
   const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
   const [mostrarEstadisticas, setMostrarEstadisticas] = useState(false);
   const navigate = useNavigate();
-  const [galeriaFotos, setGaleriaFotos] = useState(null); 
 
   const resumen = publicaciones.reduce((acumulado, publicacion) => {
     const visualizaciones = toCount(publicacion.contadorViews);
@@ -95,6 +74,31 @@ const MisPublicaciones = () => {
     const data = await getMisPublicaciones();
     console.log("PUBLICACIONES:", data);
     if (Array.isArray(data)) setPublicaciones(data);
+  };
+
+  const handleFinalizarArriendo = async (pub) => {
+    const confirm = await Swal.fire({
+      title: '¿Marcar esta publicación como disponible?',
+      text: 'El arriendo actual quedará marcado como finalizado y la publicación volverá a aparecer en las búsquedas.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: accent,
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, marcar disponible',
+      cancelButtonText: 'Cancelar',
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const [, err] = await finalizarArriendoPorPublicacion(pub.id);
+
+    if (err) {
+      Swal.fire({ icon: 'error', title: 'No se pudo finalizar el arriendo', text: err, confirmButtonColor: accent });
+      return;
+    }
+
+    Swal.fire({ icon: 'success', title: 'Publicación disponible de nuevo', confirmButtonColor: accent });
+    fetchPublicaciones();
   };
 
   const handleEliminar = async (id) => {
@@ -167,9 +171,18 @@ const MisPublicaciones = () => {
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px;">
                 <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Ubicación <span style='color:#dc2626'>*</span></label>
-                <input id="swal-edit-ubicacion" value="${pub.ubicacion}" 
+                <input id="swal-edit-ubicacion" value="${pub.ubicacion}"
                   style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
               </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Comuna <span style='color:#dc2626'>*</span></label>
+              <select id="swal-edit-comuna"
+                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; width: 100%; height: 41.5px;">
+                <option value="" disabled ${pub.comuna ? '' : 'selected'}>Selecciona comuna</option>
+                ${comunaOptionsHtml(pub.comuna)}
+              </select>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -253,11 +266,12 @@ const MisPublicaciones = () => {
           const titulo = document.getElementById('swal-edit-titulo').value.trim();
           const precioMensual = document.getElementById('swal-edit-precio').value;
           const ubicacion = document.getElementById('swal-edit-ubicacion').value.trim();
+          const comuna = document.getElementById('swal-edit-comuna').value;
           const fotoInput = document.getElementById('swal-edit-foto');
-          
+
           const existingPhotos = pub.fotos && pub.fotos.length > 0;
 
-          if (!titulo || !precioMensual || !ubicacion || (!(fotoInput.files && fotoInput.files.length > 0) && !existingPhotos)) {
+          if (!titulo || !precioMensual || !ubicacion || !comuna || (!(fotoInput.files && fotoInput.files.length > 0) && !existingPhotos)) {
             Swal.showValidationMessage('Por favor completa todos los campos obligatorios (*)');
             return;
           }
@@ -267,6 +281,7 @@ const MisPublicaciones = () => {
           formData.append('titulo', titulo);
           formData.append('precioMensual', parseInt(precioMensual));
           formData.append('ubicacion', ubicacion);
+          formData.append('comuna', comuna);
           serviciosIncluidos.forEach((servicio) => {
             formData.append('serviciosIncluidos', servicio);
           });
@@ -338,10 +353,21 @@ const MisPublicaciones = () => {
               </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Ubicación <span style='color:#dc2626'>*</span></label>
-              <input id="swal-ubicacion" placeholder="Dirección exacta del inmueble" 
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Ubicación <span style='color:#dc2626'>*</span></label>
+                <input id="swal-ubicacion" placeholder="Dirección exacta del inmueble"
+                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Comuna <span style='color:#dc2626'>*</span></label>
+                <select id="swal-comuna"
+                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; width: 100%; height: 41.5px;">
+                  <option value="" disabled selected>Selecciona comuna</option>
+                  ${comunaOptionsHtml('')}
+                </select>
+              </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -437,9 +463,10 @@ const MisPublicaciones = () => {
           const tipoInmueble = document.getElementById('swal-tipo').value;
           const precioMensual = document.getElementById('swal-precio').value;
           const ubicacion = document.getElementById('swal-ubicacion').value;
+          const comuna = document.getElementById('swal-comuna').value;
           const fotoInput = document.getElementById('swal-foto');
 
-          if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !fotoInput.files || fotoInput.files.length === 0) {
+          if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !comuna || !fotoInput.files || fotoInput.files.length === 0) {
             Swal.showValidationMessage('Por favor completa todos los campos obligatorios (*)');
             return;
           }
@@ -455,6 +482,7 @@ const MisPublicaciones = () => {
         formData.append('tipoInmueble', document.getElementById('swal-tipo').value);
         formData.append('precioMensual', document.getElementById('swal-precio').value);
         formData.append('ubicacion', document.getElementById('swal-ubicacion').value);
+        formData.append('comuna', document.getElementById('swal-comuna').value);
         serviciosIncluidos.forEach((servicio) => {
           formData.append('serviciosIncluidos', servicio);
         });
@@ -530,8 +558,7 @@ const MisPublicaciones = () => {
       <section style={styles.statsBand}>
         <div style={styles.statsBandHeader}>
           <div>
-            <p style={styles.statsEyebrow}>Rendimiento de tus publicaciones</p>
-            <h2 style={styles.statsTitle}>Estadísticas del arrendador</h2>
+            <h2 style={styles.statsTitle}>Estadísticas de tus publicaciones</h2>
           </div>
           <p style={styles.statsSubtitle}>
             Resumen rápido de alcance e interacción de tus anuncios activos.
@@ -556,7 +583,6 @@ const MisPublicaciones = () => {
 
       <section style={styles.card}>
         <header style={styles.cardHeader}>
-          <p style={{ ...styles.eyebrow, color: accent }}>Listado</p>
           <h2 style={styles.cardTitle}>Tus propiedades publicadas</h2>
           <p style={styles.cardSubtitle}>Aquí aparecen todas las publicaciones que has creado.</p>
         </header>
@@ -648,7 +674,16 @@ const MisPublicaciones = () => {
                 </div>
                 
                 {/* Botones de acción abajo */}
-                <div style={styles.rightSection}>
+                <div style={{
+                  ...styles.rightSection,
+                  gridTemplateColumns: pub.estado === 'arrendada' ? '1fr 1fr 1fr' : '1fr 1fr',
+                }}>
+                  {pub.estado === 'arrendada' && (
+                    <button onClick={() => handleFinalizarArriendo(pub)} style={styles.btnDisponible}>
+                      <RotateCcw size={13} />
+                      Marcar disponible
+                    </button>
+                  )}
                   <button onClick={() => handleEditar(pub)} style={styles.btnEditar}>
                     <Pencil size={13} />
                     Editar
@@ -892,6 +927,20 @@ const styles = {
     gridTemplateColumns: '1fr 1fr',
     borderTop: '1px solid #f1f5f9',
     backgroundColor: '#f8fafc',
+  },
+  btnDisponible: {
+    border: 'none',
+    background: 'none',
+    padding: '14px',
+    cursor: 'pointer',
+    color: '#0f766e',
+    fontSize: '13px',
+    fontWeight: '700',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    borderRight: '1px solid #f1f5f9',
   },
   btnEditar: {
     border: 'none',
