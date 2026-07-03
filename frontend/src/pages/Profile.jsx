@@ -210,12 +210,12 @@ const Profile = () => {
     ...(profileData?.rol === 'estudiante' ? [
       { label: 'Universidad', field: 'universidad', placeholder: 'Tu universidad', icon: GraduationCap },
       { label: 'Carrera', field: 'carrera', placeholder: 'Tu carrera', icon: BookOpen },
-      { label: 'Correo', field: 'email', placeholder: 'tucorreo@gmail.com', icon: Mail },
+      { label: 'Correo', field: 'email', placeholder: 'ejemplo@gmail.com', icon: Mail },
       { label: 'Confirmar correo', field: 'confirmEmail', placeholder: 'Repite tu correo', type: 'email', icon: Mail },
     ] : []),
     ...(profileData?.rol === 'arrendador' ? [
       { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678', icon: Phone },
-      { label: 'Correo', field: 'email', placeholder: 'tucorreo@gmail.com', icon: Mail },
+      { label: 'Correo', field: 'email', placeholder: 'ejemplo@gmail.com', icon: Mail },
       { label: 'Confirmar correo', field: 'confirmEmail', placeholder: 'Repite tu correo', type: 'email', icon: Mail },
     ] : [])
   ];

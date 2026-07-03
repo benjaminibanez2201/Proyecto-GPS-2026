@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 import ComparadorPublicacionesModal from '@components/ComparadorPublicacionesModal';
 import { eliminarFavorito, getMisFavoritos } from '@services/user.service.js';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
+import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 
@@ -214,7 +215,7 @@ const MisFavoritos = () => {
                       <div style={styles.actionButtonsGroup}>
                         <button
                           type="button"
-                          onClick={() => navigate(`/publicacion/${publicacionId}`)}
+                          onClick={() => navigate(`/publicacion/${encodePublicId(publicacionId)}`)}
                           style={styles.verDetallesButton}
                         >
                           Ver Detalles
@@ -458,6 +459,7 @@ const styles = {
     color: '#0f172a',
   },
   verDetallesButton: {
+    flex: '1 1 0',
     border: 'none',
     borderRadius: '10px',
     padding: '10px 14px',
@@ -466,18 +468,19 @@ const styles = {
     cursor: 'pointer',
     fontWeight: 700,
     fontSize: '14px',
+    whiteSpace: 'nowrap',
   },
   actionButtonsGroup: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
   },
   cardActionsSection: {
     marginTop: 'auto',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    alignItems: 'stretch',
     gap: '10px',
     paddingTop: '10px',
     borderTop: '1px solid #e2e8f0',
@@ -496,6 +499,7 @@ const styles = {
     cursor: 'not-allowed',
   },
   removeButton: {
+    flex: '1 1 0',
     border: 'none',
     borderRadius: '10px',
     padding: '10px 14px',
@@ -507,6 +511,7 @@ const styles = {
     justifyContent: 'center',
     gap: '8px',
     fontWeight: '700',
+    whiteSpace: 'nowrap',
     transition: 'background-color 0.2s ease',
   },
 };

@@ -115,7 +115,7 @@ const Register = () => {
                     {
                         label: 'Correo electrónico',
                         name: 'email',
-                        placeholder: 'correo@ejemplo.cl',
+                        placeholder: 'ejemplo@gmail.cl',
                         fieldType: 'input',
                         type: 'email',
                         required: true,

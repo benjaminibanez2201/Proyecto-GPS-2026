@@ -5,6 +5,7 @@ import { listarArriendos, crearResena } from '../services/rentalsAndReviews.serv
 import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
+import { encodePublicId } from '@helpers/publicId.helper.js';
 import '@styles/historialArriendos.css';
 
 export default function HistorialArriendos() {
@@ -143,7 +144,7 @@ export default function HistorialArriendos() {
               <tr key={item.id}>
                 <td>
                   {item.contratanteId ? (
-                    <Link to={`/perfil/${item.contratanteId}`} className="person-link">
+                    <Link to={`/perfil/${encodePublicId(item.contratanteId)}`} className="person-link">
                       <AvatarCirculo nombre={item.contratanteNombre} foto={item.contratanteAvatar} />
                       <span>{item.contratanteNombre || '—'}</span>
                     </Link>
@@ -189,7 +190,7 @@ export default function HistorialArriendos() {
                 </td>
                 <td>
                   {estaConcluido ? (
-                    <button onClick={() => navigate(`/arriendo/${item.id}`)} className="ver-detalle-button">
+                    <button onClick={() => navigate(`/arriendo/${encodePublicId(item.id)}`)} className="ver-detalle-button">
                       <Eye size={14} /> Ver detalle
                     </button>
                   ) : '—'}

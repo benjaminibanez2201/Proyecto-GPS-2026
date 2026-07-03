@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, ChevronRight, MessageSquareQuote, Star, UserRound, UserStar } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronRight, MessageSquareText, Star, UserRound, UserStar } from 'lucide-react';
 import { useAuth } from '@context/AuthContext';
 import { obtenerPerfilUsuario, obtenerResenasRecibidas } from '../services/rentalsAndReviews.service.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
+import { encodePublicId } from '@helpers/publicId.helper.js';
 import '@styles/calificaciones.css';
 
 function renderStars(rating) {
@@ -65,7 +66,6 @@ export default function CalificacionesRecibidas() {
         <ArrowLeft size={16} strokeWidth={2.4} />
         Volver a mi perfil
       </Link>
-
       <section className="hero">
         <div className="hero-content">
           <div className="hero-icon">
@@ -95,7 +95,7 @@ export default function CalificacionesRecibidas() {
 
         {resenas.length === 0 ? (
           <div className="empty-state">
-            <MessageSquareQuote size={38} strokeWidth={1.9} />
+            <MessageSquareText size={38} strokeWidth={1.9} />
             <h3 className="empty-title">Aún no tienes calificaciones visibles</h3>
             <p className="empty-text">Cuando recibas una, aparecerán aquí con el detalle completo.</p>
           </div>
@@ -109,7 +109,7 @@ export default function CalificacionesRecibidas() {
                     <div>
                       <div className="author-line">
                         <UserRound size={14} strokeWidth={2.1} />
-                        <Link to={`/perfil/${resena.author?.id}`} className="author-link">
+                        <Link to={`/perfil/${encodePublicId(resena.author?.id)}`} className="author-link">
                           {resena.author?.nombreCompleto || 'Usuario anónimo'}
                         </Link>
                       </div>
@@ -130,7 +130,7 @@ export default function CalificacionesRecibidas() {
                 )}
 
                 <div className="card-footer">
-                  <Link to={`/perfil/${resena.author?.id}`} className="profile-link">
+                  <Link to={`/perfil/${encodePublicId(resena.author?.id)}`} className="profile-link">
                     Revisar perfil
                     <ChevronRight size={15} strokeWidth={2.4} />
                   </Link>

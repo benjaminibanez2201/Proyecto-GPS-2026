@@ -76,7 +76,7 @@ const ForgotPassword = () => { // declaramos el componente ForgotPassword
                 {
                     label: "Correo electrónico",
                     name: "email",
-                    placeholder: "example@gmail.cl",
+                    placeholder: "ejemplo@gmail.cl",
                     fieldType: 'input',
                     type: "email",
                     required: true,

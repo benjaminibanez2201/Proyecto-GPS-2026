@@ -4,6 +4,7 @@ import { useLocation, useNavigationType } from 'react-router-dom';
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const EXIT_DURATION_MS = 160;
 const REDUCED_EXIT_DURATION_MS = 160;
+const ENTER_SETTLE_FALLBACK_MS = 500;
 
 function getTransitionVariant(navigationType, hasAnimated) {
   if (!hasAnimated) return 'initial';
@@ -42,8 +43,15 @@ function PageTransition({ children, className = '' }) {
     phase: 'enter',
     variant: 'initial',
   }));
+  const [settled, setSettled] = useState(false);
 
   latestChildrenRef.current = children;
+
+  const handleAnimationEnd = () => {
+    if (transitionState.phase === 'enter') {
+      setSettled(true);
+    }
+  };
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia?.(REDUCED_MOTION_QUERY).matches ?? false;
@@ -55,6 +63,16 @@ function PageTransition({ children, className = '' }) {
       clearTimeout(timeoutRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (transitionState.phase !== 'enter') return undefined;
+
+    const fallbackTimer = window.setTimeout(() => {
+      setSettled(true);
+    }, ENTER_SETTLE_FALLBACK_MS);
+
+    return () => clearTimeout(fallbackTimer);
+  }, [transitionState]);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia?.(REDUCED_MOTION_QUERY).matches ?? false;
@@ -72,6 +90,7 @@ function PageTransition({ children, className = '' }) {
 
     timeoutRef.current = window.setTimeout(() => {
       displayedRouteKeyRef.current = routeKey;
+      setSettled(false);
       setTransitionState({
         routeKey,
         children: latestChildrenRef.current,
@@ -82,10 +101,16 @@ function PageTransition({ children, className = '' }) {
     }, prefersReducedMotion ? REDUCED_EXIT_DURATION_MS : EXIT_DURATION_MS);
   }, [routeKey, navigationType]);
 
+  const isAnimating = transitionState.phase === 'exit' || (transitionState.phase === 'enter' && !settled);
+  const animationClassNames = isAnimating
+    ? ` page-transition--${transitionState.phase} page-transition--${transitionState.variant}`
+    : '';
+
   return (
     <div
       ref={containerRef}
-      className={`page-transition page-transition--${transitionState.phase} page-transition--${transitionState.variant}${className ? ` ${className}` : ''}`}
+      className={`page-transition${animationClassNames}${className ? ` ${className}` : ''}`}
+      onAnimationEnd={handleAnimationEnd}
     >
       {transitionState.children}
     </div>

@@ -3,9 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft } from 'lucide-react';
 import { obtenerResenasUsuario, obtenerPerfilUsuario } from '../services/rentalsAndReviews.service.js';
 import AvatarCirculo from '../components/AvatarCirculo.jsx';
+import { decodePublicId } from '../helpers/publicId.helper.js';
 
 export default function PerfilUsuario() {
-  const { id } = useParams();
+  const { id: idParam } = useParams();
+  const id = decodePublicId(idParam);
   const navigate = useNavigate();
 
   const [usuario, setUsuario] = useState(null);
@@ -49,7 +51,12 @@ export default function PerfilUsuario() {
       }
     };
 
-    if (id) cargarPerfilYResenas();
+    if (id != null) {
+      cargarPerfilYResenas();
+    } else {
+      setError('No se encontró este perfil');
+      setLoading(false);
+    }
   }, [id]);
 
   if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Cargando perfil...</div>;
@@ -90,21 +97,7 @@ export default function PerfilUsuario() {
     }}>
       <button
         onClick={() => navigate(-1)}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          width: 'fit-content',
-          color: '#0f766e',
-          fontWeight: 600,
-          padding: '10px 14px',
-          borderRadius: '999px',
-          backgroundColor: '#ffffff',
-          border: '1px solid rgba(15, 118, 110, 0.25)',
-          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
-          cursor: 'pointer',
-          marginBottom: '20px',
-        }}
+        className="back-pill-button"
       >
         <ArrowLeft size={16} strokeWidth={2.5} />
         Volver
@@ -146,7 +139,7 @@ export default function PerfilUsuario() {
             <h4 style={{ margin: '0 0 5px 0', color: '#7f8c8d' }}>Calificación promedio</h4>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '18px', fontWeight: 'bold' }}>
               {renderComponenteEstrellas(usuario?.avgRating)}
-              <span>({usuario?.avgRating})</span>
+              <span>({Number(usuario?.avgRating || 0).toFixed(1)})</span>
             </div>
           </div>
           <div>

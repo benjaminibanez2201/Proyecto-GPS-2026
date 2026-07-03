@@ -22,6 +22,10 @@
 	animation-duration: 360ms;
 	animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 	animation-fill-mode: both;
+}
+
+.page-transition--enter,
+.page-transition--exit {
 	will-change: opacity, transform;
 }
 
