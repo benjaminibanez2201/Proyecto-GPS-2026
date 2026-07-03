@@ -200,22 +200,6 @@ const Register = () => {
                                 maxLength: 255,
                             },
                             {
-                                label: 'Certificado de alumno regular',
-                                name: 'documentoVerificacion',
-                                fieldType: 'input',
-                                type: 'file',
-                                filePlaceholder: 'PDF, JPG o PNG',
-                                accept: '.pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf',
-                                required: true,
-                                validate: {
-                                    validFile: validateFile(
-                                        VERIFICATION_DOCUMENT_TYPES,
-                                        MAX_VERIFICATION_DOCUMENT_SIZE,
-                                        'El certificado debe ser PDF, JPG o PNG',
-                                    ),
-                                },
-                            },
-                            {
                                 label: 'Carnet de identidad',
                                 name: 'carnetIdentidad',
                                 fieldType: 'fieldGroup',
@@ -260,6 +244,22 @@ const Register = () => {
                                         },
                                     },
                                 ],
+                            },
+                            {
+                                label: 'Certificado de alumno regular',
+                                name: 'documentoVerificacion',
+                                fieldType: 'input',
+                                type: 'file',
+                                filePlaceholder: 'PDF, JPG o PNG',
+                                accept: '.pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf',
+                                required: true,
+                                validate: {
+                                    validFile: validateFile(
+                                        VERIFICATION_DOCUMENT_TYPES,
+                                        MAX_VERIFICATION_DOCUMENT_SIZE,
+                                        'El certificado debe ser PDF, JPG o PNG',
+                                    ),
+                                },
                             },
                         ]
                         : [
@@ -374,7 +374,7 @@ const Register = () => {
                 buttonText="Registrarse"
                 onSubmit={registerSubmit}
                 footerContent={
-                    <p>
+                    <p className="forgot-password-footer">
                         ¿Ya tienes cuenta? <Link to="/auth">Inicia sesión aquí</Link>
                     </p>
                 }
