@@ -557,7 +557,7 @@ const styles = {
   page: { display: 'flex', flexDirection: 'column', gap: '24px', padding: '4px 0 24px' },
   hero: {
     borderRadius: '24px', padding: '28px 36px',
-    background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)',
+    background: 'linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%)',
     color: '#fff', boxShadow: '0 20px 25px -5px rgba(15, 118, 110, 0.15)',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px'
   },

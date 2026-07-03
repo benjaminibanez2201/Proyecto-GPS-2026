@@ -1,10 +1,29 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Clock, Inbox, MessageSquareText, Star, X } from 'lucide-react';
+import { ArrowRight, CheckCircle, Clock, Inbox, MessageSquareText, Star, X , Library} from 'lucide-react'; 
 import { listarArriendos, crearResena } from '../services/rentalsAndReviews.service.js';
 import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
-import '@styles/HistorialArriendos.css';
+import '@styles/historialArriendos.css';
+
+function AvatarCirculo({ nombre, foto }) {
+  const [errorImagen, setErrorImagen] = useState(false);
+
+  return (
+    <div className="historial-avatar">
+      {foto && !errorImagen ? (
+        <img
+          src={foto}
+          alt={nombre || 'Usuario'}
+          className="historial-avatar-img"
+          onError={() => setErrorImagen(true)}
+        />
+      ) : (
+        (nombre || '—').charAt(0).toUpperCase()
+      )}
+    </div>
+  );
+}
 
 export default function HistorialArriendos() {
   const [arriendos, setArriendos] = useState([]);
@@ -33,7 +52,7 @@ export default function HistorialArriendos() {
       ...r,
       contratanteNombre: Number(user?.id) === r.arrendadorId ? r.estudiante?.nombreCompleto : r.arrendador?.nombreCompleto || '—',
       contratanteId: Number(user?.id) === r.arrendadorId ? r.estudiante?.id : r.arrendador?.id || null,
-      contratanteAvatar: Number(user?.id) === r.arrendadorId ? r.estudiante?.avatar : r.arrendador?.avatar || null,
+      contratanteAvatar: (Number(user?.id) === r.arrendadorId ? r.estudiante?.fotoPerfil : r.arrendador?.fotoPerfil) || null,
     }));
 
     setArriendos(enriched);
@@ -93,6 +112,9 @@ export default function HistorialArriendos() {
   return (
     <div className="historial-page">
       <section className="historial-hero">
+        <div className= "heroIcon">
+          <Library size={28} strokeWidth={2} />
+            </div>
         <div>
           <h2 className="hero-title">Arriendos concretados</h2>
           <p className="hero-subtitle">Revisa tus arriendos, dale a confirmar y deja una calificación.</p>
@@ -137,17 +159,14 @@ export default function HistorialArriendos() {
                 <td>
                   {item.contratanteId ? (
                     <Link to={`/perfil/${item.contratanteId}`} className="person-link">
-                      <div className="avatar">
-                        {item.contratanteAvatar ? (
-                          <img src={item.contratanteAvatar} alt="avatar" className="avatar-img" />
-                        ) : (
-                          (item.contratanteNombre || '—').charAt(0)
-                        )}
-                      </div>
+                      <AvatarCirculo nombre={item.contratanteNombre} foto={item.contratanteAvatar} />
                       <span>{item.contratanteNombre || '—'}</span>
                     </Link>
                   ) : (
-                    <span style={{ fontWeight: '600' }}>{item.contratanteNombre || '—'}</span>
+                    <span className="person-link person-link--static">
+                      <AvatarCirculo nombre={item.contratanteNombre} foto={item.contratanteAvatar} />
+                      <span>{item.contratanteNombre || '—'}</span>
+                    </span>
                   )}
                 </td>
                 <td>
@@ -161,7 +180,7 @@ export default function HistorialArriendos() {
                 </td>
                 <td>
                   {item.completedAt ? (
-                    <span style={{ fontWeight: 600 }}>
+                    <span className="fecha-confirmacion">
                       {new Date(item.completedAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}
                     </span>
                   ) : '—'}
