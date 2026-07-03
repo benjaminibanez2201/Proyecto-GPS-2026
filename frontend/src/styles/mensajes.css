@@ -258,17 +258,6 @@ transform: translateY(-2px);
   box-shadow: 0 18px 34px rgba(0, 128, 128, 0.1);
 }
 
-.mensajes-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(0, 128, 128, 0.16), rgba(15, 23, 42, 0.05));
-  color: #008080;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .mensajes-list-item__body {
   display: grid;
   gap: 6px;

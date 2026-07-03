@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Heart, House, MapPin, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, MapPin, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import ComparadorPublicacionesModal from '@components/ComparadorPublicacionesModal';
 import { eliminarFavorito, getMisFavoritos } from '@services/user.service.js';
@@ -15,6 +16,7 @@ function getPublicacionId(publicacion) {
 }
 
 const MisFavoritos = () => {
+  const navigate = useNavigate();
   const [favoritos, setFavoritos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [comparacion, setComparacion] = useState([]);
@@ -189,7 +191,7 @@ const MisFavoritos = () => {
                       <strong style={styles.priceValue}>${formatPrice(publicacion.precioMensual)} / mes</strong>
                     </div>
 
-                    {/* SECCIÓN DE ACCIONES FINAL: COMPARAR Y ELIMINAR */}
+                    {/* SECCIÓN DE ACCIONES FINAL: COMPARAR, VER DETALLES Y ELIMINAR */}
                     <div style={styles.cardActionsSection}>
                       <label
                         style={{
@@ -208,15 +210,25 @@ const MisFavoritos = () => {
                         Comparar
                       </label>
 
-                      <button
-                        type="button"
-                        onClick={() => handleEliminarFavorito(publicacionId)}
-                        style={styles.removeButton}
-                        title='Eliminar de favoritos'
-                      >
-                        <Trash2 size={20} color="#dc2626" />
-                        <span>Eliminar</span>
-                      </button>
+                      <div style={styles.actionButtonsGroup}>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/publicacion/${publicacionId}`)}
+                          style={styles.verDetallesButton}
+                        >
+                          Ver Detalles
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleEliminarFavorito(publicacionId)}
+                          style={styles.removeButton}
+                          title='Eliminar de favoritos'
+                        >
+                          <Trash2 size={20} color="#dc2626" />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </article>
@@ -442,6 +454,22 @@ const styles = {
   priceValue: {
     fontSize: '18px',
     color: '#0f172a',
+  },
+  verDetallesButton: {
+    border: 'none',
+    borderRadius: '10px',
+    padding: '10px 14px',
+    backgroundColor: accent,
+    color: '#ffffff',
+    cursor: 'pointer',
+    fontWeight: 700,
+    fontSize: '14px',
+  },
+  actionButtonsGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flexWrap: 'wrap',
   },
   cardActionsSection: {
     marginTop: 'auto',

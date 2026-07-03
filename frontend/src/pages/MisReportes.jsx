@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FlagTriangleRight, Clock3, BadgeCheck, TriangleAlert } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, FlagTriangleRight, Clock3, BadgeCheck, TriangleAlert } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { obtenerMisReportes } from '@services/reportes.service.js';
 
@@ -15,6 +16,7 @@ const formatDate = (value) => {
 };
 
 export default function MisReportes() {
+  const navigate = useNavigate();
   const [reportes, setReportes] = useState([]);
   const [cargando, setCargando] = useState(true);
 
@@ -48,6 +50,11 @@ export default function MisReportes() {
 
   return (
     <div style={styles.page}>
+      <Link to="/profile" style={styles.backLink}>
+        <ArrowLeft size={16} strokeWidth={2.4} />
+        Volver a mi perfil
+      </Link>
+
       <section style={styles.hero}>
         <div style={styles.heroContent}>
           <div style={styles.heroIcon}>
@@ -166,6 +173,20 @@ const styles = {
     flexDirection: 'column',
     gap: '20px',
     padding: '4px 0 12px',
+  },
+  backLink: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    width: 'fit-content',
+    textDecoration: 'none',
+    color: '#0f766e',
+    fontWeight: 600,
+    padding: '10px 14px',
+    borderRadius: '999px',
+    backgroundColor: '#ffffff',
+    border: '1px solid rgba(15, 118, 110, 0.25)',
+    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
   },
   hero: {
     borderRadius: '24px',
