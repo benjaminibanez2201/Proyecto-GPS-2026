@@ -57,9 +57,11 @@ const MisPublicaciones = () => {
 
     if (confirm.isConfirmed) {
       const response = await eliminarPublicacion(id);
-      if (!response?.message) {
+      if (response?.status === 'Success') {
         Swal.fire({ icon: 'success', title: 'Publicación eliminada', confirmButtonColor: accent });
         fetchPublicaciones();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Error', text: response?.message || 'No se pudo eliminar la publicación', confirmButtonColor: accent });
       }
     }
   };
@@ -84,7 +86,8 @@ const MisPublicaciones = () => {
             
             <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 4px;">
               <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Imágenes de la publicación <span style='color:#dc2626'>*</span></label>
-              <button id="swal-edit-file-button" type="button" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; border-radius: 10px; border: none; background-color: #0f766e; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; width: fit-content; max-width: 140px; white-space: nowrap; align-self: flex-start; line-height: 1.2;">
+              <button id="swal-create-file-button" type="button" style="display: inline-flex; align-items: center; gap: 8px; justify-content: center; padding: 10px 18px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; width: fit-content; white-space: nowrap; align-self: flex-start; box-shadow: 0 4px 10px rgba(15, 118, 110, 0.3); transition: transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 14px rgba(15, 118, 110, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(15, 118, 110, 0.3)';">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 Seleccionar fotos
               </button>
               <input id="swal-edit-foto" type="file" accept="image/*" multiple style="display:none;" />
@@ -309,7 +312,8 @@ const MisPublicaciones = () => {
           <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; margin-top: 4px;">
             <div style="display: flex; flex-direction: column; gap: 4px;">
               <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Imágenes de la publicación <span style='color:#dc2626'>*</span></label>
-              <button id="swal-create-file-button" type="button" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; border-radius: 10px; border: none; background-color: #0f766e; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; width: fit-content; max-width: 140px; white-space: nowrap; align-self: flex-start; line-height: 1.2;">
+              <button id="swal-create-file-button" type="button" style="display: inline-flex; align-items: center; gap: 8px; justify-content: center; padding: 10px 18px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; width: fit-content; white-space: nowrap; align-self: flex-start; box-shadow: 0 4px 10px rgba(15, 118, 110, 0.3); transition: transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 14px rgba(15, 118, 110, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(15, 118, 110, 0.3)';">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 Seleccionar fotos
               </button>
               <input id="swal-foto" type="file" accept="image/*" multiple style="display:none;" />
@@ -578,15 +582,16 @@ const MisPublicaciones = () => {
 const styles = {
   page: { display: 'flex', flexDirection: 'column', gap: '24px', padding: '4px 0 24px' },
   hero: {
-    borderRadius: '24px', padding: '28px 36px',
-    background: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)',
-    color: '#fff', boxShadow: '0 20px 25px -5px rgba(15, 118, 110, 0.15)',
+    borderRadius: '24px', padding: '32px',
+    background: 'linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%)',
+    color: '#fff', boxShadow: '0 20px 40px rgba(11, 34, 45, 0.18)',
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px'
   },
   heroContent: { display: 'flex', alignItems: 'center', gap: '16px' },
   heroIcon: {
     width: '52px', height: '52px', borderRadius: '16px',
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    border: '3px solid rgba(255,255,255,0.4)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   heroTitle: { margin: '0 0 4px', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.02em' },
@@ -605,15 +610,6 @@ const styles = {
   eyebrow: { margin: '0 0 6px', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' },
   cardTitle: { margin: '0 0 6px', fontSize: '24px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' },
   cardSubtitle: { margin: 0, fontSize: '14px', color: '#64748b' },
-  
-  // ¡AQUÍ ESTÁ LA MAGIA! Transformamos la lista plana en un Grid de tarjetas tipo catálogo
-  
-  // Contenedor superior con fondo y badge flotante
-  
-  // Datos internos de la tarjeta
-  
-  // Sección de botones abajo pegados al borde de la tarjeta
-  // Agrega o reemplaza estos campos exactos dentro de tu constante "styles"
   pubListContainer: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
