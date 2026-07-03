@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Info, MailCheck, ShieldCheck } from 'lucide-react';
+import { Info, ShieldCheck } from 'lucide-react';
 import useForgotPassword from '../hooks/auth/useForgotPassword';
 import Form from '@components/Form.jsx';
 import slidebaar from '@assets/slidebaar.png';
@@ -66,7 +66,7 @@ const ForgotPassword = () => {
                 <section className="forgot-password-side" aria-label="Información de recuperación">
                     <img className="forgot-password-brand" src={slidebaar} alt="Banner ArriendU" />
                     <div className="forgot-password-side-copy">
-                        <h2>Recupera tu cuenta sin perder el ritmo</h2>
+                        <strong>Recupera tu cuenta sin perder el ritmo</strong>
                         <p>
                             Te enviaremos un enlace privado para crear una nueva contraseña y volver a gestionar tus
                             arriendos en ArriendU.
@@ -79,11 +79,6 @@ const ForgotPassword = () => {
                 </section>
 
                 <section className="forgot-password-card" aria-label="Formulario de recuperación">
-                    <div className="forgot-password-card-header" aria-hidden="true">
-                        <span className="forgot-password-icon">
-                            <MailCheck size={24} strokeWidth={2.2} />
-                        </span>
-                    </div>
                     <Form
                         title="Recuperar contraseña"
                         backgroundColor="#ffffff"
