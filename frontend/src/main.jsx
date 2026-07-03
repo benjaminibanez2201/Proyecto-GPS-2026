@@ -47,6 +47,7 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/buscar\/?$/, title: `Buscar arriendos - ${APP_NAME}` }, 
     { pattern: /^\/favoritos\/?$/, title: `Mis favoritos - ${APP_NAME}` },
     { pattern: /^\/historial\/?$/, title: `Historial de arriendos - ${APP_NAME}` },
+    {pattern: /^\/arriendo\/[^/]+\/?$/, title: `Detalle de arriendo - ${APP_NAME}` },
     
     // Arrendador
     { pattern: /^\/mis-publicaciones\/?$/, title: `Mis publicaciones - ${APP_NAME}` }, 

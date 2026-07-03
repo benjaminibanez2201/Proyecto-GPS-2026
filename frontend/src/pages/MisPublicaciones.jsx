@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
 import { COMUNAS_PERMITIDAS } from '@helpers/publicacionesMapa.helper.js';
+import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
 
 const accent = '#0f766e';
 const toCount = (value) => Number(value || 0);
@@ -63,12 +64,6 @@ const MisPublicaciones = () => {
     fetchPublicaciones();
   }, []);
 
-  const resolvePhotoUrl = (url) => {
-    if (!url) return '';
-    if (typeof url !== 'string') return '';
-    if (url.startsWith('http')) return url;
-    return `http://localhost:3000${url}`;
-  };
 
   const fetchPublicaciones = async () => {
     const data = await getMisPublicaciones();
@@ -125,7 +120,7 @@ const MisPublicaciones = () => {
   };
 
   const handleEditar = async (pub) => {
-    const initialPreviewUrl = (pub.fotos && pub.fotos[0]) ? resolvePhotoUrl(pub.fotos[0]) : '';
+    const initialPreviewUrl = (pub.fotos && pub.fotos[0]) ? resolveFileUrl(pub.fotos[0]) : '';
 
     await Swal.fire({
       title: 'Editar Publicación',
@@ -137,21 +132,26 @@ const MisPublicaciones = () => {
             <div style="width: 100%; height: 230px; border-radius: 16px; overflow: hidden; background-color: #f1f5f9; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; position: relative;">
               <img id="swal-edit-preview" src="${initialPreviewUrl}" style="width: 100%; height: 100%; object-fit: cover; display: ${initialPreviewUrl ? 'block' : 'none'};" />
               <div id="swal-edit-preview-placeholder" style="display: ${initialPreviewUrl ? 'none' : 'flex'}; color: #94a3b8; align-items: center; justify-content: center; text-align: center; padding: 16px; flex-direction: column;">
-                <span style="display: block; font-size: 14px; font-weight: 600;">Selecciona fotos para ver la primera como portada</span>
                 <span style="display: block; margin-top: 6px; font-size: 12px; color: #64748b;">La primera imagen será la portada de la publicación.</span>
               </div>
             </div>
-            
+
+            ${pub.fotos && pub.fotos.length > 0 ? `
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Fotos actuales</label>
+                <div id="swal-edit-existing-thumbs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;"></div>
+                <span style="font-size: 11px; color: #64748b;">Haz clic en la "×" para quitar una foto. Las fotos nuevas que agregues abajo se sumarán a las que dejes aquí.</span>
+              </div>
+            ` : ''}
+
             <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Imágenes de la publicación <span style='color:#dc2626'>*</span></label>
-              <button id="swal-create-file-button" type="button" style="display: inline-flex; align-items: center; gap: 8px; justify-content: center; padding: 10px 18px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; width: fit-content; white-space: nowrap; align-self: flex-start; box-shadow: 0 4px 10px rgba(15, 118, 110, 0.3); transition: transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 14px rgba(15, 118, 110, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(15, 118, 110, 0.3)';">
+              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Fotos nuevas ${pub.fotos && pub.fotos.length > 0 ? '' : "<span style='color:#dc2626'>*</span>"}</label>
+              <button id="swal-edit-file-button" type="button" style="display: inline-flex; align-items: center; gap: 8px; justify-content: center; padding: 10px 18px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; width: fit-content; white-space: nowrap; align-self: flex-start; box-shadow: 0 4px 10px rgba(15, 118, 110, 0.3); transition: transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 14px rgba(15, 118, 110, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(15, 118, 110, 0.3)';">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 Seleccionar fotos
               </button>
               <input id="swal-edit-foto" type="file" accept="image/*" multiple style="display:none;" />
-              <div id="swal-edit-foto-name" style="font-size: 12px; color: #64748b; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;">
-                Ningún archivo seleccionado
-              </div>
+              <div id="swal-edit-thumbs" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
             </div>
           </div>
 
@@ -228,36 +228,84 @@ const MisPublicaciones = () => {
       showConfirmButton: false, 
       showCancelButton: false,
       didOpen: () => {
+        let archivosSeleccionados = [];
+        let fotosExistentes = Array.isArray(pub.fotos) ? [...pub.fotos] : [];
+
         const editFileButton = document.getElementById('swal-edit-file-button');
         const editFileInput = document.getElementById('swal-edit-foto');
-        const editFileName = document.getElementById('swal-edit-foto-name');
+        const editThumbsContainer = document.getElementById('swal-edit-thumbs');
+        const editExistingThumbsContainer = document.getElementById('swal-edit-existing-thumbs');
         const editPreview = document.getElementById('swal-edit-preview');
         const editPreviewPlaceholder = document.getElementById('swal-edit-preview-placeholder');
 
-        const updateEditPreview = (file) => {
+        const updateEditPreview = () => {
           if (!editPreview || !editPreviewPlaceholder) return;
-          if (file) {
-            const url = URL.createObjectURL(file);
-            editPreview.src = url;
+
+          if (archivosSeleccionados[0]) {
+            editPreview.src = URL.createObjectURL(archivosSeleccionados[0]);
             editPreview.style.display = 'block';
             editPreviewPlaceholder.style.display = 'none';
+          } else if (fotosExistentes[0]) {
+            editPreview.src = resolveFileUrl(fotosExistentes[0]);
+            editPreview.style.display = 'block';
+            editPreviewPlaceholder.style.display = 'none';
+          } else {
+            editPreview.style.display = 'none';
+            editPreviewPlaceholder.style.display = 'flex';
           }
         };
+
+        const renderExistingThumbs = () => {
+          if (!editExistingThumbsContainer) return;
+
+          editExistingThumbsContainer.innerHTML = fotosExistentes.map((foto, index) => `
+            <div style="position: relative; width: 60px; height: 60px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; flex-shrink: 0;">
+              <img src="${resolveFileUrl(foto)}" style="width: 100%; height: 100%; object-fit: cover;" />
+              <button type="button" data-remove-existing-index="${index}" style="position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: #fff; font-size: 12px; line-height: 1; cursor: pointer;">&times;</button>
+            </div>
+          `).join('');
+
+          editExistingThumbsContainer.querySelectorAll('button[data-remove-existing-index]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              fotosExistentes.splice(Number(btn.dataset.removeExistingIndex), 1);
+              renderExistingThumbs();
+              updateEditPreview();
+            });
+          });
+        };
+
+        const renderEditThumbs = () => {
+          if (!editThumbsContainer) return;
+
+          editThumbsContainer.innerHTML = archivosSeleccionados.map((_, index) => `
+            <div style="position: relative; width: 60px; height: 60px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; flex-shrink: 0;">
+              <img data-thumb-index="${index}" style="width: 100%; height: 100%; object-fit: cover;" />
+              <button type="button" data-remove-index="${index}" style="position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: #fff; font-size: 12px; line-height: 1; cursor: pointer;">&times;</button>
+            </div>
+          `).join('');
+
+          editThumbsContainer.querySelectorAll('img[data-thumb-index]').forEach((img) => {
+            img.src = URL.createObjectURL(archivosSeleccionados[Number(img.dataset.thumbIndex)]);
+          });
+
+          editThumbsContainer.querySelectorAll('button[data-remove-index]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              archivosSeleccionados.splice(Number(btn.dataset.removeIndex), 1);
+              renderEditThumbs();
+              updateEditPreview();
+            });
+          });
+        };
+
+        renderExistingThumbs();
 
         if (editFileButton && editFileInput) {
           editFileButton.addEventListener('click', () => editFileInput.click());
           editFileInput.addEventListener('change', () => {
-            const files = editFileInput.files;
-            
-            if (editFileName) {
-              editFileName.textContent = files && files.length > 0
-                ? `${files.length} archivo${files.length > 1 ? 's' : ''} seleccionado${files.length > 1 ? 's' : ''}`
-                : 'Ningún archivo seleccionado';
-            }
-
-            if (files && files.length > 0) {
-              updateEditPreview(files[0]);
-            }
+            archivosSeleccionados = archivosSeleccionados.concat(Array.from(editFileInput.files || []));
+            editFileInput.value = '';
+            renderEditThumbs();
+            updateEditPreview();
           });
         }
 
@@ -267,11 +315,8 @@ const MisPublicaciones = () => {
           const precioMensual = document.getElementById('swal-edit-precio').value;
           const ubicacion = document.getElementById('swal-edit-ubicacion').value.trim();
           const comuna = document.getElementById('swal-edit-comuna').value;
-          const fotoInput = document.getElementById('swal-edit-foto');
 
-          const existingPhotos = pub.fotos && pub.fotos.length > 0;
-
-          if (!titulo || !precioMensual || !ubicacion || !comuna || (!(fotoInput.files && fotoInput.files.length > 0) && !existingPhotos)) {
+          if (!titulo || !precioMensual || !ubicacion || !comuna || (archivosSeleccionados.length === 0 && fotosExistentes.length === 0)) {
             Swal.showValidationMessage('Por favor completa todos los campos obligatorios (*)');
             return;
           }
@@ -285,17 +330,17 @@ const MisPublicaciones = () => {
           serviciosIncluidos.forEach((servicio) => {
             formData.append('serviciosIncluidos', servicio);
           });
-          
+
           formData.append('reglasConvivencia', document.getElementById('swal-edit-reglas').value);
-          
-          Array.from(fotoInput.files || []).forEach((file) => {
+
+          formData.append('fotos', JSON.stringify(fotosExistentes));
+          archivosSeleccionados.forEach((file) => {
             formData.append('fotosPublicacion', file);
           });
 
           Swal.showLoading();
           const response = await editarPublicacion(pub.id, formData);
-          console.log("RESPUESTA EDITAR:", response);
-          
+
           if (response?.id) {
             Swal.close();
             Swal.fire({ icon: 'success', title: 'Publicación actualizada', confirmButtonColor: accent });
@@ -309,6 +354,8 @@ const MisPublicaciones = () => {
   };
 
   const handleCrear = async () => {
+    let archivosSeleccionados = [];
+
     const { value: formValues } = await Swal.fire({
       title: 'Nueva Publicación',
       html: `
@@ -397,9 +444,7 @@ const MisPublicaciones = () => {
                 Seleccionar fotos
               </button>
               <input id="swal-foto" type="file" accept="image/*" multiple style="display:none;" />
-              <div id="swal-create-file-name" style="font-size: 12px; color: #64748b; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;">
-                Ningún archivo seleccionado
-              </div>
+              <div id="swal-create-thumbs" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 4px;">
               <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Reglas de convivencia</label>
@@ -429,31 +474,53 @@ const MisPublicaciones = () => {
       didOpen: () => {
         const createFileButton = document.getElementById('swal-create-file-button');
         const createFileInput = document.getElementById('swal-foto');
-        const createFileName = document.getElementById('swal-create-file-name');
+        const createThumbsContainer = document.getElementById('swal-create-thumbs');
 
         const createPreview = document.getElementById('swal-create-preview');
         const createPreviewPlaceholder = document.getElementById('swal-create-preview-placeholder');
 
-        const updateCreatePreview = (file) => {
+        const updateCreatePreview = () => {
           if (!createPreview || !createPreviewPlaceholder) return;
-          if (file) {
-            const url = URL.createObjectURL(file);
-            createPreview.src = url;
+          if (archivosSeleccionados[0]) {
+            createPreview.src = URL.createObjectURL(archivosSeleccionados[0]);
             createPreview.style.display = 'block';
             createPreviewPlaceholder.style.display = 'none';
+          } else {
+            createPreview.style.display = 'none';
+            createPreviewPlaceholder.style.display = 'flex';
           }
+        };
+
+        const renderCreateThumbs = () => {
+          if (!createThumbsContainer) return;
+
+          createThumbsContainer.innerHTML = archivosSeleccionados.map((_, index) => `
+            <div style="position: relative; width: 60px; height: 60px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; flex-shrink: 0;">
+              <img data-thumb-index="${index}" style="width: 100%; height: 100%; object-fit: cover;" />
+              <button type="button" data-remove-index="${index}" style="position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: #fff; font-size: 12px; line-height: 1; cursor: pointer;">&times;</button>
+            </div>
+          `).join('');
+
+          createThumbsContainer.querySelectorAll('img[data-thumb-index]').forEach((img) => {
+            img.src = URL.createObjectURL(archivosSeleccionados[Number(img.dataset.thumbIndex)]);
+          });
+
+          createThumbsContainer.querySelectorAll('button[data-remove-index]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              archivosSeleccionados.splice(Number(btn.dataset.removeIndex), 1);
+              renderCreateThumbs();
+              updateCreatePreview();
+            });
+          });
         };
 
         if (createFileButton && createFileInput) {
           createFileButton.addEventListener('click', () => createFileInput.click());
           createFileInput.addEventListener('change', () => {
-            const files = createFileInput.files;
-            createFileName.textContent = files && files.length > 0
-              ? `${files.length} archivo${files.length > 1 ? 's' : ''} seleccionado${files.length > 1 ? 's' : ''}`
-              : 'Ningún archivo seleccionado';
-            if (files && files.length > 0) {
-              updateCreatePreview(files[0]);
-            }
+            archivosSeleccionados = archivosSeleccionados.concat(Array.from(createFileInput.files || []));
+            createFileInput.value = '';
+            renderCreateThumbs();
+            updateCreatePreview();
           });
         }
 
@@ -464,9 +531,8 @@ const MisPublicaciones = () => {
           const precioMensual = document.getElementById('swal-precio').value;
           const ubicacion = document.getElementById('swal-ubicacion').value;
           const comuna = document.getElementById('swal-comuna').value;
-          const fotoInput = document.getElementById('swal-foto');
 
-          if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !comuna || !fotoInput.files || fotoInput.files.length === 0) {
+          if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !comuna || archivosSeleccionados.length === 0) {
             Swal.showValidationMessage('Por favor completa todos los campos obligatorios (*)');
             return;
           }
@@ -487,7 +553,7 @@ const MisPublicaciones = () => {
           formData.append('serviciosIncluidos', servicio);
         });
         formData.append('reglasConvivencia', document.getElementById('swal-reglas').value);
-        Array.from(document.getElementById('swal-foto').files || []).forEach((file) => {
+        archivosSeleccionados.forEach((file) => {
           formData.append('fotosPublicacion', file);
         });
 
@@ -513,7 +579,7 @@ const MisPublicaciones = () => {
       html: `
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
           ${pub.fotos.map((foto) => `
-            <img src="http://localhost:3000${foto}" style="width:100%; height:140px; object-fit:cover; border-radius:10px;" />
+            <img src="${resolveFileUrl(foto)}" style="width:100%; height:140px; object-fit:cover; border-radius:10px;" />
           `).join('')}
         </div>
       `,
@@ -608,9 +674,9 @@ const MisPublicaciones = () => {
                 {/* Contenedor de la Imagen */}
                 <div style={styles.imageSection}>
                   {pub.fotos && pub.fotos[0] ? (
-                    <img 
-                      src={`http://localhost:3000${pub.fotos[0]}`} 
-                      alt={pub.titulo} 
+                    <img
+                      src={resolveFileUrl(pub.fotos[0])}
+                      alt={pub.titulo}
                       style={styles.pubImage} 
                       onError={(e) => { 
                         e.target.style.display = 'none'; 

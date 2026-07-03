@@ -10,7 +10,8 @@ import {
 } from '@services/user.service.js';
 import { forgotPassword } from '@services/auth.service.js';
 import { useAuth } from '@context/AuthContext';
-import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight, FlagTriangleRight, Image, GraduationCap, BookOpen, Mail, Phone } from 'lucide-react'; 
+import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
+import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight, FlagTriangleRight, Image, GraduationCap, BookOpen, Mail, Phone } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const accent = '#0f766e';
@@ -27,11 +28,6 @@ const Profile = () => {
   const [fotoPreview, setFotoPreview] = useState(null);
   const [isSendingPasswordResetEmail, setIsSendingPasswordResetEmail] = useState(false);
 
-  const resolvePhotoUrl = (url) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    return `http://localhost:3000${url}`;
-  };
 
   useEffect(() => {
     fetchProfile();
@@ -147,6 +143,8 @@ const Profile = () => {
             text: 'Tus datos han sido guardados correctamente.',
             confirmButtonColor: accent,
           });
+          updateUser(response);
+          setFotoSeleccionada(null);
           setEditMode(false);
           fetchProfile();
         }
@@ -241,7 +239,7 @@ const Profile = () => {
         <div style={styles.heroContent}>
           <div style={{ ...styles.avatarWrap, cursor: editMode ? 'pointer' : 'default' }}>
             {profileData?.fotoPerfil
-              ? <img src={resolvePhotoUrl(profileData.fotoPerfil)} alt="avatar" style={styles.avatar} />
+              ? <img src={resolveFileUrl(profileData.fotoPerfil)} alt="avatar" style={styles.avatar} />
               : <div style={styles.avatarPlaceholder}>
                   {profileData?.nombreCompleto?.charAt(0).toUpperCase() || '?'}
                 </div>

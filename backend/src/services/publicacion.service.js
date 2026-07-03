@@ -220,8 +220,9 @@ export async function updatePublicacionService(publicacionId, arrendadorId, body
     const updateData = { ...body };
 
     if (files?.fotosPublicacion?.length) {
-      const urls = await commitPublicacionUploads(publicacion.id, files.fotosPublicacion);
-      updateData.fotos = urls;
+      const nuevasUrls = await commitPublicacionUploads(publicacion.id, files.fotosPublicacion);
+      const fotosExistentesConservadas = Array.isArray(body.fotos) ? body.fotos : [];
+      updateData.fotos = [...fotosExistentesConservadas, ...nuevasUrls];
     }
 
     publicacionRepository.merge(publicacion, updateData);
