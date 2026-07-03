@@ -1,0 +1,174 @@
+# Pruebas con curl: autenticacion y registro
+
+Fecha de ejecucion: 2026-06-03  
+Base URL local: `http://localhost:3000/api`
+
+## Preparacion local
+
+1. Levantar PostgreSQL local en `localhost:5432`.
+2. Verificar que `backend/.env` tenga las variables necesarias para DB, JWT y correo.
+3. Levantar el backend:
+
+```powershell
+cd backend
+npm.cmd run dev
+```
+
+El backend debe mostrar:
+
+```text
+=> Conexion exitosa a la base de datos!
+=> Servidor corriendo en localhost:3000/api
+=> API Iniciada exitosamente
+```
+
+Las credenciales de correo se usan solo desde `backend/.env` local y no se documentan en este archivo.
+
+## Comandos usados
+
+Para evitar problemas de escape de JSON en PowerShell, se recomienda enviar payloads desde archivos temporales:
+
+```powershell
+$payload = @{
+  email = "administrador2024@gmail.cl"
+  password = "Admin1234."
+} | ConvertTo-Json -Compress
+
+$payload | Set-Content .codex/admin-login.json -Encoding ASCII
+curl.exe -sS -X POST http://localhost:3000/api/auth/login `
+  -H "Content-Type: application/json" `
+  --data-binary "@.codex/admin-login.json"
+Remove-Item .codex/admin-login.json
+```
+
+## Resultados verificados
+
+### Login de administrador
+
+Endpoint: `POST /auth/login`
+
+Resultado: `200 OK`  
+Mensaje: `Inicio de sesion exitoso`
+
+### Registro de arrendador RF7
+
+Endpoint: `POST /auth/register`
+
+Ejemplo usando `multipart/form-data` para registrar a `sebastian.acua@gmail.com`:
+
+```powershell
+curl.exe -sS -X POST http://localhost:3000/api/auth/register `
+  -F "nombreCompleto=Sebastian Acuna Soto" `
+  -F "email=sebastian.acua@gmail.com" `
+  -F "rut=12.345.678-9" `
+  -F "password=Arrendador123." `
+  -F "rol=arrendador" `
+  -F "telefono=+56 9 1234 5678" `
+  -F "terminosAceptados=true" `
+  -F "fotoPerfil=@C:\ruta\foto-perfil.png;type=image/png" `
+  -F "documentoVerificacion=@C:\ruta\carnet-identidad.jpg;type=image/jpeg"
+```
+
+Archivos permitidos:
+
+- Foto de perfil: JPG o PNG, maximo 8 MB.
+- Documento de verificacion: JPG, PNG o PDF, maximo 8 MB.
+```
+
+Resultado: `201 Created`  
+Mensaje: `Usuario registrado con exito`  
+Estado creado: `pendiente`
+Correo: se envia un email de registro recibido al correo del usuario con estilos de ArriendU.
+
+Nota RF7: el registro de arrendador guarda los archivos localmente en el servidor bajo `backend/uploads/verifications/<id>/`. En la base de datos se almacena la ruta protegida `/api/uploads/verifications/<id>/<archivo>`, para que el administrador pueda ver la foto y el documento desde la ficha del usuario.
+
+### Registro duplicado
+
+Se repitio el mismo payload del arrendador.
+
+Resultado: `400 Bad Request`  
+Mensaje: `Error registrando al usuario`  
+Detalle: `Correo electronico en uso`
+
+### Registro de arrendador con formato invalido
+
+Archivo `fotoPerfil` con `image/gif` o `documentoVerificacion` con tipo no permitido.
+
+Resultado: `400 Bad Request`  
+Mensaje: `Error de validacion`  
+Detalle observado: `El documento de verificacion tiene un formato no permitido.`
+
+### Registro de arrendador sin documento
+
+Solicitud sin `documentoVerificacion`.
+
+Resultado: `400 Bad Request`  
+Mensaje: `Error de validacion`  
+Detalle observado: `El documento de verificacion es obligatorio.`
+
+### Registro sin terminos aceptados
+
+Se omitio `terminosAceptados`.
+
+Resultado: `400 Bad Request`  
+Mensaje: `Error de validacion`  
+Detalle: `Debes aceptar los terminos y condiciones`
+
+### Registro de estudiante de control
+
+Payload con `rol: "estudiante"`, `universidad`, `carrera` y `terminosAceptados: true`.
+
+Resultado: `201 Created`  
+Mensaje: `Usuario registrado con exito`
+
+### Login de cuenta pendiente
+
+Se intento iniciar sesion con `sebastian.acua@gmail.com`.
+
+Resultado: `400 Bad Request`  
+Mensaje: `Error iniciando sesion`  
+Detalle: `Tu cuenta esta pendiente de verificacion. Por favor, espera a que sea aprobada.`
+
+### Listado admin de usuarios
+
+Endpoint: `GET /user/`
+
+```powershell
+curl.exe -sS -X GET http://localhost:3000/api/user/ `
+  -H "Authorization: Bearer <TOKEN_ADMIN>"
+```
+
+Resultado: `200 OK`  
+Mensaje: `Usuarios encontrados`
+
+### Consulta admin por id
+
+Endpoint: `GET /user/detail/?id=6`
+
+```powershell
+curl.exe -sS -X GET http://localhost:3000/api/user/detail/?id=6 `
+  -H "Authorization: Bearer <TOKEN_ADMIN>"
+```
+
+Resultado: `200 OK`  
+Mensaje: `Usuario encontrado`
+
+Datos verificados para `sebastian.acua@gmail.com`:
+
+- `id`: `6`
+- `rol`: `arrendador`
+- `estadoVerificacion`: `pendiente`
+- `fotoPerfil`: `/api/uploads/verifications/<id>/<archivo>`
+- `documentoVerificacion`: `/api/uploads/verifications/<id>/<archivo>`
+- `terminosAceptadosEn`: presente
+- `password`: no se expone en la respuesta
+
+## Observacion detectada
+
+El registro acepta `sebastian.acua@gmail.com`, pero la consulta `GET /api/user/detail/?email=sebastian.acua@gmail.com` responde `400` porque la validacion de consulta de usuarios exige dominio `@gmail.cl`. La consulta por `id` funciona correctamente. Esto queda fuera del registro de arrendador y pertenece a la validacion de consulta/gestion de usuarios.
+
+## Nota sobre correo
+
+El endpoint `POST /api/auth/register` usa el servicio de correo para enviar el aviso de registro recibido. Si Gmail o las variables `EMAIL_USER` / `EMAIL_PASS` fallan, el backend devuelve error y elimina el usuario recien creado para evitar una cuenta pendiente sin correo de aviso.
+
+Las credenciales de correo se mantienen solo en `backend/.env` y no se documentan.
