@@ -15,7 +15,7 @@ import Swal from 'sweetalert2';
 const accent = '#0f766e';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate(); 
   const [profileData, setProfileData] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -95,6 +95,16 @@ const Profile = () => {
       ? await updateArrendadorProfile(filteredData)
       : await updateProfile(filteredData);
 
+    if (response?.status === 'Client error' || response?.status === 'Server error') {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo actualizar el perfil',
+        text: response?.details || response?.message || 'Intenta nuevamente.',
+        confirmButtonColor: accent,
+      });
+      return;
+    }
+
     if (response) {
       if (cambiaEmail || cambiaPassword) {
         await Swal.fire({
@@ -112,6 +122,7 @@ const Profile = () => {
           text: 'Tus datos han sido guardados correctamente.',
           confirmButtonColor: accent,
         });
+        updateUser(response);
         setEditMode(false);
         fetchProfile();
       }
