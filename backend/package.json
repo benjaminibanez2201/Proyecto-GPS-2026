@@ -1,6 +1,6 @@
 {
   "name": "proyecto-gps-2026",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Backend de Proyecto-GPS-2026",
   "type": "module",
   "main": "index.js",
