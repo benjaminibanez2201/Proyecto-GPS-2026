@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, UserRound, Sparkles, CheckCircle } from 'lucide-react';
+import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
 import {
@@ -11,6 +11,7 @@ import {
 } from '@services/mensaje.service.js';
 import { createArriendo, listarArriendos } from '@services/rentalsAndReviews.service.js';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
+import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import '@styles/mensajes.css';
 
 function formatDate(value) {
@@ -337,6 +338,19 @@ export default function Mensajes() {
       return;
     }
 
+    const confirm = await Swal.fire({
+      title: '¿Quiere aceptar este arriendo?',
+      text: 'La publicación pasará a estado arrendada y ya no estará disponible para otros interesados.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#0f766e',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, aceptar',
+      cancelButtonText: 'Cancelar',
+    });
+
+    if (!confirm.isConfirmed) return;
+
     setLoadingRentalConfirmation(true);
 
     const [acceptedRental, errorResponse] = await createArriendo({
@@ -422,9 +436,7 @@ export default function Mensajes() {
                   className={`mensajes-list-item ${isSelected ? 'is-selected' : ''}`}
                   onClick={() => handleSelectConversation(conversation.id)}
                 >
-                  <div className="mensajes-avatar">
-                    <UserRound size={18} />
-                  </div>
+                  <AvatarCirculo nombre={otherParticipant?.nombreCompleto} foto={otherParticipant?.fotoPerfil} size={44} shape="square" />
                   <div className="mensajes-list-item__body">
                     <div className="mensajes-list-item__top">
                       <strong>{otherParticipant?.nombreCompleto || 'Sin nombre'}</strong>

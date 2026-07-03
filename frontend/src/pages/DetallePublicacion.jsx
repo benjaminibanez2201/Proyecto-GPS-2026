@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { Heart, ArrowLeft, MapPin, Star, Mail, Phone, FlagTriangleRight } from 'lucide-react';
@@ -7,6 +7,22 @@ import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import { useAuth } from '../context/AuthContext';
 import ModalReportar from '../components/ModalReportar.jsx';
 import '@styles/basePublicaciones.css';
+
+const backButtonStyle = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '8px',
+  width: 'fit-content',
+  color: '#0f766e',
+  fontWeight: 600,
+  padding: '10px 14px',
+  borderRadius: '999px',
+  backgroundColor: '#ffffff',
+  border: '1px solid rgba(15, 118, 110, 0.25)',
+  boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
+  cursor: 'pointer',
+  marginBottom: '20px',
+};
 
 const SERVICIOS_LABELS = {
   agua: 'Agua',
@@ -120,10 +136,9 @@ export default function DetallePublicacion() {
   if (error || !publicacion) {
     return (
       <div className="home-container">
-        <button 
-          className="confirm-btn" 
-          onClick={() => navigate(-1)} 
-          style={{ width: 'fit-content', marginBottom: '20px', backgroundColor: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}
+        <button
+          onClick={() => navigate(-1)}
+          style={backButtonStyle}
         >
           <ArrowLeft size={18} /> Volver
         </button>
@@ -143,12 +158,11 @@ export default function DetallePublicacion() {
 
   return (
     <div className="home-container">
-      <button 
-        className="confirm-btn" 
-        onClick={() => navigate(-1)} 
-        style={{ width: 'fit-content', marginBottom: '20px', backgroundColor: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}
+      <button
+        onClick={() => navigate(-1)}
+        style={backButtonStyle}
       >
-        <ArrowLeft size={18} /> Volver 
+        <ArrowLeft size={18} /> Volver
       </button>
 
       <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
