@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Info } from 'lucide-react';
-import useForgotPassword from "../hooks/auth/useForgotPassword";
-import Form from "@components/Form.jsx";
+import { Info, ShieldCheck } from 'lucide-react';
+import useForgotPassword from '../hooks/auth/useForgotPassword';
+import Form from '@components/Form.jsx';
+import slidebaar from '@assets/slidebaar.png';
 import '@styles/form.css';
-import { useRef } from 'react';
+import '@styles/forgotPassword.css';
 
-const ForgotPassword = () => { // declaramos el componente ForgotPassword
-    const { // y extraemos lo que nesesitamos del hook useForgotPassword
+const ForgotPassword = () => {
+    const {
         errorEmail,
         showHelp,
         loading,
@@ -29,16 +30,13 @@ const ForgotPassword = () => { // declaramos el componente ForgotPassword
         }
     }, [showHelp]);
 
-    const toggleTooltip = () => {
-        setIsTooltipOpen((prev) => !prev);
-    };
-
     useEffect(() => {
-        const handleOutsideClick = (e) => {
-            if (isTooltipOpen && helpRef.current && !helpRef.current.contains(e.target)) {
+        const handleOutsideClick = (event) => {
+            if (isTooltipOpen && helpRef.current && !helpRef.current.contains(event.target)) {
                 setIsTooltipOpen(false);
             }
         };
+
         document.addEventListener('mousedown', handleOutsideClick);
         return () => document.removeEventListener('mousedown', handleOutsideClick);
     }, [isTooltipOpen]);
@@ -48,7 +46,7 @@ const ForgotPassword = () => { // declaramos el componente ForgotPassword
             <button
                 type="button"
                 className="forgot-password-trigger"
-                onClick={toggleTooltip}
+                onClick={() => setIsTooltipOpen((prev) => !prev)}
                 aria-expanded={isTooltipOpen}
             >
                 <span className="forgot-password-trigger-text">¿No recibiste el correo?</span>
@@ -61,42 +59,58 @@ const ForgotPassword = () => { // declaramos el componente ForgotPassword
             </span>
         </div>
     ) : '';
+
     return (
-    <main className="container">
-        <Form
-            title="Recuperar contraseña"
-            description={
-                <>
-                    <span>Ingresa tu correo y te enviaremos un</span>
-                    <br />
-                    <span>enlace para restablecer tu contraseña</span>
-                </>
-            }
-            fields={[
-                {
-                    label: "Correo electrónico",
-                    name: "email",
-                    placeholder: "ejemplo@gmail.cl",
-                    fieldType: 'input',
-                    type: "email",
-                    required: true,
-                    minLength: 5,
-                    maxLength: 100,
-                    errorMessageData: errorEmail,
-                    onChange: (e) => handleInputChange(e.target.value),
-                },
-            ]}
-            buttonText={buttonLabel}
-            buttonDisabled={loading || isCooldown}
-            onSubmit={handleSubmit}
-            footerContent={
-                <p className="forgot-password-footer">
-                    ¿Recordaste tu contraseña? <Link to="/auth">Inicia sesión</Link>
-                </p>
-            }
-            inlineMessage={inlineHelp}
-        />
-    </main>
-);
+        <main className="container forgot-password-page">
+            <div className="forgot-password-shell">
+                <section className="forgot-password-side" aria-label="Información de recuperación">
+                    <img className="forgot-password-brand" src={slidebaar} alt="Banner ArriendU" />
+                    <div className="forgot-password-side-copy">
+                        <strong>Recupera tu cuenta sin perder el ritmo</strong>
+                        <p>
+                            Te enviaremos un enlace privado para crear una nueva contraseña y volver a gestionar tus
+                            arriendos en ArriendU.
+                        </p>
+                    </div>
+                    <div className="forgot-password-note">
+                        <ShieldCheck size={20} strokeWidth={2.2} />
+                        <span>El enlace caduca por seguridad. Revisa también tu bandeja de spam.</span>
+                    </div>
+                </section>
+
+                <section className="forgot-password-card" aria-label="Formulario de recuperación">
+                    <Form
+                        title="Recuperar contraseña"
+                        backgroundColor="#ffffff"
+                        description="Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña."
+                        fields={[
+                            {
+                                label: 'Correo electrónico',
+                                name: 'email',
+                                placeholder: 'ejemplo@gmail.cl',
+                                fieldType: 'input',
+                                type: 'email',
+                                required: true,
+                                minLength: 5,
+                                maxLength: 100,
+                                errorMessageData: errorEmail,
+                                onChange: (event) => handleInputChange(event.target.value),
+                            },
+                        ]}
+                        buttonText={buttonLabel}
+                        buttonDisabled={loading || isCooldown}
+                        onSubmit={handleSubmit}
+                        footerContent={
+                            <p className="forgot-password-footer">
+                                ¿Recordaste tu contraseña? <Link to="/auth">Inicia sesión</Link>
+                            </p>
+                        }
+                        inlineMessage={inlineHelp}
+                    />
+                </section>
+            </div>
+        </main>
+    );
 };
+
 export default ForgotPassword;
