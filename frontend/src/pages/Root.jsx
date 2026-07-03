@@ -18,6 +18,7 @@ import {
 import { useAuth, AuthProvider } from '@context/AuthContext';
 import { obtenerCantidadNotificacionesNoLeidas } from '@services/notificacion.service.js';
 import { obtenerConversaciones } from '@services/mensaje.service.js';
+import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import slidebaar from '../assets/slidebaar.png';
 import miLogo from '../assets/miLogo.png';
 
@@ -371,28 +372,22 @@ function PageRoot() {
             padding: '0 30px 0 80px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: colores.secundario,
-                color: colores.textoOscuro,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-                fontSize: '14px',
-              }}
-            >
-              {(() => {
-                const name = user?.nombreCompleto || '';
-                return name.trim() ? name.trim().charAt(0).toUpperCase() : 'U';
-              })()}
-            </div>
+          <button
+            type="button"
+            onClick={() => navigate('/profile')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+            }}
+          >
+            <AvatarCirculo nombre={user?.nombreCompleto || 'Usuario'} foto={user?.fotoPerfil} size={32} />
             <span style={{ fontSize: '14px', fontWeight: '500', color: colores.textoOscuro }}>{user?.nombreCompleto || 'Usuario'}</span>
-          </div>
+          </button>
         </header>
 
         <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px' }}>

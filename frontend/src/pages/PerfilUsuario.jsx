@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft } from 'lucide-react';
 import { obtenerResenasUsuario, obtenerPerfilUsuario } from '../services/rentalsAndReviews.service.js';
+import AvatarCirculo from '../components/AvatarCirculo.jsx';
 
 export default function PerfilUsuario() {
   const { id } = useParams();
@@ -90,21 +91,23 @@ export default function PerfilUsuario() {
       <button
         onClick={() => navigate(-1)}
         style={{
-          backgroundColor: 'transparent',
-          border: `2px solid ${colores.principal}`,
-          color: colores.principal,
-          padding: '8px 16px',
-          borderRadius: '20px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          marginBottom: '20px',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '8px'
+          gap: '8px',
+          width: 'fit-content',
+          color: '#0f766e',
+          fontWeight: 600,
+          padding: '10px 14px',
+          borderRadius: '999px',
+          backgroundColor: '#ffffff',
+          border: '1px solid rgba(15, 118, 110, 0.25)',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
+          cursor: 'pointer',
+          marginBottom: '20px',
         }}
       >
         <ArrowLeft size={16} strokeWidth={2.5} />
-        Volver a la vista anterior
+        Volver
       </button>
 
       <div style={{
@@ -117,22 +120,8 @@ export default function PerfilUsuario() {
       }}>
 
         <div style={{ backgroundColor: colores.secundario, padding: '40px', textAlign: 'center' }}>
-          <div style={{
-            width: '100px',
-            height: '100px',
-            borderRadius: '50%',
-            backgroundColor: colores.principal,
-            color: colores.blanco,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '32px',
-            fontWeight: 'bold',
-            margin: '0 auto 15px auto',
-            border: `4px solid ${colores.blanco}`,
-            boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-          }}>
-            {usuario?.nombre?.charAt(0)?.toUpperCase()}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+            <AvatarCirculo nombre={usuario?.nombre} foto={usuario?.avatar} size={100} />
           </div>
           <h2 style={{ margin: '0 0 5px 0', fontSize: '24px' }}>{usuario?.nombre}</h2>
           <span style={{
