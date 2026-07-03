@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion } from '@services/user.service.js';
-import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, TrendingUp } from 'lucide-react';
+import { finalizarArriendoPorPublicacion } from '@services/rentalsAndReviews.service.js';
+import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, RotateCcw, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
@@ -74,6 +75,31 @@ const MisPublicaciones = () => {
   const fetchPublicaciones = async () => {
     const data = await getMisPublicaciones();
     if (Array.isArray(data)) setPublicaciones(data);
+  };
+
+  const handleFinalizarArriendo = async (pub) => {
+    const confirm = await Swal.fire({
+      title: '¿Marcar esta publicación como disponible?',
+      text: 'El arriendo actual quedará marcado como finalizado y la publicación volverá a aparecer en las búsquedas.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: accent,
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, marcar disponible',
+      cancelButtonText: 'Cancelar',
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const [, err] = await finalizarArriendoPorPublicacion(pub.id);
+
+    if (err) {
+      Swal.fire({ icon: 'error', title: 'No se pudo finalizar el arriendo', text: err, confirmButtonColor: accent });
+      return;
+    }
+
+    Swal.fire({ icon: 'success', title: 'Publicación disponible de nuevo', confirmButtonColor: accent });
+    fetchPublicaciones();
   };
 
   const handleEliminar = async (id) => {
@@ -412,8 +438,7 @@ const MisPublicaciones = () => {
       <section style={styles.statsBand}>
         <div style={styles.statsBandHeader}>
           <div>
-            <p style={styles.statsEyebrow}>Rendimiento de tus publicaciones</p>
-            <h2 style={styles.statsTitle}>Estadísticas del arrendador</h2>
+            <h2 style={styles.statsTitle}>Estadísticas de tus publicaciones</h2>
           </div>
           <p style={styles.statsSubtitle}>
             Resumen rápido de alcance e interacción de tus anuncios activos.
@@ -438,7 +463,6 @@ const MisPublicaciones = () => {
 
       <section style={styles.card}>
         <header style={styles.cardHeader}>
-          <p style={{ ...styles.eyebrow, color: accent }}>Listado</p>
           <h2 style={styles.cardTitle}>Tus propiedades publicadas</h2>
           <p style={styles.cardSubtitle}>Aquí aparecen todas las publicaciones que has creado.</p>
         </header>
@@ -526,7 +550,16 @@ const MisPublicaciones = () => {
                 </div>
                 
                 {/* Botones de acción abajo */}
-                <div style={styles.rightSection}>
+                <div style={{
+                  ...styles.rightSection,
+                  gridTemplateColumns: pub.estado === 'arrendada' ? '1fr 1fr 1fr' : '1fr 1fr',
+                }}>
+                  {pub.estado === 'arrendada' && (
+                    <button onClick={() => handleFinalizarArriendo(pub)} style={styles.btnDisponible}>
+                      <RotateCcw size={13} />
+                      Marcar disponible
+                    </button>
+                  )}
                   <button onClick={() => handleEditar(pub)} style={styles.btnEditar}>
                     <Pencil size={13} />
                     Editar
@@ -778,6 +811,20 @@ const styles = {
     gridTemplateColumns: '1fr 1fr',
     borderTop: '1px solid #f1f5f9',
     backgroundColor: '#f8fafc',
+  },
+  btnDisponible: {
+    border: 'none',
+    background: 'none',
+    padding: '14px',
+    cursor: 'pointer',
+    color: '#0f766e',
+    fontSize: '13px',
+    fontWeight: '700',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    borderRight: '1px solid #f1f5f9',
   },
   btnEditar: {
     border: 'none',

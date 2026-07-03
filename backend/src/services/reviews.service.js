@@ -16,7 +16,7 @@ export async function crearResenaServicio(body, authorId) {
 
     const arriendo = await repositorioArriendo.findOne({ where: { id: rentalId } });
     if (!arriendo) return [null, "Arriendo no encontrado"];
-    if (arriendo.status !== "COMPLETED") {
+    if (arriendo.status !== "COMPLETED" && arriendo.status !== "FINISHED") {
       return [null, "El arriendo no está confirmado por ambas partes"];
     }
 

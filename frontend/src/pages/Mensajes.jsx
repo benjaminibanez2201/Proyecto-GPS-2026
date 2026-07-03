@@ -200,8 +200,11 @@ export default function Mensajes() {
         if (existingConversation) {
           setSelectedConversationId(existingConversation.id);
           await loadConversationDetail(existingConversation.id);
-          return;
+        } else {
+          setSelectedConversationId(null);
+          await loadConversationDetail(null);
         }
+        return;
       }
 
       if (currentConversations.length > 0) {
@@ -564,7 +567,6 @@ export default function Mensajes() {
               <div className="mensajes-detail__card">
                 <div className="mensajes-detail__header">
                   <div>
-                    <p className="mensajes-eyebrow">Conversación activa</p>
                     <h2>{getConversationTitle(selectedConversation)}</h2>
                     <p className="mensajes-detail__meta">
                       Con {selectedOtherParticipant?.nombreCompleto || 'Sin participante'} · {selectedConversation?.publicacion?.ubicacion || 'Sin ubicación'}

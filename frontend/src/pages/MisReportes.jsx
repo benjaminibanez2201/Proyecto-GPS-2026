@@ -87,7 +87,6 @@ export default function MisReportes() {
       <section style={styles.card}>
         <header style={styles.cardHeader}>
           <div>
-            <p style={{ ...styles.eyebrow, color: accent }}>Historial</p>
             <h2 style={styles.cardTitle}>Trazabilidad de tus reportes</h2>
             <p style={styles.cardSubtitle}>
               Aquí verás cada reporte, la publicación asociada y si ya fue revisado por el equipo.
