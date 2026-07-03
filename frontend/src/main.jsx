@@ -11,6 +11,7 @@ import Root from '@pages/Root';
 import ProtectedRoute from '@components/ProtectedRoute';
 import Profile from '@pages/Profile';
 import AdminPanel from '@pages/AdminPanel';
+import PageTransition from '@components/PageTransition';
 import '@styles/styles.css';
 import HistorialArriendos from './pages/HistorialArriendos.jsx';
 import PerfilUsuario from './pages/PerfilUsuario.jsx';
@@ -27,6 +28,12 @@ import MisReportes from '@pages/MisReportes.jsx';
 import AdminReportes from '@pages/AdminReportes.jsx';
 
 const APP_NAME = 'ArriendU';
+
+const withPageTransition = (page) => (
+  <PageTransition>
+    {page}
+  </PageTransition>
+);
 
 function getTitleFromPath(pathname) {
   const titleRules = [
@@ -72,7 +79,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <Root/>,
-    errorElement: <Error404/>,
+    errorElement: withPageTransition(<Error404/>),
     children: [
       {
         // Esto soluciona el 404: si entran a "/" los manda al "/home" que ya estaban conf
@@ -211,19 +218,19 @@ const router = createBrowserRouter([
   },
   {
     path: '/auth',
-    element: <Login/>
+    element: withPageTransition(<Login/>)
   },
   {
     path: '/forgot-password',
-    element: <ForgotPassword/>
+    element: withPageTransition(<ForgotPassword/>)
   },
   {
     path: '/reset-password/:token',
-    element: <ResetPassword/>
+    element: withPageTransition(<ResetPassword/>)
   },
   {
     path: '/register',
-    element: <Register/>
+    element: withPageTransition(<Register/>)
   }
 ])
 

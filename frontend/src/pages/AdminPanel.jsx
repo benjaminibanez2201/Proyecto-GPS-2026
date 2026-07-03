@@ -45,6 +45,8 @@ const buildReportedPosts = (reportes) => reportes
 
 const fallbackItems = (message) => [{ title: message, detail: 'No hay datos para mostrar', badge: 'OK' }];
 
+const pluralize = (count, singular, plural = `${singular}s`) => `${count} ${count === 1 ? singular : plural}`;
+
 const AdminPanel = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -83,11 +85,16 @@ const AdminPanel = () => {
     }, []);
 
     const dashboard = useMemo(() => {
-        const verifiableUsers = users.filter((item) => ['estudiante', 'arrendador'].includes(normalizeText(item.rol)));
+        const registeredUsers = users;
+        const adminUsers = registeredUsers.filter((item) => normalizeText(item.rol) === 'admin');
+        const verifiableUsers = registeredUsers.filter((item) => ['estudiante', 'arrendador'].includes(normalizeText(item.rol)));
         const pendingUsers = verifiableUsers.filter((item) => normalizeText(item.estadoVerificacion || 'pendiente') === 'pendiente');
         const approvedUsers = verifiableUsers.filter((item) => normalizeText(item.estadoVerificacion) === 'aprobado');
-        const totalReportes = reportes.reduce((sum, item) => sum + Number(item.cantidadReportes || 0), 0);
-        const inactivasReportadas = reportes.filter((item) => normalizeText(item.publicacion?.estado) === 'inactiva').length;
+        const rejectedUsers = verifiableUsers.filter((item) => normalizeText(item.estadoVerificacion) === 'rechazado');
+        const suspendedUsers = registeredUsers.filter((item) => normalizeText(item.estadoCuenta) === 'suspendido');
+        const totalPendingReports = reportes.reduce((sum, item) => sum + Number(item.cantidadReportes || 0), 0);
+        const reportedPublications = reportes.length;
+        const inactiveReportedPublications = reportes.filter((item) => normalizeText(item.publicacion?.estado) === 'inactiva').length;
 
         const usersList = buildRecentUsers(users);
         const docsList = buildPendingDocuments(verifiableUsers);
@@ -98,26 +105,26 @@ const AdminPanel = () => {
                 {
                     label: 'Usuarios por revisar',
                     value: pendingUsers.length,
-                    detail: `${approvedUsers.length} cuentas verificadas`,
+                    detail: `${pluralize(approvedUsers.length, 'aprobado')} - ${pluralize(rejectedUsers.length, 'rechazado')}`,
                     icon: UsersIcon
                 },
                 {
                     label: 'Usuarios registrados',
-                    value: users.length,
-                    detail: `${verifiableUsers.length} cuentas verificables`,
+                    value: registeredUsers.length,
+                    detail: `${pluralize(verifiableUsers.length, 'verificable')} - ${pluralize(adminUsers.length, 'admin')}`,
                     icon: ShieldCheck
                 },
                 {
                     label: 'Reportes activos',
-                    value: totalReportes,
-                    detail: `${inactivasReportadas} publicacion(es) inactiva(s)`,
+                    value: totalPendingReports,
+                    detail: `${pluralize(reportedPublications, 'publicacion', 'publicaciones')} - ${inactiveReportedPublications} inactiva(s)`,
                     icon: FlagTriangleRight
                 }
             ],
             cards: [
                 {
                     title: 'Gestion de usuarios',
-                    subtitle: `${users.length} usuario(s) registrados en el sistema.`,
+                    subtitle: `${registeredUsers.length} usuario(s) registrados. ${suspendedUsers.length} cuenta(s) suspendida(s).`,
                     items: usersList.length ? usersList : fallbackItems('Sin usuarios registrados')
                 },
                 {

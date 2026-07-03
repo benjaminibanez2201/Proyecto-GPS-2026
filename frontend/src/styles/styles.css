@@ -17,6 +17,16 @@ body {
 	margin: 0;
 }
 
+.app-content {
+	scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.app-content {
+		scroll-behavior: auto;
+	}
+}
+
 /* Hover suave y ligero para imágenes en la app */
 img {
 	transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
