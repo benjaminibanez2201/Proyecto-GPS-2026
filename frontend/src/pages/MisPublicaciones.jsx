@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion } from '@services/user.service.js';
-import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, TrendingUp } from 'lucide-react';
+import { SquarePen, Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, TrendingUp, Image } from 'lucide-react';
 import axios from '@services/root.service.js';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
@@ -93,7 +93,6 @@ const MisPublicaciones = () => {
 
   const fetchPublicaciones = async () => {
     const data = await getMisPublicaciones();
-    console.log("PUBLICACIONES:", data);
     if (Array.isArray(data)) setPublicaciones(data);
   };
 
@@ -126,87 +125,101 @@ const MisPublicaciones = () => {
     await Swal.fire({
       title: 'Editar Publicación',
       html: `
-        <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 28px; text-align: left; padding: 10px 5px; font-family: 'Segoe UI', Roboto, sans-serif; max-width: 850px;">
-          
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <p style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Vista previa de la imagen</p>
-            <div style="width: 100%; height: 230px; border-radius: 16px; overflow: hidden; background-color: #f1f5f9; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; position: relative;">
-              <img id="swal-edit-preview" src="${initialPreviewUrl}" style="width: 100%; height: 100%; object-fit: cover; display: ${initialPreviewUrl ? 'block' : 'none'};" />
-              <div id="swal-edit-preview-placeholder" style="display: ${initialPreviewUrl ? 'none' : 'flex'}; color: #94a3b8; align-items: center; justify-content: center; text-align: center; padding: 16px; flex-direction: column;">
-                <span style="display: block; font-size: 14px; font-weight: 600;">Selecciona fotos para ver la primera como portada</span>
-                <span style="display: block; margin-top: 6px; font-size: 12px; color: #64748b;">La primera imagen será la portada de la publicación.</span>
+        <style>
+          .pub-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px; text-align: left; padding: 8px 4px; font-family: 'Segoe UI', Roboto, sans-serif; }
+          .pub-label { font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 6px; display: block; }
+          .pub-required { color: #dc2626; }
+          .pub-input { padding: 11px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%; transition: border-color 0.2s; font-family: inherit; }
+          .pub-input:focus { border-color: #0f766e; background-color: #fff; }
+          .pub-col { display: flex; flex-direction: column; gap: 14px; }
+          .pub-preview-box { width: 100%; height: 240px; border-radius: 16px; overflow: hidden; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; position: relative; }
+          .pub-preview-placeholder { color: #94a3b8; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 20px; }
+          .pub-upload-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(15,118,110,0.3); transition: transform 0.15s, box-shadow 0.15s; }
+          .pub-upload-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(15,118,110,0.4); }
+          .pub-file-name { font-size: 12px; color: #64748b; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; }
+          .pub-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+          .pub-full { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px; margin-top: 4px; }
+          .pub-services { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; }
+          .pub-service-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background 0.15s; font-weight: 500; }
+          .pub-service-label:hover { background: #e6f4f1; }
+          .pub-service-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #0f766e; }
+          .pub-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+          .pub-btn-cancel { padding: 12px 24px; border-radius: 12px; background-color: #f1f5f9; color: #64748b; font-weight: 600; font-size: 14px; border: 1.5px solid #e2e8f0; cursor: pointer; transition: background 0.15s; }
+          .pub-btn-cancel:hover { background: #e2e8f0; }
+          .pub-btn-submit { padding: 12px 28px; border-radius: 12px; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-weight: 700; font-size: 14px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(15,118,110,0.3); transition: transform 0.15s, box-shadow 0.15s; }
+          .pub-btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(15,118,110,0.4); }
+        </style>
+
+        <div class="pub-grid">
+          <div class="pub-col">
+            <div>
+              <p class="pub-label">Vista previa de la propiedad</p>
+              <div class="pub-preview-box">
+                <img id="swal-edit-preview" 
+                   src="${initialPreviewUrl}"
+                   style="width:100%; height:100%; object-fit:cover; display: ${initialPreviewUrl ? 'block' : 'none'}; position:absolute; top:0; left:0;" />
+
+                <div id="swal-edit-preview-placeholder" class="pub-preview-placeholder" style="display: ${initialPreviewUrl ? 'none' : 'flex'};">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span style="font-size:13px;font-weight:600;color:#94a3b8;">La primera foto será la portada</span>
+                  <span style="font-size:12px;color:#cbd5e1;">Puedes subir hasta 10 imágenes</span>
+                </div>
               </div>
             </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Imágenes de la publicación <span style='color:#dc2626'>*</span></label>
-              <button id="swal-create-file-button" type="button" style="display: inline-flex; align-items: center; gap: 8px; justify-content: center; padding: 10px 18px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; width: fit-content; white-space: nowrap; align-self: flex-start; box-shadow: 0 4px 10px rgba(15, 118, 110, 0.3); transition: transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 14px rgba(15, 118, 110, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(15, 118, 110, 0.3)';">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <label class="pub-label">Imágenes <span class="pub-required">*</span></label>
+              <button id="swal-edit-file-button" type="button" class="pub-upload-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 Seleccionar fotos
               </button>
               <input id="swal-edit-foto" type="file" accept="image/*" multiple style="display:none;" />
-              <div id="swal-edit-foto-name" style="font-size: 12px; color: #64748b; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;">
-                Ningún archivo seleccionado
-              </div>
+              <div id="swal-edit-foto-name" class="pub-file-name">Ningún archivo seleccionado</div>
             </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 14px;">
-            
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Título del inmueble <span style='color:#dc2626'>*</span></label>
-              <input id="swal-edit-titulo" value="${pub.titulo}" placeholder="Ej: Departamento céntrico"
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+          <div class="pub-col">
+            <div>
+              <label class="pub-label">Título del inmueble <span class="pub-required">*</span></label>
+              <input id="swal-edit-titulo" class="pub-input" value="${pub.titulo}" placeholder="Ej: Departamento céntrico">
             </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Precio mensual ($) <span style='color:#dc2626'>*</span></label>
-                <input id="swal-edit-precio" type="number" value="${pub.precioMensual}" 
-                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Ubicación <span style='color:#dc2626'>*</span></label>
-                <input id="swal-edit-ubicacion" value="${pub.ubicacion}" 
-                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+            <div class="pub-row2">
+              <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div>
+                  <label class="pub-label">Precio mensual ($) <span class="pub-required">*</span></label>
+                  <input id="swal-edit-precio" type="number" class="pub-input" value="${pub.precioMensual}">
+                </div>
+                <div>
+                  <label class="pub-label">Ubicación <span class="pub-required">*</span></label>
+                  <input id="swal-edit-ubicacion" class="pub-input" value="${pub.ubicacion}">
+                </div>
               </div>
             </div>
-
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos</label>
-              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
-                ${servicioOptions.map((servicio) => `
-                  <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #334155; cursor: pointer;">
-                    <input
-                      type="checkbox"
-                      name="swal-edit-servicio"
-                      value="${servicio.id}"
-                      ${Array.isArray(pub.serviciosIncluidos) && pub.serviciosIncluidos.includes(servicio.id) ? 'checked' : ''}
-                      style="width: 16px; height: 16px; accent: ${accent};"
-                    />
-                    <span>${servicio.label}</span>
-                  </label>
-                `).join('')}
+            <div>
+              <label class="pub-label">Servicios incluidos</label>
+              <div class="pub-services">
+                ${servicioOptions.map(s => {
+                  const checked = pub.serviciosIncluidos && pub.serviciosIncluidos.includes(s.id) ? 'checked' : '';
+                  return `
+                    <label class="pub-service-label">
+                      <input type="checkbox" name="swal-edit-servicio" value="${s.id}" ${checked} />
+                      ${s.label}
+                    </label>
+                  `;
+                }).join('')}
               </div>
             </div>
-
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Reglas de convivencia</label>
-              <textarea id="swal-edit-reglas" placeholder="Reglas del hogar o ambiente de estudio..." rows="3" 
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; resize: none; font-family: inherit; box-sizing: border-box; width: 100%; min-height: 75px;">${pub.rules || pub.reglasConvivencia || ''}</textarea>
+          </div>
+              
+          <div class="pub-full">
+            <div style="display:flex;flex-direction:column;gap:8px;grid-column:1/-1;">
+              <label class="pub-label">Reglas de convivencia</label>
+              <textarea id="swal-edit-reglas" class="pub-input" rows="3" placeholder="Reglas del hogar o ambiente de estudio..." style="resize:none;min-height:75px;">${pub.rules || pub.reglasConvivencia || ''}</textarea>
             </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
-              <button id="btn-swal-cancel" type="button" 
-                style="padding: 11px 22px; border-radius: 12px; background-color: #f1f5f9; color: #64748b; font-weight: 600; font-size: 14px; border: none; cursor: pointer;">
-                Cancelar
-              </button>
-              <button id="btn-swal-submit" type="button" 
-                style="padding: 11px 22px; border-radius: 12px; background-color: ${accent}; color: #fff; font-weight: 700; font-size: 14px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);">
-                Guardar cambios
-              </button>
-            </div>
-
+          </div>
+              
+          <div class="pub-actions">
+            <button id="btn-swal-cancel" type="button" class="pub-btn-cancel">Cancelar</button>
+            <button id="btn-swal-submit" type="button" class="pub-btn-submit">Guardar cambios</button>
           </div>
         </div>
       `,
@@ -279,7 +292,6 @@ const MisPublicaciones = () => {
 
           Swal.showLoading();
           const response = await editarPublicacion(pub.id, formData);
-          console.log("RESPUESTA EDITAR:", response);
           
           if (response?.id) {
             Swal.close();
@@ -297,32 +309,64 @@ const MisPublicaciones = () => {
     const { value: formValues } = await Swal.fire({
       title: 'Nueva Publicación',
       html: `
-        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; text-align: left; padding: 10px 5px; font-family: 'Segoe UI', Roboto, sans-serif; max-width: 850px;">
-          
-          <!-- Columna Izquierda: Vista previa limpia -->
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <p style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Vista previa de la propiedad</p>
-            <div style="width: 100%; height: 265px; border-radius: 16px; overflow: hidden; background-color: #f1f5f9; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
-              <img id="swal-create-preview" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;" onError="this.style.display='none'; document.getElementById('swal-create-preview-placeholder').style.display='flex';" />
-              <div id="swal-create-preview-placeholder" style="color: #94a3b8; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;">
-                <span style="font-size: 13px; font-weight: 600;">Selecciona hasta 10 fotos y la primera se usará como portada.</span>
+        <style>
+          .pub-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px; text-align: left; padding: 8px 4px; font-family: 'Segoe UI', Roboto, sans-serif; }
+          .pub-label { font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 6px; display: block; }
+          .pub-required { color: #dc2626; }
+          .pub-input { padding: 11px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%; transition: border-color 0.2s; font-family: inherit; }
+          .pub-input:focus { border-color: #0f766e; background-color: #fff; }
+          .pub-col { display: flex; flex-direction: column; gap: 14px; }
+          .pub-preview-box { width: 100%; height: 240px; border-radius: 16px; overflow: hidden; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; position: relative; }
+          .pub-preview-placeholder { color: #94a3b8; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 20px; }
+          .pub-upload-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(15,118,110,0.3); transition: transform 0.15s, box-shadow 0.15s; }
+          .pub-upload-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(15,118,110,0.4); }
+          .pub-file-name { font-size: 12px; color: #64748b; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; }
+          .pub-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+          .pub-full { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px; margin-top: 4px; }
+          .pub-services { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; }
+          .pub-service-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background 0.15s; font-weight: 500; }
+          .pub-service-label:hover { background: #e6f4f1; }
+          .pub-service-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #0f766e; }
+          .pub-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+          .pub-btn-cancel { padding: 12px 24px; border-radius: 12px; background-color: #f1f5f9; color: #64748b; font-weight: 600; font-size: 14px; border: 1.5px solid #e2e8f0; cursor: pointer; transition: background 0.15s; }
+          .pub-btn-cancel:hover { background: #e2e8f0; }
+          .pub-btn-submit { padding: 12px 28px; border-radius: 12px; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-weight: 700; font-size: 14px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(15,118,110,0.3); transition: transform 0.15s, box-shadow 0.15s; }
+          .pub-btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(15,118,110,0.4); }
+        </style>
+
+        <div class="pub-grid">
+          <div class="pub-col">
+            <div>
+              <p class="pub-label">Vista previa de la propiedad</p>
+              <div class="pub-preview-box">
+                <img id="swal-create-preview" src="" style="width:100%;height:100%;object-fit:cover;display:none;position:absolute;top:0;left:0;" />
+                <div id="swal-create-preview-placeholder" class="pub-preview-placeholder">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span style="font-size:13px;font-weight:600;color:#94a3b8;">La primera foto será la portada</span>
+                  <span style="font-size:12px;color:#cbd5e1;">Puedes subir hasta 10 imágenes</span>
+                </div>
               </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <label class="pub-label">Imágenes <span class="pub-required">*</span></label>
+              <button id="swal-create-file-button" type="button" class="pub-upload-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Seleccionar fotos
+              </button>
+              <input id="swal-foto" type="file" accept="image/*" multiple style="display:none;" />
+              <div id="swal-create-file-name" class="pub-file-name">Ningún archivo seleccionado</div>
             </div>
           </div>
 
-          <!-- Columna Derecha: Inputs principales ajustados en altura -->
-          <div style="display: flex; flex-direction: column; gap: 14px; justify-content: space-between;">
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Título de la publicación <span style='color:#dc2626'>*</span></label>
-              <input id="swal-titulo" placeholder="Ej: Pieza Universitaria frente a la U" 
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+          <div class="pub-col">
+            <div>
+              <label class="pub-label">Título de la publicación <span class="pub-required">*</span></label>
+              <input id="swal-titulo" class="pub-input" placeholder="Ej: Pieza Universitaria frente a la U">
             </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Tipo de inmueble <span style='color:#dc2626'>*</span></label>
-                <select id="swal-tipo" 
-                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; width: 100%; height: 41.5px;">
+            <div class="pub-row2">
+              <div>
+                <label class="pub-label">Tipo de inmueble <span class="pub-required">*</span></label>
+                <select id="swal-tipo" class="pub-input" style="height:44px;">
                   <option value="" disabled selected>Selecciona tipo</option>
                   <option value="pieza">Pieza</option>
                   <option value="departamento">Departamento</option>
@@ -330,70 +374,39 @@ const MisPublicaciones = () => {
                   <option value="estudio">Estudio</option>
                 </select>
               </div>
-
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Precio mensual ($) <span style='color:#dc2626'>*</span></label>
-                <input id="swal-precio" type="number" placeholder="Ej: 180000" 
-                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+              <div>
+                <label class="pub-label">Precio mensual ($) <span class="pub-required">*</span></label>
+                <input id="swal-precio" type="number" class="pub-input" placeholder="Ej: 180000">
               </div>
             </div>
-
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Ubicación <span style='color:#dc2626'>*</span></label>
-              <input id="swal-ubicacion" placeholder="Dirección exacta del inmueble" 
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+            <div>
+              <label class="pub-label">Ubicación <span class="pub-required">*</span></label>
+              <input id="swal-ubicacion" class="pub-input" placeholder="Dirección exacta del inmueble">
             </div>
-
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos</label>
-              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
-                ${servicioOptions.map((servicio) => `
-                  <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #334155; cursor: pointer;">
-                    <input
-                      type="checkbox"
-                      name="swal-servicio"
-                      value="${servicio.id}"
-                      style="width: 16px; height: 16px; accent: ${accent};"
-                    />
-                    <span>${servicio.label}</span>
+            <div>
+              <label class="pub-label">Servicios incluidos</label>
+              <div class="pub-services">
+                ${servicioOptions.map(s => `
+                  <label class="pub-service-label">
+                    <input type="checkbox" name="swal-servicio" value="${s.id}" />
+                    ${s.label}
                   </label>
                 `).join('')}
               </div>
             </div>
           </div>
-
-          <!-- Fila Inferior Completa: URL y Reglas para balancear el diseño -->
-          <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; margin-top: 4px;">
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Imágenes de la publicación <span style='color:#dc2626'>*</span></label>
-              <button id="swal-create-file-button" type="button" style="display: inline-flex; align-items: center; gap: 8px; justify-content: center; padding: 10px 18px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; width: fit-content; white-space: nowrap; align-self: flex-start; box-shadow: 0 4px 10px rgba(15, 118, 110, 0.3); transition: transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 14px rgba(15, 118, 110, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(15, 118, 110, 0.3)';">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                Seleccionar fotos
-              </button>
-              <input id="swal-foto" type="file" accept="image/*" multiple style="display:none;" />
-              <div id="swal-create-file-name" style="font-size: 12px; color: #64748b; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;">
-                Ningún archivo seleccionado
-              </div>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Reglas de convivencia</label>
-              <textarea id="swal-reglas" placeholder="Reglas del hogar o ambiente de estudio..." rows="2" 
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; resize: none; font-family: inherit; box-sizing: border-box; width: 100%; min-height: 41.5px;"></textarea>
+                
+          <div class="pub-full">
+            <div style="display:flex;flex-direction:column;gap:8px;grid-column:1/-1;">
+              <label class="pub-label">Reglas de convivencia</label>
+              <textarea id="swal-reglas" class="pub-input" rows="3" placeholder="Ej: No se permite fumar, no mascotas, silencio después de las 22h..." style="resize:none;min-height:80px;"></textarea>
             </div>
           </div>
-
-          <!-- Botonera Premium final -->
-          <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
-            <button id="btn-create-cancel" type="button" 
-              style="padding: 11px 22px; border-radius: 12px; background-color: #f1f5f9; color: #64748b; font-weight: 600; font-size: 14px; border: none; cursor: pointer;">
-              Cancelar
-            </button>
-            <button id="btn-create-submit" type="button" 
-              style="padding: 11px 22px; border-radius: 12px; background-color: ${accent}; color: #fff; font-weight: 700; font-size: 14px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);">
-              Publicar Inmueble
-            </button>
+                
+          <div class="pub-actions">
+            <button id="btn-create-cancel" type="button" class="pub-btn-cancel">Cancelar</button>
+            <button id="btn-create-submit" type="button" class="pub-btn-submit">Publicar Inmueble</button>
           </div>
-
         </div>
       `,
       width: '880px',
@@ -613,11 +626,7 @@ const MisPublicaciones = () => {
                     Estadísticas
                   </button>
                 </div>
-                {pub.fotos && pub.fotos.length > 1 && (
-                  <button onClick={() => abrirGaleria(pub)} style={{...styles.btnStats, right: '80px', position: 'absolute', top: '8px'}}>
-                    Ver fotos ({pub.fotos.length})
-                  </button>
-                )}
+              
                 
                 {/* Bloque de Textos */}
                 <div style={styles.infoContainer}>
@@ -649,13 +658,36 @@ const MisPublicaciones = () => {
                 
                 {/* Botones de acción abajo */}
                 <div style={styles.rightSection}>
-                  <button onClick={() => handleEditar(pub)} style={styles.btnEditar}>
-                    <Pencil size={13} />
-                    Editar
+                  <button 
+                    onClick={() => handleEditar(pub)} 
+                    style={{ ...styles.iconBtnAction, color: '#16a34a', backgroundColor: '#f0fdf4', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0' }}
+                    title="Editar"
+                  >
+                    <Pencil size={16} />
                   </button>
-                  <button onClick={() => handleEliminar(pub.id)} style={styles.btnEliminar}>
-                    <Trash2 size={13} />
-                    Eliminar
+
+                  <button 
+                    onClick={() => handleEliminar(pub.id)} 
+                    style={{ ...styles.iconBtnAction, color: '#dc2626', backgroundColor: '#fef2f2' }}
+                    title="Eliminar"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                                    <button 
+                    onClick={() => abrirGaleria(pub)} 
+                    disabled={!pub.fotos || pub.fotos.length === 0}
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      padding: '14px 0',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    title={`Ver fotos (${pub.fotos?.length || 0})`}
+                  >
+                    <Image size={16} style={{ color: pub.fotos?.length > 0 ? '#0f766e' : '#94a3b8' }} />
                   </button>
                 </div>
                 
@@ -889,9 +921,23 @@ const styles = {
   },
   rightSection: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: '1fr 1fr 1fr', 
     borderTop: '1px solid #f1f5f9',
     backgroundColor: '#f8fafc',
+  },
+
+  iconBtnAction: {
+    border: 'none',
+    background: 'none',
+    padding: '14px 0',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background-color 0.2s ease',
+    '&:hover': {
+      backgroundColor: '#f1f5f9', 
+    }
   },
   btnEditar: {
     border: 'none',
