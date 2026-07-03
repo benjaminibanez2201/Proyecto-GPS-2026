@@ -172,12 +172,14 @@ export default function PerfilUsuario() {
                   borderLeft: `4px solid ${colores.principal}`,
                   boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: resena.comment ? '8px' : '0' }}>
                     {renderComponenteEstrellas(resena.rating)}
                   </div>
-                  <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
-                    {resena.comment || <span style={{ color: '#aaa', fontStyle: 'italic' }}>Sin comentarios de texto.</span>}
-                  </p>
+                  {resena.comment && (
+                    <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
+                      {resena.comment}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

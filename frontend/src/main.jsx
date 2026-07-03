@@ -17,6 +17,7 @@ import PerfilUsuario from './pages/PerfilUsuario.jsx';
 import Notificaciones from '@pages/Notificaciones';
 import BuscarArriendos from '@pages/BuscarArriendo.jsx';
 import DetallePublicacion from '@pages/DetallePublicacion.jsx';
+import DetalleArriendo from '@pages/DetalleArriendo.jsx';
 import MisPublicaciones from '@pages/MisPublicaciones';
 import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
 import MisFavoritos from '@pages/MisFavoritos';
@@ -174,10 +175,18 @@ const router = createBrowserRouter([
         )
       },
       {
-        path: 'publicacion/:id', 
+        path: 'publicacion/:id',
         element: (
           <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
             <DetallePublicacion />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'arriendo/:id',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
+            <DetalleArriendo />
           </ProtectedRoute>
         )
       },
