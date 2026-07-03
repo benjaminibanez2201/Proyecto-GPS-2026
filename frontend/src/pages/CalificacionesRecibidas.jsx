@@ -81,7 +81,6 @@ export default function CalificacionesRecibidas() {
         </div>
 
         <div className="hero-content">
-          <div className="avatar">{getInitial(perfil?.nombreCompleto || user?.nombreCompleto)}</div>
           <div>
             <h1 className="title">Calificaciones recibidas</h1>
           </div>
