@@ -1,0 +1,27 @@
+frontend/src/pages/ConfirmEmail.jsx
+  s_a9493c21237f1f::t_3ab5f4d5b728ed 8
+frontend/src/main.jsx
+  s_a9493c21237f1f::t_3ab5f4d5b728ed 10,46,242-245
+frontend/src/pages/RegisterPending.jsx
+  s_a9493c21237f1f::t_3ab5f4d5b728ed 1-66
+frontend/src/pages/Register.jsx
+  s_a9493c21237f1f::t_3ab5f4d5b728ed 7,51-57
+frontend/src/styles/emailConfirmation.css
+  s_a9493c21237f1f::t_3ab5f4d5b728ed 141-142,335-339,413
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e4ffd6db2a7d147440028981fa53aaf2e57b72f1",
+  "prompts": {},
+  "sessions": {
+    "s_a9493c21237f1f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb323-a4f2-71a3-bfdb-10bbdbaaeba6",
+        "model": "gpt-5.5"
+      },
+      "human_author": "maacuna_meli <marco.acuna@mercadolibre.cl>"
+    }
+  }
+}
