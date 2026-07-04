@@ -466,8 +466,12 @@ export default function Mensajes() {
             {!loadingConversations && filteredConversations.length === 0 && (
               <div className="mensajes-empty">
                 <Inbox size={22} />
-                <p>No tienes conversaciones todavía.</p>
-                {isContactComposerVisible && <span>Escribe un mensaje desde una publicación para empezar.</span>}
+                <p>Aquí aparecerán tus conversaciones con los arrendadores.</p>
+                <span>
+                  {isContactComposerVisible
+                    ? 'Escribe un mensaje desde una publicación para empezar.'
+                    : '¡Empieza a buscar y envía tu primer mensaje!'}
+                </span>
               </div>
             )}
 
@@ -515,7 +519,18 @@ export default function Mensajes() {
         <main className="mensajes-main">
           {error && <div className="mensajes-error">{error}</div>}
 
-          {!hasSelectedConversation && !isContactComposerVisible && (
+          {!hasSelectedConversation && !isContactComposerVisible && !loadingConversations && conversations.length === 0 && (
+            <div className="mensajes-placeholder">
+              <MessageCircle size={42} />
+              <h2>Aún no tienes conversaciones</h2>
+              <p>Aquí aparecerán tus conversaciones con los arrendadores. ¡Empieza a buscar y envía tu primer mensaje!</p>
+              <button type="button" className="mensajes-send-btn" onClick={() => navigate('/buscar')}>
+                Buscar arriendos
+              </button>
+            </div>
+          )}
+
+          {!hasSelectedConversation && !isContactComposerVisible && (loadingConversations || conversations.length > 0) && (
             <div className="mensajes-placeholder">
               <MessageCircle size={42} />
               <h2>Selecciona una conversación</h2>

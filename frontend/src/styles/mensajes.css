@@ -310,6 +310,10 @@ transform: translateY(-2px);
   color: #64748b;
 }
 
+.mensajes-placeholder .mensajes-send-btn {
+  margin-top: 8px;
+}
+
 .mensajes-empty {
   background: rgba(248, 250, 252, 0.9);
   border: 1px dashed rgba(100, 116, 139, 0.2);
