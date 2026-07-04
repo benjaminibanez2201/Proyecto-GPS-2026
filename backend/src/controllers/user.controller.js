@@ -2,6 +2,7 @@
 import {
   deleteUserService,
   getProfileService,
+  getPublicProfileService,
   getUserService,
   getUsersService,
   updateProfileService,
@@ -253,7 +254,7 @@ export async function getProfileById(req, res) {
   try {
     const { id } = req.params;
 
-    const [user, userError] = await getProfileService(Number(id));
+    const [user, userError] = await getPublicProfileService(Number(id));
 
     if (userError) return handleErrorClient(res, 404, "Error obteniendo perfil", userError);
 
