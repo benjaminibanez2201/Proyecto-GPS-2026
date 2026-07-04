@@ -140,7 +140,7 @@
 
 .email-confirmation-visual--loading .email-confirmation-visual__hourglass,
 .email-confirmation-visual--pending .email-confirmation-visual__hourglass {
-    animation: emailHourglassTilt 4.8s ease-in-out infinite;
+    animation: emailHourglassTilt 5.2s infinite;
 }
 
 .email-confirmation-visual--success .email-confirmation-visual__hourglass,
@@ -161,7 +161,7 @@
     stroke: #f59e0b;
     stroke-width: 4;
     stroke-linecap: round;
-    animation: emailSandFlow 1.8s ease-in-out infinite;
+    animation: emailSandFlow 5.2s ease-in-out infinite;
 }
 
 .email-confirmation-visual__sand-top,
@@ -171,12 +171,12 @@
 
 .email-confirmation-visual__sand-top {
     transform-origin: 90px 84px;
-    animation: emailSandTop 3.2s ease-in-out infinite;
+    animation: emailSandTop 5.2s ease-in-out infinite;
 }
 
 .email-confirmation-visual__sand-bottom {
     transform-origin: 90px 124px;
-    animation: emailSandBottom 3.2s ease-in-out infinite;
+    animation: emailSandBottom 5.2s ease-in-out infinite;
 }
 
 .email-confirmation-visual__check,
@@ -348,9 +348,18 @@
     0% {
         transform: rotate(0deg);
     }
-    50% {
+    12% {
+        transform: rotate(0deg);
+        animation-timing-function: cubic-bezier(0.48, 0, 0.18, 1);
+    }
+    42% {
         transform: rotate(180deg);
     }
+    62% {
+        transform: rotate(180deg);
+        animation-timing-function: cubic-bezier(0.48, 0, 0.18, 1);
+    }
+    92%,
     100% {
         transform: rotate(360deg);
     }
@@ -365,30 +374,41 @@
 
 @keyframes emailSandFlow {
     0%,
+    12%,
+    48%,
+    62%,
+    98%,
     100% {
-        opacity: 0.25;
+        opacity: 0.95;
     }
-    50% {
-        opacity: 1;
+    18%,
+    38%,
+    68%,
+    88% {
+        opacity: 0;
     }
 }
 
 @keyframes emailSandTop {
     0%,
+    12%,
     100% {
         transform: scaleY(1);
     }
-    50% {
+    48%,
+    62% {
         transform: scaleY(0.55);
     }
 }
 
 @keyframes emailSandBottom {
     0%,
+    12%,
     100% {
         transform: scaleY(0.7);
     }
-    50% {
+    48%,
+    62% {
         transform: scaleY(1);
     }
 }
