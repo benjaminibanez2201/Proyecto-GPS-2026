@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FlagTriangleRight, Clock3, BadgeCheck, TriangleAlert } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { obtenerMisReportes } from '@services/reportes.service.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 
@@ -146,12 +145,11 @@ export default function MisReportes() {
                   <div style={styles.reportFooter}>
                     <div style={styles.reportChipRow}>
                       <span style={styles.chip}>Acción: {reporte.accion || 'sin acción'}</span>
-                      <span style={styles.chip}>ID reporte #{reporte.id}</span>
                     </div>
 
                     <button
                       type="button"
-                      onClick={() => navigate(`/publicacion/${encodePublicId(reporte.publicacion?.id)}`)}
+                      onClick={() => navigate(`/publicacion/${reporte.publicacion?.publicId}`)}
                       style={styles.linkButton}
                     >
                       Ver publicación

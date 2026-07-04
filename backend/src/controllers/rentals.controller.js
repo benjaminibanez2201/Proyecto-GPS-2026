@@ -10,6 +10,27 @@ import {
   listarArriendosServicio,
   obtenerArriendoPorIdServicio,
 } from "../services/rentals.service.js";
+import { decodePublicId, encodePublicId } from "../helpers/publicId.helper.js";
+
+function agregarPublicIds(arriendo) {
+  if (!arriendo) return arriendo;
+
+  const resultado = { ...arriendo, publicId: encodePublicId(arriendo.id) };
+
+  if (arriendo.estudiante) {
+    resultado.estudiante = { ...arriendo.estudiante, publicId: encodePublicId(arriendo.estudiante.id) };
+  }
+
+  if (arriendo.arrendador) {
+    resultado.arrendador = { ...arriendo.arrendador, publicId: encodePublicId(arriendo.arrendador.id) };
+  }
+
+  if (arriendo.publicacion) {
+    resultado.publicacion = { ...arriendo.publicacion, publicId: encodePublicId(arriendo.publicacion.id) };
+  }
+
+  return resultado;
+}
 
 export async function crearArriendo(req, res) {
   try {
@@ -23,15 +44,18 @@ export async function crearArriendo(req, res) {
 
 export async function obtenerArriendo(req, res) {
   try {
-    const { id } = req.params;
-    const [data, error] = await obtenerArriendoPorIdServicio(Number(id));
+    const { id: idToken } = req.params;
+    const id = decodePublicId(idToken);
+    if (id == null) return handleErrorClient(res, 400, "ID inválido", "El identificador del arriendo no es válido");
+
+    const [data, error] = await obtenerArriendoPorIdServicio(id);
     if (error) return handleErrorClient(res, 404, error);
 
     const userId = Number(req.user.id);
     const esParticipante = userId === Number(data.arrendadorId) || userId === Number(data.estudianteId);
     if (!esParticipante) return handleErrorClient(res, 403, "No autorizado para ver este arriendo");
 
-    return handleSuccess(res, 200, "Arriendo obtenido", data);
+    return handleSuccess(res, 200, "Arriendo obtenido", agregarPublicIds(data));
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
@@ -66,7 +90,7 @@ export async function listarArriendos(req, res) {
     const userId = req.user.id; // Extraemos el ID del usuario logueado
     const [data, error] = await listarArriendosServicio(userId); // Le pasamos el ID
     if (error) return handleErrorClient(res, 400, error);
-    return handleSuccess(res, 200, "Lista de arriendos", data);
+    return handleSuccess(res, 200, "Lista de arriendos", data.map(agregarPublicIds));
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }

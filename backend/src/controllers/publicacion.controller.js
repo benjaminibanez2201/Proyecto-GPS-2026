@@ -8,9 +8,8 @@ import {
   updatePublicacionService 
 } from "../services/publicacion.service.js";
 import { incrementarVisualizacionesPublicacionServicio } from "../services/publicacion.estadisticas.service.js";
-import { 
+import {
   publicacionBodyValidation,
-  publicacionIdValidation,
   publicacionQueryValidation,
   publicacionUpdateValidation
 } from "../validations/publicacion.validation.js";
@@ -19,6 +18,17 @@ import {
   handleErrorServer,
   handleSuccess,
 } from "../handlers/responseHandlers.js";
+import { decodePublicId, encodePublicId } from "../helpers/publicId.helper.js";
+
+function agregarPublicId(publicacion) {
+  if (!publicacion) return publicacion;
+  return { ...publicacion, publicId: encodePublicId(publicacion.id) };
+}
+
+function agregarPublicIdALista(publicaciones) {
+  if (!Array.isArray(publicaciones)) return publicaciones;
+  return publicaciones.map(agregarPublicId);
+}
 
 function normalizePublicacionBody(body = {}) {
   const normalized = { ...body };
@@ -97,7 +107,7 @@ export async function createPublicacion(req, res) {
 
     if (publicacionError) return handleErrorClient(res, 400, "Error creando publicación", publicacionError);
 
-    handleSuccess(res, 201, "Publicación creada correctamente", publicacion);
+    handleSuccess(res, 201, "Publicación creada correctamente", agregarPublicId(publicacion));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -122,7 +132,10 @@ export async function getPublicaciones(req, res) {
       return handleErrorClient(res, 400, "Error al buscar publicaciones", error);
     }
 
-    handleSuccess(res, 200, "Búsqueda realizada con éxito", publicaciones);
+    handleSuccess(res, 200, "Búsqueda realizada con éxito", {
+      ...publicaciones,
+      data: agregarPublicIdALista(publicaciones.data),
+    });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -139,7 +152,7 @@ export async function getPublicacionesPropias(req, res) {
     const [publicaciones, error] = await obtenerPublicacionesArrendadorService(id);
     if (error) return handleErrorClient(res, 400, "Error al obtener publicaciones", error);
 
-    handleSuccess(res, 200, "Publicaciones obtenidas correctamente", publicaciones);
+    handleSuccess(res, 200, "Publicaciones obtenidas correctamente", agregarPublicIdALista(publicaciones));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -147,24 +160,23 @@ export async function getPublicacionesPropias(req, res) {
 
 export async function getPublicacionById(req, res) {
   try {
-    const { id: publicacionId } = req.params;
-    const { rol } = req.user;
+    const { id: publicacionToken } = req.params;
 
-    const { error: paramError, value: paramsValidados } = publicacionIdValidation.validate(req.params);
-    if (paramError) {
-      return handleErrorClient(res, 400, "ID inválido", paramError.message);
+    const publicacionId = decodePublicId(publicacionToken);
+    if (publicacionId == null) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la publicación no es válido");
     }
 
-    const [publicacion, error] = await getPublicacionDetalleService(paramsValidados.id);
+    const [publicacion, error] = await getPublicacionDetalleService(publicacionId);
     if (error) {
       return handleErrorClient(res, 404, "Publicación no encontrada", error);
     }
 
     if (publicacion?.arrendador?.id && Number(publicacion.arrendador.id) !== Number(req.user.id)) {
-      await incrementarVisualizacionesPublicacionServicio(paramsValidados.id);
+      await incrementarVisualizacionesPublicacionServicio(publicacionId);
     }
 
-    handleSuccess(res, 200, "Detalle de la publicación obtenido", publicacion);
+    handleSuccess(res, 200, "Detalle de la publicación obtenido", agregarPublicId(publicacion));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -193,7 +205,7 @@ export async function updatePublicacion(req, res) {
     const [publicacion, error] = await updatePublicacionService(publicacionId, arrendadorId, normalizedBody, files);
     if (error) return handleErrorClient(res, 400, "Error al editar publicación", error);
 
-    handleSuccess(res, 200, "Publicación actualizada correctamente", publicacion);
+    handleSuccess(res, 200, "Publicación actualizada correctamente", agregarPublicId(publicacion));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

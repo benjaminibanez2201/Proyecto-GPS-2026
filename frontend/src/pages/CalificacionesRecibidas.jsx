@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, CalendarDays, ChevronRight, MessageSquareText, Star, UserRound, UserStar } from 'lucide-react';
 import { useAuth } from '@context/AuthContext';
-import { obtenerPerfilUsuario, obtenerResenasRecibidas } from '../services/rentalsAndReviews.service.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
+import { obtenerResenasRecibidas } from '../services/rentalsAndReviews.service.js';
+import { getProfile } from '@services/user.service.js';
 import '@styles/calificaciones.css';
 
 function renderStars(rating) {
@@ -43,13 +43,12 @@ export default function CalificacionesRecibidas() {
     const cargarDatos = async () => {
       setLoading(true);
       const [dataResenas, errResenas] = await obtenerResenasRecibidas();
-      const [dataPerfil, errPerfil] = await obtenerPerfilUsuario(user?.id);
+      const dataPerfil = await getProfile();
 
       if (errResenas) setError(errResenas);
-      if (errPerfil) setError(errPerfil);
 
       if (dataResenas) setResenas(dataResenas);
-      if (dataPerfil) setPerfil(dataPerfil);
+      if (dataPerfil && !dataPerfil.message) setPerfil(dataPerfil);
       setLoading(false);
     };
 
@@ -107,7 +106,7 @@ export default function CalificacionesRecibidas() {
                     <div>
                       <div className="author-line">
                         <UserRound size={14} strokeWidth={2.1} />
-                        <Link to={`/perfil/${encodePublicId(resena.author?.id)}`} className="author-link">
+                        <Link to={`/perfil/${resena.author?.publicId}`} className="author-link">
                           {resena.author?.nombreCompleto || 'Usuario anónimo'}
                         </Link>
                       </div>
@@ -128,7 +127,7 @@ export default function CalificacionesRecibidas() {
                 )}
 
                 <div className="card-footer">
-                  <Link to={`/perfil/${encodePublicId(resena.author?.id)}`} className="profile-link">
+                  <Link to={`/perfil/${resena.author?.publicId}`} className="profile-link">
                     Revisar perfil
                     <ChevronRight size={15} strokeWidth={2.4} />
                   </Link>
