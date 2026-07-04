@@ -1,16 +1,59 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { usePublicaciones } from '../hooks/publicaciones/usePublicacion';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import ComparadorPublicacionesModal from '../components/ComparadorPublicacionesModal';
 import PublicacionCard from '../components/PublicacionCard';
-import { Search, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Search, ChevronDown, SlidersHorizontal, MapPin } from 'lucide-react';
 import PublicationMap from '@components/PublicationMap';
 import Swal from 'sweetalert2';
-import '@styles/BuscarArriendos.css';
+import '@styles/buscarArriendos.css';
 import '@styles/basePublicaciones.css';
 
 function getPublicacionId(publicacion) {
   return publicacion?.id_publicacion || publicacion?.id || publicacion?._id;
+}
+
+function FiltroDropdown({ open, anchorRef, align = 'left', className = '', children }) {
+  const [position, setPosition] = useState(null);
+
+  useLayoutEffect(() => {
+    if (!open || !anchorRef.current) {
+      setPosition(null);
+      return undefined;
+    }
+
+    const updatePosition = () => {
+      const rect = anchorRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 10,
+        left: align === 'right' ? undefined : rect.left,
+        right: align === 'right' ? window.innerWidth - rect.right : undefined,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [open, anchorRef, align]);
+
+  if (!open || !position) return null;
+
+  return createPortal(
+    <div
+      className={`ba-dropdown ${className}`}
+      style={{ position: 'fixed', top: position.top, left: position.left, right: position.right }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
 }
 
 const TIPOS_INMUEBLE = [
@@ -31,6 +74,10 @@ const SERVICIOS_VALIDOS = [
   { id: "lavadora", label: "Lavadora" }
 ];
 
+const PRECIO_MIN_RANGO = 0;
+const PRECIO_MAX_RANGO = 1500000;
+const PRECIO_PASO = 10000;
+
 export default function BuscarArriendos() {
   const { publicaciones, cargando, error, paginacion, cargarPublicaciones } = usePublicaciones();
   const { favoritos, handleAgregarFavorito, handleEliminarFavorito } = useFavoritos();
@@ -39,15 +86,18 @@ export default function BuscarArriendos() {
   const [mostrarMapa, setMostrarMapa] = useState(false);
   const [filtrosAplicados, setFiltrosAplicados] = useState({});
   const [dropdownAbierto, setDropdownAbierto] = useState(null);
+  const tipoBtnRef = useRef(null);
+  const precioBtnRef = useRef(null);
+  const serviciosBtnRef = useRef(null);
+  const ordenBtnRef = useRef(null);
 
   const [filtros, setFiltros] = useState({
     titulo: "",
-    tipoInmueble: "",
+    tipoInmueble: [],
     precioMin: "",
     precioMax: "",
     direccionOrden: "",
-    distanciaCampus: "",
-    servicios: []       
+    servicios: []
   });
 
   const publicacionesVisibles = useMemo(() => publicaciones, [publicaciones]);
@@ -67,10 +117,14 @@ export default function BuscarArriendos() {
   };
 
   const handleTipoInmuebleClick = (tipoId) => {
-    setFiltros((prev) => ({
-      ...prev,
-      tipoInmueble: prev.tipoInmueble === tipoId ? '' : tipoId,
-    }));
+    setFiltros((prev) => {
+      const tiposActuales = prev.tipoInmueble || [];
+      if (tiposActuales.includes(tipoId)) {
+        return { ...prev, tipoInmueble: tiposActuales.filter((id) => id !== tipoId) };
+      } else {
+        return { ...prev, tipoInmueble: [...tiposActuales, tipoId] };
+      }
+    });
   };
 
   const handleServicioChange = (servicioId) => {
@@ -94,6 +148,22 @@ export default function BuscarArriendos() {
     setFiltros((prev) => ({ ...prev, precioMax: value }));
   };
 
+  const handleRangoMinChange = (e) => {
+    const nextValue = Number(e.target.value);
+    setFiltros((prev) => {
+      const maxActual = Number(prev.precioMax || PRECIO_MAX_RANGO);
+      return { ...prev, precioMin: String(Math.min(nextValue, maxActual)) };
+    });
+  };
+
+  const handleRangoMaxChange = (e) => {
+    const nextValue = Number(e.target.value);
+    setFiltros((prev) => {
+      const minActual = Number(prev.precioMin || PRECIO_MIN_RANGO);
+      return { ...prev, precioMax: String(Math.max(nextValue, minActual)) };
+    });
+  };
+
   useEffect(() => {
     if (error) {
       Swal.fire({
@@ -109,11 +179,10 @@ export default function BuscarArriendos() {
   const limpiarFiltros = () => {
     setFiltros({
       titulo: "",
-      tipoInmueble: "",
+      tipoInmueble: [],
       precioMin: "",
       precioMax: "",
       direccionOrden: "",
-      distanciaCampus: "",
       servicios: []
     });
     setMostrarMapa(false);
@@ -157,12 +226,11 @@ export default function BuscarArriendos() {
       const parametrosConsulta = {};
 
       if (filtros.titulo) parametrosConsulta.titulo = filtros.titulo;
-      if (filtros.tipoInmueble) parametrosConsulta.tipoInmueble = filtros.tipoInmueble;
+      if (filtros.tipoInmueble && filtros.tipoInmueble.length > 0) {
+        parametrosConsulta.tipoInmueble = filtros.tipoInmueble.join(',');
+      }
       if (filtros.precioMin) parametrosConsulta.precioMin = filtros.precioMin;
       if (filtros.precioMax) parametrosConsulta.precioMax = filtros.precioMax;
-      if (filtros.distanciaCampus) {
-        parametrosConsulta.distanciaCampus = filtros.distanciaCampus;
-      }
       if (filtros.servicios && filtros.servicios.length > 0) {
         parametrosConsulta.servicios = filtros.servicios.join(',');
       }
@@ -171,7 +239,6 @@ export default function BuscarArriendos() {
         parametrosConsulta.direccionOrden = filtros.direccionOrden;
       }
 
-      setMostrarMapa(Object.keys(parametrosConsulta).length > 0);
       setFiltrosAplicados(parametrosConsulta);
       await cargarPublicaciones({ ...parametrosConsulta, pagina: 1 });
     } catch (err) {
@@ -227,15 +294,15 @@ export default function BuscarArriendos() {
   };
 
   const contarActivos = (grupo) => {
-    if (grupo === 'tipo') return filtros.tipoInmueble ? 1 : 0;
+    if (grupo === 'tipo') return filtros.tipoInmueble?.length || 0;
     if (grupo === 'precio') return (filtros.precioMin ? 1 : 0) + (filtros.precioMax ? 1 : 0);
     if (grupo === 'servicios') return filtros.servicios?.length || 0;
-    if (grupo === 'mas') return (filtros.direccionOrden ? 1 : 0) + (filtros.distanciaCampus ? 1 : 0);
+    if (grupo === 'orden') return filtros.direccionOrden ? 1 : 0;
     return 0;
   };
 
-  const tipoLabel = filtros.tipoInmueble
-    ? TIPOS_INMUEBLE.find((t) => t.id === filtros.tipoInmueble)?.label
+  const tipoLabel = filtros.tipoInmueble?.length === 1
+    ? TIPOS_INMUEBLE.find((t) => t.id === filtros.tipoInmueble[0])?.label
     : 'Tipo de inmueble';
 
   const precioLabel = (() => {
@@ -244,6 +311,9 @@ export default function BuscarArriendos() {
     if (filtros.precioMax) return `Hasta $${Number(filtros.precioMax).toLocaleString('es-CL')}`;
     return 'Precio';
   })();
+
+  const precioMinPorcentaje = ((Number(filtros.precioMin || PRECIO_MIN_RANGO) - PRECIO_MIN_RANGO) / (PRECIO_MAX_RANGO - PRECIO_MIN_RANGO)) * 100;
+  const precioMaxPorcentaje = ((Number(filtros.precioMax || PRECIO_MAX_RANGO) - PRECIO_MIN_RANGO) / (PRECIO_MAX_RANGO - PRECIO_MIN_RANGO)) * 100;
 
   return (
     <div className="ba-page">
@@ -277,9 +347,10 @@ export default function BuscarArriendos() {
         </div>
         <div className="ba-dropdown-wrap">
           <button
+            ref={tipoBtnRef}
             type="button"
             onClick={() => toggleDropdown('tipo')}
-            className={`ba-pill-button ${filtros.tipoInmueble ? 'ba-pill-button--active' : ''}`}
+            className={`ba-pill-button ${filtros.tipoInmueble?.length > 0 ? 'ba-pill-button--active' : ''}`}
           >
             <span className="ba-pill-button-text">{tipoLabel}</span>
             <span className="ba-pill-button-right">
@@ -288,14 +359,13 @@ export default function BuscarArriendos() {
             </span>
           </button>
 
-          {dropdownAbierto === 'tipo' && (
-            <div className="ba-dropdown ba-dropdown--w230" onClick={(e) => e.stopPropagation()}>
+          <FiltroDropdown open={dropdownAbierto === 'tipo'} anchorRef={tipoBtnRef} className="ba-dropdown--w230">
               <div className="ba-dropdown-list">
                 {TIPOS_INMUEBLE.map((tipo) => (
                   <label key={tipo.id} className="ba-check-row">
                     <input
                       type="checkbox"
-                      checked={filtros.tipoInmueble === tipo.id}
+                      checked={filtros.tipoInmueble?.includes(tipo.id) || false}
                       onChange={() => handleTipoInmuebleClick(tipo.id)}
                       className="ba-checkbox"
                     />
@@ -306,7 +376,7 @@ export default function BuscarArriendos() {
               <div className="ba-dropdown-footer">
                 <button
                   type="button"
-                  onClick={() => setFiltros((prev) => ({ ...prev, tipoInmueble: '' }))}
+                  onClick={() => setFiltros((prev) => ({ ...prev, tipoInmueble: [] }))}
                   className="ba-link-button"
                 >
                   Limpiar
@@ -315,11 +385,11 @@ export default function BuscarArriendos() {
                   Aplicar
                 </button>
               </div>
-            </div>
-          )}
+          </FiltroDropdown>
         </div>
         <div className="ba-dropdown-wrap">
           <button
+            ref={precioBtnRef}
             type="button"
             onClick={() => toggleDropdown('precio')}
             className={`ba-pill-button ${(filtros.precioMin || filtros.precioMax) ? 'ba-pill-button--active' : ''}`}
@@ -330,31 +400,65 @@ export default function BuscarArriendos() {
             </span>
           </button>
 
-          {dropdownAbierto === 'precio' && (
-            <div className="ba-dropdown ba-dropdown--w260" onClick={(e) => e.stopPropagation()}>
+          <FiltroDropdown open={dropdownAbierto === 'precio'} anchorRef={precioBtnRef} className="ba-dropdown--w320">
               <div className="ba-dropdown-body">
-                <div className="ba-field-group">
-                  <span className="ba-dropdown-label">Precio mínimo</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={10000}
-                    value={filtros.precioMin}
-                    onChange={handlePrecioMinTextoChange}
-                    placeholder="Sin mínimo"
-                    className="ba-dropdown-input"
-                  />
+                <div className="ba-price-inputs">
+                  <div className="ba-field-group">
+                    <span className="ba-dropdown-label">Mínimo</span>
+                    <div className="ba-price-input-wrap">
+                      <span className="ba-price-currency">$</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={PRECIO_PASO}
+                        value={filtros.precioMin}
+                        onChange={handlePrecioMinTextoChange}
+                        placeholder="0"
+                        className="ba-dropdown-input ba-price-input"
+                      />
+                    </div>
+                  </div>
+                  <span className="ba-price-separator">—</span>
+                  <div className="ba-field-group">
+                    <span className="ba-dropdown-label">Máximo</span>
+                    <div className="ba-price-input-wrap">
+                      <span className="ba-price-currency">$</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={PRECIO_PASO}
+                        value={filtros.precioMax}
+                        onChange={handlePrecioMaxTextoChange}
+                        placeholder="Sin límite"
+                        className="ba-dropdown-input ba-price-input"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="ba-field-group">
-                  <span className="ba-dropdown-label">Precio máximo</span>
+
+                <div className="ba-range-slider">
+                  <div className="ba-range-track" />
+                  <div
+                    className="ba-range-fill"
+                    style={{ left: `${precioMinPorcentaje}%`, right: `${100 - precioMaxPorcentaje}%` }}
+                  />
                   <input
-                    type="number"
-                    min={0}
-                    step={10000}
-                    value={filtros.precioMax}
-                    onChange={handlePrecioMaxTextoChange}
-                    placeholder="Sin máximo"
-                    className="ba-dropdown-input"
+                    type="range"
+                    min={PRECIO_MIN_RANGO}
+                    max={PRECIO_MAX_RANGO}
+                    step={PRECIO_PASO}
+                    value={filtros.precioMin || PRECIO_MIN_RANGO}
+                    onChange={handleRangoMinChange}
+                    className="ba-range-input"
+                  />
+                  <input
+                    type="range"
+                    min={PRECIO_MIN_RANGO}
+                    max={PRECIO_MAX_RANGO}
+                    step={PRECIO_PASO}
+                    value={filtros.precioMax || PRECIO_MAX_RANGO}
+                    onChange={handleRangoMaxChange}
+                    className="ba-range-input"
                   />
                 </div>
               </div>
@@ -370,11 +474,11 @@ export default function BuscarArriendos() {
                   Aplicar
                 </button>
               </div>
-            </div>
-          )}
+          </FiltroDropdown>
         </div>
         <div className="ba-dropdown-wrap">
           <button
+            ref={serviciosBtnRef}
             type="button"
             onClick={() => toggleDropdown('servicios')}
             className={`ba-pill-button ${filtros.servicios?.length > 0 ? 'ba-pill-button--active' : ''}`}
@@ -386,8 +490,7 @@ export default function BuscarArriendos() {
             </span>
           </button>
 
-          {dropdownAbierto === 'servicios' && (
-            <div className="ba-dropdown ba-dropdown--w280" onClick={(e) => e.stopPropagation()}>
+          <FiltroDropdown open={dropdownAbierto === 'servicios'} anchorRef={serviciosBtnRef} className="ba-dropdown--w280">
               <div className="ba-dropdown-list ba-dropdown-list--scroll">
                 {SERVICIOS_VALIDOS.map((servicio) => (
                   <label key={servicio.id} className="ba-check-row">
@@ -413,25 +516,24 @@ export default function BuscarArriendos() {
                   Aplicar
                 </button>
               </div>
-            </div>
-          )}
+          </FiltroDropdown>
         </div>
         <div className="ba-dropdown-wrap">
           <button
+            ref={ordenBtnRef}
             type="button"
-            onClick={() => toggleDropdown('mas')}
-            className={`ba-pill-button ${contarActivos('mas') > 0 ? 'ba-pill-button--active' : ''}`}
+            onClick={() => toggleDropdown('orden')}
+            className={`ba-pill-button ${contarActivos('orden') > 0 ? 'ba-pill-button--active' : ''}`}
           >
             <SlidersHorizontal size={15} className="ba-pill-icon" />
-            <span className="ba-pill-button-text">Más filtros</span>
+            <span className="ba-pill-button-text">Ordenar por</span>
             <span className="ba-pill-button-right">
-              {contarActivos('mas') > 0 && <span className="ba-badge-count">{contarActivos('mas')}</span>}
-              <ChevronDown size={16} className={`ba-chevron ${dropdownAbierto === 'mas' ? 'ba-chevron--open' : ''}`} />
+              {contarActivos('orden') > 0 && <span className="ba-badge-count">{contarActivos('orden')}</span>}
+              <ChevronDown size={16} className={`ba-chevron ${dropdownAbierto === 'orden' ? 'ba-chevron--open' : ''}`} />
             </span>
           </button>
 
-          {dropdownAbierto === 'mas' && (
-            <div className="ba-dropdown ba-dropdown--w260 ba-dropdown--right" onClick={(e) => e.stopPropagation()}>
+          <FiltroDropdown open={dropdownAbierto === 'orden'} anchorRef={ordenBtnRef} align="right" className="ba-dropdown--w260">
               <div className="ba-dropdown-body">
                 <div className="ba-field-group">
                   <span className="ba-dropdown-label">Ordenar por</span>
@@ -446,24 +548,11 @@ export default function BuscarArriendos() {
                     <option value="DESC">Precio: Mayor a Menor</option>
                   </select>
                 </div>
-                <div className="ba-field-group">
-                  <span className="ba-dropdown-label">Distancia máxima al campus (Km)</span>
-                  <input
-                    type="number"
-                    name="distanciaCampus"
-                    placeholder="Ej. 3"
-                    min="0"
-                    step="1"
-                    value={filtros.distanciaCampus}
-                    onChange={handleInputChange}
-                    className="ba-dropdown-input"
-                  />
-                </div>
               </div>
               <div className="ba-dropdown-footer">
                 <button
                   type="button"
-                  onClick={() => setFiltros((prev) => ({ ...prev, direccionOrden: '', distanciaCampus: '' }))}
+                  onClick={() => setFiltros((prev) => ({ ...prev, direccionOrden: '' }))}
                   className="ba-link-button"
                 >
                   Limpiar
@@ -472,8 +561,7 @@ export default function BuscarArriendos() {
                   Aplicar
                 </button>
               </div>
-            </div>
-          )}
+          </FiltroDropdown>
         </div>
 
         <button type="button" onClick={limpiarFiltros} className="ba-clear-all-button">
@@ -485,17 +573,30 @@ export default function BuscarArriendos() {
         </button>
       </div>
 
-      <div className="ba-compare-bar">
-        <span className="ba-compare-count">
-          Seleccionadas: {comparacion.length}/3
-        </span>
+      <div className="ba-toolbar">
         <button
           type="button"
-          onClick={abrirComparador}
-          className="ba-compare-button"
+          onClick={() => setMostrarMapa((prev) => !prev)}
+          className={`map-toggle-button${mostrarMapa ? ' map-toggle-button--active' : ''}`}
         >
-          Comparar seleccionadas
+          <MapPin size={16} />
+          {mostrarMapa ? 'Ocultar mapa' : 'Ver en el mapa'}
         </button>
+
+        {comparacion.length > 0 && (
+          <div className="ba-compare-bar">
+            <span className="ba-compare-count">
+              Seleccionadas: {comparacion.length}/3
+            </span>
+            <button
+              type="button"
+              onClick={abrirComparador}
+              className="ba-compare-button"
+            >
+              Comparar seleccionadas
+            </button>
+          </div>
+        )}
       </div>
 
       {comparadorAbierto && (

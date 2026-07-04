@@ -152,7 +152,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'historial',
-        element: <HistorialArriendos />
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
+            <HistorialArriendos />
+          </ProtectedRoute>
+        )
       },
       {
         path: 'notificaciones',
@@ -185,7 +189,7 @@ const router = createBrowserRouter([
       {
         path: 'publicacion/:id',
         element: (
-          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador', 'admin']}>
             <DetallePublicacion />
           </ProtectedRoute>
         )

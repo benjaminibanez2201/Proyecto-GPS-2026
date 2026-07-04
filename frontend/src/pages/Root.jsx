@@ -17,6 +17,7 @@ import {
   HelpCircle,
   Compass,
   X,
+  ShieldCog,
 } from 'lucide-react';
 import PageTransition from '@components/PageTransition';
 import { useAuth, AuthProvider } from '@context/AuthContext';
@@ -88,7 +89,7 @@ function PageRoot() {
         { label: 'Panel Administrador', icon: Home, to: '/admin' },
         { label: 'Gestión de Usuarios', icon: Users, to: '/admin/users?estado=todos' },
         { label: 'Publicaciones Reportadas', icon: FlagTriangleRight, to: '/admin/reportes' },
-        { label: 'Auditoría', icon: History, to: '/admin/auditoria' },
+        { label: 'Auditoría', icon: ShieldCog, to: '/admin/auditoria' },
       ],
     },
   };

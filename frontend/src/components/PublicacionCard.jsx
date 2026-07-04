@@ -3,7 +3,6 @@ import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import '../styles/publicacionCard.css';
 import { useNavigate} from 'react-router-dom';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const cardArrowStyle = {
   position: 'absolute',
@@ -99,8 +98,8 @@ export default function PublicacionCard({
   }).format(precioMensual || 0);
 
   const handleVerDetalles = () => {
-    if (idPublicacion) {
-      navigate(`/publicacion/${encodePublicId(idPublicacion)}`);
+    if (publicacion?.publicId) {
+      navigate(`/publicacion/${publicacion.publicId}`);
     }
   };
 

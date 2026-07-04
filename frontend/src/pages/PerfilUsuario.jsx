@@ -1,27 +1,42 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Star, ArrowLeft } from 'lucide-react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Star, ArrowLeft, UserRound, CalendarDays, MessageSquareText } from 'lucide-react';
 import { obtenerResenasUsuario, obtenerPerfilUsuario } from '../services/rentalsAndReviews.service.js';
 import AvatarCirculo from '../components/AvatarCirculo.jsx';
-import { decodePublicId } from '../helpers/publicId.helper.js';
+import '@styles/perfilUsuario.css';
+
+function renderEstrellas(nota) {
+  const max = 5;
+  const llenas = Math.min(Math.max(Math.round(Number(nota) || 0), 0), max);
+
+  return Array.from({ length: max }, (_, index) => (
+    <Star
+      key={index}
+      size={18}
+      strokeWidth={2}
+      fill={index < llenas ? '#f4b400' : 'transparent'}
+      color={index < llenas ? '#f4b400' : '#d1d5db'}
+    />
+  ));
+}
+
+function formatDate(value) {
+  if (!value) return 'Fecha no disponible';
+  return new Date(value).toLocaleDateString('es-CL', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
 
 export default function PerfilUsuario() {
-  const { id: idParam } = useParams();
-  const id = decodePublicId(idParam);
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [usuario, setUsuario] = useState(null);
   const [resenas, setResenas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const colores = {
-    principal: '#008080',
-    secundario: '#e6dfd3',
-    textoOscuro: '#2c3e50',
-    blanco: '#ffffff',
-    oro: '#ffd21f'
-  };
 
   useEffect(() => {
     const cargarPerfilYResenas = async () => {
@@ -51,7 +66,7 @@ export default function PerfilUsuario() {
       }
     };
 
-    if (id != null) {
+    if (id) {
       cargarPerfilYResenas();
     } else {
       setError('No se encontró este perfil');
@@ -59,127 +74,83 @@ export default function PerfilUsuario() {
     }
   }, [id]);
 
-  if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Cargando perfil...</div>;
-  if (error) return <div style={{ padding: '20px', color: 'red' }}>Error: {error}</div>;
-
-  // Renderiza estrellas usando Lucide de forma limpia
-  const renderComponenteEstrellas = (nota) => {
-    const maxEstrellas = 5;
-    const estrellasLlenas = Math.min(Math.max(Math.round(nota), 0), maxEstrellas);
-
-    return (
-      <div style={{ display: 'inline-flex', gap: '4px', alignItems: 'center' }}>
-        {Array(maxEstrellas).fill().map((_, i) => {
-          const esLlena = i < estrellasLlenas;
-          return (
-            <Star
-              key={i}
-              size={20}
-              strokeWidth={2}
-              // Si es llena, se pinta con color #ffd21f. Si es vacía, el fondo es transparente.
-              fill={esLlena ? colores.oro : 'transparent'}
-              // El borde de la estrella toma el color oro si está llena, o un gris suave si está vacía
-              color={esLlena ? colores.oro : '#d9d9d9'}
-            />
-          );
-        })}
-      </div>
-    );
-  };
+  if (loading) return <div className="pu-state-box">Cargando perfil...</div>;
+  if (error) return <div className="pu-state-box pu-state-box-error">{error}</div>;
 
   return (
-    <div style={{
-      backgroundColor: '#f9f8f6',
-      minHeight: '100vh',
-      padding: '40px 20px',
-      fontFamily: 'sans-serif',
-      color: colores.textoOscuro
-    }}>
-      <button
-        onClick={() => navigate(-1)}
-        className="back-pill-button"
-      >
+    <div className="pu-page">
+      <button onClick={() => navigate(-1)} className="back-pill-button">
         <ArrowLeft size={16} strokeWidth={2.5} />
         Volver
       </button>
 
-      <div style={{
-        maxWidth: '800px',
-        margin: '0 auto',
-        backgroundColor: colores.blanco,
-        borderRadius: '12px',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-        overflow: 'hidden'
-      }}>
-
-        <div style={{ backgroundColor: colores.secundario, padding: '40px', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
-            <AvatarCirculo nombre={usuario?.nombre} foto={usuario?.avatar} size={100} />
-          </div>
-          <h2 style={{ margin: '0 0 5px 0', fontSize: '24px' }}>{usuario?.nombre}</h2>
-          <span style={{
-            backgroundColor: colores.principal,
-            color: colores.blanco,
-            padding: '4px 12px',
-            borderRadius: '12px',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            textTransform: 'uppercase'
-          }}>{usuario?.rol}</span>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-around',
-          padding: '20px',
-          borderBottom: '1px solid #eee',
-          textAlign: 'center'
-        }}>
+      <section className="pu-hero">
+        <div className="pu-hero-identity">
+          <AvatarCirculo nombre={usuario?.nombre} foto={usuario?.avatar} size={84} />
           <div>
-            <h4 style={{ margin: '0 0 5px 0', color: '#7f8c8d' }}>Calificación promedio</h4>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '18px', fontWeight: 'bold' }}>
-              {renderComponenteEstrellas(usuario?.avgRating)}
-              <span>({Number(usuario?.avgRating || 0).toFixed(1)})</span>
-            </div>
-          </div>
-          <div>
-            <h4 style={{ margin: '0 0 5px 0', color: '#7f8c8d' }}>Reseñas recibidas</h4>
-            <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{usuario?.reviewsCount} opiniones</div>
+            <h1 className="pu-name">{usuario?.nombre}</h1>
+            <span className="pu-role-badge">{usuario?.rol}</span>
           </div>
         </div>
 
-        <div style={{ padding: '30px' }}>
-          <h3 style={{ margin: '0 0 20px 0', borderBottom: `2px solid ${colores.secundario}`, paddingBottom: '10px' }}>
-            Comentarios de otros usuarios
-          </h3>
+        <article className="pu-stat-card">
+          <p className="pu-stat-label">Calificación promedio</p>
+          <div className="pu-stat-row">
+            {renderEstrellas(usuario?.avgRating)}
+            <strong className="pu-stat-value">{Number(usuario?.avgRating || 0).toFixed(1)}</strong>
+          </div>
+        </article>
+      </section>
 
-          {resenas.length === 0 ? (
-            <p style={{ color: '#7f8c8d', fontStyle: 'italic' }}>Este usuario no registra comentarios en la plataforma.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              {resenas.map((resena) => (
-                <div key={resena.id} style={{
-                  padding: '15px',
-                  borderRadius: '8px',
-                  backgroundColor: '#fdfbf7',
-                  borderLeft: `4px solid ${colores.principal}`,
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: resena.comment ? '8px' : '0' }}>
-                    {renderComponenteEstrellas(resena.rating)}
+      <section className="pu-section">
+        <header className="pu-section-header">
+          <h2 className="pu-section-title">Comentarios de otros usuarios</h2>
+          <span className="pu-section-count">{resenas.length} comentarios</span>
+        </header>
+
+        {resenas.length === 0 ? (
+          <div className="pu-empty-state">
+            <MessageSquareText size={34} strokeWidth={1.9} />
+            <h3 className="pu-empty-title">Este usuario aún no tiene comentarios</h3>
+            <p className="pu-empty-text">Cuando reciba una calificación, aparecerá aquí.</p>
+          </div>
+        ) : (
+          <div className="pu-list">
+            {resenas.map((resena) => (
+              <article key={resena.id} className="pu-card">
+                <div className="pu-card-top">
+                  <div className="pu-author-block">
+                    <div>
+                      <div className="pu-meta-line" style={{ marginTop: 0 }}>
+                        <UserRound size={14} strokeWidth={2.1} />
+                        {resena.author?.publicId ? (
+                          <Link to={`/perfil/${resena.author.publicId}`} className="pu-author-name">
+                            {resena.author?.nombreCompleto || 'Usuario anónimo'}
+                          </Link>
+                        ) : (
+                          <span className="pu-author-name">Usuario anónimo</span>
+                        )}
+                      </div>
+                      <div className="pu-meta-line">
+                        <CalendarDays size={13} strokeWidth={2} />
+                        <span>{formatDate(resena.createdAt)}</span>
+                      </div>
+                    </div>
                   </div>
-                  {resena.comment && (
-                    <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
-                      {resena.comment}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
-      </div>
+                  <div className="pu-stars-wrap">{renderEstrellas(resena.rating)}</div>
+                </div>
+
+                {resena.comment && (
+                  <div className="pu-comment-box">
+                    <p className="pu-comment-text">{resena.comment}</p>
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

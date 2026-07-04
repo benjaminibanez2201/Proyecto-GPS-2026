@@ -2,6 +2,7 @@
 import {
   deleteUserService,
   getProfileService,
+  getPublicProfileService,
   getUserService,
   getUsersService,
   updateProfileService,
@@ -23,6 +24,7 @@ import {
   handleSuccess,
 } from "../handlers/responseHandlers.js";
 import { commitProfilePhotoUpload } from "../helpers/upload.helper.js";
+import { decodePublicId, encodePublicId } from "../helpers/publicId.helper.js";
 
 export async function getUser(req, res) {
   try {
@@ -251,13 +253,18 @@ export async function getProfile(req, res) {
 
 export async function getProfileById(req, res) {
   try {
-    const { id } = req.params;
+    const { id: idToken } = req.params;
+    const id = decodePublicId(idToken);
 
-    const [user, userError] = await getProfileService(Number(id));
+    if (id == null) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador del perfil no es válido");
+    }
+
+    const [user, userError] = await getPublicProfileService(id);
 
     if (userError) return handleErrorClient(res, 404, "Error obteniendo perfil", userError);
 
-    handleSuccess(res, 200, "Perfil obtenido correctamente", user);
+    handleSuccess(res, 200, "Perfil obtenido correctamente", { ...user, publicId: encodePublicId(user.id) });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

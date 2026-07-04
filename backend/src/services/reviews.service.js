@@ -71,10 +71,35 @@ export async function crearResenaServicio(body, authorId) {
 export async function obtenerResenasPorUsuarioServicio(userId) {
   try {
     const repositorioResena = AppDataSource.getRepository(Review);
+    const repositorioUsuario = AppDataSource.getRepository(User);
 
-    const resenas = await repositorioResena.find({ where: { targetUserId: userId } });
+    const resenas = await repositorioResena.find({
+      where: { targetUserId: userId },
+      order: { createdAt: "DESC" },
+    });
 
-    return [resenas, null];
+    if (resenas.length === 0) {
+      return [[], null];
+    }
+
+    const authorIds = [...new Set(resenas.map((resena) => Number(resena.authorId)))];
+    const autores = await repositorioUsuario.find({
+      where: { id: In(authorIds) },
+      select: {
+        id: true,
+        nombreCompleto: true,
+        fotoPerfil: true,
+      },
+    });
+
+    const autoresMap = new Map(autores.map((autor) => [Number(autor.id), autor]));
+
+    const resenasEnriquecidas = resenas.map((resena) => ({
+      ...resena,
+      author: autoresMap.get(Number(resena.authorId)) || null,
+    }));
+
+    return [resenasEnriquecidas, null];
   } catch (error) {
     console.error("Error obtenerResenasPorUsuarioServicio:", error);
     return [null, "Error interno del servidor"];

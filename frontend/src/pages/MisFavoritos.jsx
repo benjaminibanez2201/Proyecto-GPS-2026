@@ -5,7 +5,6 @@ import Swal from 'sweetalert2';
 import ComparadorPublicacionesModal from '@components/ComparadorPublicacionesModal';
 import { eliminarFavorito, getMisFavoritos } from '@services/user.service.js';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 
@@ -215,7 +214,7 @@ const MisFavoritos = () => {
                       <div style={styles.actionButtonsGroup}>
                         <button
                           type="button"
-                          onClick={() => navigate(`/publicacion/${encodePublicId(publicacionId)}`)}
+                          onClick={() => navigate(`/publicacion/${publicacion.publicId}`)}
                           style={styles.verDetallesButton}
                         >
                           Ver Detalles
