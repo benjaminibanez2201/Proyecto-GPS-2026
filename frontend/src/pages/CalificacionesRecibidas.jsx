@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, CalendarDays, ChevronRight, MessageSquareText, Star, UserRound, UserStar } from 'lucide-react';
 import { useAuth } from '@context/AuthContext';
 import { obtenerPerfilUsuario, obtenerResenasRecibidas } from '../services/rentalsAndReviews.service.js';
-import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import { encodePublicId } from '@helpers/publicId.helper.js';
 import '@styles/calificaciones.css';
 
@@ -105,7 +104,6 @@ export default function CalificacionesRecibidas() {
               <article key={resena.id} className="card">
                 <div className="card-top">
                   <div className="author-block">
-                    <AvatarCirculo nombre={resena.author?.nombreCompleto} foto={resena.author?.fotoPerfil} size={46} />
                     <div>
                       <div className="author-line">
                         <UserRound size={14} strokeWidth={2.1} />
