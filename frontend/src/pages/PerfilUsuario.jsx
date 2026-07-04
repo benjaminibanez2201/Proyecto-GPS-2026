@@ -150,7 +150,7 @@ export default function PerfilUsuario() {
 
         <div style={{ padding: '30px' }}>
           <h3 style={{ margin: '0 0 20px 0', borderBottom: `2px solid ${colores.secundario}`, paddingBottom: '10px' }}>
-            Comentarios de otros usuarios
+            Calificaciones que han dejado otros usuarios
           </h3>
 
           {resenas.length === 0 ? (

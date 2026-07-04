@@ -79,7 +79,7 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
       <section style={styles.modal}>
         <header style={styles.header}>
           <div>
-            <p style={styles.eyebrow}>Comparacion</p>
+            <p style={styles.eyebrow}>Comparación</p>
             <h2 style={styles.title}>Publicaciones seleccionadas</h2>
           </div>
           <button type="button" onClick={onClose} style={styles.iconButton} aria-label="Cerrar comparacion">
