@@ -6,6 +6,29 @@ import { obtenerMisReportes } from '@services/reportes.service.js';
 
 const accent = '#0f766e';
 
+const motivoLabels = {
+  informacion_incorrecta: 'Información incorrecta',
+  contenido_engañoso: 'Contenido engañoso',
+  fraude_sospechoso: 'Sospecha de fraude',
+  spam: 'Spam o contenido repetido',
+  otro: 'Otro motivo',
+};
+
+const accionLabels = {
+  sin_accion: 'Sin acción',
+  mantenida: 'Publicación mantenida',
+  desactivada: 'Publicación desactivada',
+  reactivada: 'Publicación reactivada',
+};
+
+const formatLabel = (value, mapping) => {
+  if (!value) return 'Sin dato';
+  return mapping[value] || value
+    .toString()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 const formatDate = (value) => {
   if (!value) return 'Fecha no disponible';
   return new Date(value).toLocaleDateString('es-CL', {
@@ -139,12 +162,12 @@ export default function MisReportes() {
                   </div>
 
                   <p style={styles.reportReason}>
-                    <strong>Motivo:</strong> {reporte.motivo}
+                    <strong>Motivo:</strong> {formatLabel(reporte.motivo, motivoLabels)}
                   </p>
 
                   <div style={styles.reportFooter}>
                     <div style={styles.reportChipRow}>
-                      <span style={styles.chip}>Acción: {reporte.accion || 'sin acción'}</span>
+                      <span style={styles.chip}>Acción: {formatLabel(reporte.accion, accionLabels)}</span>
                     </div>
 
                     <button
