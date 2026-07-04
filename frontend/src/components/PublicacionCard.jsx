@@ -136,6 +136,7 @@ export default function PublicacionCard({
         <button
           onClick={toggleFavorito}
           disabled={procesando}
+          data-tour="favorito-btn"
           title={esFavorito ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
           style={{ 
             position: 'absolute', 
