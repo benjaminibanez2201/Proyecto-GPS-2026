@@ -1,0 +1,55 @@
+backend/src/services/rentals.service.js
+  s_a9493c21237f1f::t_2b0db45fba1278 236-239
+frontend/src/pages/AdminReportes.jsx
+  s_a9493c21237f1f::t_2b0db45fba1278 94
+backend/src/services/notificacion.service.js
+  s_a9493c21237f1f::t_2b0db45fba1278 132-137
+frontend/src/pages/BuscarArriendo.jsx
+  s_a9493c21237f1f::t_57b9b3dfea56c3 1,109,167,180-192
+  s_a9493c21237f1f::t_2b0db45fba1278 244,668
+frontend/src/pages/Profile.jsx
+  s_a9493c21237f1f::t_2b0db45fba1278 14,159,201,407
+  s_a9493c21237f1f::t_57b9b3dfea56c3 1,50,69-73
+frontend/src/hooks/table/useTable.jsx
+  s_a9493c21237f1f::t_57b9b3dfea56c3 71
+frontend/src/hooks/users/useGetUsers.jsx
+  s_a9493c21237f1f::t_57b9b3dfea56c3 1,7,19-34
+frontend/src/pages/AdminUsers.jsx
+  s_a9493c21237f1f::t_57b9b3dfea56c3 163
+backend/src/controllers/user.controller.js
+  s_a9493c21237f1f::t_2b0db45fba1278 8-9,352-357,365-370,385
+backend/src/services/reportes.service.js
+  s_a9493c21237f1f::t_2b0db45fba1278 195-201
+backend/src/controllers/auditoria.controller.js
+  s_a9493c21237f1f::t_3b38f8af149c15 7
+backend/src/controllers/mensaje.controller.js
+  s_a9493c21237f1f::t_0c276caf6effc2 4
+backend/src/controllers/publicacion.estadisticas.controller.js
+  s_a9493c21237f1f::t_b7c75c434348c5 21-22
+backend/src/routes/user.routes.js
+  s_a9493c21237f1f::t_69b75ea2edfb54 9
+backend/src/services/favorito.service.js
+  s_a9493c21237f1f::t_22444f333d6cfd 39-40,66-67
+backend/src/services/user.service.js
+  s_a9493c21237f1f::t_50305b34300914 403,425,439,450,507,538,554,565,585
+backend/src/validations/auditoria.validation.js
+  s_a9493c21237f1f::t_ccb13e42157c65 26
+backend/src/validations/publicacion.validation.js
+  s_a9493c21237f1f::t_d2e0427d5017bd 86,95,267
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e0a6f21267f93864194bf7516b0bb05cd6ac479e",
+  "prompts": {},
+  "sessions": {
+    "s_a9493c21237f1f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eb323-a4f2-71a3-bfdb-10bbdbaaeba6",
+        "model": "gpt-5.5"
+      },
+      "human_author": "maacuna_meli <marco.acuna@mercadolibre.cl>"
+    }
+  }
+}
