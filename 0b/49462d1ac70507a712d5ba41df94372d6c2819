@@ -1,0 +1,24 @@
+frontend/src/pages/ConfirmEmail.jsx
+  s_f1ade8b32edbdf::t_928db7312e7928 14-21
+  s_f1ade8b32edbdf::t_364451d96e5dde 22-23
+frontend/src/styles/emailConfirmation.css
+  s_f1ade8b32edbdf::t_de82295f0cee91 388
+  s_f1ade8b32edbdf::t_eca6498f5f057e 366-369,383-384
+  s_f1ade8b32edbdf::t_7056c16a62a7bf 370,374,377,385,390,394
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0b49462d1ac70507a712d5ba41df94372d6c2819",
+  "prompts": {},
+  "sessions": {
+    "s_f1ade8b32edbdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f0a012bd-9744-4196-b45a-066feee73ae8",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "maacuna_meli <marco.acuna@mercadolibre.cl>"
+    }
+  }
+}
