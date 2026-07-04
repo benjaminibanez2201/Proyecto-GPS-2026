@@ -426,7 +426,6 @@ export default function Mensajes() {
         <aside className="mensajes-sidebar">
           <div className="mensajes-sidebar__header">
             <div>
-              <p className="mensajes-eyebrow">Mensajes</p>
               <h1>Tu bandeja</h1>
               <p className="mensajes-subtitle">Revisa conversaciones, responde y sigue el hilo de cada arriendo.</p>
             </div>
