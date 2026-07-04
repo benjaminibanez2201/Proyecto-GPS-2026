@@ -20,9 +20,58 @@ import {
   handleSuccess,
 } from "../handlers/responseHandlers.js";
 
+function normalizePublicacionBody(body = {}) {
+  const normalized = { ...body };
+
+  if (normalized.precioMensual !== undefined && normalized.precioMensual !== "") {
+    normalized.precioMensual = Number(normalized.precioMensual);
+  }
+
+  if (normalized.distanciaCampus !== undefined && normalized.distanciaCampus !== "") {
+    normalized.distanciaCampus = Number(normalized.distanciaCampus);
+  }
+
+  if (normalized.latitud !== undefined && normalized.latitud !== "") {
+    normalized.latitud = Number(normalized.latitud);
+  }
+
+  if (normalized.longitud !== undefined && normalized.longitud !== "") {
+    normalized.longitud = Number(normalized.longitud);
+  }
+
+  if (normalized.serviciosIncluidos !== undefined) {
+    if (typeof normalized.serviciosIncluidos === "string") {
+      try {
+        const parsed = JSON.parse(normalized.serviciosIncluidos);
+        normalized.serviciosIncluidos = Array.isArray(parsed) ? parsed : [normalized.serviciosIncluidos];
+      } catch {
+        normalized.serviciosIncluidos = normalized.serviciosIncluidos
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+    }
+  }
+
+  if (normalized.reglasConvivencia === undefined && normalized.rules !== undefined) {
+    normalized.reglasConvivencia = normalized.rules;
+  }
+
+  if (normalized.fotos !== undefined && typeof normalized.fotos === "string") {
+    try {
+      const parsed = JSON.parse(normalized.fotos);
+      normalized.fotos = Array.isArray(parsed) ? parsed : [normalized.fotos];
+    } catch {
+      normalized.fotos = [normalized.fotos];
+    }
+  }
+
+  return normalized;
+}
+
 export async function createPublicacion(req, res) {
   try {
-    const { body } = req;
+    const { body, files } = req;
     const { id, rol, estadoVerificacion } = req.user;
 
     if (rol !== "arrendador") {
@@ -33,13 +82,18 @@ export async function createPublicacion(req, res) {
       return handleErrorClient(res, 403, "Acceso denegado", "Tu cuenta debe estar verificada para crear publicaciones");
     }
 
-    const { error: bodyError } = publicacionBodyValidation.validate(body);
+    if (!files?.fotosPublicacion?.length) {
+      return handleErrorClient(res, 400, "Error de validación", "Debes adjuntar al menos una foto de la publicación.");
+    }
+
+    const normalizedBody = normalizePublicacionBody(body);
+    const { error: bodyError } = publicacionBodyValidation.validate(normalizedBody);
 
     if (bodyError) {
       return handleErrorClient(res, 400, "Error de validación", bodyError.message);
     }
 
-    const [publicacion, publicacionError] = await createPublicacionService(id, body);
+    const [publicacion, publicacionError] = await createPublicacionService(id, normalizedBody, files);
 
     if (publicacionError) return handleErrorClient(res, 400, "Error creando publicación", publicacionError);
 
@@ -118,7 +172,7 @@ export async function getPublicacionById(req, res) {
 
 export async function updatePublicacion(req, res) {
   try {
-    const { body, params } = req;
+    const { body, params, files } = req;
     const { id: publicacionId } = params;
     const { id: arrendadorId, rol } = req.user;
 
@@ -126,10 +180,17 @@ export async function updatePublicacion(req, res) {
       return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden editar publicaciones");
     }
 
-    const { error: bodyError } = publicacionUpdateValidation.validate(body);
+    const normalizedBody = normalizePublicacionBody(body);
+    const { error: bodyError } = publicacionUpdateValidation.validate(normalizedBody);
     if (bodyError) return handleErrorClient(res, 400, "Error de validación", bodyError.message);
 
-    const [publicacion, error] = await updatePublicacionService(publicacionId, arrendadorId, body);
+    console.log("BODY NORMALIZADO");
+    console.log(normalizedBody);
+      
+    console.log("FILES");
+    console.log(files);
+
+    const [publicacion, error] = await updatePublicacionService(publicacionId, arrendadorId, normalizedBody, files);
     if (error) return handleErrorClient(res, 400, "Error al editar publicación", error);
 
     handleSuccess(res, 200, "Publicación actualizada correctamente", publicacion);
@@ -206,3 +267,4 @@ export async function removeFavorito(req, res) {
     handleErrorServer(res, 500, error.message);
   }
 }
+

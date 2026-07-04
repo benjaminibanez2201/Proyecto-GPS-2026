@@ -165,11 +165,11 @@ export const profileBodyValidation = Joi.object({
       "string.base": "El teléfono debe ser de tipo string.",
       "string.pattern.base": "Formato de teléfono inválido.",
     }),
-  fotoPerfil: Joi.string().max(255).uri().messages({
-    "string.empty": "La foto de perfil no puede estar vacía.",
-    "string.uri": "La foto de perfil debe ser una URL válida.",
-    "string.max": "La URL de la foto no puede superar los 255 caracteres.",
-  }),
+  fotoPerfil: Joi.string().max(255).uri({ allowRelative: true }).messages({
+  "string.empty": "La foto de perfil no puede estar vacía.",
+  "string.uri": "La foto de perfil debe ser una URL válida.",
+  "string.max": "La URL de la foto no puede superar los 255 caracteres.",
+}),
   newPassword: Joi.string()
     .min(8)
     .max(50)
@@ -231,11 +231,11 @@ export const profileArrendadorBodyValidation = Joi.object({
       "string.base": "El teléfono debe ser de tipo string.",
       "string.pattern.base": "Formato de teléfono inválido.",
     }),
-  fotoPerfil: Joi.string().max(255).uri().messages({
-    "string.empty": "La foto de perfil no puede estar vacía.",
-    "string.uri": "La foto de perfil debe ser una URL válida.",
-    "string.max": "La URL de la foto no puede superar los 255 caracteres.",
-  }),
+  fotoPerfil: Joi.string().max(255).uri({ allowRelative: true }).messages({
+  "string.empty": "La foto de perfil no puede estar vacía.",
+  "string.uri": "La foto de perfil debe ser una URL válida.",
+  "string.max": "La URL de la foto no puede superar los 255 caracteres.",
+}),
   passwordActual: Joi.string().optional().messages({
     "string.base": "La contraseña debe ser de tipo string.",
   }),

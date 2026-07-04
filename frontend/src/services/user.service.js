@@ -61,10 +61,13 @@ export async function deleteUser(rut) {
 
 export async function updateProfile(data) {
     try {
-        const response = await axios.patch('/profile/', data);
+        const isFormData = data instanceof FormData;
+        const response = await axios.patch('/profile/', data, {
+            headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {}
+        });
         return response.data.data;
     } catch (error) {
-        return error.response.data;
+        return error.response?.data || { message: 'Error al actualizar perfil' };
     }
 }
 
@@ -88,10 +91,13 @@ export async function getMisPublicaciones() {
 
 export async function updateArrendadorProfile(data) {
     try {
-        const response = await axios.patch('/profile/arrendador', data);
+        const isFormData = data instanceof FormData;
+        const response = await axios.patch('/profile/arrendador', data, {
+            headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {}
+        });
         return response.data.data;
     } catch (error) {
-        return error.response.data;
+        return error.response?.data || { message: 'Error al actualizar perfil' };
     }
 }
 
@@ -106,19 +112,23 @@ export async function eliminarPublicacion(id) {
 
 export async function editarPublicacion(id, data) {
     try {
-        const response = await axios.put(`/publicacion/${id}`, data);
+        const response = await axios.put(`/publicacion/${id}`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data.data;
     } catch (error) {
-        return error.response.data;
+        return error.response?.data || { message: 'Error al actualizar publicación' };
     }
 }
 
 export async function crearPublicacion(data) {
     try {
-        const response = await axios.post('/publicacion/', data);
+        const response = await axios.post('/publicacion/', data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data.data;
     } catch (error) {
-        return error.response.data;
+        return error.response?.data || { message: 'Error al crear publicación' };
     }
 }
 
