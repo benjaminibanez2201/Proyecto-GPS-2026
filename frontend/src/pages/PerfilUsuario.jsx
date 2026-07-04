@@ -3,7 +3,6 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, UserRound, CalendarDays, MessageSquareText } from 'lucide-react';
 import { obtenerResenasUsuario, obtenerPerfilUsuario } from '../services/rentalsAndReviews.service.js';
 import AvatarCirculo from '../components/AvatarCirculo.jsx';
-import { decodePublicId, encodePublicId } from '../helpers/publicId.helper.js';
 import '@styles/perfilUsuario.css';
 
 function renderEstrellas(nota) {
@@ -31,8 +30,7 @@ function formatDate(value) {
 }
 
 export default function PerfilUsuario() {
-  const { id: idParam } = useParams();
-  const id = decodePublicId(idParam);
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [usuario, setUsuario] = useState(null);
@@ -68,7 +66,7 @@ export default function PerfilUsuario() {
       }
     };
 
-    if (id != null) {
+    if (id) {
       cargarPerfilYResenas();
     } else {
       setError('No se encontró este perfil');
@@ -125,8 +123,8 @@ export default function PerfilUsuario() {
                     <div>
                       <div className="pu-meta-line" style={{ marginTop: 0 }}>
                         <UserRound size={14} strokeWidth={2.1} />
-                        {resena.author?.id ? (
-                          <Link to={`/perfil/${encodePublicId(resena.author.id)}`} className="pu-author-name">
+                        {resena.author?.publicId ? (
+                          <Link to={`/perfil/${resena.author.publicId}`} className="pu-author-name">
                             {resena.author?.nombreCompleto || 'Usuario anónimo'}
                           </Link>
                         ) : (

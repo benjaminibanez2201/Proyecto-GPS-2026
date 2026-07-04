@@ -6,7 +6,6 @@ import { getPublicacionPorId } from '../services/publicacion.service.js';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import { useAuth } from '../context/AuthContext';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
-import { decodePublicId, encodePublicId } from '@helpers/publicId.helper.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import ModalReportar from '../components/ModalReportar.jsx';
 import '@styles/basePublicaciones.css';
@@ -53,8 +52,7 @@ function formatPriceCLP(value) {
 }
 
 export default function DetallePublicacion() {
-  const { id: idParam } = useParams();
-  const id = decodePublicId(idParam);
+  const { id } = useParams();
   const navigate = useNavigate();
   const [publicacion, setPublicacion] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -75,7 +73,7 @@ export default function DetallePublicacion() {
 
   useEffect(() => {
     const traerDetalles = async () => {
-      if (id == null) {
+      if (!id) {
         setError('No se encontró esta publicación.');
         setCargando(false);
         return;
@@ -394,7 +392,7 @@ export default function DetallePublicacion() {
                 <button
                   type="button"
                   className="confirm-btn"
-                  onClick={() => navigate(`/mensajes?publicacion=${encodePublicId(id)}`)}
+                  onClick={() => navigate(`/mensajes?publicacion=${id}`)}
                   style={{ width: '100%', marginTop: '30px' }}
                 >
                   Contactar al Propietario

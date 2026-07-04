@@ -7,6 +7,7 @@ import {
   resolverReporte,
 } from "../services/reportes.service.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
+import { encodePublicId } from "../helpers/publicId.helper.js";
 
 export async function crearReportePublicacion(req, res) {
   try {
@@ -37,7 +38,15 @@ export async function misReportes(req, res) {
     const reporterId = req.user.id;
     const [result, error] = await listarReportesDeUsuario(reporterId);
     if (error) return handleErrorServer(res, 500, error);
-    return handleSuccess(res, 200, "Mis reportes obtenidos correctamente", result);
+
+    const resultConPublicId = result.map((reporte) => ({
+      ...reporte,
+      publicacion: reporte.publicacion
+        ? { ...reporte.publicacion, publicId: encodePublicId(reporte.publicacion.id) }
+        : reporte.publicacion,
+    }));
+
+    return handleSuccess(res, 200, "Mis reportes obtenidos correctamente", resultConPublicId);
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
