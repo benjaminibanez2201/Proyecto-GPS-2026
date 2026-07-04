@@ -12,7 +12,6 @@ import {
 } from '@services/mensaje.service.js';
 import { createArriendo, listarArriendos } from '@services/rentalsAndReviews.service.js';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
-import { decodePublicId, encodePublicId } from '@helpers/publicId.helper.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import '@styles/mensajes.css';
 
@@ -109,8 +108,8 @@ export default function Mensajes() {
   const [rentalForConversation, setRentalForConversation] = useState(null);
   const [loadingRentalConfirmation, setLoadingRentalConfirmation] = useState(false);
 
-  const publicationTargetId = publicationIdParam ? decodePublicId(publicationIdParam) : null;
-  const conversationTargetId = conversationIdParam ? Number(conversationIdParam) : null;
+  const publicationTargetId = publicationIdParam || null;
+  const conversationTargetId = conversationIdParam || null;
 
   const fetchConversations = async () => {
     setLoadingConversations(true);
@@ -197,10 +196,10 @@ export default function Mensajes() {
       }
 
       if (publicationTargetId) {
-        const existingConversation = currentConversations.find((conversation) => String(conversation?.publicacion?.id) === String(publicationTargetId));
+        const existingConversation = currentConversations.find((conversation) => conversation?.publicacion?.publicId === publicationTargetId);
         if (existingConversation) {
-          setSelectedConversationId(existingConversation.id);
-          await loadConversationDetail(existingConversation.id);
+          setSelectedConversationId(existingConversation.publicId);
+          await loadConversationDetail(existingConversation.publicId);
         } else {
           setSelectedConversationId(null);
           await loadConversationDetail(null);
@@ -209,8 +208,8 @@ export default function Mensajes() {
       }
 
       if (currentConversations.length > 0) {
-        setSelectedConversationId(currentConversations[0].id);
-        await loadConversationDetail(currentConversations[0].id);
+        setSelectedConversationId(currentConversations[0].publicId);
+        await loadConversationDetail(currentConversations[0].publicId);
       }
     };
 
@@ -260,7 +259,7 @@ export default function Mensajes() {
   ) && !isRentalCompleted && !isRentalCancelled;
 
   const handleSelectConversation = async (conversationId) => {
-    setSearchParams({ conversacion: String(conversationId) });
+    setSearchParams({ conversacion: conversationId });
     setSelectedConversationId(conversationId);
     await loadConversationDetail(conversationId);
   };
@@ -292,16 +291,16 @@ export default function Mensajes() {
 
     setComposeText('');
     const refreshedConversations = await fetchConversations();
-    const createdConversation = refreshedConversations.find((conversation) => String(conversation?.publicacion?.id) === String(publicationTargetId));
+    const createdConversation = refreshedConversations.find((conversation) => conversation?.publicacion?.publicId === publicationTargetId);
 
     if (createdConversation) {
-      setSelectedConversationId(createdConversation.id);
-      await loadConversationDetail(createdConversation.id);
-      setSearchParams({ conversacion: String(createdConversation.id) });
-    } else if (result?.conversacion?.id) {
-      setSelectedConversationId(result.conversacion.id);
-      await loadConversationDetail(result.conversacion.id);
-      setSearchParams({ conversacion: String(result.conversacion.id) });
+      setSelectedConversationId(createdConversation.publicId);
+      await loadConversationDetail(createdConversation.publicId);
+      setSearchParams({ conversacion: createdConversation.publicId });
+    } else if (result?.conversacion?.publicId) {
+      setSelectedConversationId(result.conversacion.publicId);
+      await loadConversationDetail(result.conversacion.publicId);
+      setSearchParams({ conversacion: result.conversacion.publicId });
     }
   };
 
@@ -340,7 +339,7 @@ export default function Mensajes() {
   };
 
   const handleDeleteConversation = async (conversation) => {
-    if (!conversation?.id) return;
+    if (!conversation?.publicId) return;
 
     const confirmation = await Swal.fire({
       title: '¿Ocultar conversación?',
@@ -355,7 +354,7 @@ export default function Mensajes() {
 
     if (!confirmation.isConfirmed) return;
 
-    const [, errorResponse] = await eliminarConversacion(conversation.id);
+    const [, errorResponse] = await eliminarConversacion(conversation.publicId);
 
     if (errorResponse) {
       await Swal.fire('No se pudo ocultar', errorResponse, 'error');
@@ -477,7 +476,7 @@ export default function Mensajes() {
 
             {filteredConversations.map((conversation) => {
               const otherParticipant = getOtherParticipant(conversation, user?.id, userRole);
-              const isSelected = String(conversation.id) === String(selectedConversationId);
+              const isSelected = conversation.publicId === selectedConversationId;
               const unreadCount = getUnreadConversationBadgeCount(conversation, userRole);
 
               return (
@@ -485,7 +484,7 @@ export default function Mensajes() {
                   <button
                     type="button"
                     className={`mensajes-list-item ${isSelected ? 'is-selected' : ''}`}
-                    onClick={() => handleSelectConversation(conversation.id)}
+                    onClick={() => handleSelectConversation(conversation.publicId)}
                   >
                     <AvatarCirculo nombre={otherParticipant?.nombreCompleto} foto={otherParticipant?.fotoPerfil} size={44} shape="square" />
                     <div className="mensajes-list-item__body">
@@ -550,7 +549,7 @@ export default function Mensajes() {
                     <h2>{publicacionObjetivo?.titulo || 'Iniciar conversación'}</h2>
                     <p className="mensajes-detail__meta">{publicacionObjetivo?.ubicacion || 'La publicación seleccionada'}</p>
                   </div>
-                  <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${encodePublicId(publicationTargetId)}`)}>
+                  <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${publicationTargetId}`)}>
                     Ver publicación
                   </button>
                 </div>
@@ -589,7 +588,7 @@ export default function Mensajes() {
                     </p>
                   </div>
                   <div className="mensajes-detail__header-actions">
-                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${encodePublicId(selectedConversation?.publicacion?.id)}`)}>
+                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${selectedConversation?.publicacion?.publicId}`)}>
                       Ver publicación
                     </button>
                     <button type="button" className="mensajes-icon-btn mensajes-icon-btn--danger" onClick={() => handleDeleteConversation(selectedConversation)}>

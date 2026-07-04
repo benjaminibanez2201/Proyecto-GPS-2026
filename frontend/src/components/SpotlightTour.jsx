@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { getPublicaciones } from '@services/publicacion.service.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 import '@styles/spotlightTour.css';
 
 const POLL_INTERVAL_MS = 150;
@@ -101,14 +100,14 @@ export default function SpotlightTour({ active, onClose, onFinish }) {
 
           const list = Array.isArray(data) ? data : (data?.data || []);
           const primera = list[0];
-          const id = primera?.id || primera?._id;
+          const publicId = primera?.publicId;
 
-          if (error || !id) {
+          if (error || !publicId) {
             handleFinishTour();
             return;
           }
 
-          targetPath = `/publicacion/${encodePublicId(id)}`;
+          targetPath = `/publicacion/${publicId}`;
           setContactoPath(targetPath);
         }
 

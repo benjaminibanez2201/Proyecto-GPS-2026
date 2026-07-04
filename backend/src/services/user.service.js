@@ -480,6 +480,24 @@ export async function getProfileService(id) {
   }
 }
 
+export async function getPublicProfileService(id) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({
+      where: { id },
+      select: ["id", "nombreCompleto", "fotoPerfil", "rol", "avgRating", "reviewsCount"],
+    });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+
+    return [userFound, null];
+  } catch (error) {
+    console.error("Error al obtener perfil público:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
 export async function updateArrendadorProfileService(id, body) {
   try {
     const userRepository = AppDataSource.getRepository(User);

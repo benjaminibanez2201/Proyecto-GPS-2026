@@ -27,14 +27,6 @@ const ArriendoEsquema = new EntitySchema({
       enum: ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "FINISHED"],
       default: "PENDING",
     },
-    confirmedByArrendador: {
-      type: "boolean",
-      default: false,
-    },
-    confirmedByEstudiante: {
-      type: "boolean",
-      default: false,
-    },
     createdAt: {
       type: "timestamp with time zone",
       default: () => "CURRENT_TIMESTAMP",

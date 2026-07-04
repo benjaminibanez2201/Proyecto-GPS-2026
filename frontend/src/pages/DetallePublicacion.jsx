@@ -6,7 +6,6 @@ import { getPublicacionPorId } from '../services/publicacion.service.js';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import { useAuth } from '../context/AuthContext';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
-import { decodePublicId, encodePublicId } from '@helpers/publicId.helper.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import ModalReportar from '../components/ModalReportar.jsx';
 import '@styles/basePublicaciones.css';
@@ -53,8 +52,7 @@ function formatPriceCLP(value) {
 }
 
 export default function DetallePublicacion() {
-  const { id: idParam } = useParams();
-  const id = decodePublicId(idParam);
+  const { id } = useParams();
   const navigate = useNavigate();
   const [publicacion, setPublicacion] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -68,6 +66,7 @@ export default function DetallePublicacion() {
   const [fotoActivaIndex, setFotoActivaIndex] = useState(0);
   const [lightboxAbierto, setLightboxAbierto] = useState(false);
   const esArrendador = user?.rol === 'arrendador' || user?.rol === 'Arrendador';
+  const esAdmin = user?.rol === 'admin' || user?.rol === 'administrador';
   const esAutorPublicacion = String(publicacion?.arrendador?.id) === String(user?.id);
 
   const idPublicacion = publicacion?.id || publicacion?._id;
@@ -75,7 +74,7 @@ export default function DetallePublicacion() {
 
   useEffect(() => {
     const traerDetalles = async () => {
-      if (id == null) {
+      if (!id) {
         setError('No se encontró esta publicación.');
         setCargando(false);
         return;
@@ -269,8 +268,8 @@ export default function DetallePublicacion() {
             </>
           )}
 
-          {!esArrendador && (
-            <button 
+          {!esArrendador && !esAdmin && (
+            <button
               type="button"
               onClick={toggleFavorito}
               disabled={procesando}
@@ -390,19 +389,19 @@ export default function DetallePublicacion() {
                 )}
               </ul>
 
-              {!esArrendador && (
+              {!esArrendador && !esAdmin && (
                 <button
                   type="button"
                   className="confirm-btn"
                   data-tour="contactar-btn"
-                  onClick={() => navigate(`/mensajes?publicacion=${encodePublicId(id)}`)}
+                  onClick={() => navigate(`/mensajes?publicacion=${id}`)}
                   style={{ width: '100%', marginTop: '30px' }}
                 >
                   Contactar al Propietario
                 </button>
               )}
 
-              {!esAutorPublicacion && (
+              {!esAutorPublicacion && !esAdmin && (
                 <button
                   type="button"
                   onClick={() => setMostrarModalReporte(true)}

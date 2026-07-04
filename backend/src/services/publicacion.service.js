@@ -76,7 +76,8 @@ export async function getPublicacionesService(filtros) {
     }
 
     if (tipoInmueble) {
-      query.andWhere("publicacion.tipoInmueble = :tipoInmueble", { tipoInmueble });
+      const tiposArray = Array.isArray(tipoInmueble) ? tipoInmueble : tipoInmueble.split(",");
+      query.andWhere("publicacion.tipoInmueble IN (:...tiposArray)", { tiposArray });
     }
 
     if (distanciaCampus) {

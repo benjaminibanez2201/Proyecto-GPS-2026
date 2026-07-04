@@ -4,7 +4,6 @@ import { ArrowLeft, MapPin, CalendarCheck, CheckCircle, Archive, XCircle, Chevro
 import { obtenerArriendoPorId } from '../services/rentalsAndReviews.service.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { resolveFileUrl } from '../helpers/resolveFileUrl.js';
-import { decodePublicId } from '../helpers/publicId.helper.js';
 import AvatarCirculo from '../components/AvatarCirculo.jsx';
 import '@styles/detalleArriendo.css';
 
@@ -48,8 +47,7 @@ const ESTADO_META = {
 };
 
 export default function DetalleArriendo() {
-  const { id: idParam } = useParams();
-  const id = decodePublicId(idParam);
+  const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [arriendo, setArriendo] = useState(null);
@@ -71,7 +69,7 @@ export default function DetalleArriendo() {
       setCargando(false);
     };
 
-    if (id != null) {
+    if (id) {
       cargarArriendo();
     } else {
       setError('No se encontró este arriendo.');

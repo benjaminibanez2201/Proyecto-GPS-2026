@@ -7,7 +7,6 @@ import Swal from 'sweetalert2';
 import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
 import { COMUNAS_PERMITIDAS } from '@helpers/publicacionesMapa.helper.js';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 const toCount = (value) => Number(value || 0);
@@ -610,8 +609,8 @@ const MisPublicaciones = () => {
   };
 
   const irAlDetalle = (pub) => {
-    if (!pub?.id) return;
-    navigate(`/publicacion/${encodePublicId(pub.id)}`);
+    if (!pub?.publicId) return;
+    navigate(`/publicacion/${pub.publicId}`);
   };
 
   return (

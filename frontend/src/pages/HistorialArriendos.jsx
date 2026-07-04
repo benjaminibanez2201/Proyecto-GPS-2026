@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Archive, CheckCircle, Clock, Eye, Inbox, MessageSquareText, Star, X, Landmark} from 'lucide-react';
+import { ArrowRight, Archive, CheckCircle, Eye, Inbox, MessageSquareText, Star, X, Landmark} from 'lucide-react';
 import { listarArriendos, crearResena } from '../services/rentalsAndReviews.service.js';
 import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 import '@styles/historialArriendos.css';
 
 export default function HistorialArriendos() {
@@ -36,6 +35,7 @@ export default function HistorialArriendos() {
       ...r,
       contratanteNombre: Number(user?.id) === r.arrendadorId ? r.estudiante?.nombreCompleto : r.arrendador?.nombreCompleto || '—',
       contratanteId: Number(user?.id) === r.arrendadorId ? r.estudiante?.id : r.arrendador?.id || null,
+      contratantePublicId: Number(user?.id) === r.arrendadorId ? r.estudiante?.publicId : r.arrendador?.publicId || null,
       contratanteAvatar: (Number(user?.id) === r.arrendadorId ? r.estudiante?.fotoPerfil : r.arrendador?.fotoPerfil) || null,
     }));
 
@@ -129,22 +129,19 @@ export default function HistorialArriendos() {
               <td colSpan="5" style={{ padding: 0 }}>
                 <div className="empty-state">
                   <div className="empty-icon"><Inbox size={28} /></div>
-                  <strong>No hay arriendos todavía</strong>
-                  <span className="empty-text">Cuando concretes tu primer arriendo, aparecerá aquí con sus opciones para calificar.</span>
+                  <h3 className="empty-title">No hay arriendos todavía</h3>
+                  <p className="empty-text">Cuando concretes tu primer arriendo, aparecerá aquí con sus opciones para calificar.</p>
                 </div>
               </td>
             </tr>
           ) : arriendos.map((item) => {
-            const yaConfirme = Number(user?.id) === item.arrendadorId
-              ? item.confirmedByArrendador
-              : item.confirmedByEstudiante;
             const estaConcluido = item.status === 'COMPLETED' || item.status === 'FINISHED';
 
             return (
               <tr key={item.id}>
                 <td>
                   {item.contratanteId ? (
-                    <Link to={`/perfil/${encodePublicId(item.contratanteId)}`} className="person-link">
+                    <Link to={`/perfil/${item.contratantePublicId}`} className="person-link">
                       <AvatarCirculo nombre={item.contratanteNombre} foto={item.contratanteAvatar} />
                       <span>{item.contratanteNombre || '—'}</span>
                     </Link>
@@ -160,8 +157,6 @@ export default function HistorialArriendos() {
                     <span className="finished-chip"><Archive size={16} /> Arriendo finalizado</span>
                   ) : item.status === 'COMPLETED' ? (
                     <span className="reviewed-chip"><CheckCircle size={16} /> Arriendo concretado</span>
-                  ) : yaConfirme ? (
-                    <span className="waiting-chip"><Clock size={16} /> Esperando confirmación...</span>
                   ) : (
                     <span className="waiting-chip"><MessageSquareText size={16} /> Confirma en conversación</span>
                   )}
@@ -190,7 +185,7 @@ export default function HistorialArriendos() {
                 </td>
                 <td>
                   {estaConcluido ? (
-                    <button onClick={() => navigate(`/arriendo/${encodePublicId(item.id)}`)} className="ver-detalle-button">
+                    <button onClick={() => navigate(`/arriendo/${item.publicId}`)} className="ver-detalle-button">
                       <Eye size={14} /> Ver detalle
                     </button>
                   ) : '—'}

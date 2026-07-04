@@ -9,6 +9,7 @@ import {
   handleErrorServer,
   handleSuccess,
 } from "../handlers/responseHandlers.js";
+import { encodePublicId } from "../helpers/publicId.helper.js";
 
 export async function createFavorito(req, res) {
   try {
@@ -74,7 +75,14 @@ export async function getFavoritos(req, res) {
       return handleErrorClient(res, 400, "Error al obtener favoritos", error);
     }
 
-    handleSuccess(res, 200, "Favoritos obtenidos con éxito", favoritos);
+    const favoritosConPublicId = favoritos.map((favorito) => ({
+      ...favorito,
+      publicacion: favorito.publicacion
+        ? { ...favorito.publicacion, publicId: encodePublicId(favorito.publicacion.id) }
+        : favorito.publicacion,
+    }));
+
+    handleSuccess(res, 200, "Favoritos obtenidos con éxito", favoritosConPublicId);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
