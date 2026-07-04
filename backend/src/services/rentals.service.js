@@ -309,19 +309,7 @@ export async function anularArriendoServicio(arriendoId, userId) {
       return [actualizado, null];
     }
 
-    const actualizacion = {
-      status: "PENDING",
-    };
-
-    if (esArrendador) {
-      actualizacion.confirmedByArrendador = false;
-    }
-
-    if (esEstudiante) {
-      actualizacion.confirmedByEstudiante = false;
-    }
-
-    await repositorioArriendo.update({ id: arriendo.id }, actualizacion);
+    await repositorioArriendo.update({ id: arriendo.id }, { status: "PENDING" });
 
     const actualizado = await repositorioArriendo.findOne({ where: { id: arriendoId } });
     return [actualizado, null];
