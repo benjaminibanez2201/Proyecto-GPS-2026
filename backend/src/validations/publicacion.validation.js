@@ -64,7 +64,7 @@ export const publicacionBodyValidation = Joi.object({
       "number.max": "La longitud debe estar entre -180 y 180.",
     }),
   fotos: Joi.array()
-    .items(Joi.string().uri())
+    .items(Joi.string().uri({ allowRelative: true }))
     .optional(),
   serviciosIncluidos: Joi.array()
     .items(
@@ -242,8 +242,7 @@ export const publicacionUpdateValidation = Joi.object({
     "number.max": "La longitud debe estar entre -180 y 180.",
   }),
   fotos: Joi.array()
-    .items(Joi.string()
-    .uri())
+    .items(Joi.string().uri({ allowRelative: true }))
     .optional(),
   serviciosIncluidos: Joi.array()
     .items(

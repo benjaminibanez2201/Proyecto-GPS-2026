@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '@styles/publicationMap.css';
@@ -8,10 +8,13 @@ import {
   formatMoneyCLP,
   resolvePublicationLocation,
 } from '@helpers/publicacionesMapa.helper.js';
+import { encodePublicId } from '@helpers/publicId.helper.js';
 
 function getPublicacionId(publicacion) {
   return publicacion?.id_publicacion || publicacion?.id || publicacion?._id;
 }
+
+const HOVER_DETALLE_DELAY_MS = 500;
 
 function crearIconoPrecio(precio) {
   return L.divIcon({
@@ -23,11 +26,24 @@ function crearIconoPrecio(precio) {
   });
 }
 
+function crearIconoVerDetalle() {
+  return L.divIcon({
+    className: 'publication-price-icon',
+    html: `<div class="publication-price-icon__bubble publication-price-icon__bubble--hover">Ver detalle</div>`,
+    iconSize: [110, 44],
+    iconAnchor: [55, 42],
+    popupAnchor: [0, -36],
+  });
+}
+
 export default function PublicationMap({ publicaciones = [] }) {
   const navigate = useNavigate();
   const [markers, setMarkers] = useState([]);
   const [cargandoMapa, setCargandoMapa] = useState(true);
   const [mapaError, setMapaError] = useState('');
+  const hoverTimeoutRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(hoverTimeoutRef.current), []);
 
   useEffect(() => {
     let isMounted = true;
@@ -120,7 +136,7 @@ export default function PublicationMap({ publicaciones = [] }) {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {markers.map(({ publicacion, commune, position }) => {
+          {markers.map(({ publicacion, position }) => {
             const idPublicacion = getPublicacionId(publicacion);
 
             return (
@@ -131,26 +147,21 @@ export default function PublicationMap({ publicaciones = [] }) {
                 eventHandlers={{
                   click: () => {
                     if (idPublicacion) {
-                      navigate(`/publicacion/${idPublicacion}`);
+                      navigate(`/publicacion/${encodePublicId(idPublicacion)}`);
                     }
                   },
+                  mouseover: (e) => {
+                    clearTimeout(hoverTimeoutRef.current);
+                    hoverTimeoutRef.current = setTimeout(() => {
+                      e.target.setIcon(crearIconoVerDetalle());
+                    }, HOVER_DETALLE_DELAY_MS);
+                  },
+                  mouseout: (e) => {
+                    clearTimeout(hoverTimeoutRef.current);
+                    e.target.setIcon(crearIconoPrecio(publicacion?.precioMensual));
+                  },
                 }}
-              >
-                <Popup>
-                  <div className="publication-map-popup">
-                    <strong>{publicacion?.titulo || 'Sin título'}</strong>
-                    <span>{commune?.name || 'Comuna no identificada'}</span>
-                    <span>{formatMoneyCLP(publicacion?.precioMensual || 0)} / mes</span>
-                    <button
-                      type="button"
-                      className="publication-map-popup__button"
-                      onClick={() => navigate(`/publicacion/${idPublicacion}`)}
-                    >
-                      Ver detalle
-                    </button>
-                  </div>
-                </Popup>
-              </Marker>
+              />
             );
           })}
         </MapContainer>

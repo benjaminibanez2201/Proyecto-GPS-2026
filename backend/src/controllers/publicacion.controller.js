@@ -57,6 +57,15 @@ function normalizePublicacionBody(body = {}) {
     normalized.reglasConvivencia = normalized.rules;
   }
 
+  if (normalized.fotos !== undefined && typeof normalized.fotos === "string") {
+    try {
+      const parsed = JSON.parse(normalized.fotos);
+      normalized.fotos = Array.isArray(parsed) ? parsed : [normalized.fotos];
+    } catch {
+      normalized.fotos = [normalized.fotos];
+    }
+  }
+
   return normalized;
 }
 
@@ -258,3 +267,4 @@ export async function removeFavorito(req, res) {
     handleErrorServer(res, 500, error.message);
   }
 }
+

@@ -40,6 +40,26 @@ export async function anularArriendo(id) {
   }
 }
 
+// Obtener detalle de un arriendo (con la publicación incluida)
+export async function obtenerArriendoPorId(id) {
+  try {
+    const response = await axios.get(`/rentals/${id}`);
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || "Error al cargar el arriendo"];
+  }
+}
+
+// Marcar un arriendo como finalizado (libera la publicación)
+export async function finalizarArriendoPorPublicacion(publicacionId) {
+  try {
+    const response = await axios.post(`/rentals/publicacion/${publicacionId}/finalizar`);
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || "Error al finalizar el arriendo"];
+  }
+}
+
 // Crear reseña
 export async function crearResena(resenaData) {
   try {
@@ -60,7 +80,7 @@ export async function obtenerResenasUsuario(userId) {
   }
 }
 
-export async function obtenerResenasRecibidas(userId) {
+export async function obtenerResenasRecibidas() {
   try {
     const response = await axios.get('/reviews/received');
     return [response.data.data, null];
