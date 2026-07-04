@@ -394,16 +394,16 @@
     }
     68% {
         opacity: 0.95;
-        stroke-dashoffset: -18;
+        stroke-dashoffset: 18;
     }
     82% {
         opacity: 0.95;
-        stroke-dashoffset: -36;
+        stroke-dashoffset: 36;
     }
     86%,
     100% {
         opacity: 0;
-        stroke-dashoffset: -36;
+        stroke-dashoffset: 36;
     }
 }
 
@@ -425,17 +425,21 @@
     }
     52% {
         opacity: 1;
-        transform: scaleY(1);
+        transform: scaleY(0.28);
     }
     82%,
     84% {
         opacity: 1;
-        transform: scaleY(0.28);
+        transform: scaleY(1);
     }
     88%,
-    100% {
+    98% {
         opacity: 0;
-        transform: scaleY(0.28);
+        transform: scaleY(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scaleY(1);
     }
 }
 
@@ -457,17 +461,21 @@
     }
     52% {
         opacity: 1;
-        transform: scaleY(0.7);
+        transform: scaleY(1);
     }
     82%,
     84% {
         opacity: 1;
-        transform: scaleY(1);
+        transform: scaleY(0.7);
     }
     88%,
-    100% {
+    98% {
         opacity: 0;
-        transform: scaleY(1);
+        transform: scaleY(0.7);
+    }
+    100% {
+        opacity: 1;
+        transform: scaleY(0.7);
     }
 }
 
