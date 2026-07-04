@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Archive, CheckCircle, Clock, Eye, Inbox, MessageSquareText, Star, X, Landmark} from 'lucide-react';
+import { ArrowRight, Archive, CheckCircle, Eye, Inbox, MessageSquareText, Star, X, Landmark} from 'lucide-react';
 import { listarArriendos, crearResena } from '../services/rentalsAndReviews.service.js';
 import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -135,9 +135,6 @@ export default function HistorialArriendos() {
               </td>
             </tr>
           ) : arriendos.map((item) => {
-            const yaConfirme = Number(user?.id) === item.arrendadorId
-              ? item.confirmedByArrendador
-              : item.confirmedByEstudiante;
             const estaConcluido = item.status === 'COMPLETED' || item.status === 'FINISHED';
 
             return (
@@ -160,8 +157,6 @@ export default function HistorialArriendos() {
                     <span className="finished-chip"><Archive size={16} /> Arriendo finalizado</span>
                   ) : item.status === 'COMPLETED' ? (
                     <span className="reviewed-chip"><CheckCircle size={16} /> Arriendo concretado</span>
-                  ) : yaConfirme ? (
-                    <span className="waiting-chip"><Clock size={16} /> Esperando confirmación...</span>
                   ) : (
                     <span className="waiting-chip"><MessageSquareText size={16} /> Confirma en conversación</span>
                   )}
