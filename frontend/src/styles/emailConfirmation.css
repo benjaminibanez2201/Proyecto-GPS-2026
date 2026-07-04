@@ -138,7 +138,8 @@
     transform-origin: 90px 90px;
 }
 
-.email-confirmation-visual--loading .email-confirmation-visual__hourglass {
+.email-confirmation-visual--loading .email-confirmation-visual__hourglass,
+.email-confirmation-visual--pending .email-confirmation-visual__hourglass {
     animation: emailHourglassTilt 1.35s ease-in-out infinite;
 }
 
@@ -331,6 +332,11 @@
 }
 
 .email-confirmation-loading-text {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     color: #647477;
     font-size: 14px;
     font-weight: 700;
@@ -404,6 +410,7 @@
 
 @media (prefers-reduced-motion: reduce) {
     .email-confirmation-visual--loading .email-confirmation-visual__hourglass,
+    .email-confirmation-visual--pending .email-confirmation-visual__hourglass,
     .email-confirmation-visual__sand-stream,
     .email-confirmation-visual__sand-top,
     .email-confirmation-visual__sand-bottom,

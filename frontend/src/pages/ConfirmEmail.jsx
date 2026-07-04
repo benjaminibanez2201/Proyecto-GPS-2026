@@ -5,7 +5,7 @@ import miLogo from '@assets/miLogo.png';
 import slidebaar from '@assets/slidebaar.png';
 import '@styles/emailConfirmation.css';
 
-function ConfirmationAnimation({ status }) {
+export function ConfirmationAnimation({ status }) {
     return (
         <div className={`email-confirmation-visual email-confirmation-visual--${status}`} aria-hidden="true">
             <svg viewBox="0 0 180 180" role="img">
