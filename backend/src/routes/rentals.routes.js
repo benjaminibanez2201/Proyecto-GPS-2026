@@ -2,8 +2,6 @@
 import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
 import {
-  anularArriendo,
-  confirmarArriendo,
   crearArriendo,
   finalizarArriendoPorPublicacion,
   obtenerArriendo,
@@ -25,9 +23,6 @@ router.post("/", crearArriendo);
 router.get("/:id", obtenerArriendo);
 router.put("/:id", actualizarArriendo);
 router.delete("/:id", eliminarArriendo);
-//confirmacion del arriendo
-router.post("/:id/confirm", confirmarArriendo);
-router.post("/:id/cancel", anularArriendo);
 router.post("/publicacion/:publicacionId/finalizar", finalizarArriendoPorPublicacion);
 
 export default router;

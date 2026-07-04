@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
 import { Heart, ArrowLeft, MapPin, Star, FlagTriangleRight, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { getPublicacionPorId } from '../services/publicacion.service.js';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
@@ -114,21 +113,6 @@ export default function DetallePublicacion() {
     if (procesando || !idPublicacion) return;
 
     const estadoAnterior = esFavorito;
-
-    if (estadoAnterior) {
-      const confirmacion = await Swal.fire({
-        title: '¿Seguro que quieres eliminarlo de tus favoritos?',
-        text: 'La publicación seguirá disponible para volver a guardarla más adelante.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#008080',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-      });
-
-      if (!confirmacion.isConfirmed) return;
-    }
 
     setProcesando(true);
     setEsFavorito(!estadoAnterior);

@@ -2,8 +2,6 @@
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
 import {
   actualizarArriendoServicio,
-  anularArriendoServicio,
-  confirmarArriendoServicio,
   crearArriendoServicio,
   eliminarArriendoServicio,
   finalizarArriendoPorPublicacionServicio,
@@ -73,36 +71,12 @@ export async function finalizarArriendoPorPublicacion(req, res) {
   }
 }
 
-export async function confirmarArriendo(req, res) {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
-    const [data, error] = await confirmarArriendoServicio(Number(id), userId);
-    if (error) return handleErrorClient(res, 400, error);
-    return handleSuccess(res, 200, "Confirmación registrada", data);
-  } catch (error) {
-    return handleErrorServer(res, 500, error.message);
-  }
-}
-
 export async function listarArriendos(req, res) {
   try {
     const userId = req.user.id; // Extraemos el ID del usuario logueado
     const [data, error] = await listarArriendosServicio(userId); // Le pasamos el ID
     if (error) return handleErrorClient(res, 400, error);
     return handleSuccess(res, 200, "Lista de arriendos", data.map(agregarPublicIds));
-  } catch (error) {
-    return handleErrorServer(res, 500, error.message);
-  }
-}
-
-export async function anularArriendo(req, res) {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
-    const [data, error] = await anularArriendoServicio(Number(id), userId);
-    if (error) return handleErrorClient(res, 400, error);
-    return handleSuccess(res, 200, "Arriendo anulado", data);
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
