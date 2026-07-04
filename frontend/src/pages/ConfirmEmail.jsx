@@ -14,7 +14,7 @@ export function ConfirmationAnimation({ status }) {
                     <path className="email-confirmation-visual__frame" d="M62 44H118M62 136H118M72 44V58C72 72 84 79 90 90C96 79 108 72 108 58V44M72 136V122C72 108 84 101 90 90C96 101 108 108 108 122V136" />
                     <path className="email-confirmation-visual__sand-top" d="M79 62H101C98 72 94 78 90 84C86 78 82 72 79 62Z" />
                     <path className="email-confirmation-visual__sand-bottom" d="M90 96C97 105 101 112 103 124H77C79 112 83 105 90 96Z" />
-                    <path className="email-confirmation-visual__sand-stream" d="M90 85V101" />
+                    <path className="email-confirmation-visual__sand-stream" d="M90 76V112" />
                 </g>
                 <g className="email-confirmation-visual__check">
                     <circle className="email-confirmation-visual__check-circle" cx="90" cy="90" r="45" />

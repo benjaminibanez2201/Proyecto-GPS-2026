@@ -140,7 +140,7 @@
 
 .email-confirmation-visual--loading .email-confirmation-visual__hourglass,
 .email-confirmation-visual--pending .email-confirmation-visual__hourglass {
-    animation: emailHourglassTilt 1.35s ease-in-out infinite;
+    animation: emailHourglassTilt 3.2s ease-in-out infinite;
 }
 
 .email-confirmation-visual--success .email-confirmation-visual__hourglass,
@@ -159,7 +159,7 @@
 
 .email-confirmation-visual__sand-stream {
     stroke-width: 5;
-    animation: emailSandFlow 0.95s ease-in-out infinite;
+    animation: emailSandFlow 2.2s ease-in-out infinite;
 }
 
 .email-confirmation-visual__sand-top,
@@ -169,12 +169,12 @@
 
 .email-confirmation-visual__sand-top {
     transform-origin: 90px 84px;
-    animation: emailSandTop 1.35s ease-in-out infinite;
+    animation: emailSandTop 3.2s ease-in-out infinite;
 }
 
 .email-confirmation-visual__sand-bottom {
     transform-origin: 90px 124px;
-    animation: emailSandBottom 1.35s ease-in-out infinite;
+    animation: emailSandBottom 3.2s ease-in-out infinite;
 }
 
 .email-confirmation-visual__check,
@@ -344,10 +344,11 @@
 
 @keyframes emailHourglassTilt {
     0%,
-    100% {
+    38% {
         transform: rotate(0deg);
     }
-    50% {
+    62%,
+    100% {
         transform: rotate(180deg);
     }
 }
@@ -362,12 +363,10 @@
 @keyframes emailSandFlow {
     0%,
     100% {
-        opacity: 0.35;
-        transform: scaleY(0.55);
+        opacity: 0.42;
     }
     50% {
         opacity: 1;
-        transform: scaleY(1);
     }
 }
 
