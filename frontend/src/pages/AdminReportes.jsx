@@ -7,11 +7,11 @@ import { obtenerPublicacionesReportadas, resolverPublicacionReportada } from '@s
 const accent = '#008080';
 
 const motivoLabels = {
-  fraude_sospechoso: 'Fraude/Sospechoso',
-  contenido_inapropiado: 'Contenido inapropiado',
-  informacion_falsa: 'Información falsa',
-  spam: 'Spam',
-  otro: 'Otro',
+  informacion_incorrecta: 'Información incorrecta',
+  contenido_engañoso: 'Contenido engañoso',
+  fraude_sospechoso: 'Sospecha de fraude',
+  spam: 'Spam o contenido repetido',
+  otro: 'Otro motivo',
 };
 
 const accionLabels = {

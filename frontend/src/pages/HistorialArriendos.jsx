@@ -129,8 +129,8 @@ export default function HistorialArriendos() {
               <td colSpan="5" style={{ padding: 0 }}>
                 <div className="empty-state">
                   <div className="empty-icon"><Inbox size={28} /></div>
-                  <strong>No hay arriendos todavía</strong>
-                  <span className="empty-text">Cuando concretes tu primer arriendo, aparecerá aquí con sus opciones para calificar.</span>
+                  <h3 className="empty-title">No hay arriendos todavía</h3>
+                  <p className="empty-text">Cuando concretes tu primer arriendo, aparecerá aquí con sus opciones para calificar.</p>
                 </div>
               </td>
             </tr>
