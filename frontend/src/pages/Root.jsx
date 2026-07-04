@@ -15,13 +15,16 @@ import {
   ChevronLeft,
   ChevronRight,
   HelpCircle,
+  Compass,
+  X,
 } from 'lucide-react';
 import PageTransition from '@components/PageTransition';
 import { useAuth, AuthProvider } from '@context/AuthContext';
 import { obtenerCantidadNotificacionesNoLeidas } from '@services/notificacion.service.js';
 import { obtenerConversaciones } from '@services/mensaje.service.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
-import TutorialEstudiante from '@components/TutorialEstudiante.jsx';
+import SpotlightTour from '@components/SpotlightTour.jsx';
+import FaqModal from '@components/FaqModal.jsx';
 import slidebaar from '../assets/slidebaar.png';
 import miLogo from '../assets/miLogo.png';
 
@@ -44,7 +47,9 @@ function PageRoot() {
   const [hoveredItem, setHoveredItem] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-  const [showTutorial, setShowTutorial] = useState(false);
+  const [tourActive, setTourActive] = useState(false);
+  const [showHelpMenu, setShowHelpMenu] = useState(false);
+  const [showFaq, setShowFaq] = useState(false);
 
   const colores = {
     principal: '#008080',
@@ -251,17 +256,34 @@ function PageRoot() {
   useEffect(() => {
     if (!user?.id || normalizedRole !== 'estudiante') return;
 
-    const seenKey = `tutorialVisto_estudiante_${user.id}`;
+    const seenKey = `tourVisto_estudiante_${user.id}`;
     if (!localStorage.getItem(seenKey)) {
-      setShowTutorial(true);
+      navigate('/buscar');
+      setTourActive(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, normalizedRole]);
 
-  const closeTutorial = () => {
+  const markTourAsSeen = () => {
     if (user?.id) {
-      localStorage.setItem(`tutorialVisto_estudiante_${user.id}`, '1');
+      localStorage.setItem(`tourVisto_estudiante_${user.id}`, '1');
     }
-    setShowTutorial(false);
+  };
+
+  const closeTour = () => {
+    markTourAsSeen();
+    setTourActive(false);
+  };
+
+  const finishTour = () => {
+    markTourAsSeen();
+    setTourActive(false);
+  };
+
+  const restartTour = () => {
+    setShowHelpMenu(false);
+    navigate('/buscar');
+    setTourActive(true);
   };
 
   const notificationsItem = { to: '/notificaciones' };
@@ -399,13 +421,13 @@ function PageRoot() {
           {normalizedRole === 'estudiante' && (
             <button
               type="button"
-              onClick={() => setShowTutorial(true)}
+              onClick={restartTour}
               onMouseEnter={() => setHoveredItem('tutorial')}
               onMouseLeave={() => setHoveredItem(null)}
               style={getSidebarItemStyle({ hovered: hoveredItem === 'tutorial' })}
             >
-              <HelpCircle size={20} strokeWidth={2} />
-              {!isSidebarCollapsed && <span>Ver tutorial</span>}
+              <Compass size={20} strokeWidth={2} />
+              {!isSidebarCollapsed && <span>Ver tour de la página</span>}
             </button>
           )}
 
@@ -468,7 +490,40 @@ function PageRoot() {
         </main>
       </div>
 
-      <TutorialEstudiante open={showTutorial} onClose={closeTutorial} />
+      <SpotlightTour active={tourActive} onClose={closeTour} onFinish={finishTour} />
+
+      {normalizedRole === 'estudiante' && (
+        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1500 }}>
+          {showHelpMenu && (
+            <div style={styles.helpMenu}>
+              <button type="button" style={styles.helpMenuItem} onClick={restartTour}>
+                <Compass size={16} /> Ver tour de la página otra vez
+              </button>
+              <button
+                type="button"
+                style={styles.helpMenuItem}
+                onClick={() => {
+                  setShowHelpMenu(false);
+                  setShowFaq(true);
+                }}
+              >
+                <HelpCircle size={16} /> Preguntas frecuentes
+              </button>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setShowHelpMenu((prev) => !prev)}
+            aria-label={showHelpMenu ? 'Cerrar ayuda' : 'Abrir ayuda'}
+            style={styles.helpFab}
+          >
+            {showHelpMenu ? <X size={22} /> : <HelpCircle size={22} />}
+          </button>
+        </div>
+      )}
+
+      <FaqModal open={showFaq} onClose={() => setShowFaq(false)} />
     </div>
   );
 }
@@ -485,6 +540,45 @@ const styles = {
     fontSize: '15px',
     fontWeight: '500',
     cursor: 'pointer',
+  },
+  helpFab: {
+    width: '52px',
+    height: '52px',
+    borderRadius: '999px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #008080, #0f9d9d)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    boxShadow: '0 14px 28px rgba(0, 128, 128, 0.32)',
+    marginLeft: 'auto',
+  },
+  helpMenu: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    padding: '8px',
+    marginBottom: '10px',
+    boxShadow: '0 20px 45px rgba(15, 23, 42, 0.22)',
+    minWidth: '240px',
+  },
+  helpMenuItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 12px',
+    border: 'none',
+    background: 'transparent',
+    borderRadius: '10px',
+    fontSize: '13.5px',
+    fontWeight: '600',
+    color: '#0f172a',
+    cursor: 'pointer',
+    textAlign: 'left',
   },
 };
 

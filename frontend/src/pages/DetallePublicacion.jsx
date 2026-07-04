@@ -394,6 +394,7 @@ export default function DetallePublicacion() {
                 <button
                   type="button"
                   className="confirm-btn"
+                  data-tour="contactar-btn"
                   onClick={() => navigate(`/mensajes?publicacion=${encodePublicId(id)}`)}
                   style={{ width: '100%', marginTop: '30px' }}
                 >
