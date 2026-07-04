@@ -345,6 +345,7 @@ export async function listarArriendosServicio(userId) {
       relations: {
         arrendador: true,
         estudiante: true,
+        publicacion: true,
       },
       order: {
         createdAt: "DESC"
