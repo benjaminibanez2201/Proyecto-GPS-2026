@@ -140,7 +140,7 @@
 
 .email-confirmation-visual--loading .email-confirmation-visual__hourglass,
 .email-confirmation-visual--pending .email-confirmation-visual__hourglass {
-    animation: emailHourglassTilt 5.2s infinite;
+    animation: emailHourglassTilt 5.6s infinite;
 }
 
 .email-confirmation-visual--success .email-confirmation-visual__hourglass,
@@ -161,22 +161,24 @@
     stroke: #f59e0b;
     stroke-width: 4;
     stroke-linecap: round;
-    animation: emailSandFlow 5.2s ease-in-out infinite;
+    stroke-dasharray: 6 8;
+    animation: emailSandFlow 5.6s linear infinite;
 }
 
 .email-confirmation-visual__sand-top,
 .email-confirmation-visual__sand-bottom {
     fill: #f59e0b;
+    transform-box: fill-box;
 }
 
 .email-confirmation-visual__sand-top {
-    transform-origin: 90px 84px;
-    animation: emailSandTop 5.2s ease-in-out infinite;
+    transform-origin: center bottom;
+    animation: emailSandTop 5.6s ease-in-out infinite;
 }
 
 .email-confirmation-visual__sand-bottom {
-    transform-origin: 90px 124px;
-    animation: emailSandBottom 5.2s ease-in-out infinite;
+    transform-origin: center bottom;
+    animation: emailSandBottom 5.6s ease-in-out infinite;
 }
 
 .email-confirmation-visual__check,
@@ -345,21 +347,20 @@
 }
 
 @keyframes emailHourglassTilt {
-    0% {
+    0%,
+    34% {
         transform: rotate(0deg);
     }
-    12% {
-        transform: rotate(0deg);
+    34% {
         animation-timing-function: cubic-bezier(0.48, 0, 0.18, 1);
     }
-    42% {
+    52%,
+    84% {
         transform: rotate(180deg);
     }
-    62% {
-        transform: rotate(180deg);
+    84% {
         animation-timing-function: cubic-bezier(0.48, 0, 0.18, 1);
     }
-    92%,
     100% {
         transform: rotate(360deg);
     }
@@ -374,41 +375,98 @@
 
 @keyframes emailSandFlow {
     0%,
-    12%,
-    48%,
-    62%,
-    98%,
-    100% {
+    32% {
         opacity: 0.95;
+        stroke-dashoffset: 0;
     }
-    18%,
-    38%,
-    68%,
-    88% {
+    16% {
+        opacity: 0.95;
+        stroke-dashoffset: -18;
+    }
+    34%,
+    50% {
         opacity: 0;
+        stroke-dashoffset: -36;
+    }
+    52% {
+        opacity: 0.95;
+        stroke-dashoffset: 0;
+    }
+    68% {
+        opacity: 0.95;
+        stroke-dashoffset: -18;
+    }
+    82% {
+        opacity: 0.95;
+        stroke-dashoffset: -36;
+    }
+    86%,
+    100% {
+        opacity: 0;
+        stroke-dashoffset: -36;
     }
 }
 
 @keyframes emailSandTop {
     0%,
-    12%,
-    100% {
+    2% {
+        opacity: 1;
         transform: scaleY(1);
     }
-    48%,
-    62% {
-        transform: scaleY(0.55);
+    32%,
+    34% {
+        opacity: 1;
+        transform: scaleY(0.28);
+    }
+    38%,
+    50% {
+        opacity: 0;
+        transform: scaleY(0.28);
+    }
+    52% {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+    82%,
+    84% {
+        opacity: 1;
+        transform: scaleY(0.28);
+    }
+    88%,
+    100% {
+        opacity: 0;
+        transform: scaleY(0.28);
     }
 }
 
 @keyframes emailSandBottom {
     0%,
-    12%,
-    100% {
+    2% {
+        opacity: 1;
         transform: scaleY(0.7);
     }
-    48%,
-    62% {
+    32%,
+    34% {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+    38%,
+    50% {
+        opacity: 0;
+        transform: scaleY(1);
+    }
+    52% {
+        opacity: 1;
+        transform: scaleY(0.7);
+    }
+    82%,
+    84% {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+    88%,
+    100% {
+        opacity: 0;
         transform: scaleY(1);
     }
 }
