@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Heart, House, MapPin, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, MapPin, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import ComparadorPublicacionesModal from '@components/ComparadorPublicacionesModal';
 import { eliminarFavorito, getMisFavoritos } from '@services/user.service.js';
+import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
+import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 
@@ -15,6 +18,7 @@ function getPublicacionId(publicacion) {
 }
 
 const MisFavoritos = () => {
+  const navigate = useNavigate();
   const [favoritos, setFavoritos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [comparacion, setComparacion] = useState([]);
@@ -162,8 +166,8 @@ const MisFavoritos = () => {
               const publicacionId = publicacion.id_publicacion || publicacion.id;
               
               const fallbackImage = 'https://via.placeholder.com/400x250?text=Imagen+no+disponible';
-              const imagenPrincipal = publicacion.fotos && publicacion.fotos.length > 0 
-                ? publicacion.fotos[0] 
+              const imagenPrincipal = publicacion.fotos && publicacion.fotos.length > 0
+                ? resolveFileUrl(publicacion.fotos[0])
                 : fallbackImage;
 
               return (
@@ -189,7 +193,7 @@ const MisFavoritos = () => {
                       <strong style={styles.priceValue}>${formatPrice(publicacion.precioMensual)} / mes</strong>
                     </div>
 
-                    {/* SECCIÓN DE ACCIONES FINAL: COMPARAR Y ELIMINAR */}
+                    {/* SECCIÓN DE ACCIONES FINAL: COMPARAR, VER DETALLES Y ELIMINAR */}
                     <div style={styles.cardActionsSection}>
                       <label
                         style={{
@@ -208,15 +212,25 @@ const MisFavoritos = () => {
                         Comparar
                       </label>
 
-                      <button
-                        type="button"
-                        onClick={() => handleEliminarFavorito(publicacionId)}
-                        style={styles.removeButton}
-                        title='Eliminar de favoritos'
-                      >
-                        <Trash2 size={20} color="#dc2626" />
-                        <span>Eliminar</span>
-                      </button>
+                      <div style={styles.actionButtonsGroup}>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/publicacion/${encodePublicId(publicacionId)}`)}
+                          style={styles.verDetallesButton}
+                        >
+                          Ver Detalles
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleEliminarFavorito(publicacionId)}
+                          style={styles.removeButton}
+                          title='Eliminar de favoritos'
+                        >
+                          <Trash2 size={20} color="#dc2626" />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </article>
@@ -253,6 +267,7 @@ const styles = {
     height: '52px',
     borderRadius: '16px',
     backgroundColor: 'rgba(255,255,255,0.15)',
+    border: '3px solid rgba(255,255,255,0.4)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -443,11 +458,29 @@ const styles = {
     fontSize: '18px',
     color: '#0f172a',
   },
+  verDetallesButton: {
+    flex: '1 1 0',
+    border: 'none',
+    borderRadius: '10px',
+    padding: '10px 14px',
+    backgroundColor: accent,
+    color: '#ffffff',
+    cursor: 'pointer',
+    fontWeight: 700,
+    fontSize: '14px',
+    whiteSpace: 'nowrap',
+  },
+  actionButtonsGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flexWrap: 'nowrap',
+  },
   cardActionsSection: {
     marginTop: 'auto',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    alignItems: 'stretch',
     gap: '10px',
     paddingTop: '10px',
     borderTop: '1px solid #e2e8f0',
@@ -466,6 +499,7 @@ const styles = {
     cursor: 'not-allowed',
   },
   removeButton: {
+    flex: '1 1 0',
     border: 'none',
     borderRadius: '10px',
     padding: '10px 14px',
@@ -477,6 +511,7 @@ const styles = {
     justifyContent: 'center',
     gap: '8px',
     fontWeight: '700',
+    whiteSpace: 'nowrap',
     transition: 'background-color 0.2s ease',
   },
 };

@@ -11,6 +11,7 @@ export const uploadRoot = path.resolve(__dirname, "../../uploads");
 export const tmpUploadDir = path.join(uploadRoot, "tmp");
 export const verificationUploadDir = path.join(uploadRoot, "verifications");
 export const MAX_VERIFICATION_FILE_SIZE = 8 * 1024 * 1024;
+export const publicacionUploadDir = path.join(uploadRoot, "publicaciones");
 
 export const uploadFieldConfig = {
   documentoVerificacion: {
@@ -43,6 +44,7 @@ const extensionByMimeType = {
   "application/pdf": ".pdf",
   "image/jpeg": ".jpg",
   "image/png": ".png",
+  "image/webp": ".webp",
 };
 
 function flattenFiles(files = {}) {
@@ -134,4 +136,42 @@ export function resolveVerificationFilePath(userId, filename) {
   if (!filePath.startsWith(`${userUploadDir}${path.sep}`)) return null;
 
   return filePath;
+}
+
+export function buildProfilePhotoUrl(userId, filename) {
+  return `/api/uploads/perfiles/${userId}/${encodeURIComponent(filename)}`;
+}
+
+export async function commitProfilePhotoUpload(userId, file) {
+  if (!file) return null;
+
+  const profileUploadDir = path.join(uploadRoot, "perfiles", String(userId));
+  const finalFilename = `foto-perfil-${Date.now()}-${randomUUID()}${getUploadExtension(file)}`;
+  const finalPath = path.join(profileUploadDir, finalFilename);
+
+  await fs.mkdir(profileUploadDir, { recursive: true });
+  await fs.rename(file.path, finalPath);
+
+  return buildProfilePhotoUrl(userId, finalFilename);
+}
+
+export function buildPublicacionFileUrl(publicacionId, filename) {
+  return `/api/uploads/publicaciones/${publicacionId}/${encodeURIComponent(filename)}`;
+}
+
+export async function commitPublicacionUploads(publicacionId, files = []) {
+  const pubUploadDir = path.join(publicacionUploadDir, String(publicacionId));
+  const urls = [];
+
+  await fs.mkdir(pubUploadDir, { recursive: true });
+
+  for (const file of files) {
+    if (!file) continue;
+    const finalFilename = `foto-${Date.now()}-${randomUUID()}${getUploadExtension(file)}`;
+    const finalPath = path.join(pubUploadDir, finalFilename);
+    await fs.rename(file.path, finalPath);
+    urls.push(buildPublicacionFileUrl(publicacionId, finalFilename));
+  }
+
+  return urls;
 }

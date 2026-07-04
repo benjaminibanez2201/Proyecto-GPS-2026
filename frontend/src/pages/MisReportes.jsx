@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FlagTriangleRight, Clock3, BadgeCheck, TriangleAlert } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, FlagTriangleRight, Clock3, BadgeCheck, TriangleAlert } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { obtenerMisReportes } from '@services/reportes.service.js';
+import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 
@@ -15,6 +17,7 @@ const formatDate = (value) => {
 };
 
 export default function MisReportes() {
+  const navigate = useNavigate();
   const [reportes, setReportes] = useState([]);
   const [cargando, setCargando] = useState(true);
 
@@ -48,6 +51,11 @@ export default function MisReportes() {
 
   return (
     <div style={styles.page}>
+      <Link to="/profile" className="back-pill-button">
+        <ArrowLeft size={16} strokeWidth={2.4} />
+        Volver a mi perfil
+      </Link>
+
       <section style={styles.hero}>
         <div style={styles.heroContent}>
           <div style={styles.heroIcon}>
@@ -80,7 +88,6 @@ export default function MisReportes() {
       <section style={styles.card}>
         <header style={styles.cardHeader}>
           <div>
-            <p style={{ ...styles.eyebrow, color: accent }}>Historial</p>
             <h2 style={styles.cardTitle}>Trazabilidad de tus reportes</h2>
             <p style={styles.cardSubtitle}>
               Aquí verás cada reporte, la publicación asociada y si ya fue revisado por el equipo.
@@ -144,7 +151,7 @@ export default function MisReportes() {
 
                     <button
                       type="button"
-                      onClick={() => navigate(`/publicacion/${reporte.publicacion?.id}`)}
+                      onClick={() => navigate(`/publicacion/${encodePublicId(reporte.publicacion?.id)}`)}
                       style={styles.linkButton}
                     >
                       Ver publicación
@@ -189,6 +196,7 @@ const styles = {
     height: '54px',
     borderRadius: '16px',
     backgroundColor: 'rgba(255,255,255,0.14)',
+    border: '3px solid rgba(255,255,255,0.4)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
