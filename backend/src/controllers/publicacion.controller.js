@@ -169,7 +169,19 @@ export async function getPublicacionById(req, res) {
 
     const [publicacion, error] = await getPublicacionDetalleService(publicacionId);
     if (error) {
-      return handleErrorClient(res, 404, "Publicación no encontrada", error);
+      return handleErrorClient(res, 404, error, "Publicación no encontrada");
+    }
+
+    const esPropietario = publicacion?.arrendador?.id && Number(publicacion.arrendador.id) === Number(req.user.id);
+    const esAdmin = req.user?.rol === "admin";
+
+    if (publicacion.estado === "inactiva" && !esPropietario && !esAdmin) {
+      return handleErrorClient(
+        res,
+        404,
+        "Esta publicación fue dada de baja de la plataforma por incumplir las normas.",
+        "Publicación inactiva",
+      );
     }
 
     if (publicacion?.arrendador?.id && Number(publicacion.arrendador.id) !== Number(req.user.id)) {

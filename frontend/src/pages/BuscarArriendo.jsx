@@ -1,10 +1,9 @@
-import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { useMemo, useState, useEffect } from 'react';
 import { usePublicaciones } from '../hooks/publicaciones/usePublicacion';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import ComparadorPublicacionesModal from '../components/ComparadorPublicacionesModal';
 import PublicacionCard from '../components/PublicacionCard';
-import { Search, ChevronDown, SlidersHorizontal, MapPin } from 'lucide-react';
+import { Search, SlidersHorizontal, Map, ChevronDown } from 'lucide-react';
 import PublicationMap from '@components/PublicationMap';
 import Swal from 'sweetalert2';
 import '@styles/buscarArriendos.css';
@@ -12,48 +11,6 @@ import '@styles/basePublicaciones.css';
 
 function getPublicacionId(publicacion) {
   return publicacion?.id_publicacion || publicacion?.id || publicacion?._id;
-}
-
-function FiltroDropdown({ open, anchorRef, align = 'left', className = '', children }) {
-  const [position, setPosition] = useState(null);
-
-  useLayoutEffect(() => {
-    if (!open || !anchorRef.current) {
-      setPosition(null);
-      return undefined;
-    }
-
-    const updatePosition = () => {
-      const rect = anchorRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom + 10,
-        left: align === 'right' ? undefined : rect.left,
-        right: align === 'right' ? window.innerWidth - rect.right : undefined,
-      });
-    };
-
-    updatePosition();
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
-
-    return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-    };
-  }, [open, anchorRef, align]);
-
-  if (!open || !position) return null;
-
-  return createPortal(
-    <div
-      className={`ba-dropdown ${className}`}
-      style={{ position: 'fixed', top: position.top, left: position.left, right: position.right }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {children}
-    </div>,
-    document.body,
-  );
 }
 
 const TIPOS_INMUEBLE = [
@@ -85,11 +42,7 @@ export default function BuscarArriendos() {
   const [comparadorAbierto, setComparadorAbierto] = useState(false);
   const [mostrarMapa, setMostrarMapa] = useState(false);
   const [filtrosAplicados, setFiltrosAplicados] = useState({});
-  const [dropdownAbierto, setDropdownAbierto] = useState(null);
-  const tipoBtnRef = useRef(null);
-  const precioBtnRef = useRef(null);
-  const serviciosBtnRef = useRef(null);
-  const ordenBtnRef = useRef(null);
+  const [filtrosVisibles, setFiltrosVisibles] = useState(false);
 
   const [filtros, setFiltros] = useState({
     titulo: "",
@@ -101,12 +54,6 @@ export default function BuscarArriendos() {
   });
 
   const publicacionesVisibles = useMemo(() => publicaciones, [publicaciones]);
-
-  const toggleDropdown = (nombre) => {
-    setDropdownAbierto((actual) => (actual === nombre ? null : nombre));
-  };
-
-  const cerrarDropdowns = () => setDropdownAbierto(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -187,13 +134,10 @@ export default function BuscarArriendos() {
     });
     setMostrarMapa(false);
     setFiltrosAplicados({});
-    cerrarDropdowns();
     cargarPublicaciones({});
   };
 
   const aplicarFiltros = async () => {
-    cerrarDropdowns();
-
     if (filtros.precioMin && filtros.precioMax) {
       const min = Number(filtros.precioMin);
       const max = Number(filtros.precioMax);
@@ -301,17 +245,6 @@ export default function BuscarArriendos() {
     return 0;
   };
 
-  const tipoLabel = filtros.tipoInmueble?.length === 1
-    ? TIPOS_INMUEBLE.find((t) => t.id === filtros.tipoInmueble[0])?.label
-    : 'Tipo de inmueble';
-
-  const precioLabel = (() => {
-    if (filtros.precioMin && filtros.precioMax) return `$${Number(filtros.precioMin).toLocaleString('es-CL')} - $${Number(filtros.precioMax).toLocaleString('es-CL')}`;
-    if (filtros.precioMin) return `Desde $${Number(filtros.precioMin).toLocaleString('es-CL')}`;
-    if (filtros.precioMax) return `Hasta $${Number(filtros.precioMax).toLocaleString('es-CL')}`;
-    return 'Precio';
-  })();
-
   const precioMinPorcentaje = ((Number(filtros.precioMin || PRECIO_MIN_RANGO) - PRECIO_MIN_RANGO) / (PRECIO_MAX_RANGO - PRECIO_MIN_RANGO)) * 100;
   const precioMaxPorcentaje = ((Number(filtros.precioMax || PRECIO_MAX_RANGO) - PRECIO_MIN_RANGO) / (PRECIO_MAX_RANGO - PRECIO_MIN_RANGO)) * 100;
 
@@ -329,249 +262,173 @@ export default function BuscarArriendos() {
         </div>
       </section>
 
-      {dropdownAbierto && (
-        <div className="ba-overlay" onClick={cerrarDropdowns} />
-      )}
-
-      <div className="ba-filter-bar">
-        <div className="ba-pill">
-          <Search size={16} color="#94a3b8" className="ba-pill-icon" />
-          <input
-            type="text"
-            name="titulo"
-            placeholder="Busca por título"
-            value={filtros.titulo}
-            onChange={handleInputChange}
-            className="ba-pill-input"
-          />
-        </div>
-        <div className="ba-dropdown-wrap">
+      <section className="ba-filters-panel">
+        <div className="ba-filters-header">
           <button
-            ref={tipoBtnRef}
             type="button"
-            onClick={() => toggleDropdown('tipo')}
-            className={`ba-pill-button ${filtros.tipoInmueble?.length > 0 ? 'ba-pill-button--active' : ''}`}
+            onClick={() => setFiltrosVisibles((prev) => !prev)}
+            className="ba-filters-toggle"
+            aria-expanded={filtrosVisibles}
           >
-            <span className="ba-pill-button-text">{tipoLabel}</span>
-            <span className="ba-pill-button-right">
-              {contarActivos('tipo') > 0 && <span className="ba-badge-count">{contarActivos('tipo')}</span>}
-              <ChevronDown size={16} className={`ba-chevron ${dropdownAbierto === 'tipo' ? 'ba-chevron--open' : ''}`} />
+            <span className="ba-filters-eyebrow">
+              Filtros de búsqueda
+              <ChevronDown size={16} className={`ba-filters-chevron${filtrosVisibles ? ' ba-filters-chevron--open' : ''}`} />
             </span>
+            <span className="ba-filters-subtitle">Ajusta los filtros que necesites y presiona Buscar.</span>
           </button>
+          <button type="button" onClick={limpiarFiltros} className="ba-filters-clear-button">
+            Limpiar filtros
+          </button>
+        </div>
 
-          <FiltroDropdown open={dropdownAbierto === 'tipo'} anchorRef={tipoBtnRef} className="ba-dropdown--w230">
-              <div className="ba-dropdown-list">
-                {TIPOS_INMUEBLE.map((tipo) => (
-                  <label key={tipo.id} className="ba-check-row">
+        {filtrosVisibles && (
+          <>
+            <div className="ba-filters-grid">
+              <div className="ba-filters-row-top">
+                <label className="ba-filter-field ba-filter-field--grow">
+                  <span className="ba-filter-label">Título</span>
+                  <div className="ba-filter-input-icon-wrap">
+                    <Search size={16} color="#94a3b8" />
                     <input
-                      type="checkbox"
-                      checked={filtros.tipoInmueble?.includes(tipo.id) || false}
-                      onChange={() => handleTipoInmuebleClick(tipo.id)}
-                      className="ba-checkbox"
+                      type="text"
+                      name="titulo"
+                      placeholder="Busca por título"
+                      value={filtros.titulo}
+                      onChange={handleInputChange}
+                      className="ba-filter-input ba-filter-input--icon"
                     />
-                    {tipo.label}
-                  </label>
-                ))}
-              </div>
-              <div className="ba-dropdown-footer">
-                <button
-                  type="button"
-                  onClick={() => setFiltros((prev) => ({ ...prev, tipoInmueble: [] }))}
-                  className="ba-link-button"
-                >
-                  Limpiar
-                </button>
-                <button type="button" onClick={cerrarDropdowns} className="ba-apply-button">
-                  Aplicar
-                </button>
-              </div>
-          </FiltroDropdown>
-        </div>
-        <div className="ba-dropdown-wrap">
-          <button
-            ref={precioBtnRef}
-            type="button"
-            onClick={() => toggleDropdown('precio')}
-            className={`ba-pill-button ${(filtros.precioMin || filtros.precioMax) ? 'ba-pill-button--active' : ''}`}
-          >
-            <span className="ba-pill-button-text">{precioLabel}</span>
-            <span className="ba-pill-button-right">
-              <ChevronDown size={16} className={`ba-chevron ${dropdownAbierto === 'precio' ? 'ba-chevron--open' : ''}`} />
-            </span>
-          </button>
-
-          <FiltroDropdown open={dropdownAbierto === 'precio'} anchorRef={precioBtnRef} className="ba-dropdown--w320">
-              <div className="ba-dropdown-body">
-                <div className="ba-price-inputs">
-                  <div className="ba-field-group">
-                    <span className="ba-dropdown-label">Mínimo</span>
-                    <div className="ba-price-input-wrap">
-                      <span className="ba-price-currency">$</span>
-                      <input
-                        type="number"
-                        min={0}
-                        step={PRECIO_PASO}
-                        value={filtros.precioMin}
-                        onChange={handlePrecioMinTextoChange}
-                        placeholder="0"
-                        className="ba-dropdown-input ba-price-input"
-                      />
-                    </div>
                   </div>
-                  <span className="ba-price-separator">—</span>
-                  <div className="ba-field-group">
-                    <span className="ba-dropdown-label">Máximo</span>
-                    <div className="ba-price-input-wrap">
-                      <span className="ba-price-currency">$</span>
-                      <input
-                        type="number"
-                        min={0}
-                        step={PRECIO_PASO}
-                        value={filtros.precioMax}
-                        onChange={handlePrecioMaxTextoChange}
-                        placeholder="Sin límite"
-                        className="ba-dropdown-input ba-price-input"
-                      />
-                    </div>
-                  </div>
-                </div>
+                </label>
 
-                <div className="ba-range-slider">
-                  <div className="ba-range-track" />
-                  <div
-                    className="ba-range-fill"
-                    style={{ left: `${precioMinPorcentaje}%`, right: `${100 - precioMaxPorcentaje}%` }}
-                  />
-                  <input
-                    type="range"
-                    min={PRECIO_MIN_RANGO}
-                    max={PRECIO_MAX_RANGO}
-                    step={PRECIO_PASO}
-                    value={filtros.precioMin || PRECIO_MIN_RANGO}
-                    onChange={handleRangoMinChange}
-                    className="ba-range-input"
-                  />
-                  <input
-                    type="range"
-                    min={PRECIO_MIN_RANGO}
-                    max={PRECIO_MAX_RANGO}
-                    step={PRECIO_PASO}
-                    value={filtros.precioMax || PRECIO_MAX_RANGO}
-                    onChange={handleRangoMaxChange}
-                    className="ba-range-input"
-                  />
-                </div>
-              </div>
-              <div className="ba-dropdown-footer">
-                <button
-                  type="button"
-                  onClick={() => setFiltros((prev) => ({ ...prev, precioMin: '', precioMax: '' }))}
-                  className="ba-link-button"
-                >
-                  Limpiar
-                </button>
-                <button type="button" onClick={cerrarDropdowns} className="ba-apply-button">
-                  Aplicar
-                </button>
-              </div>
-          </FiltroDropdown>
-        </div>
-        <div className="ba-dropdown-wrap">
-          <button
-            ref={serviciosBtnRef}
-            type="button"
-            onClick={() => toggleDropdown('servicios')}
-            className={`ba-pill-button ${filtros.servicios?.length > 0 ? 'ba-pill-button--active' : ''}`}
-          >
-            <span className="ba-pill-button-text">Servicios</span>
-            <span className="ba-pill-button-right">
-              {contarActivos('servicios') > 0 && <span className="ba-badge-count">{contarActivos('servicios')}</span>}
-              <ChevronDown size={16} className={`ba-chevron ${dropdownAbierto === 'servicios' ? 'ba-chevron--open' : ''}`} />
-            </span>
-          </button>
-
-          <FiltroDropdown open={dropdownAbierto === 'servicios'} anchorRef={serviciosBtnRef} className="ba-dropdown--w280">
-              <div className="ba-dropdown-list ba-dropdown-list--scroll">
-                {SERVICIOS_VALIDOS.map((servicio) => (
-                  <label key={servicio.id} className="ba-check-row">
-                    <input
-                      type="checkbox"
-                      checked={filtros.servicios?.includes(servicio.id)}
-                      onChange={() => handleServicioChange(servicio.id)}
-                      className="ba-checkbox"
-                    />
-                    {servicio.label}
-                  </label>
-                ))}
-              </div>
-              <div className="ba-dropdown-footer">
-                <button
-                  type="button"
-                  onClick={() => setFiltros((prev) => ({ ...prev, servicios: [] }))}
-                  className="ba-link-button"
-                >
-                  Limpiar
-                </button>
-                <button type="button" onClick={cerrarDropdowns} className="ba-apply-button">
-                  Aplicar
-                </button>
-              </div>
-          </FiltroDropdown>
-        </div>
-        <div className="ba-dropdown-wrap">
-          <button
-            ref={ordenBtnRef}
-            type="button"
-            onClick={() => toggleDropdown('orden')}
-            className={`ba-pill-button ${contarActivos('orden') > 0 ? 'ba-pill-button--active' : ''}`}
-          >
-            <SlidersHorizontal size={15} className="ba-pill-icon" />
-            <span className="ba-pill-button-text">Ordenar por</span>
-            <span className="ba-pill-button-right">
-              {contarActivos('orden') > 0 && <span className="ba-badge-count">{contarActivos('orden')}</span>}
-              <ChevronDown size={16} className={`ba-chevron ${dropdownAbierto === 'orden' ? 'ba-chevron--open' : ''}`} />
-            </span>
-          </button>
-
-          <FiltroDropdown open={dropdownAbierto === 'orden'} anchorRef={ordenBtnRef} align="right" className="ba-dropdown--w260">
-              <div className="ba-dropdown-body">
-                <div className="ba-field-group">
-                  <span className="ba-dropdown-label">Ordenar por</span>
+                <label className="ba-filter-field ba-filter-field--fixed">
+                  <span className="ba-filter-label">
+                    <SlidersHorizontal size={13} />
+                    Ordenar por
+                  </span>
                   <select
                     name="direccionOrden"
                     value={filtros.direccionOrden}
                     onChange={handleInputChange}
-                    className="ba-dropdown-input"
+                    className="ba-filter-input"
                   >
                     <option value="">Sin ordenar</option>
                     <option value="ASC">Precio: Menor a Mayor</option>
                     <option value="DESC">Precio: Mayor a Menor</option>
                   </select>
+                </label>
+              </div>
+
+              <div className="ba-filter-field">
+                <span className="ba-filter-label">
+                  Tipo de inmueble
+                  {contarActivos('tipo') > 0 && <span className="ba-badge-count">{contarActivos('tipo')}</span>}
+                </span>
+                <div className="ba-filter-chip-list">
+                  {TIPOS_INMUEBLE.map((tipo) => (
+                    <label key={tipo.id} className="ba-check-row">
+                      <input
+                        type="checkbox"
+                        checked={filtros.tipoInmueble?.includes(tipo.id) || false}
+                        onChange={() => handleTipoInmuebleClick(tipo.id)}
+                        className="ba-checkbox"
+                      />
+                      {tipo.label}
+                    </label>
+                  ))}
                 </div>
               </div>
-              <div className="ba-dropdown-footer">
-                <button
-                  type="button"
-                  onClick={() => setFiltros((prev) => ({ ...prev, direccionOrden: '' }))}
-                  className="ba-link-button"
-                >
-                  Limpiar
-                </button>
-                <button type="button" onClick={cerrarDropdowns} className="ba-apply-button">
-                  Aplicar
+
+              <div className="ba-filter-field">
+                <span className="ba-filter-label">
+                  Servicios
+                  {contarActivos('servicios') > 0 && <span className="ba-badge-count">{contarActivos('servicios')}</span>}
+                </span>
+                <div className="ba-filter-chip-list">
+                  {SERVICIOS_VALIDOS.map((servicio) => (
+                    <label key={servicio.id} className="ba-check-row">
+                      <input
+                        type="checkbox"
+                        checked={filtros.servicios?.includes(servicio.id)}
+                        onChange={() => handleServicioChange(servicio.id)}
+                        className="ba-checkbox"
+                      />
+                      {servicio.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ba-filters-row-bottom">
+                <div className="ba-filter-field">
+                  <span className="ba-filter-label">
+                    Precio mensual
+                    {contarActivos('precio') > 0 && <span className="ba-badge-count">{contarActivos('precio')}</span>}
+                  </span>
+                  <div className="ba-filter-price-box">
+                    <div className="ba-price-inputs">
+                      <div className="ba-price-input-wrap">
+                        <span className="ba-price-currency">$</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={PRECIO_PASO}
+                          value={filtros.precioMin}
+                          onChange={handlePrecioMinTextoChange}
+                          placeholder="Mínimo"
+                          className="ba-price-input"
+                        />
+                      </div>
+                      <span className="ba-price-separator">—</span>
+                      <div className="ba-price-input-wrap">
+                        <span className="ba-price-currency">$</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={PRECIO_PASO}
+                          value={filtros.precioMax}
+                          onChange={handlePrecioMaxTextoChange}
+                          placeholder="Máximo"
+                          className="ba-price-input"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="ba-range-slider">
+                      <div className="ba-range-track" />
+                      <div
+                        className="ba-range-fill"
+                        style={{ left: `${precioMinPorcentaje}%`, right: `${100 - precioMaxPorcentaje}%` }}
+                      />
+                      <input
+                        type="range"
+                        min={PRECIO_MIN_RANGO}
+                        max={PRECIO_MAX_RANGO}
+                        step={PRECIO_PASO}
+                        value={filtros.precioMin || PRECIO_MIN_RANGO}
+                        onChange={handleRangoMinChange}
+                        className="ba-range-input"
+                      />
+                      <input
+                        type="range"
+                        min={PRECIO_MIN_RANGO}
+                        max={PRECIO_MAX_RANGO}
+                        step={PRECIO_PASO}
+                        value={filtros.precioMax || PRECIO_MAX_RANGO}
+                        onChange={handleRangoMaxChange}
+                        className="ba-range-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button type="button" onClick={aplicarFiltros} className="ba-search-button">
+                  Buscar
                 </button>
               </div>
-          </FiltroDropdown>
-        </div>
-
-        <button type="button" onClick={limpiarFiltros} className="ba-clear-all-button">
-          Limpiar filtros
-        </button>
-
-        <button type="button" onClick={aplicarFiltros} className="ba-search-button">
-          Buscar
-        </button>
-      </div>
+            </div>
+          </>
+        )}
+      </section>
 
       <div className="ba-toolbar">
         <button
@@ -579,7 +436,7 @@ export default function BuscarArriendos() {
           onClick={() => setMostrarMapa((prev) => !prev)}
           className={`map-toggle-button${mostrarMapa ? ' map-toggle-button--active' : ''}`}
         >
-          <MapPin size={16} />
+          <Map size={16} />
           {mostrarMapa ? 'Ocultar mapa' : 'Ver en el mapa'}
         </button>
 

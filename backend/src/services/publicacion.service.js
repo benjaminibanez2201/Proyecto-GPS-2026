@@ -165,7 +165,6 @@ export async function getPublicacionDetalleService(id) {
         "arrendador.reviewsCount",
       ])
       .where("publicacion.id = :id", { id: parseInt(id) })
-      .andWhere("publicacion.estado IN (:...estados)", { estados: ["activa", "disponible", "arrendada"] })
       .getOne();
 
     if (!publicacion) {

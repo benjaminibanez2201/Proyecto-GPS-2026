@@ -1,7 +1,8 @@
 "use strict";
 import { AppDataSource } from "../config/configDb.js";
-import FavoritoSchema from "../entity/favorito.entity.js"; 
+import FavoritoSchema from "../entity/favorito.entity.js";
 import PublicacionSchema from "../entity/publicacion.entity.js";
+import RentalSchema from "../entity/rental.entity.js";
 
 export async function createFavoritoService(estudianteId, publicacionId) {
   try {
@@ -81,7 +82,15 @@ export async function getFavoritosService(estudianteId) {
 
     const favoritos = await favoritoRepository.createQueryBuilder("favorito")
       .innerJoinAndSelect("favorito.publicacion", "publicacion")
+      .leftJoin(
+        RentalSchema,
+        "arriendo",
+        "arriendo.publicacionId = publicacion.id AND arriendo.estudianteId = :estudianteId AND arriendo.status = :statusArrendado",
+        { estudianteId, statusArrendado: "COMPLETED" },
+      )
       .where("favorito.estudiante_id = :estudianteId", { estudianteId })
+      .andWhere("publicacion.estado != :estadoInactiva", { estadoInactiva: "inactiva" })
+      .andWhere("(publicacion.estado != :estadoArrendada OR arriendo.id IS NOT NULL)", { estadoArrendada: "arrendada" })
       .orderBy("favorito.createdAt", "DESC")
       .select([
         "favorito.id",

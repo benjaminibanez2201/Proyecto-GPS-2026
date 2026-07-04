@@ -44,7 +44,7 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
       setError('');
 
       const responses = await Promise.all(
-        publicaciones.map((publicacion) => getPublicacionPorId(getPublicacionId(publicacion))),
+        publicaciones.map((publicacion) => getPublicacionPorId(publicacion.publicId)),
       );
 
       if (!isMounted) return;
