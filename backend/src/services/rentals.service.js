@@ -233,7 +233,10 @@ export async function confirmarArriendoServicio(arriendoId, userId) {
     const publicacion = await repositorioPublicacion.findOne({ where: { id: Number(arriendo.publicacionId) } });
     if (!publicacion) return [null, "Publicación no encontrada"];
     if (publicacion.estado === "arrendada") {
-      await repositorioArriendo.update({ id: arriendo.id }, { status: "COMPLETED", completedAt: arriendo.completedAt || new Date() });
+      await repositorioArriendo.update(
+        { id: arriendo.id },
+        { status: "COMPLETED", completedAt: arriendo.completedAt || new Date() },
+      );
       return [arriendo, null];
     }
 

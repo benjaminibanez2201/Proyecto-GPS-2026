@@ -23,7 +23,7 @@ export const auditoriaQueryValidation = Joi.object({
     }),
   fechaHasta: Joi.date()
     .iso()
-    .min(Joi.ref('fechaDesde'))
+    .min(Joi.ref("fechaDesde"))
     .optional()
     .messages({
       "date.base": "La fecha hasta debe ser una fecha válida.",

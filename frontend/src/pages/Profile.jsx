@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -11,7 +11,7 @@ import {
 import { forgotPassword } from '@services/auth.service.js';
 import { useAuth } from '@context/AuthContext';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
-import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight, FlagTriangleRight, Image, GraduationCap, BookOpen, Mail, Phone } from 'lucide-react';
+import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight, FlagTriangleRight, GraduationCap, BookOpen, Mail, Phone } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const accent = '#0f766e';
@@ -28,10 +28,6 @@ const Profile = () => {
   const [fotoPreview, setFotoPreview] = useState(null);
   const [isSendingPasswordResetEmail, setIsSendingPasswordResetEmail] = useState(false);
 
-
-  useEffect(() => {
-    fetchProfile();
-  }, []);
 
   useEffect(() => {
     trigger('confirmEmail');
@@ -51,7 +47,7 @@ const Profile = () => {
     };
   }, [fotoSeleccionada]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     const data = await getProfile();
     if (data) {
       setProfileData(data);
@@ -70,7 +66,11 @@ const Profile = () => {
         }
       }
     }
-  };
+  }, [setValue]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const onSubmit = async (data) => {
     const filteredData = Object.fromEntries(
@@ -156,7 +156,7 @@ const Profile = () => {
           confirmButtonColor: accent 
         });
       }
-    } catch (err) {
+    } catch {
       Swal.fire({ icon: 'error', title: 'Error de Red', text: 'No se pudo conectar con el servidor.', confirmButtonColor: accent });
     };
   };
@@ -198,7 +198,7 @@ const Profile = () => {
         } else {
           Swal.fire({ icon: 'error', title: 'Error', text: payload?.details || payload?.message || 'No se pudo enviar el enlace de restablecimiento.', confirmButtonColor: accent });
         }
-      } catch (error) {
+      } catch {
         Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo enviar el enlace de restablecimiento.', confirmButtonColor: accent });
       } finally {
         setIsSendingPasswordResetEmail(false);
@@ -404,7 +404,7 @@ const Profile = () => {
                         }
                         if (field === 'telefono') {
                           return {
-                            pattern: { value: /^\+?[\d\s\-]{7,20}$/, message: 'Formato de teléfono inválido' },
+                            pattern: { value: /^\+?[\d\s-]{7,20}$/, message: 'Formato de teléfono inválido' },
                           };
                         }
                         if (field === 'email') {

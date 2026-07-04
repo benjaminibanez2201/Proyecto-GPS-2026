@@ -91,7 +91,7 @@ const AdminReportes = () => {
 
     if (!isConfirmed) return;
 
-    const [_, err] = await resolverPublicacionReportada(item.publicacion.id, { accion, observacion });
+    const [, err] = await resolverPublicacionReportada(item.publicacion.id, { accion, observacion });
     if (err) {
       Swal.fire({ icon: 'error', title: 'No se pudo resolver', text: err, confirmButtonColor: accent });
       return;

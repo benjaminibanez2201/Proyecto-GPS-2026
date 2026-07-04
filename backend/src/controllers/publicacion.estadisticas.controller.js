@@ -18,8 +18,8 @@ export async function obtenerEstadisticasPublicacion(req, res) {
     }
 
     if (
-      error === "No autorizado para consultar las estadísticas de esta publicación" ||
-      error === "Solo un arrendador puede consultar estas estadísticas"
+      error === "No autorizado para consultar las estadísticas de esta publicación"
+      || error === "Solo un arrendador puede consultar estas estadísticas"
     ) {
       return handleErrorClient(res, 403, error);
     }

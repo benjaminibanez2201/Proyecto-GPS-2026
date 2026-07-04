@@ -68,7 +68,7 @@ function useTable({ data, columns, filter, filters, dataToFilter, initialSortNam
                 setTable(null);
             };
         }
-    }, []);
+    }, [columns, initialSortName, onSelectionChange]);
 
     useEffect(() => {
         if (table && isTableBuilt) {

@@ -192,4 +192,10 @@ export async function resolverReporte(id_publicacion, administradorId, accion, o
   }
 }
 
-export default { crearReporte, listarPublicacionesReportadas, listarReportesDeUsuario, obtenerDetalleReporte, resolverReporte };
+export default {
+  crearReporte,
+  listarPublicacionesReportadas,
+  listarReportesDeUsuario,
+  obtenerDetalleReporte,
+  resolverReporte,
+};

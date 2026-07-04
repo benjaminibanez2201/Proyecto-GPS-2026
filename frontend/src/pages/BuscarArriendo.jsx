@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useCallback, useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { usePublicaciones } from '../hooks/publicaciones/usePublicacion';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
@@ -106,7 +106,7 @@ export default function BuscarArriendos() {
     setDropdownAbierto((actual) => (actual === nombre ? null : nombre));
   };
 
-  const cerrarDropdowns = () => setDropdownAbierto(null);
+  const cerrarDropdowns = useCallback(() => setDropdownAbierto(null), []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -164,19 +164,7 @@ export default function BuscarArriendos() {
     });
   };
 
-  useEffect(() => {
-    if (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al aplicar filtros',
-        text: error.message || 'Ocurrió un problema al aplicar los filtros. Se restablecerán los valores por defecto.',
-        confirmButtonColor: '#008080',
-      });
-      limpiarFiltros();
-    }
-  }, [error]);
-
-  const limpiarFiltros = () => {
+  const limpiarFiltros = useCallback(() => {
     setFiltros({
       titulo: "",
       tipoInmueble: [],
@@ -189,7 +177,19 @@ export default function BuscarArriendos() {
     setFiltrosAplicados({});
     cerrarDropdowns();
     cargarPublicaciones({});
-  };
+  }, [cargarPublicaciones, cerrarDropdowns]);
+
+  useEffect(() => {
+    if (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al aplicar filtros',
+        text: error.message || 'Ocurrió un problema al aplicar los filtros. Se restablecerán los valores por defecto.',
+        confirmButtonColor: '#008080',
+      });
+      limpiarFiltros();
+    }
+  }, [error, limpiarFiltros]);
 
   const aplicarFiltros = async () => {
     cerrarDropdowns();
@@ -241,7 +241,7 @@ export default function BuscarArriendos() {
 
       setFiltrosAplicados(parametrosConsulta);
       await cargarPublicaciones({ ...parametrosConsulta, pagina: 1 });
-    } catch (err) {
+    } catch {
       Swal.fire({
         icon: 'error',
         title: 'Error al aplicar filtros',

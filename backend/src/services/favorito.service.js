@@ -36,8 +36,8 @@ export async function createFavoritoService(estudianteId, publicacionId) {
     await publicacionRepository
       .createQueryBuilder()
       .update(PublicacionSchema)
-      .set({ contadorFavoritos: () => '"contadorFavoritos" + 1' })
-      .where('id = :id', { id: parseInt(publicacionId) })
+      .set({ contadorFavoritos: () => "\"contadorFavoritos\" + 1" })
+      .where("id = :id", { id: parseInt(publicacionId) })
       .execute();
 
     return [nuevoFavorito, null];
@@ -63,8 +63,8 @@ export async function deleteFavoritoService(estudianteId, publicacionId) {
     await AppDataSource.getRepository(PublicacionSchema)
       .createQueryBuilder()
       .update(PublicacionSchema)
-      .set({ contadorFavoritos: () => 'GREATEST("contadorFavoritos" - 1, 0)' })
-      .where('id = :id', { id: parseInt(publicacionId) })
+      .set({ contadorFavoritos: () => "GREATEST(\"contadorFavoritos\" - 1, 0)" })
+      .where("id = :id", { id: parseInt(publicacionId) })
       .execute();
 
     return [true, null];

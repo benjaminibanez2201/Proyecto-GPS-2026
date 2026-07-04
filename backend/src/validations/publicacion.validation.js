@@ -83,7 +83,7 @@ export const publicacionBodyValidation = Joi.object({
   reglasConvivencia: Joi.string()
     .allow("")
     .max(1000)
-    .allow('')
+    .allow("")
     .optional()
     .messages({
       "string.max": "Las reglas de convivencia no pueden superar los 1000 caracteres.",
@@ -92,7 +92,7 @@ export const publicacionBodyValidation = Joi.object({
     .allow("")
     .max(1000)
     .optional()
-    .allow('')
+    .allow("")
     .messages({
       "string.max": "Las reglas de convivencia no pueden superar los 1000 caracteres.",
     }),
@@ -264,7 +264,7 @@ export const publicacionUpdateValidation = Joi.object({
   }),
   reglasConvivencia: Joi.string()
     .max(1000)
-    .allow('')
+    .allow("")
     .optional()
     .messages({
     "string.max": "Las reglas no pueden superar los 1000 caracteres.",

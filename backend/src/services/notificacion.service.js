@@ -129,7 +129,12 @@ export async function marcarNotificacionesPorTargetLeidasService(userId, targetT
             .createQueryBuilder()
             .update()
             .set({ leida: true, readAt: () => "CURRENT_TIMESTAMP" })
-            .where("\"userId\" = :userId AND \"targetType\" = :targetType AND \"targetId\" = :targetId AND leida = false", {
+            .where([
+                "\"userId\" = :userId",
+                "\"targetType\" = :targetType",
+                "\"targetId\" = :targetId",
+                "leida = false",
+            ].join(" AND "), {
                 userId,
                 targetType,
                 targetId,
