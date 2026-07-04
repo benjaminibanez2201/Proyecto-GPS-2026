@@ -24,7 +24,7 @@ const ArriendoEsquema = new EntitySchema({
     },
     status: {
       type: "enum",
-      enum: ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"],
+      enum: ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "FINISHED"],
       default: "PENDING",
     },
     confirmedByArrendador: {
@@ -41,6 +41,10 @@ const ArriendoEsquema = new EntitySchema({
       nullable: false,
     },
     completedAt: {
+      type: "timestamp with time zone",
+      nullable: true,
+    },
+    finishedAt: {
       type: "timestamp with time zone",
       nullable: true,
     },
