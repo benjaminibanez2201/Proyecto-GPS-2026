@@ -66,6 +66,7 @@ export default function DetallePublicacion() {
   const [fotoActivaIndex, setFotoActivaIndex] = useState(0);
   const [lightboxAbierto, setLightboxAbierto] = useState(false);
   const esArrendador = user?.rol === 'arrendador' || user?.rol === 'Arrendador';
+  const esAdmin = user?.rol === 'admin' || user?.rol === 'administrador';
   const esAutorPublicacion = String(publicacion?.arrendador?.id) === String(user?.id);
 
   const idPublicacion = publicacion?.id || publicacion?._id;
@@ -267,8 +268,8 @@ export default function DetallePublicacion() {
             </>
           )}
 
-          {!esArrendador && (
-            <button 
+          {!esArrendador && !esAdmin && (
+            <button
               type="button"
               onClick={toggleFavorito}
               disabled={procesando}
@@ -388,7 +389,7 @@ export default function DetallePublicacion() {
                 )}
               </ul>
 
-              {!esArrendador && (
+              {!esArrendador && !esAdmin && (
                 <button
                   type="button"
                   className="confirm-btn"
@@ -399,7 +400,7 @@ export default function DetallePublicacion() {
                 </button>
               )}
 
-              {!esAutorPublicacion && (
+              {!esAutorPublicacion && !esAdmin && (
                 <button
                   type="button"
                   onClick={() => setMostrarModalReporte(true)}

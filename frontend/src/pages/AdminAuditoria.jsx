@@ -149,7 +149,6 @@ const AdminAuditoria = () => {
       <section style={styles.contentCard}>
         <header style={styles.cardHeader}>
           <div>
-            <p style={{ ...styles.cardEyebrow, color: '#008080' }}>Administración</p>
             <h3 style={styles.cardTitle}>Registros de auditoría</h3>
             <p style={styles.cardSubtitle}>
               Filtra por administrador responsable, tipo de acción o rango de fechas.
