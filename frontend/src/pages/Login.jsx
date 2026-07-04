@@ -87,7 +87,7 @@ const Login = () => {
                 <section
                     style={{
                         flex: 1,
-                        backgroundColor: '#008080',
+                        background: 'linear-gradient(145deg, #008080 0%, #006b6b 54%, #004d40 100%)',
                         color: '#ffffff',
                         display: 'flex',
                         flexDirection: 'column',
