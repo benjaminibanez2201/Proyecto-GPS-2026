@@ -14,12 +14,14 @@ import {
   FlagTriangleRight,
   ChevronLeft,
   ChevronRight,
+  HelpCircle,
 } from 'lucide-react';
 import PageTransition from '@components/PageTransition';
 import { useAuth, AuthProvider } from '@context/AuthContext';
 import { obtenerCantidadNotificacionesNoLeidas } from '@services/notificacion.service.js';
 import { obtenerConversaciones } from '@services/mensaje.service.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
+import TutorialEstudiante from '@components/TutorialEstudiante.jsx';
 import slidebaar from '../assets/slidebaar.png';
 import miLogo from '../assets/miLogo.png';
 
@@ -42,6 +44,7 @@ function PageRoot() {
   const [hoveredItem, setHoveredItem] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const colores = {
     principal: '#008080',
@@ -245,6 +248,22 @@ function PageRoot() {
     refreshUnreadMessagesCount();
   }, [refreshUnreadCount, refreshUnreadMessagesCount, location.pathname]);
 
+  useEffect(() => {
+    if (!user?.id || normalizedRole !== 'estudiante') return;
+
+    const seenKey = `tutorialVisto_estudiante_${user.id}`;
+    if (!localStorage.getItem(seenKey)) {
+      setShowTutorial(true);
+    }
+  }, [user?.id, normalizedRole]);
+
+  const closeTutorial = () => {
+    if (user?.id) {
+      localStorage.setItem(`tutorialVisto_estudiante_${user.id}`, '1');
+    }
+    setShowTutorial(false);
+  };
+
   const notificationsItem = { to: '/notificaciones' };
   const isNotificationsCurrent = isSidebarItemCurrent(notificationsItem);
 
@@ -377,6 +396,19 @@ function PageRoot() {
             {!isSidebarCollapsed && <span>Centro de Notificaciones</span>}
           </NavLink>
 
+          {normalizedRole === 'estudiante' && (
+            <button
+              type="button"
+              onClick={() => setShowTutorial(true)}
+              onMouseEnter={() => setHoveredItem('tutorial')}
+              onMouseLeave={() => setHoveredItem(null)}
+              style={getSidebarItemStyle({ hovered: hoveredItem === 'tutorial' })}
+            >
+              <HelpCircle size={20} strokeWidth={2} />
+              {!isSidebarCollapsed && <span>Ver tutorial</span>}
+            </button>
+          )}
+
           <button
             onClick={handleLogout}
             onMouseEnter={() => setHoveredItem('logout')}
@@ -435,6 +467,8 @@ function PageRoot() {
           <PageTransition>{outlet}</PageTransition>
         </main>
       </div>
+
+      <TutorialEstudiante open={showTutorial} onClose={closeTutorial} />
     </div>
   );
 }

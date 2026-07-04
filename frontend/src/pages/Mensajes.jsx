@@ -594,9 +594,6 @@ export default function Mensajes() {
                         <CheckCircle size={18} /> Arriendo aceptado
                       </button>
                     )}
-                    <button type="button" className="mensajes-icon-btn" onClick={handleRefresh}>
-                      <RefreshCw size={18} />
-                    </button>
                   </div>
                 </div>
 
