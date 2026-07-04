@@ -131,11 +131,16 @@ export const publicacionQueryValidation = Joi.object({
       "number.base": "El precio máximo debe ser un número.",
       "number.positive": "El precio máximo debe ser positivo."
     }),
-  tipoInmueble: Joi.string()
-    .valid("departamento", "casa", "pieza", "estudio")
+  tipoInmueble: Joi.alternatives()
+    .try(
+      Joi.array().items(
+        Joi.string().valid("departamento", "casa", "pieza", "estudio")
+      ),
+      Joi.string()
+    )
     .optional()
     .messages({
-      "any.only": "El tipo de inmueble a buscar debe ser: departamento, casa, pieza o estudio."
+      "alternatives.match": "El tipo de inmueble a buscar debe ser: departamento, casa, pieza o estudio."
     }),
   distanciaCampus: Joi.number()
     .integer()
