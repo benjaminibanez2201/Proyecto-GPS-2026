@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BadgeCheck, Eye, FlagTriangleRight, RotateCcw, ShieldCheck, ShieldOff } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
@@ -44,6 +45,7 @@ const formatDate = (value) => {
 
 const AdminReportes = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [reportes, setReportes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -91,7 +93,7 @@ const AdminReportes = () => {
 
     if (!isConfirmed) return;
 
-    const [_, err] = await resolverPublicacionReportada(item.publicacion.id, { accion, observacion });
+    const [_, err] = await resolverPublicacionReportada(item.publicacion.publicId, { accion, observacion });
     if (err) {
       Swal.fire({ icon: 'error', title: 'No se pudo resolver', text: err, confirmButtonColor: accent });
       return;
@@ -141,7 +143,7 @@ const AdminReportes = () => {
             const publicacion = item.publicacion || {};
             const reportesDetalle = Array.isArray(item.reportes) ? item.reportes : [];
             return (
-              <article key={publicacion.id} style={styles.reportCard}>
+              <article key={publicacion.publicId} style={styles.reportCard}>
                 <div style={styles.reportHeader}>
                   <div>
                     <div style={styles.badgeRow}>
@@ -170,7 +172,7 @@ const AdminReportes = () => {
 
                 <div style={styles.reportesDetalleList}>
                   {reportesDetalle.map((reporte, index) => (
-                    <article key={`${publicacion.id}-${reporte.id || index}`} style={styles.reporteDetalleCard}>
+                    <article key={`${publicacion.publicId}-${reporte.id || index}`} style={styles.reporteDetalleCard}>
                       <div style={styles.reporteDetalleHeader}>
                         <strong>Reporte {index + 1}</strong>
                         <span style={styles.reporteDetalleDate}>{formatDate(reporte.createdAt)}</span>
@@ -192,6 +194,13 @@ const AdminReportes = () => {
                 </div>
 
                 <div style={styles.actions}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/publicacion/${publicacion.publicId}`)}
+                    style={styles.secondaryButton}
+                  >
+                    <Eye size={16} /> Ver publicación
+                  </button>
                   <button type="button" onClick={() => resolver(item, 'mantener')} style={styles.actionButton}>
                     <ShieldCheck size={16} /> Mantener
                   </button>

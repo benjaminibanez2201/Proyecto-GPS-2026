@@ -34,9 +34,30 @@ export async function listarPublicacionesReportadas() {
   try {
     const repoReport = AppDataSource.getRepository(ReportePublicacion);
 
-    const pendientes = await repoReport.find({ 
-      where: { estado: "pendiente" }, 
-      relations: ["publicacion", "reporter", "publicacion.arrendador"] });
+    const pendientes = await repoReport.find({
+      where: { estado: "pendiente" },
+      relations: ["publicacion", "reporter", "publicacion.arrendador"],
+      select: {
+        id: true,
+        motivo: true,
+        estado: true,
+        accion: true,
+        createdAt: true,
+        reporter: { id: true, nombreCompleto: true, email: true },
+        publicacion: {
+          id: true,
+          titulo: true,
+          tipoInmueble: true,
+          precioMensual: true,
+          ubicacion: true,
+          comuna: true,
+          fotos: true,
+          estado: true,
+          createdAt: true,
+          arrendador: { id: true, nombreCompleto: true, email: true },
+        },
+      },
+    });
 
     // Agrupar por publicación
     const map = new Map();
@@ -79,6 +100,26 @@ export async function listarReportesDeUsuario(reporterId) {
       where: { reporter: { id: reporterId } },
       relations: ["publicacion", "publicacion.arrendador"],
       order: { createdAt: "DESC" },
+      select: {
+        id: true,
+        motivo: true,
+        estado: true,
+        accion: true,
+        createdAt: true,
+        resolvedAt: true,
+        publicacion: {
+          id: true,
+          titulo: true,
+          tipoInmueble: true,
+          precioMensual: true,
+          ubicacion: true,
+          comuna: true,
+          fotos: true,
+          estado: true,
+          createdAt: true,
+          arrendador: { id: true, nombreCompleto: true, email: true },
+        },
+      },
     });
 
     const result = reportes.map((reporte) => ({
@@ -102,15 +143,46 @@ export async function obtenerDetalleReporte(reportId) {
   try {
     const repoReport = AppDataSource.getRepository(ReportePublicacion);
 
-    const reporte = await repoReport.findOne({ 
-      where: { id: reportId }, 
-      relations: ["publicacion", "reporter", "publicacion.arrendador"] });
+    const reporte = await repoReport.findOne({
+      where: { id: reportId },
+      relations: ["publicacion", "reporter", "publicacion.arrendador"],
+      select: {
+        id: true,
+        motivo: true,
+        estado: true,
+        accion: true,
+        createdAt: true,
+        resolvedAt: true,
+        reporter: { id: true, nombreCompleto: true, email: true },
+        publicacion: {
+          id: true,
+          titulo: true,
+          tipoInmueble: true,
+          precioMensual: true,
+          ubicacion: true,
+          comuna: true,
+          fotos: true,
+          estado: true,
+          createdAt: true,
+          arrendador: { id: true, nombreCompleto: true, email: true },
+        },
+      },
+    });
     if (!reporte) return [null, "Reporte no encontrado"];
 
     const repoReportes = AppDataSource.getRepository(ReportePublicacion);
-    const asociados = await repoReportes.find({ 
-      where: { publicacion: { id: reporte.publicacion.id } }, 
-      relations: ["reporter"] });
+    const asociados = await repoReportes.find({
+      where: { publicacion: { id: reporte.publicacion.id } },
+      relations: ["reporter"],
+      select: {
+        id: true,
+        motivo: true,
+        estado: true,
+        accion: true,
+        createdAt: true,
+        reporter: { id: true, nombreCompleto: true, email: true },
+      },
+    });
 
     return [{ reporte, asociados }, null];
   } catch (error) {
