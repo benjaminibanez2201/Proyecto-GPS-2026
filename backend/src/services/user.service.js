@@ -405,6 +405,16 @@ export async function updateProfileService(id, body) {
 
     if (!userFound) return [null, "Usuario no encontrado"];
 
+    if ((body.email && body.email !== userFound.email) || body.newPassword) {
+      if (!body.passwordActual) {
+        return [null, "Se requiere la contraseña actual para cambiar las credenciales"];
+      }
+      const isMatch = await comparePassword(body.passwordActual, userFound.password);
+      if (!isMatch) return [null, "Contraseña incorrecta"];
+    }
+
+    delete body.passwordActual;
+
     if (body.email && body.email !== userFound.email) {
       const existingEmail = await userRepository.findOne({ where: { email: body.email } });
       if (existingEmail && existingEmail.id !== userFound.id) {

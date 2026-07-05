@@ -26,6 +26,23 @@ const servicioOptions = [
   { id: 'lavadora', label: 'Lavadora' },
 ];
 
+const MAX_FOTOS = 10;
+
+const getRawDigits = (value) => (value || '').replace(/\D/g, '');
+
+const attachPriceFormatting = (input) => {
+  if (!input) return;
+  input.addEventListener('input', () => {
+    const raw = getRawDigits(input.value);
+    input.value = raw ? Number(raw).toLocaleString('es-CL') : '';
+  });
+};
+
+const setFieldError = (input, errorEl, message) => {
+  if (input) input.classList.toggle('pub-input-error', Boolean(message));
+  if (errorEl) errorEl.textContent = message || '';
+};
+
 const MisPublicaciones = () => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
@@ -122,7 +139,6 @@ const MisPublicaciones = () => {
     const initialPreviewUrl = (pub.fotos && pub.fotos[0]) ? resolveFileUrl(pub.fotos[0]) : '';
 
     await Swal.fire({
-      title: 'Editar Publicación',
       html: `
         <style>
           .pub-label { font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 6px; display: block; }
@@ -130,101 +146,162 @@ const MisPublicaciones = () => {
           .pub-input { padding: 11px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%; transition: border-color 0.2s; font-family: inherit; }
           .pub-input:focus { border-color: #0f766e; background-color: #fff; }
           .pub-col { display: flex; flex-direction: column; gap: 14px; }
-          .pub-full { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px; margin-top: 4px; }
-          .pub-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
-          .pub-btn-cancel { padding: 12px 24px; border-radius: 12px; background-color: #f1f5f9; color: #64748b; font-weight: 600; font-size: 14px; border: 1.5px solid #e2e8f0; cursor: pointer; transition: background 0.15s; }
-          .pub-btn-cancel:hover { background: #e2e8f0; }
+          .pub-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+          .pub-section { display: flex; flex-direction: column; gap: 14px; padding-top: 18px; margin-top: 4px; border-top: 1px solid #eef2f6; }
+          .pub-section:first-child { padding-top: 0; margin-top: 0; border-top: none; }
+          .pub-section-title { margin: 0; font-size: 12px; font-weight: 800; color: #0f766e; text-transform: uppercase; letter-spacing: 0.06em; }
+          .pub-full { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; padding-top: 18px; border-top: 1px solid #eef2f6; }
+          .pub-preview-box { width: 100%; height: 230px; border-radius: 16px; overflow: hidden; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; position: relative; }
+          .pub-preview-placeholder { color: #94a3b8; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 20px; }
+          .pub-upload-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(15,118,110,0.3); transition: transform 0.15s, box-shadow 0.15s; width: fit-content; align-self: flex-start; }
+          .pub-upload-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(15,118,110,0.4); }
+          .pub-services { display: flex; flex-wrap: wrap; gap: 8px; }
+          .pub-service-label { position: relative; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #334155; cursor: pointer; padding: 8px 14px; border-radius: 999px; border: 1.5px solid #e2e8f0; background: #fff; transition: all 0.15s ease; font-weight: 600; user-select: none; }
+          .pub-service-label:hover { border-color: #0f766e; background: #f0fdfa; }
+          .pub-service-label input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+          .pub-service-label .pub-service-check { display: none; font-weight: 800; }
+          .pub-service-label:has(input:checked) { background: #0f766e; border-color: #0f766e; color: #fff; box-shadow: 0 3px 10px rgba(15,118,110,0.3); }
+          .pub-service-label:has(input:checked) .pub-service-check { display: inline; }
+          .pub-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; padding-top: 18px; border-top: 1.5px solid #e2e8f0; }
+          .pub-footer-hint { font-size: 12px; color: #94a3b8; }
+          .pub-actions { display: flex; gap: 12px; }
+          .pub-btn-cancel { padding: 12px 22px; border-radius: 12px; background-color: transparent; color: #64748b; font-weight: 600; font-size: 14px; border: 1.5px solid #e2e8f0; cursor: pointer; transition: all 0.15s; }
+          .pub-btn-cancel:hover { background: #f1f5f9; border-color: #cbd5e1; }
           .pub-btn-submit { padding: 12px 28px; border-radius: 12px; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-weight: 700; font-size: 14px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(15,118,110,0.3); transition: transform 0.15s, box-shadow 0.15s; }
           .pub-btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(15,118,110,0.4); }
+          .pub-header { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+          .pub-header-icon { width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+          .pub-header-title { margin: 0 0 2px; font-size: 20px; font-weight: 800; color: #0f172a; text-align: left; }
+          .pub-header-subtitle { margin: 0; font-size: 13px; color: #64748b; text-align: left; }
+          .pub-input-error { border-color: #dc2626 !important; background-color: #fef2f2 !important; }
+          .pub-error-text { display: block; color: #dc2626; font-size: 11px; margin-top: 4px; font-weight: 600; }
+          .pub-error-text:empty { display: none; margin-top: 0; }
+          .pub-photo-counter { font-size: 11px; color: #94a3b8; font-weight: 700; }
+          .pub-photo-counter.pub-counter-warn { color: #dc2626; }
         </style>
 
         <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 28px; text-align: left; padding: 10px 5px; font-family: 'Segoe UI', Roboto, sans-serif; max-width: 850px;">
 
+          <div class="pub-header">
+            <div class="pub-header-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
+            </div>
+            <div>
+              <h2 class="pub-header-title">Editar publicación</h2>
+              <p class="pub-header-subtitle">Actualiza los datos de tu propiedad.</p>
+            </div>
+          </div>
+
           <div style="display: flex; flex-direction: column; gap: 12px;">
-            <p style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Vista previa de la imagen</p>
-            <div style="width: 100%; height: 230px; border-radius: 16px; overflow: hidden; background-color: #f1f5f9; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; position: relative;">
-              <img id="swal-edit-preview" src="${initialPreviewUrl}" style="width: 100%; height: 100%; object-fit: cover; display: ${initialPreviewUrl ? 'block' : 'none'};" />
-              <div id="swal-edit-preview-placeholder" style="display: ${initialPreviewUrl ? 'none' : 'flex'}; color: #94a3b8; align-items: center; justify-content: center; text-align: center; padding: 16px; flex-direction: column;">
-                <span style="display: block; margin-top: 6px; font-size: 12px; color: #64748b;">La primera imagen será la portada de la publicación.</span>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <p class="pub-label" style="margin-bottom: 0;">Vista previa de la imagen</p>
+              <span id="swal-edit-photo-counter" class="pub-photo-counter">0/${MAX_FOTOS} fotos</span>
+            </div>
+            <div class="pub-preview-box">
+              <img id="swal-edit-preview" src="${initialPreviewUrl}" style="width: 100%; height: 100%; object-fit: cover; display: ${initialPreviewUrl ? 'block' : 'none'}; position: absolute; top: 0; left: 0;" />
+              <div id="swal-edit-preview-placeholder" class="pub-preview-placeholder" style="display: ${initialPreviewUrl ? 'none' : 'flex'};">
+                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span style="font-size: 13px; font-weight: 600; color: #94a3b8;">La primera imagen será la portada</span>
               </div>
             </div>
 
             ${pub.fotos && pub.fotos.length > 0 ? `
               <div style="display: flex; flex-direction: column; gap: 6px;">
-                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Fotos actuales</label>
+                <label class="pub-label" style="margin-bottom: 0;">Fotos actuales</label>
                 <div id="swal-edit-existing-thumbs" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;"></div>
                 <span style="font-size: 11px; color: #64748b;">Haz clic en la "×" para quitar una foto. Las fotos nuevas que agregues abajo se sumarán a las que dejes aquí.</span>
               </div>
             ` : ''}
 
-            <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Fotos nuevas ${pub.fotos && pub.fotos.length > 0 ? '' : "<span style='color:#dc2626'>*</span>"}</label>
-              <button id="swal-edit-file-button" type="button" style="display: inline-flex; align-items: center; gap: 8px; justify-content: center; padding: 10px 18px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; width: fit-content; white-space: nowrap; align-self: flex-start; box-shadow: 0 4px 10px rgba(15, 118, 110, 0.3); transition: transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 14px rgba(15, 118, 110, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(15, 118, 110, 0.3)';">
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+              <label class="pub-label" style="margin-bottom: 0;">Fotos nuevas ${pub.fotos && pub.fotos.length > 0 ? '' : "<span class='pub-required'>*</span>"}</label>
+              <button id="swal-edit-file-button" type="button" class="pub-upload-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                 Seleccionar fotos
               </button>
               <input id="swal-edit-foto" type="file" accept="image/*" multiple style="display:none;" />
               <div id="swal-edit-thumbs" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+              <span class="pub-error-text" id="err-edit-fotos"></span>
             </div>
           </div>
 
           <div class="pub-col">
-            <div>
-              <label class="pub-label">Título del inmueble <span class="pub-required">*</span></label>
-              <input id="swal-edit-titulo" class="pub-input" value="${pub.titulo}" placeholder="Ej: Departamento céntrico">
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Precio mensual ($) <span style='color:#dc2626'>*</span></label>
-                <input id="swal-edit-precio" type="number" value="${pub.precioMensual}" 
-                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+            <div class="pub-section">
+              <p class="pub-section-title">Datos básicos</p>
+              <div>
+                <label class="pub-label">Título del inmueble <span class="pub-required">*</span></label>
+                <input id="swal-edit-titulo" class="pub-input" value="${pub.titulo}" placeholder="Ej: Departamento céntrico">
+                <span class="pub-error-text" id="err-edit-titulo"></span>
               </div>
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Ubicación <span style='color:#dc2626'>*</span></label>
-                <input id="swal-edit-ubicacion" value="${pub.ubicacion}"
-                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
+              <div class="pub-row2">
+                <div>
+                  <label class="pub-label">Tipo de inmueble <span class="pub-required">*</span></label>
+                  <select id="swal-edit-tipo" class="pub-input" style="height:44px;">
+                    <option value="" disabled ${pub.tipoInmueble ? '' : 'selected'}>Selecciona tipo</option>
+                    <option value="pieza" ${pub.tipoInmueble === 'pieza' ? 'selected' : ''}>Pieza</option>
+                    <option value="departamento" ${pub.tipoInmueble === 'departamento' ? 'selected' : ''}>Departamento</option>
+                    <option value="casa" ${pub.tipoInmueble === 'casa' ? 'selected' : ''}>Casa</option>
+                    <option value="estudio" ${pub.tipoInmueble === 'estudio' ? 'selected' : ''}>Estudio</option>
+                  </select>
+                  <span class="pub-error-text" id="err-edit-tipo"></span>
+                </div>
+                <div>
+                  <label class="pub-label">Precio mensual ($) <span class="pub-required">*</span></label>
+                  <input id="swal-edit-precio" type="text" inputmode="numeric" class="pub-input" value="${Number(pub.precioMensual).toLocaleString('es-CL')}">
+                  <span class="pub-error-text" id="err-edit-precio"></span>
+                </div>
               </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Comuna <span style='color:#dc2626'>*</span></label>
-              <select id="swal-edit-comuna"
-                style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; width: 100%; height: 41.5px;">
-                <option value="" disabled ${pub.comuna ? '' : 'selected'}>Selecciona comuna</option>
-                ${comunaOptionsHtml(pub.comuna)}
-              </select>
+            <div class="pub-section">
+              <p class="pub-section-title">Ubicación</p>
+              <div class="pub-row2">
+                <div>
+                  <label class="pub-label">Ubicación <span class="pub-required">*</span></label>
+                  <input id="swal-edit-ubicacion" class="pub-input" value="${pub.ubicacion}">
+                  <span class="pub-error-text" id="err-edit-ubicacion"></span>
+                </div>
+                <div>
+                  <label class="pub-label">Comuna <span class="pub-required">*</span></label>
+                  <select id="swal-edit-comuna" class="pub-input" style="height:44px;">
+                    <option value="" disabled ${pub.comuna ? '' : 'selected'}>Selecciona comuna</option>
+                    ${comunaOptionsHtml(pub.comuna)}
+                  </select>
+                  <span class="pub-error-text" id="err-edit-comuna"></span>
+                </div>
+              </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Servicios incluidos</label>
-              <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+            <div class="pub-section">
+              <p class="pub-section-title">Servicios</p>
+              <div class="pub-services">
                 ${servicioOptions.map((servicio) => `
-                  <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #334155; cursor: pointer;">
+                  <label class="pub-service-label">
                     <input
                       type="checkbox"
                       name="swal-edit-servicio"
                       value="${servicio.id}"
                       ${Array.isArray(pub.serviciosIncluidos) && pub.serviciosIncluidos.includes(servicio.id) ? 'checked' : ''}
-                      style="width: 16px; height: 16px; accent: ${accent};"
                     />
+                    <span class="pub-service-check">✓</span>
                     <span>${servicio.label}</span>
                   </label>
                 `).join('')}
               </div>
             </div>
           </div>
-              
+
           <div class="pub-full">
-            <div style="display:flex;flex-direction:column;gap:8px;grid-column:1/-1;">
-              <label class="pub-label">Reglas de convivencia</label>
-              <textarea id="swal-edit-reglas" class="pub-input" rows="3" placeholder="Reglas del hogar o ambiente de estudio..." style="resize:none;min-height:75px;">${pub.rules || pub.reglasConvivencia || ''}</textarea>
-            </div>
+            <label class="pub-label">Reglas de convivencia</label>
+            <textarea id="swal-edit-reglas" class="pub-input" rows="3" placeholder="Reglas del hogar o ambiente de estudio..." style="resize:none;min-height:75px;">${pub.rules || pub.reglasConvivencia || ''}</textarea>
           </div>
-              
-          <div class="pub-actions">
-            <button id="btn-swal-cancel" type="button" class="pub-btn-cancel">Cancelar</button>
-            <button id="btn-swal-submit" type="button" class="pub-btn-submit">Guardar cambios</button>
+
+          <div class="pub-footer">
+            <span class="pub-footer-hint"><span class="pub-required">*</span> Campos obligatorios</span>
+            <div class="pub-actions">
+              <button id="btn-swal-cancel" type="button" class="pub-btn-cancel">Cancelar</button>
+              <button id="btn-swal-submit" type="button" class="pub-btn-submit">Guardar cambios</button>
+            </div>
           </div>
         </div>
       `,
@@ -242,6 +319,16 @@ const MisPublicaciones = () => {
         const editExistingThumbsContainer = document.getElementById('swal-edit-existing-thumbs');
         const editPreview = document.getElementById('swal-edit-preview');
         const editPreviewPlaceholder = document.getElementById('swal-edit-preview-placeholder');
+        const editPhotoCounter = document.getElementById('swal-edit-photo-counter');
+
+        attachPriceFormatting(document.getElementById('swal-edit-precio'));
+
+        const updatePhotoCounter = () => {
+          if (!editPhotoCounter) return;
+          const total = archivosSeleccionados.length + fotosExistentes.length;
+          editPhotoCounter.textContent = `${total}/${MAX_FOTOS} fotos`;
+          editPhotoCounter.classList.toggle('pub-counter-warn', total > MAX_FOTOS);
+        };
 
         const updateEditPreview = () => {
           if (!editPreview || !editPreviewPlaceholder) return;
@@ -275,6 +362,7 @@ const MisPublicaciones = () => {
               fotosExistentes.splice(Number(btn.dataset.removeExistingIndex), 1);
               renderExistingThumbs();
               updateEditPreview();
+              updatePhotoCounter();
             });
           });
         };
@@ -298,11 +386,13 @@ const MisPublicaciones = () => {
               archivosSeleccionados.splice(Number(btn.dataset.removeIndex), 1);
               renderEditThumbs();
               updateEditPreview();
+              updatePhotoCounter();
             });
           });
         };
 
         renderExistingThumbs();
+        updatePhotoCounter();
 
         if (editFileButton && editFileInput) {
           editFileButton.addEventListener('click', () => editFileInput.click());
@@ -311,24 +401,44 @@ const MisPublicaciones = () => {
             editFileInput.value = '';
             renderEditThumbs();
             updateEditPreview();
+            updatePhotoCounter();
           });
         }
 
         document.getElementById('btn-swal-cancel').addEventListener('click', () => Swal.close());
         document.getElementById('btn-swal-submit').addEventListener('click', async () => {
-          const titulo = document.getElementById('swal-edit-titulo').value.trim();
-          const precioMensual = document.getElementById('swal-edit-precio').value;
-          const ubicacion = document.getElementById('swal-edit-ubicacion').value.trim();
-          const comuna = document.getElementById('swal-edit-comuna').value;
+          const tituloInput = document.getElementById('swal-edit-titulo');
+          const tipoSelect = document.getElementById('swal-edit-tipo');
+          const precioInput = document.getElementById('swal-edit-precio');
+          const ubicacionInput = document.getElementById('swal-edit-ubicacion');
+          const comunaSelect = document.getElementById('swal-edit-comuna');
+          const fotosErr = document.getElementById('err-edit-fotos');
 
-          if (!titulo || !precioMensual || !ubicacion || !comuna || (archivosSeleccionados.length === 0 && fotosExistentes.length === 0)) {
-            Swal.showValidationMessage('Por favor completa todos los campos obligatorios (*)');
-            return;
+          const titulo = tituloInput.value.trim();
+          const tipoInmueble = tipoSelect.value;
+          const precioMensual = getRawDigits(precioInput.value);
+          const ubicacion = ubicacionInput.value.trim();
+          const comuna = comunaSelect.value;
+          const totalFotos = archivosSeleccionados.length + fotosExistentes.length;
+
+          setFieldError(tituloInput, document.getElementById('err-edit-titulo'), titulo ? '' : 'El título es obligatorio.');
+          setFieldError(tipoSelect, document.getElementById('err-edit-tipo'), tipoInmueble ? '' : 'Selecciona un tipo.');
+          setFieldError(precioInput, document.getElementById('err-edit-precio'), precioMensual ? '' : 'El precio es obligatorio.');
+          setFieldError(ubicacionInput, document.getElementById('err-edit-ubicacion'), ubicacion ? '' : 'La ubicación es obligatoria.');
+          setFieldError(comunaSelect, document.getElementById('err-edit-comuna'), comuna ? '' : 'Selecciona una comuna.');
+          if (fotosErr) {
+            fotosErr.textContent = totalFotos === 0
+              ? 'Agrega al menos una foto.'
+              : (totalFotos > MAX_FOTOS ? `Máximo ${MAX_FOTOS} fotos permitidas.` : '');
           }
+
+          const hayErrores = !titulo || !tipoInmueble || !precioMensual || !ubicacion || !comuna || totalFotos === 0 || totalFotos > MAX_FOTOS;
+          if (hayErrores) return;
 
           const serviciosIncluidos = Array.from(document.querySelectorAll('input[name="swal-edit-servicio"]:checked')).map((checkbox) => checkbox.value);
           const formData = new FormData();
           formData.append('titulo', titulo);
+          formData.append('tipoInmueble', tipoInmueble);
           formData.append('precioMensual', parseInt(precioMensual));
           formData.append('ubicacion', ubicacion);
           formData.append('comuna', comuna);
@@ -361,43 +471,71 @@ const MisPublicaciones = () => {
     let archivosSeleccionados = [];
 
     const { value: formValues } = await Swal.fire({
-      title: 'Nueva Publicación',
       html: `
         <style>
           .pub-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px; text-align: left; padding: 8px 4px; font-family: 'Segoe UI', Roboto, sans-serif; }
+          .pub-header { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+          .pub-header-icon { width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+          .pub-header-title { margin: 0 0 2px; font-size: 20px; font-weight: 800; color: #0f172a; text-align: left; }
+          .pub-header-subtitle { margin: 0; font-size: 13px; color: #64748b; text-align: left; }
           .pub-label { font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 6px; display: block; }
           .pub-required { color: #dc2626; }
           .pub-input { padding: 11px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%; transition: border-color 0.2s; font-family: inherit; }
           .pub-input:focus { border-color: #0f766e; background-color: #fff; }
           .pub-col { display: flex; flex-direction: column; gap: 14px; }
+          .pub-section { display: flex; flex-direction: column; gap: 14px; padding-top: 18px; margin-top: 4px; border-top: 1px solid #eef2f6; }
+          .pub-section:first-child { padding-top: 0; margin-top: 0; border-top: none; }
+          .pub-section-title { margin: 0; font-size: 12px; font-weight: 800; color: #0f766e; text-transform: uppercase; letter-spacing: 0.06em; }
           .pub-preview-box { width: 100%; height: 240px; border-radius: 16px; overflow: hidden; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; position: relative; }
           .pub-preview-placeholder { color: #94a3b8; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 20px; }
-          .pub-upload-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(15,118,110,0.3); transition: transform 0.15s, box-shadow 0.15s; }
+          .pub-upload-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; border: none; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(15,118,110,0.3); transition: transform 0.15s, box-shadow 0.15s; width: fit-content; }
           .pub-upload-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(15,118,110,0.4); }
-          .pub-file-name { font-size: 12px; color: #64748b; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; }
           .pub-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-          .pub-full { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.3fr; gap: 24px; margin-top: 4px; }
-          .pub-services { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; }
-          .pub-service-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background 0.15s; font-weight: 500; }
-          .pub-service-label:hover { background: #e6f4f1; }
-          .pub-service-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #0f766e; }
-          .pub-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
-          .pub-btn-cancel { padding: 12px 24px; border-radius: 12px; background-color: #f1f5f9; color: #64748b; font-weight: 600; font-size: 14px; border: 1.5px solid #e2e8f0; cursor: pointer; transition: background 0.15s; }
-          .pub-btn-cancel:hover { background: #e2e8f0; }
+          .pub-full { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; padding-top: 18px; border-top: 1px solid #eef2f6; }
+          .pub-services { display: flex; flex-wrap: wrap; gap: 8px; }
+          .pub-service-label { position: relative; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #334155; cursor: pointer; padding: 8px 14px; border-radius: 999px; border: 1.5px solid #e2e8f0; background: #fff; transition: all 0.15s ease; font-weight: 600; user-select: none; }
+          .pub-service-label:hover { border-color: #0f766e; background: #f0fdfa; }
+          .pub-service-label input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+          .pub-service-label .pub-service-check { display: none; font-weight: 800; }
+          .pub-service-label:has(input:checked) { background: #0f766e; border-color: #0f766e; color: #fff; box-shadow: 0 3px 10px rgba(15,118,110,0.3); }
+          .pub-service-label:has(input:checked) .pub-service-check { display: inline; }
+          .pub-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; padding-top: 18px; border-top: 1.5px solid #e2e8f0; }
+          .pub-footer-hint { font-size: 12px; color: #94a3b8; }
+          .pub-actions { display: flex; gap: 12px; }
+          .pub-btn-cancel { padding: 12px 22px; border-radius: 12px; background-color: transparent; color: #64748b; font-weight: 600; font-size: 14px; border: 1.5px solid #e2e8f0; cursor: pointer; transition: all 0.15s; }
+          .pub-btn-cancel:hover { background: #f1f5f9; border-color: #cbd5e1; }
           .pub-btn-submit { padding: 12px 28px; border-radius: 12px; background: linear-gradient(135deg, #0f766e 0%, #0b5b54 100%); color: #fff; font-weight: 700; font-size: 14px; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(15,118,110,0.3); transition: transform 0.15s, box-shadow 0.15s; }
           .pub-btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(15,118,110,0.4); }
+          .pub-input-error { border-color: #dc2626 !important; background-color: #fef2f2 !important; }
+          .pub-error-text { display: block; color: #dc2626; font-size: 11px; margin-top: 4px; font-weight: 600; }
+          .pub-error-text:empty { display: none; margin-top: 0; }
+          .pub-photo-counter { font-size: 11px; color: #94a3b8; font-weight: 700; }
+          .pub-photo-counter.pub-counter-warn { color: #dc2626; }
         </style>
 
         <div class="pub-grid">
+          <div class="pub-header">
+            <div class="pub-header-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path><path d="M9 9v.01"></path><path d="M9 12v.01"></path><path d="M9 15v.01"></path><path d="M9 18v.01"></path></svg>
+            </div>
+            <div>
+              <h2 class="pub-header-title">Nueva publicación</h2>
+              <p class="pub-header-subtitle">Completa los datos para publicar tu propiedad.</p>
+            </div>
+          </div>
+
           <div class="pub-col">
             <div>
-              <p class="pub-label">Vista previa de la propiedad</p>
-              <div class="pub-preview-box">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <p class="pub-label" style="margin-bottom: 0;">Vista previa de la propiedad</p>
+                <span id="swal-create-photo-counter" class="pub-photo-counter">0/${MAX_FOTOS} fotos</span>
+              </div>
+              <div class="pub-preview-box" style="margin-top: 8px;">
                 <img id="swal-create-preview" src="" style="width:100%;height:100%;object-fit:cover;display:none;position:absolute;top:0;left:0;" />
                 <div id="swal-create-preview-placeholder" class="pub-preview-placeholder">
                   <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                   <span style="font-size:13px;font-weight:600;color:#94a3b8;">La primera foto será la portada</span>
-                  <span style="font-size:12px;color:#cbd5e1;">Puedes subir hasta 10 imágenes</span>
+                  <span style="font-size:12px;color:#cbd5e1;">Puedes subir hasta ${MAX_FOTOS} imágenes</span>
                 </div>
               </div>
             </div>
@@ -408,55 +546,67 @@ const MisPublicaciones = () => {
                 Seleccionar fotos
               </button>
               <input id="swal-foto" type="file" accept="image/*" multiple style="display:none;" />
-              <div id="swal-create-file-name" class="pub-file-name">Ningún archivo seleccionado</div>
+              <div id="swal-create-thumbs" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+              <span class="pub-error-text" id="err-fotos"></span>
             </div>
           </div>
 
           <div class="pub-col">
-            <div>
-              <label class="pub-label">Título de la publicación <span class="pub-required">*</span></label>
-              <input id="swal-titulo" class="pub-input" placeholder="Ej: Pieza Universitaria frente a la U">
-            </div>
-            <div class="pub-row2">
+            <div class="pub-section">
+              <p class="pub-section-title">Datos básicos</p>
               <div>
-                <label class="pub-label">Tipo de inmueble <span class="pub-required">*</span></label>
-                <select id="swal-tipo" class="pub-input" style="height:44px;">
-                  <option value="" disabled selected>Selecciona tipo</option>
-                  <option value="pieza">Pieza</option>
-                  <option value="departamento">Departamento</option>
-                  <option value="casa">Casa</option>
-                  <option value="estudio">Estudio</option>
-                </select>
+                <label class="pub-label">Título de la publicación <span class="pub-required">*</span></label>
+                <input id="swal-titulo" class="pub-input" placeholder="Ej: Pieza Universitaria frente a la U">
+                <span class="pub-error-text" id="err-titulo"></span>
               </div>
-              <div>
-                <label class="pub-label">Precio mensual ($) <span class="pub-required">*</span></label>
-                <input id="swal-precio" type="number" class="pub-input" placeholder="Ej: 180000">
+              <div class="pub-row2">
+                <div>
+                  <label class="pub-label">Tipo de inmueble <span class="pub-required">*</span></label>
+                  <select id="swal-tipo" class="pub-input" style="height:44px;">
+                    <option value="" disabled selected>Selecciona tipo</option>
+                    <option value="pieza">Pieza</option>
+                    <option value="departamento">Departamento</option>
+                    <option value="casa">Casa</option>
+                    <option value="estudio">Estudio</option>
+                  </select>
+                  <span class="pub-error-text" id="err-tipo"></span>
+                </div>
+                <div>
+                  <label class="pub-label">Precio mensual ($) <span class="pub-required">*</span></label>
+                  <input id="swal-precio" type="text" inputmode="numeric" class="pub-input" placeholder="Ej: 180.000">
+                  <span class="pub-error-text" id="err-precio"></span>
+                </div>
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Ubicación <span style='color:#dc2626'>*</span></label>
-                <input id="swal-ubicacion" placeholder="Dirección exacta del inmueble"
-                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; box-sizing: border-box; width: 100%;">
-              </div>
+            <div class="pub-section">
+              <p class="pub-section-title">Ubicación</p>
+              <div class="pub-row2">
+                <div>
+                  <label class="pub-label">Ubicación <span class="pub-required">*</span></label>
+                  <input id="swal-ubicacion" class="pub-input" placeholder="Dirección exacta del inmueble">
+                  <span class="pub-error-text" id="err-ubicacion"></span>
+                </div>
 
-              <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label style="font-weight: 700; font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">Comuna <span style='color:#dc2626'>*</span></label>
-                <select id="swal-comuna"
-                  style="padding: 11px 14px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 14px; background-color: #f8fafc; color: #0f172a; outline: none; width: 100%; height: 41.5px;">
-                  <option value="" disabled selected>Selecciona comuna</option>
-                  ${comunaOptionsHtml('')}
-                </select>
+                <div>
+                  <label class="pub-label">Comuna <span class="pub-required">*</span></label>
+                  <select id="swal-comuna" class="pub-input" style="height:44px;">
+                    <option value="" disabled selected>Selecciona comuna</option>
+                    ${comunaOptionsHtml('')}
+                  </select>
+                  <span class="pub-error-text" id="err-comuna"></span>
+                </div>
               </div>
             </div>
-            <div>
-              <label class="pub-label">Servicios incluidos</label>
+
+            <div class="pub-section">
+              <p class="pub-section-title">Servicios</p>
               <div class="pub-services">
                 ${servicioOptions.map(s => `
                   <label class="pub-service-label">
                     <input type="checkbox" name="swal-servicio" value="${s.id}" />
-                    ${s.label}
+                    <span class="pub-service-check">✓</span>
+                    <span>${s.label}</span>
                   </label>
                 `).join('')}
               </div>
@@ -464,15 +614,16 @@ const MisPublicaciones = () => {
           </div>
 
           <div class="pub-full">
-            <div style="display:flex;flex-direction:column;gap:8px;grid-column:1/-1;">
-              <label class="pub-label">Reglas de convivencia</label>
-              <textarea id="swal-reglas" class="pub-input" rows="3" placeholder="Ej: No se permite fumar, no mascotas, silencio después de las 22h..." style="resize:none;min-height:80px;"></textarea>
-            </div>
+            <label class="pub-label">Reglas de convivencia</label>
+            <textarea id="swal-reglas" class="pub-input" rows="3" placeholder="Ej: No se permite fumar, no mascotas, silencio después de las 22h..." style="resize:none;min-height:80px;"></textarea>
           </div>
 
-          <div class="pub-actions">
-            <button id="btn-create-cancel" type="button" class="pub-btn-cancel">Cancelar</button>
-            <button id="btn-create-submit" type="button" class="pub-btn-submit">Publicar Inmueble</button>
+          <div class="pub-footer">
+            <span class="pub-footer-hint"><span class="pub-required">*</span> Campos obligatorios</span>
+            <div class="pub-actions">
+              <button id="btn-create-cancel" type="button" class="pub-btn-cancel">Cancelar</button>
+              <button id="btn-create-submit" type="button" class="pub-btn-submit">Publicar Inmueble</button>
+            </div>
           </div>
         </div>
       `,
@@ -487,6 +638,15 @@ const MisPublicaciones = () => {
 
         const createPreview = document.getElementById('swal-create-preview');
         const createPreviewPlaceholder = document.getElementById('swal-create-preview-placeholder');
+        const createPhotoCounter = document.getElementById('swal-create-photo-counter');
+
+        attachPriceFormatting(document.getElementById('swal-precio'));
+
+        const updatePhotoCounter = () => {
+          if (!createPhotoCounter) return;
+          createPhotoCounter.textContent = `${archivosSeleccionados.length}/${MAX_FOTOS} fotos`;
+          createPhotoCounter.classList.toggle('pub-counter-warn', archivosSeleccionados.length > MAX_FOTOS);
+        };
 
         const updateCreatePreview = () => {
           if (!createPreview || !createPreviewPlaceholder) return;
@@ -519,6 +679,7 @@ const MisPublicaciones = () => {
               archivosSeleccionados.splice(Number(btn.dataset.removeIndex), 1);
               renderCreateThumbs();
               updateCreatePreview();
+              updatePhotoCounter();
             });
           });
         };
@@ -530,21 +691,38 @@ const MisPublicaciones = () => {
             createFileInput.value = '';
             renderCreateThumbs();
             updateCreatePreview();
+            updatePhotoCounter();
           });
         }
 
         document.getElementById('btn-create-cancel').addEventListener('click', () => Swal.close());
         document.getElementById('btn-create-submit').addEventListener('click', () => {
-          const titulo = document.getElementById('swal-titulo').value;
-          const tipoInmueble = document.getElementById('swal-tipo').value;
-          const precioMensual = document.getElementById('swal-precio').value;
-          const ubicacion = document.getElementById('swal-ubicacion').value;
-          const comuna = document.getElementById('swal-comuna').value;
+          const tituloInput = document.getElementById('swal-titulo');
+          const tipoSelect = document.getElementById('swal-tipo');
+          const precioInput = document.getElementById('swal-precio');
+          const ubicacionInput = document.getElementById('swal-ubicacion');
+          const comunaSelect = document.getElementById('swal-comuna');
+          const fotosErr = document.getElementById('err-fotos');
 
-          if (!titulo || !tipoInmueble || !precioMensual || !ubicacion || !comuna || archivosSeleccionados.length === 0) {
-            Swal.showValidationMessage('Por favor completa todos los campos obligatorios (*)');
-            return;
+          const titulo = tituloInput.value.trim();
+          const tipoInmueble = tipoSelect.value;
+          const precioMensual = getRawDigits(precioInput.value);
+          const ubicacion = ubicacionInput.value.trim();
+          const comuna = comunaSelect.value;
+
+          setFieldError(tituloInput, document.getElementById('err-titulo'), titulo ? '' : 'El título es obligatorio.');
+          setFieldError(tipoSelect, document.getElementById('err-tipo'), tipoInmueble ? '' : 'Selecciona un tipo.');
+          setFieldError(precioInput, document.getElementById('err-precio'), precioMensual ? '' : 'El precio es obligatorio.');
+          setFieldError(ubicacionInput, document.getElementById('err-ubicacion'), ubicacion ? '' : 'La ubicación es obligatoria.');
+          setFieldError(comunaSelect, document.getElementById('err-comuna'), comuna ? '' : 'Selecciona una comuna.');
+          if (fotosErr) {
+            fotosErr.textContent = archivosSeleccionados.length === 0
+              ? 'Agrega al menos una foto.'
+              : (archivosSeleccionados.length > MAX_FOTOS ? `Máximo ${MAX_FOTOS} fotos permitidas.` : '');
           }
+
+          const hayErrores = !titulo || !tipoInmueble || !precioMensual || !ubicacion || !comuna || archivosSeleccionados.length === 0 || archivosSeleccionados.length > MAX_FOTOS;
+          if (hayErrores) return;
 
           Swal.clickConfirm();
         });
@@ -555,7 +733,7 @@ const MisPublicaciones = () => {
         const formData = new FormData();
         formData.append('titulo', document.getElementById('swal-titulo').value);
         formData.append('tipoInmueble', document.getElementById('swal-tipo').value);
-        formData.append('precioMensual', document.getElementById('swal-precio').value);
+        formData.append('precioMensual', getRawDigits(document.getElementById('swal-precio').value));
         formData.append('ubicacion', document.getElementById('swal-ubicacion').value);
         formData.append('comuna', document.getElementById('swal-comuna').value);
         serviciosIncluidos.forEach((servicio) => {
@@ -583,20 +761,77 @@ const MisPublicaciones = () => {
 
   const abrirGaleria = (pub) => {
     if (!pub.fotos || pub.fotos.length === 0) return;
+    const fotos = pub.fotos;
+
     Swal.fire({
-      title: pub.titulo,
       html: `
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
-          ${pub.fotos.map((foto) => `
-            <div style="width:100%; height:220px; border-radius:10px; background-color:#0f172a0d; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-              <img src="${resolveFileUrl(foto)}" style="max-width:100%; max-height:100%; object-fit:contain;" />
+        <style>
+          .gal-header { display:flex; align-items:center; gap:14px; margin-bottom:16px; text-align:left; }
+          .gal-header-icon { width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#0f766e 0%,#0b5b54 100%);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+          .gal-header-title { margin:0 0 2px;font-size:20px;font-weight:800;color:#0f172a;text-align:left; }
+          .gal-header-subtitle { margin:0;font-size:13px;color:#64748b;text-align:left; }
+          .gal-main { position:relative; width:100%; height:380px; border-radius:16px; overflow:hidden; background:#0f172a; display:flex; align-items:center; justify-content:center; }
+          .gal-main img { width:100%; height:100%; object-fit:contain; }
+          .gal-nav { position:absolute; top:50%; transform:translateY(-50%); width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.9);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0f172a;box-shadow:0 4px 10px rgba(0,0,0,0.25); font-size:18px; font-weight:800; }
+          .gal-nav:hover { background:#fff; }
+          .gal-nav-prev { left:12px; }
+          .gal-nav-next { right:12px; }
+          .gal-counter { position:absolute; bottom:12px; right:12px; background:rgba(15,23,42,0.75); color:#fff; font-size:12px; font-weight:700; padding:4px 10px; border-radius:999px; }
+          .gal-thumbs { display:flex; gap:8px; margin-top:12px; overflow-x:auto; padding-bottom:4px; }
+          .gal-thumb { width:64px; height:64px; border-radius:10px; overflow:hidden; flex-shrink:0; cursor:pointer; border:2px solid transparent; opacity:0.6; transition:all 0.15s; padding:0; background:none; }
+          .gal-thumb img { width:100%;height:100%;object-fit:cover; }
+          .gal-thumb.active { border-color:#0f766e; opacity:1; }
+          .gal-thumb:hover { opacity:1; }
+        </style>
+        <div style="text-align:left; font-family:'Segoe UI',Roboto,sans-serif;">
+          <div class="gal-header">
+            <div class="gal-header-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             </div>
-          `).join('')}
+            <div>
+              <h2 class="gal-header-title">${pub.titulo}</h2>
+              <p class="gal-header-subtitle">${fotos.length} foto${fotos.length === 1 ? '' : 's'} publicada${fotos.length === 1 ? '' : 's'}</p>
+            </div>
+          </div>
+          <div class="gal-main">
+            <img id="gal-main-img" src="${resolveFileUrl(fotos[0])}" />
+            ${fotos.length > 1 ? `
+              <button id="gal-prev" type="button" class="gal-nav gal-nav-prev">‹</button>
+              <button id="gal-next" type="button" class="gal-nav gal-nav-next">›</button>
+            ` : ''}
+            <span id="gal-counter" class="gal-counter">1 / ${fotos.length}</span>
+          </div>
+          ${fotos.length > 1 ? `
+            <div class="gal-thumbs" id="gal-thumbs">
+              ${fotos.map((foto, i) => `
+                <button type="button" class="gal-thumb ${i === 0 ? 'active' : ''}" data-index="${i}">
+                  <img src="${resolveFileUrl(foto)}" />
+                </button>
+              `).join('')}
+            </div>
+          ` : ''}
         </div>
       `,
       width: '760px',
       confirmButtonColor: accent,
       confirmButtonText: 'Cerrar',
+      didOpen: () => {
+        let currentIndex = 0;
+        const mainImg = document.getElementById('gal-main-img');
+        const counter = document.getElementById('gal-counter');
+        const thumbs = document.querySelectorAll('.gal-thumb');
+
+        const showIndex = (index) => {
+          currentIndex = (index + fotos.length) % fotos.length;
+          mainImg.src = resolveFileUrl(fotos[currentIndex]);
+          counter.textContent = `${currentIndex + 1} / ${fotos.length}`;
+          thumbs.forEach((t) => t.classList.toggle('active', Number(t.dataset.index) === currentIndex));
+        };
+
+        thumbs.forEach((t) => t.addEventListener('click', () => showIndex(Number(t.dataset.index))));
+        document.getElementById('gal-prev')?.addEventListener('click', () => showIndex(currentIndex - 1));
+        document.getElementById('gal-next')?.addEventListener('click', () => showIndex(currentIndex + 1));
+      },
     });
   };
 
@@ -700,10 +935,11 @@ const MisPublicaciones = () => {
                   
                   {/* Placeholder oculto por defecto, se activa si no hay imagen o falla la carga */}
                   <div style={{
-                    ...styles.imagePlaceholder, 
+                    ...styles.imagePlaceholder,
                     display: pub.fotos && pub.fotos[0] ? 'none' : 'flex'
                   }}>
                     <Home size={32} strokeWidth={1.5} />
+                    <p style={styles.imagePlaceholderText}>Sin fotos</p>
                   </div>
                 
                   <span style={{
@@ -796,7 +1032,7 @@ const MisPublicaciones = () => {
                     <Image size={16} style={{ color: pub.fotos?.length > 0 ? '#0f766e' : '#94a3b8' }} />
                   </button>
                 </div>
-                
+
               </div>
             ))}
           </div>
@@ -964,9 +1200,19 @@ const styles = {
     width: '100%',
     height: '100%',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#94a3b8',
+    gap: '6px',
+    background: 'linear-gradient(135deg, rgba(0,128,128,0.14), rgba(0,128,128,0.04))',
+    color: accent,
+  },
+  imagePlaceholderText: {
+    margin: 0,
+    fontSize: '12px',
+    fontWeight: '700',
+    color: accent,
+    opacity: 0.7,
   },
   stateBadge: {
     position: 'absolute',
@@ -1038,22 +1284,12 @@ const styles = {
     borderTop: '1px solid #f1f5f9',
     backgroundColor: '#f8fafc',
   },
-  iconBtnAction: {
-    border: 'none',
-    background: 'none',
-    padding: '14px 0',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'background-color 0.2s ease',
-  },
   btnDisponible: {
     border: 'none',
     background: 'none',
     padding: '14px',
     cursor: 'pointer',
-    color: '#0f766e',
+    color: '#b45309',
     fontSize: '13px',
     fontWeight: '700',
     display: 'flex',
