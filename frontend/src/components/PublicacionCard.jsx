@@ -160,6 +160,22 @@ export default function PublicacionCard({
             strokeWidth={2}
           />
         </button>
+
+        {onToggleCompare && (
+          <label
+            className={`publicacion-compare-chip${selectedForCompare ? ' publicacion-compare-chip--selected' : ''}${compareDisabled ? ' publicacion-compare-chip--disabled' : ''}`}
+            title={compareDisabled ? 'Puedes comparar hasta tres publicaciones' : 'Seleccionar para comparar'}
+          >
+            <input
+              type="checkbox"
+              checked={selectedForCompare}
+              disabled={compareDisabled}
+              onChange={() => onToggleCompare(publicacion)}
+              className="publicacion-compare-checkbox"
+            />
+            <span>{selectedForCompare ? 'Seleccionada' : 'Comparar'}</span>
+          </label>
+        )}
       </div>
 
       <div className="publicacion-info">
@@ -168,30 +184,6 @@ export default function PublicacionCard({
         </span>
         <h3 className="publicacion-title">{titulo || 'Sin título'}</h3>
         <p className="publicacion-location">{ubicacion || 'Ubicación no disponible'}</p>
-        
-        {onToggleCompare && (
-          <label
-            style={{
-              alignItems: 'center',
-              color: compareDisabled ? '#94a3b8' : '#334155',
-              cursor: compareDisabled ? 'not-allowed' : 'pointer',
-              display: 'inline-flex',
-              fontSize: '13px',
-              fontWeight: 700,
-              gap: '8px',
-              marginBottom: '12px',
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={selectedForCompare}
-              disabled={compareDisabled}
-              onChange={() => onToggleCompare(publicacion)}
-            />
-            Comparar
-          </label>
-        )}
-
         <div className="publicacion-footer">
           <span className="publicacion-price">{precioFormateado} <small>/mes</small></span>
           <button 

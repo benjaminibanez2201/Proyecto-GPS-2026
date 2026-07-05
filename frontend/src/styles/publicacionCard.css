@@ -47,6 +47,54 @@
   transform: scale(1.1);
 }
 
+.publicacion-compare-chip {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  background-color: rgba(255, 255, 255, 0.92);
+  color: #0f766e;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.14);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  backdrop-filter: blur(6px);
+  transition: background-color 160ms ease, color 160ms ease, transform 120ms ease;
+}
+
+.publicacion-compare-chip:hover {
+  transform: translateY(-1px);
+  background-color: #ffffff;
+}
+
+.publicacion-compare-chip--selected {
+  background-color: #0f766e;
+  border-color: #0f766e;
+  color: #ffffff;
+}
+
+.publicacion-compare-chip--disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+  transform: none;
+}
+
+.publicacion-compare-checkbox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: #0f766e;
+  cursor: inherit;
+}
+
 .publicacion-info {
   padding: 16px;
   display: flex;
