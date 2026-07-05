@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { Eye, Home, MapPin, Star, Wallet, Wifi, X } from 'lucide-react';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
 
 const accent = '#0f766e';
@@ -16,9 +16,9 @@ function formatPrice(value) {
   }).format(Number(value || 0));
 }
 
-function formatServices(servicios) {
-  if (!Array.isArray(servicios) || servicios.length === 0) return 'No especificados';
-  return servicios.join(', ');
+function getServices(servicios) {
+  if (!Array.isArray(servicios) || servicios.length === 0) return [];
+  return servicios.filter(Boolean);
 }
 
 function formatRating(arrendador) {
@@ -66,11 +66,45 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
   }, [publicaciones]);
 
   const rows = [
-    { label: 'Precio mensual', render: (publicacion) => formatPrice(publicacion.precioMensual) },
-    { label: 'Tipo de inmueble', render: (publicacion) => publicacion.tipoInmueble || 'No especificado' },
-    { label: 'Distancia al campus', render: () => 'No disponible' },
-    { label: 'Servicios incluidos', render: (publicacion) => formatServices(publicacion.serviciosIncluidos) },
-    { label: 'Calificacion arrendador', render: (publicacion) => formatRating(publicacion.arrendador) },
+    {
+      label: 'Precio mensual',
+      Icon: Wallet,
+      highlight: true,
+      render: (publicacion) => <span style={styles.priceValue}>{formatPrice(publicacion.precioMensual)}</span>,
+    },
+    {
+      label: 'Tipo de inmueble',
+      Icon: Home,
+      render: (publicacion) => publicacion.tipoInmueble || 'No especificado',
+    },
+    {
+      label: 'Ubicacion',
+      Icon: MapPin,
+      render: (publicacion) => publicacion.ubicacion || 'No especificada',
+    },
+    {
+      label: 'Servicios incluidos',
+      Icon: Wifi,
+      render: (publicacion) => {
+        const servicios = getServices(publicacion.serviciosIncluidos);
+        if (!servicios.length) return 'No especificados';
+
+        return (
+          <div style={styles.chipList}>
+            {servicios.map((servicio) => (
+              <span key={servicio} style={styles.serviceChip}>
+                {servicio}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      label: 'Calificacion arrendador',
+      Icon: Star,
+      render: (publicacion) => formatRating(publicacion.arrendador),
+    },
   ];
 
   return (
@@ -80,8 +114,9 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
           <div>
             <p style={styles.eyebrow}>Comparación</p>
             <h2 style={styles.title}>Publicaciones seleccionadas</h2>
+            <p style={styles.subtitle}>Compara precio, ubicacion, servicios y reputacion antes de abrir el detalle.</p>
           </div>
-          <button type="button" onClick={onClose} style={styles.iconButton} aria-label="Cerrar comparacion">
+          <button type="button" onClick={onClose} style={styles.iconButton} aria-label="Cerrar comparacion" title="Cerrar">
             <X size={18} strokeWidth={2.2} />
           </button>
         </header>
@@ -98,13 +133,18 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
                   <th style={styles.rowHeader}>Atributo</th>
                   {detalles.map((publicacion) => (
                     <th key={getPublicacionId(publicacion)} style={styles.columnHeader}>
-                      <span style={styles.publicationTitle}>{publicacion.titulo || 'Sin titulo'}</span>
+                      <div style={styles.publicationHeaderCard}>
+                        <span style={styles.publicationType}>{publicacion.tipoInmueble || 'Publicacion'}</span>
+                        <span style={styles.publicationTitle}>{publicacion.titulo || 'Sin titulo'}</span>
+                        <span style={styles.publicationLocation}>{publicacion.ubicacion || 'Sin ubicacion'}</span>
+                        <span style={styles.headerPrice}>{formatPrice(publicacion.precioMensual)}</span>
+                      </div>
                       <button
                         type="button"
                         onClick={() => navigate(`/publicacion/${publicacion.publicId}`)}
                         style={styles.detailButton}
                       >
-                        Ver detalle
+                        <Eye size={14} strokeWidth={2.3} /> Ver detalle
                       </button>
                     </th>
                   ))}
@@ -113,9 +153,20 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.label}>
-                    <th style={styles.rowHeader}>{row.label}</th>
+                    <th style={styles.rowHeader}>
+                      <span style={styles.rowHeaderContent}>
+                        <row.Icon size={16} strokeWidth={2.2} />
+                        {row.label}
+                      </span>
+                    </th>
                     {detalles.map((publicacion) => (
-                      <td key={`${row.label}-${getPublicacionId(publicacion)}`} style={styles.cell}>
+                      <td
+                        key={`${row.label}-${getPublicacionId(publicacion)}`}
+                        style={{
+                          ...styles.cell,
+                          ...(row.highlight ? styles.highlightCell : {}),
+                        }}
+                      >
                         {row.render(publicacion)}
                       </td>
                     ))}
@@ -133,7 +184,7 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
 const styles = {
   overlay: {
     alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    backgroundColor: 'rgba(15, 23, 42, 0.58)',
     display: 'flex',
     inset: 0,
     justifyContent: 'center',
@@ -143,20 +194,22 @@ const styles = {
   },
   modal: {
     backgroundColor: '#ffffff',
-    borderRadius: '18px',
-    boxShadow: '0 24px 60px rgba(15, 23, 42, 0.28)',
-    maxHeight: '88vh',
-    maxWidth: '980px',
+    border: '1px solid rgba(226, 232, 240, 0.95)',
+    borderRadius: '20px',
+    boxShadow: '0 28px 80px rgba(15, 23, 42, 0.32)',
+    maxHeight: '90vh',
+    maxWidth: '1060px',
     overflow: 'hidden',
     width: '100%',
   },
   header: {
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    alignItems: 'flex-start',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #ecfdf5 100%)',
     borderBottom: '1px solid #e2e8f0',
     display: 'flex',
+    gap: '18px',
     justifyContent: 'space-between',
-    padding: '18px 20px',
+    padding: '22px 24px',
   },
   eyebrow: {
     color: accent,
@@ -167,8 +220,16 @@ const styles = {
   },
   title: {
     color: '#0f172a',
-    fontSize: '20px',
+    fontSize: '24px',
+    lineHeight: 1.15,
     margin: 0,
+  },
+  subtitle: {
+    color: '#64748b',
+    fontSize: '14px',
+    lineHeight: 1.5,
+    margin: '8px 0 0',
+    maxWidth: '58ch',
   },
   iconButton: {
     alignItems: 'center',
@@ -189,11 +250,13 @@ const styles = {
     padding: '22px',
   },
   tableWrap: {
-    maxHeight: '70vh',
+    backgroundColor: '#ffffff',
+    maxHeight: '72vh',
     overflow: 'auto',
   },
   table: {
-    borderCollapse: 'collapse',
+    borderCollapse: 'separate',
+    borderSpacing: 0,
     minWidth: '760px',
     width: '100%',
   },
@@ -203,32 +266,78 @@ const styles = {
     color: '#334155',
     fontSize: '13px',
     fontWeight: 700,
-    padding: '14px 16px',
+    padding: '16px 18px',
+    position: 'sticky',
+    left: 0,
+    zIndex: 2,
     textAlign: 'left',
-    verticalAlign: 'top',
+    verticalAlign: 'middle',
     width: '190px',
   },
+  rowHeaderContent: {
+    alignItems: 'center',
+    color: '#0f766e',
+    display: 'inline-flex',
+    gap: '9px',
+    whiteSpace: 'nowrap',
+  },
   columnHeader: {
+    backgroundColor: '#ffffff',
     borderBottom: '1px solid #e2e8f0',
     color: '#0f172a',
     fontSize: '14px',
-    padding: '14px 16px',
+    minWidth: '230px',
+    padding: '16px',
     textAlign: 'left',
     verticalAlign: 'top',
   },
+  publicationHeaderCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '7px',
+    minHeight: '128px',
+  },
+  publicationType: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#e0f2f1',
+    borderRadius: '999px',
+    color: '#0f766e',
+    fontSize: '11px',
+    fontWeight: 800,
+    padding: '4px 8px',
+    textTransform: 'uppercase',
+  },
   publicationTitle: {
     display: 'block',
+    color: '#0f172a',
+    fontSize: '15px',
     fontWeight: 700,
-    marginBottom: '8px',
+    lineHeight: 1.25,
+  },
+  publicationLocation: {
+    color: '#64748b',
+    fontSize: '12px',
+    lineHeight: 1.35,
+  },
+  headerPrice: {
+    color: '#0f766e',
+    fontSize: '17px',
+    fontWeight: 800,
+    marginTop: 'auto',
   },
   detailButton: {
+    alignItems: 'center',
     backgroundColor: accent,
     border: 'none',
     borderRadius: '10px',
     color: '#ffffff',
     cursor: 'pointer',
+    display: 'inline-flex',
     fontSize: '12px',
     fontWeight: 700,
+    gap: '6px',
+    justifyContent: 'center',
+    marginTop: '12px',
     padding: '8px 10px',
   },
   cell: {
@@ -236,7 +345,30 @@ const styles = {
     color: '#475569',
     fontSize: '14px',
     lineHeight: 1.45,
-    padding: '14px 16px',
-    verticalAlign: 'top',
+    padding: '16px',
+    verticalAlign: 'middle',
+  },
+  highlightCell: {
+    backgroundColor: '#f0fdfa',
+  },
+  priceValue: {
+    color: '#0f766e',
+    fontSize: '17px',
+    fontWeight: 800,
+  },
+  chipList: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+  },
+  serviceChip: {
+    backgroundColor: '#f1f5f9',
+    border: '1px solid #e2e8f0',
+    borderRadius: '999px',
+    color: '#334155',
+    display: 'inline-flex',
+    fontSize: '12px',
+    fontWeight: 700,
+    padding: '5px 9px',
   },
 };
