@@ -9,6 +9,13 @@ import {
 
 export function useNotificaciones() {
   const [notificaciones, setNotificaciones] = useState([]);
+  const [paginacion, setPaginacion] = useState({
+    total: 0,
+    limit: 20,
+    offset: 0,
+    paginaActual: 1,
+    totalPaginas: 0,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -21,8 +28,19 @@ export function useNotificaciones() {
       if (err) {
         setError(err);
         setNotificaciones([]);
+        setPaginacion((prev) => ({ ...prev, total: 0, offset: options.offset ?? 0, totalPaginas: 0 }));
       } else {
-        setNotificaciones(Array.isArray(data) ? data : []);
+        const nextNotificaciones = Array.isArray(data) ? data : data?.notificaciones ?? [];
+        const nextPagination = data?.paginacion;
+
+        setNotificaciones(nextNotificaciones);
+        setPaginacion({
+          total: Number(nextPagination?.total ?? nextNotificaciones.length),
+          limit: Number(nextPagination?.limit ?? options.limit ?? 20),
+          offset: Number(nextPagination?.offset ?? options.offset ?? 0),
+          paginaActual: Number(nextPagination?.paginaActual ?? Math.floor((options.offset ?? 0) / (options.limit ?? 20)) + 1),
+          totalPaginas: Number(nextPagination?.totalPaginas ?? (nextNotificaciones.length > 0 ? 1 : 0)),
+        });
       }
     } catch (e) {
       setError(e.message || 'Error desconocido');
@@ -72,6 +90,7 @@ export function useNotificaciones() {
 
   return {
     notificaciones,
+    paginacion,
     loading,
     error,
     unreadCount,
