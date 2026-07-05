@@ -43,13 +43,32 @@ function formatService(servicio) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function formatRating(arrendador) {
+function renderRating(arrendador) {
   const rating = Number(arrendador?.avgRating || 0);
   const count = Number(arrendador?.reviewsCount || 0);
 
   if (!count) return 'Sin calificaciones';
 
-  return `${rating.toFixed(1)} / 5 (${count})`;
+  const filledStars = Math.max(0, Math.min(5, Math.round(rating)));
+
+  return (
+    <div style={styles.ratingWrap}>
+      <span style={styles.ratingStars} aria-hidden="true">
+        {Array.from({ length: 5 }, (_, index) => (
+          <Star
+            key={index}
+            size={15}
+            fill={index < filledStars ? '#f59e0b' : 'transparent'}
+            color={index < filledStars ? '#f59e0b' : '#cbd5e1'}
+            strokeWidth={2.2}
+          />
+        ))}
+      </span>
+      <span style={styles.ratingText}>
+        {rating.toFixed(1)}/5.0 ({count})
+      </span>
+    </div>
+  );
 }
 
 function getPrimaryImage(publicacion) {
@@ -135,7 +154,7 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
     {
       label: 'Calificacion arrendador',
       Icon: Star,
-      render: (publicacion) => formatRating(publicacion.arrendador),
+      render: (publicacion) => renderRating(publicacion.arrendador),
     },
   ];
 
@@ -433,5 +452,20 @@ const styles = {
     fontSize: '12px',
     fontWeight: 700,
     padding: '5px 9px',
+  },
+  ratingWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  ratingStars: {
+    alignItems: 'center',
+    display: 'inline-flex',
+    gap: '2px',
+  },
+  ratingText: {
+    color: '#334155',
+    fontSize: '13px',
+    fontWeight: 700,
   },
 };
