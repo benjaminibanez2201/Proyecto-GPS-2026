@@ -169,6 +169,7 @@ const AdminUsers = () => {
         blanco: '#ffffff',
         grisSuave: '#f4f6f6',
     };
+    const canEditSelectedUser = dataUser.length === 1;
 
     const stats = [
         { label: 'Usuarios cargados', value: users.length, icon: UsersIcon },
@@ -228,8 +229,17 @@ const AdminUsers = () => {
                         <button type="button" onClick={() => setAdvancedFiltersEnabled((current) => !current)} style={styles.actionButton}>
                             {advancedFiltersEnabled ? 'Ocultar filtros avanzados' : 'Mostrar filtros avanzados'}
                         </button>
-                        <button type="button" onClick={handleClickUpdate} disabled={dataUser.length === 0} style={styles.actionButton}>
-                            Editar selección
+                        <button
+                            type="button"
+                            onClick={handleClickUpdate}
+                            disabled={!canEditSelectedUser}
+                            title={dataUser.length > 1 ? 'Selecciona solo un usuario para editar' : undefined}
+                            style={{
+                                ...styles.actionButton,
+                                ...(!canEditSelectedUser ? styles.disabledActionButton : {}),
+                            }}
+                        >
+                            Editar usuario
                         </button>
                         <button
                             type="button"
@@ -566,6 +576,11 @@ const styles = {
         fontWeight: '700',
         cursor: 'pointer',
         boxShadow: '0 10px 18px rgba(0, 128, 128, 0.18)',
+    },
+    disabledActionButton: {
+        opacity: 0.55,
+        cursor: 'not-allowed',
+        boxShadow: 'none',
     },
     deleteButton: {
         backgroundColor: '#0f766e',
