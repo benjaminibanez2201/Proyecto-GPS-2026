@@ -25,7 +25,15 @@ const formatLabel = (value, mapping) => {
   if (!value) return 'Sin dato';
   if (mapping[value]) return mapping[value];
 
-  const raw = value.toString();
+  const raw = value.toString().trim();
+  const [prefix, ...detailParts] = raw.split(':');
+  const normalizedPrefix = prefix.trim();
+
+  if (mapping[normalizedPrefix]) {
+    const detail = detailParts.join(':').trim();
+    return detail ? `${mapping[normalizedPrefix]}: ${detail}` : mapping[normalizedPrefix];
+  }
+
   if (!/^[a-z0-9_]+$/.test(raw)) return raw;
 
   return raw

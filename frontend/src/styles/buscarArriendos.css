@@ -448,6 +448,24 @@
   background-color: var(--ba-principal-dark);
 }
 
+.ba-compare-clear-button {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background-color: transparent;
+  color: var(--ba-principal-dark);
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.ba-compare-clear-button:hover {
+  background-color: rgba(15, 118, 110, 0.08);
+  border-color: rgba(15, 118, 110, 0.42);
+}
+
 .ba-center {
   text-align: center;
 }

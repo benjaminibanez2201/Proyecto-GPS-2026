@@ -38,7 +38,15 @@ const formatLabel = (value, mapping) => {
   if (!value) return 'Sin dato';
   if (mapping[value]) return mapping[value];
 
-  const raw = value.toString();
+  const raw = value.toString().trim();
+  const [prefix, ...detailParts] = raw.split(':');
+  const normalizedPrefix = prefix.trim();
+
+  if (mapping[normalizedPrefix]) {
+    const detail = detailParts.join(':').trim();
+    return detail ? `${mapping[normalizedPrefix]}: ${detail}` : mapping[normalizedPrefix];
+  }
+
   if (!/^[a-z0-9_]+$/.test(raw)) return raw;
 
   return raw
@@ -107,7 +115,7 @@ const AdminReportes = () => {
 
     if (!isConfirmed) return;
 
-    const [_, err] = await resolverPublicacionReportada(publicacion.publicId, { accion, observacion });
+    const [, err] = await resolverPublicacionReportada(publicacion.publicId, { accion, observacion });
     if (err) {
       Swal.fire({ icon: 'error', title: 'No se pudo resolver', text: err, confirmButtonColor: accent });
       return;

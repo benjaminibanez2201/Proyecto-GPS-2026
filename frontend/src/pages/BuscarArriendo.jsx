@@ -34,11 +34,34 @@ const SERVICIOS_VALIDOS = [
 const PRECIO_MIN_RANGO = 0;
 const PRECIO_MAX_RANGO = 1500000;
 const PRECIO_PASO = 10000;
+const COMPARACION_STORAGE_KEY = 'buscarArriendoComparacion';
+
+function getStoredComparacion() {
+  try {
+    const stored = sessionStorage.getItem(COMPARACION_STORAGE_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed.slice(0, 3) : [];
+  } catch {
+    return [];
+  }
+}
+
+function buildComparablePublicacion(publicacion) {
+  return {
+    id: getPublicacionId(publicacion),
+    publicId: publicacion?.publicId,
+    titulo: publicacion?.titulo,
+    tipoInmueble: publicacion?.tipoInmueble,
+    precioMensual: publicacion?.precioMensual,
+    ubicacion: publicacion?.ubicacion,
+    fotos: publicacion?.fotos,
+  };
+}
 
 export default function BuscarArriendos() {
   const { publicaciones, cargando, error, paginacion, cargarPublicaciones } = usePublicaciones();
   const { favoritos, handleAgregarFavorito, handleEliminarFavorito } = useFavoritos();
-  const [comparacion, setComparacion] = useState([]);
+  const [comparacion, setComparacion] = useState(() => getStoredComparacion());
   const [comparadorAbierto, setComparadorAbierto] = useState(false);
   const [mostrarMapa, setMostrarMapa] = useState(false);
   const [filtrosAplicados, setFiltrosAplicados] = useState({});
@@ -123,6 +146,14 @@ export default function BuscarArriendos() {
     }
   }, [error]);
 
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(COMPARACION_STORAGE_KEY, JSON.stringify(comparacion));
+    } catch {
+      // Si el navegador bloquea sessionStorage, la comparación sigue funcionando en memoria.
+    }
+  }, [comparacion]);
+
   const limpiarFiltros = () => {
     setFiltros({
       titulo: "",
@@ -185,7 +216,7 @@ export default function BuscarArriendos() {
 
       setFiltrosAplicados(parametrosConsulta);
       await cargarPublicaciones({ ...parametrosConsulta, pagina: 1 });
-    } catch (err) {
+    } catch {
       Swal.fire({
         icon: 'error',
         title: 'Error al aplicar filtros',
@@ -220,7 +251,7 @@ export default function BuscarArriendos() {
       return;
     }
 
-    setComparacion((prev) => [...prev, publicacion]);
+    setComparacion((prev) => [...prev, buildComparablePublicacion(publicacion)]);
   };
 
   const abrirComparador = () => {
@@ -235,6 +266,11 @@ export default function BuscarArriendos() {
     }
 
     setComparadorAbierto(true);
+  };
+
+  const limpiarComparacion = () => {
+    setComparacion([]);
+    setComparadorAbierto(false);
   };
 
   const contarActivos = (grupo) => {
@@ -451,6 +487,13 @@ export default function BuscarArriendos() {
               className="ba-compare-button"
             >
               Comparar seleccionadas
+            </button>
+            <button
+              type="button"
+              onClick={limpiarComparacion}
+              className="ba-compare-clear-button"
+            >
+              Limpiar selección
             </button>
           </div>
         )}
