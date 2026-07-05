@@ -157,7 +157,7 @@ const Profile = () => {
           confirmButtonColor: accent 
         });
       }
-    } catch (err) {
+    } catch {
       Swal.fire({ icon: 'error', title: 'Error de Red', text: 'No se pudo conectar con el servidor.', confirmButtonColor: accent });
     };
   };
@@ -199,7 +199,7 @@ const Profile = () => {
         } else {
           Swal.fire({ icon: 'error', title: 'Error', text: payload?.details || payload?.message || 'No se pudo enviar el enlace de restablecimiento.', confirmButtonColor: accent });
         }
-      } catch (error) {
+      } catch {
         Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo enviar el enlace de restablecimiento.', confirmButtonColor: accent });
       } finally {
         setIsSendingPasswordResetEmail(false);
@@ -249,7 +249,7 @@ const Profile = () => {
     if (field === 'telefono') {
       return {
         required: 'El teléfono es obligatorio',
-        pattern: { value: /^\+?[\d\s\-]{7,20}$/, message: 'Formato de teléfono inválido' },
+        pattern: { value: /^\+?[\d\s-]{7,20}$/, message: 'Formato de teléfono inválido' },
       };
     }
     if (field === 'email') {
