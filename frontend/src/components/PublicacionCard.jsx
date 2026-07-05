@@ -34,7 +34,7 @@ export default function PublicacionCard({
 }) {
   const navigate = useNavigate();
   
-  const idPublicacion = publicacion?.id || publicacion?._id;
+  const idPublicacion = publicacion?.publicId;
 
   const [esFavorito, setEsFavorito] = useState(false);
   const [procesando, setProcesando] = useState(false);
@@ -42,14 +42,9 @@ export default function PublicacionCard({
 
   useEffect(() => {
     if (!idPublicacion) return;
-    
-    const isFav = favoritos.some(fav => 
-      String(fav.publicacionId) === String(idPublicacion) || 
-      String(fav?.publicacion?.id) === String(idPublicacion) || 
-      String(fav?.publicacion?._id) === String(idPublicacion) ||
-      String(fav.id) === String(idPublicacion)
-    );
-    
+
+    const isFav = favoritos.some(fav => String(fav?.publicacion?.publicId) === String(idPublicacion));
+
     setEsFavorito(isFav);
   }, [favoritos, idPublicacion]);
 

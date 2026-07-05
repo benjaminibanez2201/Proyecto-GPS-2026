@@ -194,12 +194,12 @@ export async function obtenerPublicacionesArrendadorService(arrendadorId) {
   }
 }
 
-export async function updatePublicacionService(publicacionId, arrendadorId, body, files) {
+export async function updatePublicacionService(publicacionUuid, arrendadorId, body, files) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
-    
+
     const publicacion = await publicacionRepository.findOne({
-      where: { id: publicacionId, arrendador: { id: arrendadorId } }
+      where: { uuid: publicacionUuid, arrendador: { id: arrendadorId } }
     });
 
     if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];
@@ -246,12 +246,12 @@ export async function updatePublicacionService(publicacionId, arrendadorId, body
   }
 }
 
-export async function deletePublicacionService(publicacionId, arrendadorId) {
+export async function deletePublicacionService(publicacionUuid, arrendadorId) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
 
     const publicacion = await publicacionRepository.findOne({
-      where: { id: publicacionId, arrendador: { id: arrendadorId } }
+      where: { uuid: publicacionUuid, arrendador: { id: arrendadorId } }
     });
 
     if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];

@@ -101,7 +101,7 @@ const MisPublicaciones = () => {
 
     if (!confirm.isConfirmed) return;
 
-    const [, err] = await finalizarArriendoPorPublicacion(pub.id);
+    const [, err] = await finalizarArriendoPorPublicacion(pub.publicId);
 
     if (err) {
       Swal.fire({ icon: 'error', title: 'No se pudo finalizar el arriendo', text: err, confirmButtonColor: accent });
@@ -454,7 +454,7 @@ const MisPublicaciones = () => {
           });
 
           Swal.showLoading();
-          const response = await editarPublicacion(pub.id, formData);
+          const response = await editarPublicacion(pub.publicId, formData);
           if (response?.id) {
             Swal.close();
             Swal.fire({ icon: 'success', title: 'Publicación actualizada', confirmButtonColor: accent });
@@ -1009,7 +1009,7 @@ const MisPublicaciones = () => {
                   )}
 
                   <button 
-                    onClick={() => handleEliminar(pub.id)} 
+                    onClick={() => handleEliminar(pub.publicId)}
                     style={{ ...styles.iconBtnAction, color: '#dc2626', backgroundColor: '#fef2f2' }}
                     title="Eliminar"
                   >

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { validate as validateRut } from 'rut.js';
 import { register } from '@services/auth.service.js';
 import Form from '@components/Form';
 import useRegister from '@hooks/auth/useRegister.jsx';
 import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
+import slidebaar from '@assets/slidebaar.png';
 import '@styles/form.css';
 
 const patternRut = /^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/;
@@ -93,292 +94,303 @@ const Register = () => {
 
     return (
         <main className="container register-container">
-            <Form
-                title="Crea tu cuenta"
-                validationMode="onChange"
-                reValidationMode="onChange"
-                showRequiredHints
-                validateControlledCheckboxOnMount={false}
-                fields={[
-                    {
-                        label: 'Nombre completo',
-                        name: 'nombreCompleto',
-                        placeholder: 'Ingresa tu nombre completo',
-                        fieldType: 'input',
-                        type: 'text',
-                        required: true,
-                        minLength: 15,
-                        maxLength: 50,
-                        pattern: patternNombre,
-                        patternMessage: 'Debe contener solo letras y espacios',
-                    },
-                    {
-                        label: 'Correo electrónico',
-                        name: 'email',
-                        placeholder: 'ejemplo@gmail.cl',
-                        fieldType: 'input',
-                        type: 'email',
-                        required: true,
-                        minLength: 5,
-                        maxLength: 100,
-                        errorMessageData: errorEmail,
-                        onChange: (e) => handleInputChange('email', e.target.value),
-                    },
-                    {
-                        label: 'RUT',
-                        name: 'rut',
-                        placeholder: '12.345.678-9',
-                        fieldType: 'input',
-                        type: 'text',
-                        minLength: 9,
-                        maxLength: 12,
-                        pattern: patternRut,
-                        patternMessage: 'Debe ser xx.xxx.xxx-x o xxxxxxxx-x',
-                        required: true,
-                        validate: {
-                            validRut: validateRutValue,
-                        },
-                        errorMessageData: errorRut,
-                        onChange: (e) => handleInputChange('rut', e.target.value),
-                    },
-                    {
-                        label: 'Contraseña',
-                        name: 'password',
-                        placeholder: '**********',
-                        fieldType: 'input',
-                        type: 'password',
-                        required: true,
-                        minLength: 8,
-                        maxLength: 50,
-                        pattern: patternPassword,
-                        patternMessage: 'Debe contener al menos una mayúscula, un número y un carácter especial.',
-                    },
-                    {
-                        label: 'Confirmar contraseña',
-                        name: 'confirmPassword',
-                        placeholder: '**********',
-                        fieldType: 'input',
-                        type: 'password',
-                        required: true,
-                        minLength: 8,
-                        maxLength: 50,
-                        matchField: 'password',
-                        matchMessage: 'Las contraseñas no coinciden',
-                    },
-                    {
-                        label: 'Tipo de cuenta',
-                        name: 'rol',
-                        fieldType: 'select',
-                        required: true,
-                        defaultValue: 'estudiante',
-                        options: [
-                            { label: 'Estudiante', value: 'estudiante' },
-                            { label: 'Arrendador', value: 'arrendador' },
-                        ],
-                        onChange: handleRoleChange,
-                    },
-                    ...(role === 'estudiante'
-                        ? [
-                            {
-                                label: 'Universidad',
-                                name: 'universidad',
-                                placeholder: 'Ingresa tu universidad',
-                                fieldType: 'input',
-                                type: 'text',
-                                required: true,
-                                minLength: 2,
-                                maxLength: 255,
-                            },
-                            {
-                                label: 'Carrera',
-                                name: 'carrera',
-                                placeholder: 'Ingresa tu carrera',
-                                fieldType: 'input',
-                                type: 'text',
-                                required: true,
-                                minLength: 2,
-                                maxLength: 255,
-                            },
-                            {
-                                label: 'Carnet de identidad',
-                                name: 'carnetIdentidad',
-                                fieldType: 'fieldGroup',
-                                groupClassName: 'identity-document-group',
-                                fields: [
-                                    {
-                                        label: 'Delantera',
-                                        name: 'carnetIdentidadFrontal',
-                                        fieldType: 'input',
-                                        type: 'file',
-                                        fileActionLabel: 'Delantera',
-                                        filePlaceholder: 'JPG, PNG o PDF',
-                                        fileVariant: 'identity-card',
-                                        hideLabel: true,
-                                        accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
-                                        required: true,
-                                        validate: {
-                                            validFile: validateFile(
-                                                VERIFICATION_DOCUMENT_TYPES,
-                                                MAX_VERIFICATION_DOCUMENT_SIZE,
-                                                'La parte delantera del carnet debe ser JPG, PNG o PDF',
-                                            ),
-                                        },
-                                    },
-                                    {
-                                        label: 'Trasera',
-                                        name: 'carnetIdentidadReverso',
-                                        fieldType: 'input',
-                                        type: 'file',
-                                        fileActionLabel: 'Trasera',
-                                        filePlaceholder: 'JPG, PNG o PDF',
-                                        fileVariant: 'identity-card',
-                                        hideLabel: true,
-                                        accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
-                                        required: true,
-                                        validate: {
-                                            validFile: validateFile(
-                                                VERIFICATION_DOCUMENT_TYPES,
-                                                MAX_VERIFICATION_DOCUMENT_SIZE,
-                                                'La parte trasera del carnet debe ser JPG, PNG o PDF',
-                                            ),
-                                        },
-                                    },
-                                ],
-                            },
-                            {
-                                label: 'Certificado de alumno regular',
-                                name: 'documentoVerificacion',
-                                fieldType: 'input',
-                                type: 'file',
-                                filePlaceholder: 'PDF, JPG o PNG',
-                                accept: '.pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf',
-                                required: true,
-                                validate: {
-                                    validFile: validateFile(
-                                        VERIFICATION_DOCUMENT_TYPES,
-                                        MAX_VERIFICATION_DOCUMENT_SIZE,
-                                        'El certificado debe ser PDF, JPG o PNG',
-                                    ),
-                                },
-                            },
-                        ]
-                        : [
-                            {
-                                label: 'Teléfono',
-                                name: 'telefono',
-                                placeholder: 'Ingresa tu teléfono',
-                                fieldType: 'input',
-                                type: 'tel',
-                                required: true,
-                                minLength: 8,
-                                maxLength: 20,
-                                pattern: patternTelefono,
-                                patternMessage: 'Debe ingresar un teléfono válido',
-                            },
-                            {
-                                label: 'Foto de perfil',
-                                name: 'fotoPerfil',
-                                fieldType: 'input',
-                                type: 'file',
-                                filePlaceholder: 'JPG o PNG',
-                                accept: '.jpg,.jpeg,.png,image/jpeg,image/png',
-                                required: true,
-                                validate: {
-                                    validFile: validateFile(
-                                        PROFILE_PHOTO_TYPES,
-                                        MAX_PROFILE_PHOTO_SIZE,
-                                        'La foto de perfil debe ser JPG o PNG',
-                                    ),
-                                },
-                            },
-                            {
-                                label: 'Carnet de identidad',
-                                name: 'carnetIdentidadArrendador',
-                                fieldType: 'fieldGroup',
-                                groupClassName: 'identity-document-group',
-                                fields: [
-                                    {
-                                        label: 'Delantera',
-                                        name: 'documentoVerificacion',
-                                        fieldType: 'input',
-                                        type: 'file',
-                                        fileActionLabel: 'Delantera',
-                                        filePlaceholder: 'JPG, PNG o PDF',
-                                        fileVariant: 'identity-card',
-                                        hideLabel: true,
-                                        accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
-                                        required: true,
-                                        validate: {
-                                            validFile: validateFile(
-                                                VERIFICATION_DOCUMENT_TYPES,
-                                                MAX_VERIFICATION_DOCUMENT_SIZE,
-                                                'La parte delantera del carnet debe ser JPG, PNG o PDF',
-                                            ),
-                                        },
-                                    },
-                                    {
-                                        label: 'Trasera',
-                                        name: 'documentoVerificacionReverso',
-                                        fieldType: 'input',
-                                        type: 'file',
-                                        fileActionLabel: 'Trasera',
-                                        filePlaceholder: 'JPG, PNG o PDF',
-                                        fileVariant: 'identity-card',
-                                        hideLabel: true,
-                                        accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
-                                        required: true,
-                                        validate: {
-                                            validFile: validateFile(
-                                                VERIFICATION_DOCUMENT_TYPES,
-                                                MAX_VERIFICATION_DOCUMENT_SIZE,
-                                                'La parte trasera del carnet debe ser JPG, PNG o PDF',
-                                            ),
-                                        },
-                                    },
-                                ],
-                            },
-                            {
-                                label: 'Comprobante de residencia',
-                                name: 'documentoResidencia',
-                                fieldType: 'input',
-                                type: 'file',
-                                filePlaceholder: 'JPG, PNG o PDF',
-                                accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
-                                required: true,
-                                validate: {
-                                    validFile: validateFile(
-                                        VERIFICATION_DOCUMENT_TYPES,
-                                        MAX_VERIFICATION_DOCUMENT_SIZE,
-                                        'El comprobante debe ser boleta, factura, certificado, contrato u otro respaldo en JPG, PNG o PDF',
-                                    ),
-                                },
-                                extraContent: (
-                                    <span style={{ color: '#64748b', fontSize: '12px' }}>
-                                        Puedes subir una boleta o factura de servicio, certificado de residencia o contrato.
-                                    </span>
-                                ),
-                            },
-                        ]),
-                    {
-                        name: 'terminosAceptados',
-                        fieldType: 'checkbox',
-                        required: true,
-                        requiredMessage: 'Debes aceptar los términos y condiciones',
-                        checkboxLabel: 'Acepto los términos y condiciones',
-                        checked: termsAccepted,
-                        readOnly: true,
-                        onClick: openTermsModal,
-                        onLabelClick: openTermsModal,
-                    },
-                ]}
-                buttonText="Registrarse"
-                onSubmit={registerSubmit}
-                footerContent={
-                    <p className="forgot-password-footer">
-                        ¿Ya tienes cuenta? <Link to="/auth">Inicia sesión aquí</Link>
+            <div className="register-card">
+                <section className="register-card-banner">
+                    <img src={slidebaar} alt="Banner ArriendU" />
+                    <p>
+                        Únete a ArriendU y encuentra piezas, departamentos y pensiones verificadas cerca de tu
+                        campus, o publica tu propiedad para arrendar a estudiantes de Concepción.
                     </p>
-                }
-            />
+                </section>
+                <section className="register-card-form">
+                <Form
+                    title="Crea tu cuenta"
+                    validationMode="onChange"
+                    reValidationMode="onChange"
+                    showRequiredHints
+                    validateControlledCheckboxOnMount={false}
+                    fields={[
+                        {
+                            label: 'Nombre completo',
+                            name: 'nombreCompleto',
+                            placeholder: 'Ingresa tu nombre completo',
+                            fieldType: 'input',
+                            type: 'text',
+                            required: true,
+                            minLength: 15,
+                            maxLength: 50,
+                            pattern: patternNombre,
+                            patternMessage: 'Debe contener solo letras y espacios',
+                        },
+                        {
+                            label: 'Correo electrónico',
+                            name: 'email',
+                            placeholder: 'ejemplo@gmail.cl',
+                            fieldType: 'input',
+                            type: 'email',
+                            required: true,
+                            minLength: 5,
+                            maxLength: 100,
+                            errorMessageData: errorEmail,
+                            onChange: (e) => handleInputChange('email', e.target.value),
+                        },
+                        {
+                            label: 'RUT',
+                            name: 'rut',
+                            placeholder: '12.345.678-9',
+                            fieldType: 'input',
+                            type: 'text',
+                            minLength: 9,
+                            maxLength: 12,
+                            pattern: patternRut,
+                            patternMessage: 'Debe ser xx.xxx.xxx-x o xxxxxxxx-x',
+                            required: true,
+                            validate: {
+                                validRut: validateRutValue,
+                            },
+                            errorMessageData: errorRut,
+                            onChange: (e) => handleInputChange('rut', e.target.value),
+                        },
+                        {
+                            label: 'Contraseña',
+                            name: 'password',
+                            placeholder: '**********',
+                            fieldType: 'input',
+                            type: 'password',
+                            required: true,
+                            minLength: 8,
+                            maxLength: 50,
+                            pattern: patternPassword,
+                            patternMessage: 'Debe contener al menos una mayúscula, un número y un carácter especial.',
+                        },
+                        {
+                            label: 'Confirmar contraseña',
+                            name: 'confirmPassword',
+                            placeholder: '**********',
+                            fieldType: 'input',
+                            type: 'password',
+                            required: true,
+                            minLength: 8,
+                            maxLength: 50,
+                            matchField: 'password',
+                            matchMessage: 'Las contraseñas no coinciden',
+                        },
+                        {
+                            label: 'Tipo de cuenta',
+                            name: 'rol',
+                            fieldType: 'select',
+                            required: true,
+                            defaultValue: 'estudiante',
+                            options: [
+                                { label: 'Estudiante', value: 'estudiante' },
+                                { label: 'Arrendador', value: 'arrendador' },
+                            ],
+                            onChange: handleRoleChange,
+                        },
+                        ...(role === 'estudiante'
+                            ? [
+                                {
+                                    label: 'Universidad',
+                                    name: 'universidad',
+                                    placeholder: 'Ingresa tu universidad',
+                                    fieldType: 'input',
+                                    type: 'text',
+                                    required: true,
+                                    minLength: 2,
+                                    maxLength: 255,
+                                },
+                                {
+                                    label: 'Carrera',
+                                    name: 'carrera',
+                                    placeholder: 'Ingresa tu carrera',
+                                    fieldType: 'input',
+                                    type: 'text',
+                                    required: true,
+                                    minLength: 2,
+                                    maxLength: 255,
+                                },
+                                {
+                                    label: 'Carnet de identidad',
+                                    name: 'carnetIdentidad',
+                                    fieldType: 'fieldGroup',
+                                    groupClassName: 'identity-document-group',
+                                    fields: [
+                                        {
+                                            label: 'Delantera',
+                                            name: 'carnetIdentidadFrontal',
+                                            fieldType: 'input',
+                                            type: 'file',
+                                            fileActionLabel: 'Delantera',
+                                            filePlaceholder: 'JPG, PNG o PDF',
+                                            fileVariant: 'identity-card',
+                                            hideLabel: true,
+                                            accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
+                                            required: true,
+                                            validate: {
+                                                validFile: validateFile(
+                                                    VERIFICATION_DOCUMENT_TYPES,
+                                                    MAX_VERIFICATION_DOCUMENT_SIZE,
+                                                    'La parte delantera del carnet debe ser JPG, PNG o PDF',
+                                                ),
+                                            },
+                                        },
+                                        {
+                                            label: 'Trasera',
+                                            name: 'carnetIdentidadReverso',
+                                            fieldType: 'input',
+                                            type: 'file',
+                                            fileActionLabel: 'Trasera',
+                                            filePlaceholder: 'JPG, PNG o PDF',
+                                            fileVariant: 'identity-card',
+                                            hideLabel: true,
+                                            accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
+                                            required: true,
+                                            validate: {
+                                                validFile: validateFile(
+                                                    VERIFICATION_DOCUMENT_TYPES,
+                                                    MAX_VERIFICATION_DOCUMENT_SIZE,
+                                                    'La parte trasera del carnet debe ser JPG, PNG o PDF',
+                                                ),
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    label: 'Certificado de alumno regular',
+                                    name: 'documentoVerificacion',
+                                    fieldType: 'input',
+                                    type: 'file',
+                                    filePlaceholder: 'PDF, JPG o PNG',
+                                    accept: '.pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf',
+                                    required: true,
+                                    validate: {
+                                        validFile: validateFile(
+                                            VERIFICATION_DOCUMENT_TYPES,
+                                            MAX_VERIFICATION_DOCUMENT_SIZE,
+                                            'El certificado debe ser PDF, JPG o PNG',
+                                        ),
+                                    },
+                                },
+                            ]
+                            : [
+                                {
+                                    label: 'Teléfono',
+                                    name: 'telefono',
+                                    placeholder: 'Ingresa tu teléfono',
+                                    fieldType: 'input',
+                                    type: 'tel',
+                                    required: true,
+                                    minLength: 8,
+                                    maxLength: 20,
+                                    pattern: patternTelefono,
+                                    patternMessage: 'Debe ingresar un teléfono válido',
+                                },
+                                {
+                                    label: 'Foto de perfil',
+                                    name: 'fotoPerfil',
+                                    fieldType: 'input',
+                                    type: 'file',
+                                    filePlaceholder: 'JPG o PNG',
+                                    accept: '.jpg,.jpeg,.png,image/jpeg,image/png',
+                                    required: true,
+                                    validate: {
+                                        validFile: validateFile(
+                                            PROFILE_PHOTO_TYPES,
+                                            MAX_PROFILE_PHOTO_SIZE,
+                                            'La foto de perfil debe ser JPG o PNG',
+                                        ),
+                                    },
+                                },
+                                {
+                                    label: 'Carnet de identidad',
+                                    name: 'carnetIdentidadArrendador',
+                                    fieldType: 'fieldGroup',
+                                    groupClassName: 'identity-document-group',
+                                    fields: [
+                                        {
+                                            label: 'Delantera',
+                                            name: 'documentoVerificacion',
+                                            fieldType: 'input',
+                                            type: 'file',
+                                            fileActionLabel: 'Delantera',
+                                            filePlaceholder: 'JPG, PNG o PDF',
+                                            fileVariant: 'identity-card',
+                                            hideLabel: true,
+                                            accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
+                                            required: true,
+                                            validate: {
+                                                validFile: validateFile(
+                                                    VERIFICATION_DOCUMENT_TYPES,
+                                                    MAX_VERIFICATION_DOCUMENT_SIZE,
+                                                    'La parte delantera del carnet debe ser JPG, PNG o PDF',
+                                                ),
+                                            },
+                                        },
+                                        {
+                                            label: 'Trasera',
+                                            name: 'documentoVerificacionReverso',
+                                            fieldType: 'input',
+                                            type: 'file',
+                                            fileActionLabel: 'Trasera',
+                                            filePlaceholder: 'JPG, PNG o PDF',
+                                            fileVariant: 'identity-card',
+                                            hideLabel: true,
+                                            accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
+                                            required: true,
+                                            validate: {
+                                                validFile: validateFile(
+                                                    VERIFICATION_DOCUMENT_TYPES,
+                                                    MAX_VERIFICATION_DOCUMENT_SIZE,
+                                                    'La parte trasera del carnet debe ser JPG, PNG o PDF',
+                                                ),
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    label: 'Comprobante de residencia',
+                                    name: 'documentoResidencia',
+                                    fieldType: 'input',
+                                    type: 'file',
+                                    filePlaceholder: 'JPG, PNG o PDF',
+                                    accept: '.jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf',
+                                    required: true,
+                                    validate: {
+                                        validFile: validateFile(
+                                            VERIFICATION_DOCUMENT_TYPES,
+                                            MAX_VERIFICATION_DOCUMENT_SIZE,
+                                            'El comprobante debe ser boleta, factura, certificado, contrato u otro respaldo en JPG, PNG o PDF',
+                                        ),
+                                    },
+                                    extraContent: (
+                                        <span style={{ color: '#64748b', fontSize: '12px' }}>
+                                            Puedes subir una boleta o factura de servicio, certificado de residencia o contrato.
+                                        </span>
+                                    ),
+                                },
+                            ]),
+                        {
+                            name: 'terminosAceptados',
+                            fieldType: 'checkbox',
+                            required: true,
+                            requiredMessage: 'Debes aceptar los términos y condiciones',
+                            checkboxLabel: 'Acepto los términos y condiciones',
+                            checked: termsAccepted,
+                            readOnly: true,
+                            onClick: openTermsModal,
+                            onLabelClick: openTermsModal,
+                        },
+                    ]}
+                    buttonText="Registrarse"
+                    onSubmit={registerSubmit}
+                    footerContent={
+                        <p className="forgot-password-footer">
+                            ¿Ya tienes cuenta? <Link to="/auth">Inicia sesión aquí</Link>
+                        </p>
+                    }
+                />
+                </section>
+            </div>
             {termsModalOpen && (
                 <div className="terms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="terms-modal-title">
                     <section className="terms-modal">

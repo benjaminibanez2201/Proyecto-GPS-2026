@@ -9,6 +9,8 @@ import {
   handleErrorServer,
   handleSuccess,
 } from "../handlers/responseHandlers.js";
+import { isValidPublicId } from "../helpers/publicId.helper.js";
+
 export async function createFavorito(req, res) {
   try {
     const { publicacionId } = req.body;
@@ -18,8 +20,8 @@ export async function createFavorito(req, res) {
       return handleErrorClient(res, 403, "Acceso denegado", "Solo los estudiantes pueden guardar favoritos");
     }
 
-    if (!publicacionId) {
-      return handleErrorClient(res, 400, "Error de validación", "El publicacionId es obligatorio");
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "Error de validación", "El publicacionId es obligatorio y debe ser válido");
     }
 
     const [favorito, error] = await createFavoritoService(estudianteId, publicacionId);
@@ -43,8 +45,8 @@ export async function deleteFavorito(req, res) {
       return handleErrorClient(res, 403, "Acceso denegado", "Solo los estudiantes pueden gestionar favoritos");
     }
 
-    if (!publicacionId) {
-      return handleErrorClient(res, 400, "Error de validación", "El ID de la publicación es obligatorio");
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "Error de validación", "El ID de la publicación es obligatorio y debe ser válido");
     }
 
     const [eliminado, error] = await deleteFavoritoService(estudianteId, publicacionId);

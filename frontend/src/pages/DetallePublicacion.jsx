@@ -68,7 +68,7 @@ export default function DetallePublicacion() {
   const esAdmin = user?.rol === 'admin' || user?.rol === 'administrador';
   const esAutorPublicacion = String(publicacion?.arrendador?.id) === String(user?.id);
 
-  const idPublicacion = publicacion?.id || publicacion?._id;
+  const idPublicacion = publicacion?.publicId;
   const arrendador = publicacion?.arrendador;
 
   useEffect(() => {
@@ -95,11 +95,8 @@ export default function DetallePublicacion() {
 
   useEffect(() => {
     if (favoritos.length > 0 && idPublicacion) {
-      const isFav = favoritos.some(fav => 
-        String(fav.publicacionId) === String(idPublicacion) || 
-        String(fav?.publicacion?.id) === String(idPublicacion) || 
-        String(fav?.publicacion?._id) === String(idPublicacion) ||
-        String(fav.id) === String(idPublicacion)
+      const isFav = favoritos.some(fav =>
+        String(fav?.publicacion?.publicId) === String(idPublicacion)
       );
       setEsFavorito(isFav);
     } else {

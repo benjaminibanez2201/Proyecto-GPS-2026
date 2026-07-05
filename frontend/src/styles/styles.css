@@ -60,8 +60,9 @@ img:hover {
 	opacity: 0.98;
 }
 
-/* Disable hover transform for images inside the login page */
-.login-page img:hover {
+/* Disable hover transform for images inside the login and register pages */
+.login-page img:hover,
+.register-container img:hover {
   transform: none !important;
   box-shadow: none !important;
   opacity: 1 !important;

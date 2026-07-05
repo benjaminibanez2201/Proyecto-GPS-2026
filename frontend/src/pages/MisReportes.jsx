@@ -23,8 +23,12 @@ const accionLabels = {
 
 const formatLabel = (value, mapping) => {
   if (!value) return 'Sin dato';
-  return mapping[value] || value
-    .toString()
+  if (mapping[value]) return mapping[value];
+
+  const raw = value.toString();
+  if (!/^[a-z0-9_]+$/.test(raw)) return raw;
+
+  return raw
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };

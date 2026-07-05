@@ -15,6 +15,9 @@ router.get("/mios", authenticateJwt, reportesController.misReportes);
 // Listado de publicaciones reportadas (solo admin)
 router.get("/", authenticateJwt, isAdmin, reportesController.listarReportes);
 
+// Listado de publicaciones inactivas (solo admin)
+router.get("/inactivas", authenticateJwt, isAdmin, reportesController.listarInactivas);
+
 // Detalle de reporte
 router.get("/:id", authenticateJwt, isAdmin, reportesController.detalleReporte);
 
