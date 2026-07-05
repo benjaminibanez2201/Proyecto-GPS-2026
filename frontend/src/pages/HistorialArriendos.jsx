@@ -107,6 +107,7 @@ export default function HistorialArriendos() {
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
+      <div className="historial-table-wrap">
       <table className="historial-table">
         <thead>
           <tr>
@@ -195,6 +196,7 @@ export default function HistorialArriendos() {
           })}
         </tbody>
       </table>
+      </div>
 
       {/* MODAL DE CALIFICACIÓN */}
       {modalAbierto && (

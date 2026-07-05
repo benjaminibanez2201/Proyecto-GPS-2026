@@ -192,7 +192,7 @@ const styles = {
   page: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
+    gap: '14px',
     padding: '4px 0 12px',
   },
   hero: {

@@ -1015,18 +1015,10 @@ const MisPublicaciones = () => {
                   >
                     <Trash2 size={16} />
                   </button>
-                                    <button 
-                    onClick={() => abrirGaleria(pub)} 
+                  <button
+                    onClick={() => abrirGaleria(pub)}
                     disabled={!pub.fotos || pub.fotos.length === 0}
-                    style={{
-                      border: 'none',
-                      background: 'none',
-                      padding: '14px 0',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
+                    style={styles.iconBtnAction}
                     title={`Ver fotos (${pub.fotos?.length || 0})`}
                   >
                     <Image size={16} style={{ color: pub.fotos?.length > 0 ? '#0f766e' : '#94a3b8' }} />
@@ -1280,12 +1272,24 @@ const styles = {
   },
   rightSection: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr', 
+    gridTemplateColumns: '1fr 1fr 1fr',
     borderTop: '1px solid #f1f5f9',
     backgroundColor: '#f8fafc',
   },
+  iconBtnAction: {
+    border: 'none',
+    outline: 'none',
+    background: 'none',
+    padding: '14px 0',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background-color 0.2s ease',
+  },
   btnDisponible: {
     border: 'none',
+    outline: 'none',
     background: 'none',
     padding: '14px',
     cursor: 'pointer',
@@ -1300,6 +1304,7 @@ const styles = {
   },
   btnEditar: {
     border: 'none',
+    outline: 'none',
     background: 'none',
     padding: '14px',
     cursor: 'pointer',
@@ -1323,19 +1328,6 @@ const styles = {
     gap: '6px',
     borderRight: '1px solid #f1f5f9',
     cursor: 'not-allowed',
-  },
-  btnEliminar: {
-    border: 'none',
-    background: 'none',
-    padding: '14px',
-    cursor: 'pointer',
-    color: '#dc2626',
-    fontSize: '13px',
-    fontWeight: '700',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
   },
   btnStats: {
     border: '1px solid #dbe4ee',

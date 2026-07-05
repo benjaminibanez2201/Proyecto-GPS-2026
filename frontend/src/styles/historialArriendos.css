@@ -1,6 +1,6 @@
 /* --- CONTENEDOR GENERAL --- */
 .historial-page {
-  padding: 30px 20px;
+  padding: 4px 20px 16px;
   background-color: #f9f8f6;
   min-height: 100vh;
   font-family: 'Inter', system-ui, sans-serif;
@@ -16,7 +16,11 @@
   color: #ffffff;
   background: linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%);
   box-shadow: 0 10px 25px rgba(11, 34, 45, 0.15);
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+.historial-table-wrap {
+  overflow-x: auto;
 }
 
 .hero-title {
@@ -34,6 +38,7 @@
 /* --- TABLA --- */
 .historial-table {
   width: 100%;
+  min-width: 720px;
   text-align: left;
   border-collapse: collapse;
   background-color: #ffffff;
