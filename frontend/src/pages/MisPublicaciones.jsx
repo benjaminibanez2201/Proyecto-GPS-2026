@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion } from '@services/user.service.js';
 import { finalizarArriendoPorPublicacion } from '@services/rentalsAndReviews.service.js';
-import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, RotateCcw, TrendingUp, Image } from 'lucide-react';
+import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, RotateCcw, TrendingUp, Image, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
@@ -586,13 +586,15 @@ const MisPublicaciones = () => {
     Swal.fire({
       title: pub.titulo,
       html: `
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
           ${pub.fotos.map((foto) => `
-            <img src="${resolveFileUrl(foto)}" style="width:100%; height:140px; object-fit:cover; border-radius:10px;" />
+            <div style="width:100%; height:220px; border-radius:10px; background-color:#0f172a0d; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+              <img src="${resolveFileUrl(foto)}" style="max-width:100%; max-height:100%; object-fit:contain;" />
+            </div>
           `).join('')}
         </div>
       `,
-      width: '700px',
+      width: '760px',
       confirmButtonColor: accent,
       confirmButtonText: 'Cerrar',
     });
@@ -712,11 +714,6 @@ const MisPublicaciones = () => {
                     {pub.estado}
                   </span>
                   <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {pub.fotos && pub.fotos.length > 1 && (
-                      <button onClick={() => abrirGaleria(pub)} style={styles.btnStats}>
-                        Ver fotos ({pub.fotos.length})
-                      </button>
-                    )}
                     <button onClick={() => abrirEstadisticas(pub)} style={styles.btnStats}>
                       <BarChart3 size={14} strokeWidth={2.2} />
                       Estadísticas
@@ -763,10 +760,17 @@ const MisPublicaciones = () => {
                       Marcar disponible
                     </button>
                   )}
-                  <button onClick={() => handleEditar(pub)} style={styles.btnEditar}>
-                    <Pencil size={13} />
-                    Editar
-                  </button>
+                  {pub.estado === 'inactiva' ? (
+                    <span style={styles.btnBloqueado} title="Esta publicación fue dada de baja por incumplir las normas y no se puede editar">
+                      <Lock size={13} />
+                      No editable
+                    </span>
+                  ) : (
+                    <button onClick={() => handleEditar(pub)} style={styles.btnEditar}>
+                      <Pencil size={13} />
+                      Editar
+                    </button>
+                  )}
 
                   <button 
                     onClick={() => handleEliminar(pub.id)} 
@@ -1071,6 +1075,18 @@ const styles = {
     justifyContent: 'center',
     gap: '6px',
     borderRight: '1px solid #f1f5f9',
+  },
+  btnBloqueado: {
+    padding: '14px',
+    color: '#94a3b8',
+    fontSize: '13px',
+    fontWeight: '700',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    borderRight: '1px solid #f1f5f9',
+    cursor: 'not-allowed',
   },
   btnEliminar: {
     border: 'none',
