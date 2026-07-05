@@ -10,6 +10,12 @@ const PublicacionSchema = new EntitySchema({
       primary: true,
       generated: true,
     },
+    uuid: {
+      type: "uuid",
+      generated: "uuid",
+      unique: true,
+      nullable: false,
+    },
     titulo: {
       type: "varchar",
       length: 255,

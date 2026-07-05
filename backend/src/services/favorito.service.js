@@ -96,6 +96,7 @@ export async function getFavoritosService(estudianteId) {
         "favorito.id",
         "favorito.createdAt",
         "publicacion.id",
+        "publicacion.uuid",
         "publicacion.titulo",
         "publicacion.precioMensual",
         "publicacion.tipoInmueble",

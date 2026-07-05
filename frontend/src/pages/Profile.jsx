@@ -11,7 +11,7 @@ import {
 import { forgotPassword, logout } from '@services/auth.service.js';
 import { useAuth } from '@context/AuthContext';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
-import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight, FlagTriangleRight, GraduationCap, BookOpen, Mail, Phone, Check, ShieldCheck, Camera, KeyRound } from 'lucide-react';
+import { UserCircle2, Save, Pencil, X, Home, Star, ChevronRight, FlagTriangleRight, GraduationCap, BookOpen, Mail, Phone, Check, Camera, KeyRound } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const accent = '#0f766e';
@@ -309,12 +309,6 @@ const Profile = () => {
       items: [
         { label: 'Universidad', value: profileData?.universidad || 'No especificada', icon: GraduationCap },
         { label: 'Carrera', value: profileData?.carrera || 'No especificada', icon: BookOpen },
-      ],
-    }] : []),
-    ...(profileData?.rol === 'arrendador' ? [{
-      title: 'Verificación',
-      items: [
-        { label: 'Estado de verificación', value: (profileData?.estadoVerificacion || 'pendiente').toUpperCase(), icon: ShieldCheck },
       ],
     }] : []),
   ];

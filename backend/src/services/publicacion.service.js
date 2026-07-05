@@ -100,6 +100,7 @@ export async function getPublicacionesService(filtros) {
     query.orderBy(`publicacion.${campoOrden}`, direccion);
     query.select([
       "publicacion.id",
+      "publicacion.uuid",
       "publicacion.titulo",
       "publicacion.precioMensual",
       "publicacion.tipoInmueble",
@@ -134,14 +135,15 @@ export async function getPublicacionesService(filtros) {
   }
 }
 
-export async function getPublicacionDetalleService(id) {
+export async function getPublicacionDetalleService(uuid) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
-    
+
     const publicacion = await publicacionRepository.createQueryBuilder("publicacion")
       .leftJoin("publicacion.arrendador", "arrendador")
       .select([
         "publicacion.id",
+        "publicacion.uuid",
         "publicacion.titulo",
         "publicacion.precioMensual",
         "publicacion.tipoInmueble",
@@ -157,6 +159,7 @@ export async function getPublicacionDetalleService(id) {
       ])
       .addSelect([
         "arrendador.id",
+        "arrendador.uuid",
         "arrendador.nombreCompleto",
         "arrendador.email",
         "arrendador.fotoPerfil",
@@ -164,7 +167,7 @@ export async function getPublicacionDetalleService(id) {
         "arrendador.avgRating",
         "arrendador.reviewsCount",
       ])
-      .where("publicacion.id = :id", { id: parseInt(id) })
+      .where("publicacion.uuid = :uuid", { uuid })
       .getOne();
 
     if (!publicacion) {

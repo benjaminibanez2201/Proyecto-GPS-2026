@@ -337,7 +337,16 @@ export default function DetallePublicacion() {
             {arrendador && (
               <div style={{ backgroundColor: '#f8fafc', padding: '24px', borderRadius: '12px' }}>
                 <h3 style={{ margin: '0 0 16px 0', color: '#2c3e50', fontSize: '18px' }}>Propietario</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '14px',
+                    cursor: arrendador.publicId ? 'pointer' : 'default',
+                  }}
+                  onClick={() => arrendador.publicId && navigate(`/perfil/${arrendador.publicId}`)}
+                >
                   <AvatarCirculo nombre={arrendador.nombreCompleto} foto={arrendador.fotoPerfil} size={52} />
                   <div>
                     <p style={{ margin: 0, fontWeight: 'bold', color: '#2c3e50', fontSize: '15px' }}>

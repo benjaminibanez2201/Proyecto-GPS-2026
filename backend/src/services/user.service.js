@@ -490,13 +490,13 @@ export async function getProfileService(id) {
   }
 }
 
-export async function getPublicProfileService(id) {
+export async function getPublicProfileService(uuid) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
     const userFound = await userRepository.findOne({
-      where: { id },
-      select: ["id", "nombreCompleto", "fotoPerfil", "rol", "avgRating", "reviewsCount"],
+      where: { uuid },
+      select: ["id", "uuid", "nombreCompleto", "fotoPerfil", "rol", "avgRating", "reviewsCount"],
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];
