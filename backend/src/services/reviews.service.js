@@ -12,7 +12,7 @@ export async function crearResenaServicio(body, authorId) {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
     const repositorioUsuario = AppDataSource.getRepository(User);
 
-    const { rentalId, targetUserId, rating, comment } = body;
+    const { rentalId, targetUserId, rating, comment, isAnonymous } = body;
 
     const arriendo = await repositorioArriendo.findOne({ where: { id: rentalId } });
     if (!arriendo) return [null, "Arriendo no encontrado"];
@@ -35,6 +35,7 @@ export async function crearResenaServicio(body, authorId) {
       targetUserId,
       rating,
       comment,
+      isAnonymous: Boolean(isAnonymous),
     });
 
     const guardada = await repositorioResena.save(nuevaResena);
@@ -68,13 +69,16 @@ export async function crearResenaServicio(body, authorId) {
   }
 }
 
-export async function obtenerResenasPorUsuarioServicio(userId) {
+export async function obtenerResenasPorUsuarioServicio(userUuid) {
   try {
     const repositorioResena = AppDataSource.getRepository(Review);
     const repositorioUsuario = AppDataSource.getRepository(User);
 
+    const usuarioTarget = await repositorioUsuario.findOne({ where: { uuid: userUuid } });
+    if (!usuarioTarget) return [null, "Usuario no encontrado"];
+
     const resenas = await repositorioResena.find({
-      where: { targetUserId: userId },
+      where: { targetUserId: usuarioTarget.id },
       order: { createdAt: "DESC" },
     });
 
@@ -87,6 +91,7 @@ export async function obtenerResenasPorUsuarioServicio(userId) {
       where: { id: In(authorIds) },
       select: {
         id: true,
+        uuid: true,
         nombreCompleto: true,
         fotoPerfil: true,
       },
@@ -96,7 +101,7 @@ export async function obtenerResenasPorUsuarioServicio(userId) {
 
     const resenasEnriquecidas = resenas.map((resena) => ({
       ...resena,
-      author: autoresMap.get(Number(resena.authorId)) || null,
+      author: resena.isAnonymous ? null : autoresMap.get(Number(resena.authorId)) || null,
     }));
 
     return [resenasEnriquecidas, null];
@@ -125,6 +130,7 @@ export async function obtenerResenasRecibidasServicio(userId) {
       where: { id: In(authorIds) },
       select: {
         id: true,
+        uuid: true,
         nombreCompleto: true,
         fotoPerfil: true,
       },
@@ -134,7 +140,7 @@ export async function obtenerResenasRecibidasServicio(userId) {
 
     const resenasEnriquecidas = resenas.map((resena) => ({
       ...resena,
-      author: autoresMap.get(Number(resena.authorId)) || null,
+      author: resena.isAnonymous ? null : autoresMap.get(Number(resena.authorId)) || null,
     }));
 
     return [resenasEnriquecidas, null];

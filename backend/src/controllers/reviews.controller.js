@@ -8,11 +8,11 @@ import {
   obtenerResenasPorUsuarioServicio,
   obtenerResenasRecibidasServicio,
 } from "../services/reviews.service.js";
-import { decodePublicId, encodePublicId } from "../helpers/publicId.helper.js";
+import { isValidPublicId } from "../helpers/publicId.helper.js";
 
 function agregarPublicIdAutor(resena) {
   if (!resena?.author) return resena;
-  return { ...resena, author: { ...resena.author, publicId: encodePublicId(resena.author.id) } };
+  return { ...resena, author: { ...resena.author, publicId: resena.author.uuid } };
 }
 
 export async function crearResena(req, res) {
@@ -29,11 +29,12 @@ export async function crearResena(req, res) {
 
 export async function obtenerResenasPorUsuario(req, res) {
   try {
-    const { id: idToken } = req.params;
-    const id = decodePublicId(idToken);
-    if (id == null) return handleErrorClient(res, 400, "ID inválido", "El identificador del usuario no es válido");
+    const { id: usuarioUuid } = req.params;
+    if (!isValidPublicId(usuarioUuid)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador del usuario no es válido");
+    }
 
-    const [data, error] = await obtenerResenasPorUsuarioServicio(id);
+    const [data, error] = await obtenerResenasPorUsuarioServicio(usuarioUuid);
     if (error) return handleErrorClient(res, 400, error);
     return handleSuccess(res, 200, "Reviews del usuario", data.map(agregarPublicIdAutor));
   } catch (error) {

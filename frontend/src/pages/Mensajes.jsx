@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -107,6 +107,7 @@ export default function Mensajes() {
   const [searchText, setSearchText] = useState('');
   const [rentalForConversation, setRentalForConversation] = useState(null);
   const [loadingRentalConfirmation, setLoadingRentalConfirmation] = useState(false);
+  const threadRef = useRef(null);
 
   const publicationTargetId = publicationIdParam || null;
   const conversationTargetId = conversationIdParam || null;
@@ -184,6 +185,11 @@ export default function Mensajes() {
 
     loadRentalForConversation(selectedConversation);
   }, [loadRentalForConversation, selectedConversation, user?.id]);
+
+  useEffect(() => {
+    if (!threadRef.current) return;
+    threadRef.current.scrollTop = threadRef.current.scrollHeight;
+  }, [messages, selectedConversationId]);
 
   useEffect(() => {
     const init = async () => {
@@ -579,11 +585,25 @@ export default function Mensajes() {
             <section className="mensajes-detail">
               <div className="mensajes-detail__card">
                 <div className="mensajes-detail__header">
-                  <div>
-                    <h2>{getConversationTitle(selectedConversation)}</h2>
-                    <p className="mensajes-detail__meta">
-                      Con {selectedOtherParticipant?.nombreCompleto || 'Sin participante'} · {selectedConversation?.publicacion?.ubicacion || 'Sin ubicación'}
-                    </p>
+                  <div className="mensajes-detail__header-info">
+                    {selectedOtherParticipant?.publicId ? (
+                      <button
+                        type="button"
+                        className="mensajes-detail__avatar-btn"
+                        onClick={() => navigate(`/perfil/${selectedOtherParticipant.publicId}`)}
+                        title="Ver perfil"
+                      >
+                        <AvatarCirculo nombre={selectedOtherParticipant?.nombreCompleto} foto={selectedOtherParticipant?.fotoPerfil} size={44} />
+                      </button>
+                    ) : (
+                      <AvatarCirculo nombre={selectedOtherParticipant?.nombreCompleto} foto={selectedOtherParticipant?.fotoPerfil} size={44} />
+                    )}
+                    <div>
+                      <h2>{getConversationTitle(selectedConversation)}</h2>
+                      <p className="mensajes-detail__meta">
+                        Con <span className="mensajes-detail__participant-name">{selectedOtherParticipant?.nombreCompleto || 'Sin participante'}</span> · {selectedConversation?.publicacion?.ubicacion || 'Sin ubicación'}
+                      </p>
+                    </div>
                   </div>
                   <div className="mensajes-detail__header-actions">
                     <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${selectedConversation?.publicacion?.publicId}`)}>
@@ -612,7 +632,7 @@ export default function Mensajes() {
                 {loadingDetail ? (
                   <div className="mensajes-empty mensajes-empty--detail">Cargando mensajes...</div>
                 ) : (
-                  <div className="mensajes-thread">
+                  <div className="mensajes-thread" ref={threadRef}>
                     {messages.length === 0 ? (
                       <div className="mensajes-empty mensajes-empty--detail">Todavía no hay mensajes en esta conversación.</div>
                     ) : (

@@ -18,11 +18,17 @@ import {
   handleErrorServer,
   handleSuccess,
 } from "../handlers/responseHandlers.js";
-import { decodePublicId, encodePublicId } from "../helpers/publicId.helper.js";
+import { isValidPublicId } from "../helpers/publicId.helper.js";
 
 function agregarPublicId(publicacion) {
   if (!publicacion) return publicacion;
-  return { ...publicacion, publicId: encodePublicId(publicacion.id) };
+  const resultado = { ...publicacion, publicId: publicacion.uuid };
+
+  if (publicacion.arrendador) {
+    resultado.arrendador = { ...publicacion.arrendador, publicId: publicacion.arrendador.uuid };
+  }
+
+  return resultado;
 }
 
 function agregarPublicIdALista(publicaciones) {
@@ -160,14 +166,13 @@ export async function getPublicacionesPropias(req, res) {
 
 export async function getPublicacionById(req, res) {
   try {
-    const { id: publicacionToken } = req.params;
+    const { id: publicacionUuid } = req.params;
 
-    const publicacionId = decodePublicId(publicacionToken);
-    if (publicacionId == null) {
+    if (!isValidPublicId(publicacionUuid)) {
       return handleErrorClient(res, 400, "ID inválido", "El identificador de la publicación no es válido");
     }
 
-    const [publicacion, error] = await getPublicacionDetalleService(publicacionId);
+    const [publicacion, error] = await getPublicacionDetalleService(publicacionUuid);
     if (error) {
       return handleErrorClient(res, 404, error, "Publicación no encontrada");
     }
@@ -185,7 +190,7 @@ export async function getPublicacionById(req, res) {
     }
 
     if (publicacion?.arrendador?.id && Number(publicacion.arrendador.id) !== Number(req.user.id)) {
-      await incrementarVisualizacionesPublicacionServicio(publicacionId);
+      await incrementarVisualizacionesPublicacionServicio(publicacion.id);
     }
 
     handleSuccess(res, 200, "Detalle de la publicación obtenido", agregarPublicId(publicacion));

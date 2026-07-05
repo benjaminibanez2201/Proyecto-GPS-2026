@@ -7,7 +7,7 @@ import {
   resolverReporte,
 } from "../services/reportes.service.js";
 import { handleErrorClient, handleErrorServer, handleSuccess } from "../handlers/responseHandlers.js";
-import { decodePublicId, encodePublicId } from "../helpers/publicId.helper.js";
+import { isValidPublicId } from "../helpers/publicId.helper.js";
 
 export async function crearReportePublicacion(req, res) {
   try {
@@ -31,7 +31,7 @@ export async function listarReportes(req, res) {
     const resultConPublicId = result.map((item) => ({
       ...item,
       publicacion: item.publicacion
-        ? { ...item.publicacion, publicId: encodePublicId(item.publicacion.id) }
+        ? { ...item.publicacion, publicId: item.publicacion.uuid }
         : item.publicacion,
     }));
 
@@ -50,7 +50,7 @@ export async function misReportes(req, res) {
     const resultConPublicId = result.map((reporte) => ({
       ...reporte,
       publicacion: reporte.publicacion
-        ? { ...reporte.publicacion, publicId: encodePublicId(reporte.publicacion.id) }
+        ? { ...reporte.publicacion, publicId: reporte.publicacion.uuid }
         : reporte.publicacion,
     }));
 
@@ -74,16 +74,15 @@ export async function detalleReporte(req, res) {
 export async function reviewReporte(req, res) {
   try {
     const adminId = req.user.id;
-    const { id_publicacion: idPublicacionToken } = req.params;
+    const { id_publicacion: publicacionUuid } = req.params;
     const { accion, observacion } = req.body;
     if (!accion) return handleErrorClient(res, 400, "Falta la acción a realizar");
 
-    const idPublicacion = decodePublicId(idPublicacionToken);
-    if (idPublicacion == null) {
+    if (!isValidPublicId(publicacionUuid)) {
       return handleErrorClient(res, 400, "ID inválido", "El identificador de la publicación no es válido");
     }
 
-    const [result, error] = await resolverReporte(idPublicacion, adminId, accion, observacion);
+    const [result, error] = await resolverReporte(publicacionUuid, adminId, accion, observacion);
     if (error) return handleErrorClient(res, 400, error);
     return handleSuccess(res, 200, "Reporte resuelto correctamente", { ok: result });
   } catch (error) {

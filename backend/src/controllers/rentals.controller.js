@@ -8,23 +8,23 @@ import {
   listarArriendosServicio,
   obtenerArriendoPorIdServicio,
 } from "../services/rentals.service.js";
-import { decodePublicId, encodePublicId } from "../helpers/publicId.helper.js";
+import { isValidPublicId } from "../helpers/publicId.helper.js";
 
 function agregarPublicIds(arriendo) {
   if (!arriendo) return arriendo;
 
-  const resultado = { ...arriendo, publicId: encodePublicId(arriendo.id) };
+  const resultado = { ...arriendo, publicId: arriendo.uuid };
 
   if (arriendo.estudiante) {
-    resultado.estudiante = { ...arriendo.estudiante, publicId: encodePublicId(arriendo.estudiante.id) };
+    resultado.estudiante = { ...arriendo.estudiante, publicId: arriendo.estudiante.uuid };
   }
 
   if (arriendo.arrendador) {
-    resultado.arrendador = { ...arriendo.arrendador, publicId: encodePublicId(arriendo.arrendador.id) };
+    resultado.arrendador = { ...arriendo.arrendador, publicId: arriendo.arrendador.uuid };
   }
 
   if (arriendo.publicacion) {
-    resultado.publicacion = { ...arriendo.publicacion, publicId: encodePublicId(arriendo.publicacion.id) };
+    resultado.publicacion = { ...arriendo.publicacion, publicId: arriendo.publicacion.uuid };
   }
 
   return resultado;
@@ -42,11 +42,12 @@ export async function crearArriendo(req, res) {
 
 export async function obtenerArriendo(req, res) {
   try {
-    const { id: idToken } = req.params;
-    const id = decodePublicId(idToken);
-    if (id == null) return handleErrorClient(res, 400, "ID inválido", "El identificador del arriendo no es válido");
+    const { id: arriendoUuid } = req.params;
+    if (!isValidPublicId(arriendoUuid)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador del arriendo no es válido");
+    }
 
-    const [data, error] = await obtenerArriendoPorIdServicio(id);
+    const [data, error] = await obtenerArriendoPorIdServicio(arriendoUuid);
     if (error) return handleErrorClient(res, 404, error);
 
     const userId = Number(req.user.id);

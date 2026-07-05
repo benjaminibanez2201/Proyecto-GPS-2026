@@ -13,6 +13,7 @@
   height: 100%;
   display: grid;
   grid-template-columns: 360px 1fr;
+  grid-template-rows: minmax(0, 1fr);
   gap: 20px;
   align-items: stretch;
 }
@@ -36,12 +37,43 @@
   min-height: 0;
 }
 
-.mensajes-sidebar__header,
+.mensajes-sidebar__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
 .mensajes-detail__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
+}
+
+.mensajes-detail__header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mensajes-detail__avatar-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease;
+}
+
+.mensajes-detail__avatar-btn:hover {
+  opacity: 0.8;
+}
+
+.mensajes-detail__participant-name {
+  color: #0f766e;
+  font-weight: 700;
 }
 
 .mensajes-sidebar h1,
@@ -138,6 +170,14 @@ transform: translateY(-2px);
 
 .mensajes-detail__header-actions .mensajes-icon-btn--danger {
   display: none;
+}
+
+.mensajes-detail__header-actions .mensajes-send-btn {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 14px;
+  box-shadow: 0 12px 24px rgba(0, 128, 128, 0.2);
 }
 
 .mensajes-icon-btn:hover,
@@ -344,6 +384,7 @@ transform: translateY(-2px);
 
 .mensajes-detail__card {
   height: 100%;
+  min-height: 0;
   border-radius: 22px;
   padding: 24px;
   display: flex;
@@ -383,10 +424,10 @@ transform: translateY(-2px);
 .mensajes-thread {
   margin-top: 18px;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   gap: 8px;
   padding-right: 6px;
 }

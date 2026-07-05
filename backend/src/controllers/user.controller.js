@@ -24,7 +24,7 @@ import {
   handleSuccess,
 } from "../handlers/responseHandlers.js";
 import { commitProfilePhotoUpload } from "../helpers/upload.helper.js";
-import { decodePublicId, encodePublicId } from "../helpers/publicId.helper.js";
+import { isValidPublicId } from "../helpers/publicId.helper.js";
 
 export async function getUser(req, res) {
   try {
@@ -253,18 +253,17 @@ export async function getProfile(req, res) {
 
 export async function getProfileById(req, res) {
   try {
-    const { id: idToken } = req.params;
-    const id = decodePublicId(idToken);
+    const { id: usuarioUuid } = req.params;
 
-    if (id == null) {
+    if (!isValidPublicId(usuarioUuid)) {
       return handleErrorClient(res, 400, "ID inválido", "El identificador del perfil no es válido");
     }
 
-    const [user, userError] = await getPublicProfileService(id);
+    const [user, userError] = await getPublicProfileService(usuarioUuid);
 
     if (userError) return handleErrorClient(res, 404, "Error obteniendo perfil", userError);
 
-    handleSuccess(res, 200, "Perfil obtenido correctamente", { ...user, publicId: encodePublicId(user.id) });
+    handleSuccess(res, 200, "Perfil obtenido correctamente", { ...user, publicId: user.uuid });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

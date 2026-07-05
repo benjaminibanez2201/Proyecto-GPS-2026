@@ -141,12 +141,12 @@ export async function crearArriendoServicio(body) {
   }
 }
 
-export async function obtenerArriendoPorIdServicio(id) {
+export async function obtenerArriendoPorIdServicio(uuid) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
 
     const arriendo = await repositorioArriendo.findOne({
-      where: { id },
+      where: { uuid },
       relations: {
         arrendador: true,
         estudiante: true,

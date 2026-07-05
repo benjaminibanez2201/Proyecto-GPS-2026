@@ -9,8 +9,6 @@ import {
   handleErrorServer,
   handleSuccess,
 } from "../handlers/responseHandlers.js";
-import { encodePublicId } from "../helpers/publicId.helper.js";
-
 export async function createFavorito(req, res) {
   try {
     const { publicacionId } = req.body;
@@ -78,7 +76,7 @@ export async function getFavoritos(req, res) {
     const favoritosConPublicId = favoritos.map((favorito) => ({
       ...favorito,
       publicacion: favorito.publicacion
-        ? { ...favorito.publicacion, publicId: encodePublicId(favorito.publicacion.id) }
+        ? { ...favorito.publicacion, publicId: favorito.publicacion.uuid }
         : favorito.publicacion,
     }));
 

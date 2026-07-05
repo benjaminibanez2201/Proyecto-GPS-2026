@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, ChevronRight, MessageSquareText, Star, UserRound, UserStar } from 'lucide-react';
+import { ArrowLeft, CalendarDays, MessageSquareText, Star, UserRound, UserStar } from 'lucide-react';
 import { useAuth } from '@context/AuthContext';
 import { obtenerResenasRecibidas } from '../services/rentalsAndReviews.service.js';
 import { getProfile } from '@services/user.service.js';
@@ -106,9 +106,9 @@ export default function CalificacionesRecibidas() {
                     <div>
                       <div className="author-line">
                         <UserRound size={14} strokeWidth={2.1} />
-                        <Link to={`/perfil/${resena.author?.publicId}`} className="author-link">
+                        <span className="author-link">
                           {resena.author?.nombreCompleto || 'Usuario anónimo'}
-                        </Link>
+                        </span>
                       </div>
                       <div className="meta-line">
                         <CalendarDays size={13} strokeWidth={2} />
@@ -126,12 +126,6 @@ export default function CalificacionesRecibidas() {
                   </div>
                 )}
 
-                <div className="card-footer">
-                  <Link to={`/perfil/${resena.author?.publicId}`} className="profile-link">
-                    Revisar perfil
-                    <ChevronRight size={15} strokeWidth={2.4} />
-                  </Link>
-                </div>
               </article>
             ))}
           </div>

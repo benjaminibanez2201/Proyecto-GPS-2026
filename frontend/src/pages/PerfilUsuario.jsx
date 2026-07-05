@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ArrowLeft, UserRound, CalendarDays, MessageSquareText } from 'lucide-react';
 import { obtenerResenasUsuario, obtenerPerfilUsuario } from '../services/rentalsAndReviews.service.js';
 import AvatarCirculo from '../components/AvatarCirculo.jsx';
@@ -123,13 +123,9 @@ export default function PerfilUsuario() {
                     <div>
                       <div className="pu-meta-line" style={{ marginTop: 0 }}>
                         <UserRound size={14} strokeWidth={2.1} />
-                        {resena.author?.publicId ? (
-                          <Link to={`/perfil/${resena.author.publicId}`} className="pu-author-name">
-                            {resena.author?.nombreCompleto || 'Usuario anónimo'}
-                          </Link>
-                        ) : (
-                          <span className="pu-author-name">Usuario anónimo</span>
-                        )}
+                        <span className="pu-author-name">
+                          {resena.author?.nombreCompleto || 'Usuario anónimo'}
+                        </span>
                       </div>
                       <div className="pu-meta-line">
                         <CalendarDays size={13} strokeWidth={2} />

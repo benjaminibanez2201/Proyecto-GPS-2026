@@ -248,6 +248,8 @@
 .star-button:hover { transform: scale(1.15); }
 .textarea-input { width: 100%; padding: 14px; border-radius: 16px; border: 1px solid #e2e8f0; min-height: 120px; font-family: inherit; resize: vertical; box-sizing: border-box; outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
 .textarea-input:focus { border-color: #008080; box-shadow: 0 0 0 4px rgba(0, 128, 128, 0.12); }
+.anonimo-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; }
+.anonimo-label input { width: 16px; height: 16px; cursor: pointer; accent-color: #008080; }
 .footer-actions { display: flex; justify-content: flex-end; gap: 12px; }
 .secondary-button { padding: 12px 18px; border-radius: 14px; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; font-weight: 700; }
 .primary-button { padding: 12px 18px; border-radius: 14px; border: none; background: #008080; color: #fff; cursor: pointer; font-weight: 700; }

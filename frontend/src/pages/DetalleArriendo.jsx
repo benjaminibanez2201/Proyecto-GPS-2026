@@ -226,7 +226,11 @@ export default function DetalleArriendo() {
           <div className="detalle-arriendo-sidebar">
             <div className="detalle-arriendo-info-card">
               <h3>{esArrendador ? 'Estudiante' : 'Arrendador'}</h3>
-              <div className="detalle-arriendo-persona">
+              <div
+                className="detalle-arriendo-persona"
+                style={{ cursor: otraPersona?.publicId ? 'pointer' : 'default' }}
+                onClick={() => otraPersona?.publicId && navigate(`/perfil/${otraPersona.publicId}`)}
+              >
                 <AvatarCirculo nombre={otraPersona?.nombreCompleto} foto={otraPersona?.fotoPerfil} size={48} />
                 <span>{otraPersona?.nombreCompleto || 'Sin nombre'}</span>
               </div>

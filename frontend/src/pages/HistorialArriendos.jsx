@@ -18,6 +18,7 @@ export default function HistorialArriendos() {
 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
+  const [anonimo, setAnonimo] = useState(false);
 
   const { user } = useAuth();
 
@@ -58,6 +59,7 @@ export default function HistorialArriendos() {
     setArriendoSeleccionado(null);
     setComment('');
     setRating(5);
+    setAnonimo(false);
     setSendingReview(false);
   };
 
@@ -69,7 +71,7 @@ export default function HistorialArriendos() {
       ? arriendoSeleccionado.estudianteId
       : arriendoSeleccionado.arrendadorId;
 
-    const payload = { rentalId: arriendoSeleccionado.id, targetUserId, rating, comment };
+    const payload = { rentalId: arriendoSeleccionado.id, targetUserId, rating, comment, isAnonymous: anonimo };
 
     try {
       setSendingReview(true);
@@ -240,6 +242,14 @@ export default function HistorialArriendos() {
                   className="textarea-input"
                   placeholder="Escribe una reseña honesta y concreta..."
                 />
+              </label>
+              <label className="anonimo-label">
+                <input
+                  type="checkbox"
+                  checked={anonimo}
+                  onChange={(e) => setAnonimo(e.target.checked)}
+                />
+                <span>Enviar como anónimo</span>
               </label>
               <div className="footer-actions">
                 <button type="button" onClick={cerrarModalCalificacion} className="secondary-button" disabled={sendingReview}>Cancelar</button>

@@ -157,12 +157,6 @@
 
 .author-link {
   color: #0f172a;
-  text-decoration: none;
-  transition: color 160ms ease;
-}
-
-.author-link:hover {
-  color: #0f766e;
 }
 
 .meta-line {

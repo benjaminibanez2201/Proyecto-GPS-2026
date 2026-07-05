@@ -46,6 +46,7 @@ export async function listarPublicacionesReportadas() {
         reporter: { id: true, nombreCompleto: true, email: true },
         publicacion: {
           id: true,
+          uuid: true,
           titulo: true,
           tipoInmueble: true,
           precioMensual: true,
@@ -109,6 +110,7 @@ export async function listarReportesDeUsuario(reporterId) {
         resolvedAt: true,
         publicacion: {
           id: true,
+          uuid: true,
           titulo: true,
           tipoInmueble: true,
           precioMensual: true,
@@ -156,6 +158,7 @@ export async function obtenerDetalleReporte(reportId) {
         reporter: { id: true, nombreCompleto: true, email: true },
         publicacion: {
           id: true,
+          uuid: true,
           titulo: true,
           tipoInmueble: true,
           precioMensual: true,
@@ -191,7 +194,7 @@ export async function obtenerDetalleReporte(reportId) {
   }
 }
 
-export async function resolverReporte(id_publicacion, administradorId, accion, observacion = null) {
+export async function resolverReporte(publicacionUuid, administradorId, accion, observacion = null) {
   try {
     const repoReport = AppDataSource.getRepository(ReportePublicacion);
     const repoPublicacion = AppDataSource.getRepository(Publicacion);
@@ -201,8 +204,8 @@ export async function resolverReporte(id_publicacion, administradorId, accion, o
     const admin = await repoUser.findOneBy({ id: administradorId });
     if (!admin) return [null, "Administrador no encontrado"];
 
-    const publicacion = await repoPublicacion.findOne({ 
-      where: { id: id_publicacion }, 
+    const publicacion = await repoPublicacion.findOne({
+      where: { uuid: publicacionUuid },
       relations: ["arrendador"] });
     if (!publicacion) return [null, "Publicación no encontrada"];
 
@@ -218,8 +221,8 @@ export async function resolverReporte(id_publicacion, administradorId, accion, o
       await repoPublicacion.save(publicacion);
     }
 
-    const pendientes = await repoReport.find({ 
-      where: { publicacion: { id: id_publicacion }, 
+    const pendientes = await repoReport.find({
+      where: { publicacion: { id: publicacion.id },
       estado: "pendiente" } });
     for (const r of pendientes) {
       r.estado = "revisado";

@@ -10,7 +10,6 @@ import {
   FRONTEND_URL,
 } from "../config/configEnv.js";
 import { renderEmailTemplate } from "../helpers/emailTemplate.helper.js";
-import { encodePublicId } from "../helpers/publicId.helper.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -175,7 +174,7 @@ export async function sendRentalCompleteEmail(rental) {
   try {
     const transporter = createTransporter();
     const baseUrl = normalizeBaseUrl(FRONTEND_URL);
-    const nextPath = `/arriendo/${encodePublicId(rental.id)}`;
+    const nextPath = `/arriendo/${rental.uuid}`;
     const loginWithNextUrl = `${baseUrl}/auth?next=${encodeURIComponent(nextPath)}`;
     const greetingNameArrendador = rental.arrendador?.nombreCompleto || "Arrendador";
     const greetingNameEstudiante = rental.estudiante?.nombreCompleto || "Estudiante";
