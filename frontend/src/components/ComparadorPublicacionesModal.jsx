@@ -117,6 +117,31 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
 
   return (
     <div style={styles.overlay} role="dialog" aria-modal="true" aria-label="Comparar publicaciones">
+      <style>
+        {`
+          @keyframes comparador-overlay-in {
+            from {
+              opacity: 0;
+            }
+
+            to {
+              opacity: 1;
+            }
+          }
+
+          @keyframes comparador-modal-in {
+            from {
+              opacity: 0;
+              transform: translateY(16px) scale(0.98);
+            }
+
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+        `}
+      </style>
       <section style={styles.modal}>
         <header style={styles.header}>
           <div>
@@ -206,6 +231,7 @@ const styles = {
     padding: '24px',
     position: 'fixed',
     zIndex: 1000,
+    animation: 'comparador-overlay-in 160ms ease-out both',
   },
   modal: {
     backgroundColor: '#ffffff',
@@ -216,6 +242,8 @@ const styles = {
     maxWidth: '1060px',
     overflow: 'hidden',
     width: '100%',
+    animation: 'comparador-modal-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both',
+    transformOrigin: 'center top',
   },
   header: {
     alignItems: 'flex-start',
