@@ -91,8 +91,36 @@ export async function listarArriendos(req, res) {
 export async function actualizarArriendo(req, res) {
   try {
     const { id } = req.params;
-    const body = req.body;
-    const [data, error] = await actualizarArriendoServicio(Number(id), body);
+    if (!isValidPublicId(id)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador del arriendo no es válido");
+    }
+
+    const [arriendo, errorArriendo] = await obtenerArriendoPorIdServicio(id);
+    if (errorArriendo) return handleErrorClient(res, 404, errorArriendo);
+
+    const userId = Number(req.user.id);
+    const esParticipante = userId === Number(arriendo.arrendadorId) || userId === Number(arriendo.estudianteId);
+    if (!esParticipante) return handleErrorClient(res, 403, "No autorizado para editar este arriendo");
+
+    const {
+      id: _id,
+      uuid: _uuid,
+      arrendadorId: _arrendadorId,
+      estudianteId: _estudianteId,
+      publicacionId: _publicacionId,
+      status: _status,
+      confirmedByArrendador: _confirmedByArrendador,
+      confirmedByEstudiante: _confirmedByEstudiante,
+      completedAt: _completedAt,
+      finishedAt: _finishedAt,
+      ...camposPermitidos
+    } = req.body;
+
+    if (Object.keys(camposPermitidos).length === 0) {
+      return handleErrorClient(res, 400, "Error de validación", "No hay campos válidos para actualizar");
+    }
+
+    const [data, error] = await actualizarArriendoServicio(arriendo.id, camposPermitidos);
     if (error) return handleErrorClient(res, 400, error);
     return handleSuccess(res, 200, "Arriendo actualizado", agregarPublicIds(data));
   } catch (error) {
@@ -103,7 +131,18 @@ export async function actualizarArriendo(req, res) {
 export async function eliminarArriendo(req, res) {
   try {
     const { id } = req.params;
-    const [data, error] = await eliminarArriendoServicio(Number(id));
+    if (!isValidPublicId(id)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador del arriendo no es válido");
+    }
+
+    const [arriendo, errorArriendo] = await obtenerArriendoPorIdServicio(id);
+    if (errorArriendo) return handleErrorClient(res, 404, errorArriendo);
+
+    const userId = Number(req.user.id);
+    const esParticipante = userId === Number(arriendo.arrendadorId) || userId === Number(arriendo.estudianteId);
+    if (!esParticipante) return handleErrorClient(res, 403, "No autorizado para eliminar este arriendo");
+
+    const [data, error] = await eliminarArriendoServicio(arriendo.id);
     if (error) return handleErrorClient(res, 400, error);
     return handleSuccess(res, 200, "Arriendo eliminado", agregarPublicIds(data));
   } catch (error) {
