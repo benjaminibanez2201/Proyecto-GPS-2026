@@ -170,6 +170,7 @@ const AdminUsers = () => {
         grisSuave: '#f4f6f6',
     };
     const canEditSelectedUser = dataUser.length === 1;
+    const canToggleUserAccess = dataUser.length === 1;
 
     const stats = [
         { label: 'Usuarios cargados', value: users.length, icon: UsersIcon },
@@ -259,14 +260,14 @@ const AdminUsers = () => {
                         <button
                             type="button"
                             onClick={() => handleToggleStatus(dataUser)}
-                            disabled={dataUser.length !== 1}
-                            style={styles.actionButton}
+                            disabled={!canToggleUserAccess}
+                            title={dataUser.length > 1 ? 'Selecciona solo un usuario para suspender' : undefined}
+                            style={{
+                                ...styles.actionButton,
+                                ...(!canToggleUserAccess ? styles.disabledActionButton : {}),
+                            }}
                         >
-                            {dataUser.length === 1 && dataUser[0]?.estadoCuenta === 'suspendido'
-                                ? 'Reactivar selección'
-                                : dataUser.length === 1
-                                    ? 'Suspender selección'
-                                    : 'Cambiar acceso'}
+                            Suspender usuario
                         </button>
                         <button
                             type="button"
