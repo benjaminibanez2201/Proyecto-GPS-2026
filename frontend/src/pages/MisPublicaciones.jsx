@@ -130,7 +130,7 @@ const MisPublicaciones = () => {
         Swal.fire({ icon: 'success', title: 'Publicación eliminada', confirmButtonColor: accent });
         fetchPublicaciones();
       } else {
-        Swal.fire({ icon: 'error', title: 'Error', text: response?.message || 'No se pudo eliminar la publicación', confirmButtonColor: accent });
+        Swal.fire({ icon: 'error', title: 'Error', text: response?.details || response?.message || 'No se pudo eliminar la publicación', confirmButtonColor: accent });
       }
     }
   };
@@ -421,10 +421,18 @@ const MisPublicaciones = () => {
           const comuna = comunaSelect.value;
           const totalFotos = archivosSeleccionados.length + fotosExistentes.length;
 
-          setFieldError(tituloInput, document.getElementById('err-edit-titulo'), titulo ? '' : 'El título es obligatorio.');
+          let tituloError = '';
+          if (!titulo) tituloError = 'El título es obligatorio.';
+          else if (titulo.length < 5) tituloError = 'El título debe tener al menos 5 caracteres.';
+
+          let ubicacionError = '';
+          if (!ubicacion) ubicacionError = 'La ubicación es obligatoria.';
+          else if (ubicacion.length < 5) ubicacionError = 'La ubicación debe tener al menos 5 caracteres.';
+
+          setFieldError(tituloInput, document.getElementById('err-edit-titulo'), tituloError);
           setFieldError(tipoSelect, document.getElementById('err-edit-tipo'), tipoInmueble ? '' : 'Selecciona un tipo.');
           setFieldError(precioInput, document.getElementById('err-edit-precio'), precioMensual ? '' : 'El precio es obligatorio.');
-          setFieldError(ubicacionInput, document.getElementById('err-edit-ubicacion'), ubicacion ? '' : 'La ubicación es obligatoria.');
+          setFieldError(ubicacionInput, document.getElementById('err-edit-ubicacion'), ubicacionError);
           setFieldError(comunaSelect, document.getElementById('err-edit-comuna'), comuna ? '' : 'Selecciona una comuna.');
           if (fotosErr) {
             fotosErr.textContent = totalFotos === 0
@@ -432,7 +440,7 @@ const MisPublicaciones = () => {
               : (totalFotos > MAX_FOTOS ? `Máximo ${MAX_FOTOS} fotos permitidas.` : '');
           }
 
-          const hayErrores = !titulo || !tipoInmueble || !precioMensual || !ubicacion || !comuna || totalFotos === 0 || totalFotos > MAX_FOTOS;
+          const hayErrores = Boolean(tituloError) || !tipoInmueble || !precioMensual || Boolean(ubicacionError) || !comuna || totalFotos === 0 || totalFotos > MAX_FOTOS;
           if (hayErrores) return;
 
           const serviciosIncluidos = Array.from(document.querySelectorAll('input[name="swal-edit-servicio"]:checked')).map((checkbox) => checkbox.value);
@@ -460,7 +468,7 @@ const MisPublicaciones = () => {
             Swal.fire({ icon: 'success', title: 'Publicación actualizada', confirmButtonColor: accent });
             fetchPublicaciones();
           } else {
-            Swal.showValidationMessage(response?.message || 'Error interno al intentar actualizar la publicación.');
+            Swal.showValidationMessage(response?.details || response?.message || 'Error interno al intentar actualizar la publicación.');
           }
         });
       },
@@ -710,10 +718,18 @@ const MisPublicaciones = () => {
           const ubicacion = ubicacionInput.value.trim();
           const comuna = comunaSelect.value;
 
-          setFieldError(tituloInput, document.getElementById('err-titulo'), titulo ? '' : 'El título es obligatorio.');
+          let tituloError = '';
+          if (!titulo) tituloError = 'El título es obligatorio.';
+          else if (titulo.length < 5) tituloError = 'El título debe tener al menos 5 caracteres.';
+
+          let ubicacionError = '';
+          if (!ubicacion) ubicacionError = 'La ubicación es obligatoria.';
+          else if (ubicacion.length < 5) ubicacionError = 'La ubicación debe tener al menos 5 caracteres.';
+
+          setFieldError(tituloInput, document.getElementById('err-titulo'), tituloError);
           setFieldError(tipoSelect, document.getElementById('err-tipo'), tipoInmueble ? '' : 'Selecciona un tipo.');
           setFieldError(precioInput, document.getElementById('err-precio'), precioMensual ? '' : 'El precio es obligatorio.');
-          setFieldError(ubicacionInput, document.getElementById('err-ubicacion'), ubicacion ? '' : 'La ubicación es obligatoria.');
+          setFieldError(ubicacionInput, document.getElementById('err-ubicacion'), ubicacionError);
           setFieldError(comunaSelect, document.getElementById('err-comuna'), comuna ? '' : 'Selecciona una comuna.');
           if (fotosErr) {
             fotosErr.textContent = archivosSeleccionados.length === 0
@@ -721,7 +737,7 @@ const MisPublicaciones = () => {
               : (archivosSeleccionados.length > MAX_FOTOS ? `Máximo ${MAX_FOTOS} fotos permitidas.` : '');
           }
 
-          const hayErrores = !titulo || !tipoInmueble || !precioMensual || !ubicacion || !comuna || archivosSeleccionados.length === 0 || archivosSeleccionados.length > MAX_FOTOS;
+          const hayErrores = Boolean(tituloError) || !tipoInmueble || !precioMensual || Boolean(ubicacionError) || !comuna || archivosSeleccionados.length === 0 || archivosSeleccionados.length > MAX_FOTOS;
           if (hayErrores) return;
 
           Swal.clickConfirm();
@@ -754,7 +770,7 @@ const MisPublicaciones = () => {
         Swal.fire({ icon: 'success', title: '¡Publicación creada!', confirmButtonColor: accent });
         fetchPublicaciones();
       } else {
-        Swal.fire({ icon: 'error', title: 'Error', text: response?.message || 'No se pudo crear la publicación', confirmButtonColor: accent });
+        Swal.fire({ icon: 'error', title: 'Error', text: response?.details || response?.message || 'No se pudo crear la publicación', confirmButtonColor: accent });
       }
     }
   };

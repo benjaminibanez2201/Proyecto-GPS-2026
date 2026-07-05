@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle, Trash2 } from 'lucide-react';
+import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle, Trash2, XCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
 import {
@@ -257,12 +257,19 @@ export default function Mensajes() {
 
   const isRentalCompleted = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'COMPLETED');
   const isRentalCancelled = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'CANCELLED');
+  const isRentalFinished = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'FINISHED');
   const isCurrentUserArrendador = Boolean(
     selectedConversation?.arrendador?.id && Number(user?.id) === Number(selectedConversation.arrendador.id),
   );
+  const currentUserConfirmed = !isRentalFinished && Boolean(
+    isCurrentUserArrendador ? rentalForConversation?.confirmedByArrendador : rentalForConversation?.confirmedByEstudiante,
+  );
+  const isPublicacionArrendadaPorOtro = Boolean(
+    selectedConversation?.publicacion?.estado === 'arrendada' && !isRentalCompleted,
+  );
   const shouldShowConfirmRentalButton = Boolean(
-    selectedConversation?.publicacion?.id && selectedConversation?.arrendador?.id && selectedConversation?.estudiante?.id && isCurrentUserArrendador,
-  ) && !isRentalCompleted && !isRentalCancelled;
+    selectedConversation?.publicacion?.id && selectedConversation?.arrendador?.id && selectedConversation?.estudiante?.id,
+  ) && !isRentalCompleted && !isRentalCancelled && !isPublicacionArrendadaPorOtro;
 
   const handleSelectConversation = async (conversationId) => {
     setSearchParams({ conversacion: conversationId });
@@ -385,14 +392,9 @@ export default function Mensajes() {
       return;
     }
 
-    if (!isCurrentUserArrendador) {
-      await Swal.fire('No autorizado', 'Solo el arrendador puede aceptar el arriendo desde el chat.', 'warning');
-      return;
-    }
-
     const confirm = await Swal.fire({
       title: '¿Quiere aceptar este arriendo?',
-      text: 'La publicación pasará a estado arrendada y ya no estará disponible para otros interesados.',
+      text: 'Al aceptar, queda confirmado de tu lado. Cuando la otra persona también acepte, el arriendo quedará cerrado.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#0f766e',
@@ -419,7 +421,13 @@ export default function Mensajes() {
     }
 
     setRentalForConversation(acceptedRental || null);
-    await Swal.fire('Arriendo aceptado', 'El arriendo quedó concretado y la publicación pasó a estado arrendada.', 'success');
+
+    if (acceptedRental?.status === 'COMPLETED') {
+      await Swal.fire('Arriendo aceptado', 'El arriendo quedó concretado y la publicación pasó a estado arrendada.', 'success');
+    } else {
+      await Swal.fire('Confirmación registrada', 'Falta que la otra parte también acepte para concretar el arriendo.', 'success');
+    }
+
     await loadRentalForConversation(selectedConversation);
   };
 
@@ -612,13 +620,23 @@ export default function Mensajes() {
                     <button type="button" className="mensajes-icon-btn mensajes-icon-btn--danger" onClick={() => handleDeleteConversation(selectedConversation)}>
                       Ocultar chat
                     </button>
-                    {shouldShowConfirmRentalButton && (
+                    {isPublicacionArrendadaPorOtro && (
+                      <button type="button" className="mensajes-send-btn" disabled>
+                        <XCircle size={18} /> Este inmueble ya fue arrendado
+                      </button>
+                    )}
+                    {shouldShowConfirmRentalButton && !currentUserConfirmed && (
                       <button type="button" className="mensajes-send-btn" onClick={handleConfirmRental} disabled={loadingRentalConfirmation}>
                         {loadingRentalConfirmation ? (
                           <><RefreshCw size={18} className="spin" /> Aceptando...</>
                         ) : (
                           <><CheckCircle size={18} /> Aceptar arriendo</>
                         )}
+                      </button>
+                    )}
+                    {shouldShowConfirmRentalButton && currentUserConfirmed && (
+                      <button type="button" className="mensajes-send-btn" disabled>
+                        <CheckCircle size={18} /> Ya aceptaste, falta la otra persona
                       </button>
                     )}
                     {isRentalCompleted && (
