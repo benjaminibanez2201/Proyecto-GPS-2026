@@ -179,6 +179,21 @@ const AdminUsers = () => {
 
     return (
         <div style={styles.page}>
+            <style>
+                {`
+                    @keyframes admin-users-filters-down {
+                        from {
+                            opacity: 0;
+                            transform: translateY(-10px);
+                        }
+
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+                `}
+            </style>
             <section style={{ ...styles.hero, background: 'linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%)' }}>
                 <div style={styles.heroContent}>
                     <h1 style={styles.title}>Gestión de Usuarios</h1>
@@ -227,7 +242,7 @@ const AdminUsers = () => {
                 <div style={styles.toolbar}>
                     <div style={styles.actionButtons}>
                         <button type="button" onClick={() => setAdvancedFiltersEnabled((current) => !current)} style={styles.actionButton}>
-                            {advancedFiltersEnabled ? 'Ocultar filtros avanzados' : 'Mostrar filtros avanzados'}
+                            {advancedFiltersEnabled ? 'Ocultar filtros' : 'Mostrar filtros'}
                         </button>
                         <button
                             type="button"
@@ -268,7 +283,7 @@ const AdminUsers = () => {
                     <section style={styles.advancedFiltersPanel}>
                         <div style={styles.advancedFiltersHeader}>
                             <div>
-                                <p style={styles.cardEyebrow}>Filtros avanzados</p>
+                                <p style={styles.cardEyebrow}>Filtros</p>
                                 <p style={styles.cardSubtitle}>Todos los campos arrancan vacíos y solo filtran cuando los completas.</p>
                             </div>
                             <button type="button" onClick={clearAdvancedFilters} style={styles.clearFiltersButton}>
@@ -526,6 +541,8 @@ const styles = {
         borderRadius: '18px',
         backgroundColor: '#f8fafc',
         border: '1px solid #e2e8f0',
+        transformOrigin: 'top center',
+        animation: 'admin-users-filters-down 180ms ease-out both',
     },
     advancedFiltersHeader: {
         display: 'flex',
