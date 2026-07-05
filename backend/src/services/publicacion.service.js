@@ -201,6 +201,10 @@ export async function updatePublicacionService(publicacionId, arrendadorId, body
 
     if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];
 
+    if (publicacion.estado === "inactiva") {
+      return [null, "Esta publicación fue dada de baja por incumplir las normas y no se puede editar. Solo puedes eliminarla."];
+    }
+
     const comunaCambio = body.comuna && body.comuna !== publicacion.comuna;
     const faltanCoordenadas = body.latitud == null || body.longitud == null;
     const ubicacionEnBody = body.ubicacion && (body.ubicacion !== publicacion.ubicacion || faltanCoordenadas);

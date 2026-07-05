@@ -13,7 +13,7 @@ const STEPS = [
   {
     id: 'filtros',
     route: '/buscar',
-    selector: '.ba-filter-bar',
+    selector: '.ba-filters-panel',
     title: 'Filtros a tu medida',
     text: 'Encuentra piezas con internet incluido o cerca de tu universidad aquí.',
   },

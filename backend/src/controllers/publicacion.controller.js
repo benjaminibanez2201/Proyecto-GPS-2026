@@ -215,7 +215,7 @@ export async function updatePublicacion(req, res) {
     console.log(files);
 
     const [publicacion, error] = await updatePublicacionService(publicacionId, arrendadorId, normalizedBody, files);
-    if (error) return handleErrorClient(res, 400, "Error al editar publicación", error);
+    if (error) return handleErrorClient(res, 400, error, "Error al editar publicación");
 
     handleSuccess(res, 200, "Publicación actualizada correctamente", agregarPublicId(publicacion));
   } catch (error) {

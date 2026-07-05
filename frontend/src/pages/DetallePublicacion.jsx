@@ -198,8 +198,8 @@ export default function DetallePublicacion() {
         <ArrowLeft size={18} /> Volver
       </button>
 
-      <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-        
+      <div style={{ backgroundColor: '#fff', padding: '28px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -212,14 +212,14 @@ export default function DetallePublicacion() {
                 </span>
               )}
             </div>
-            <h1 style={{ marginTop: '15px', color: '#2c3e50', fontSize: '32px' }}>
+            <h1 style={{ marginTop: '10px', color: '#2c3e50', fontSize: '32px' }}>
               {publicacion.titulo || 'Sin título'}
             </h1>
-            <p style={{ color: '#64748b', fontSize: '14px', marginTop: '5px' }}>
+            <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
               Publicado el: {fechaPublicacion}
             </p>
           </div>
-          
+
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontSize: '28px', color: '#008080', fontWeight: 'bold', margin: '0' }}>
               {formatPriceCLP(publicacion.precioMensual)}
@@ -228,9 +228,9 @@ export default function DetallePublicacion() {
           </div>
         </div>
 
-        <hr style={{ margin: '30px 0', borderColor: '#e2e8f0', opacity: 0.5 }}/>
-        
-        <div style={{ position: 'relative', marginBottom: '30px' }}>
+        <hr style={{ margin: '20px 0', borderColor: '#e2e8f0', opacity: 0.5 }}/>
+
+        <div style={{ position: 'relative', marginBottom: '20px' }}>
           <img
             src={imagenActiva}
             alt={publicacion.titulo || 'Imagen del arriendo'}
@@ -289,7 +289,7 @@ export default function DetallePublicacion() {
         </div>
 
         {fotosResueltas.length > 1 && (
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '30px', overflowX: 'auto' }}>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', overflowX: 'auto' }}>
             {fotosResueltas.map((foto, index) => (
               <img
                 key={foto}
@@ -312,7 +312,7 @@ export default function DetallePublicacion() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '28px' }}>
           <div>
             <h3 style={{ color: '#2c3e50', marginBottom: '15px' }}>Ubicación</h3>
             <p style={{ color: '#475569', lineHeight: '1.6', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -326,7 +326,7 @@ export default function DetallePublicacion() {
               </p>
             )}
 
-            <h3 style={{ color: '#2c3e50', marginTop: '30px', marginBottom: '15px' }}>Reglas de Convivencia</h3>
+            <h3 style={{ color: '#2c3e50', marginTop: '20px', marginBottom: '15px' }}>Reglas de Convivencia</h3>
             <p style={{ color: '#475569', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
               {publicacion.reglasConvivencia || 'El dueño no ha especificado reglas de convivencia.'}
             </p>
