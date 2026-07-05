@@ -164,6 +164,7 @@ export default function PublicacionCard({
         {onToggleCompare && (
           <button
             type="button"
+            data-tour="comparar-btn"
             className={`publicacion-compare-btn${selectedForCompare ? ' publicacion-compare-btn--selected' : ''}`}
             disabled={compareDisabled}
             onClick={() => onToggleCompare(publicacion)}
