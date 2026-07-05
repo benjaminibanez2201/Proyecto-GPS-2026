@@ -268,6 +268,11 @@ export default function BuscarArriendos() {
     setComparadorAbierto(true);
   };
 
+  const limpiarComparacion = () => {
+    setComparacion([]);
+    setComparadorAbierto(false);
+  };
+
   const contarActivos = (grupo) => {
     if (grupo === 'tipo') return filtros.tipoInmueble?.length || 0;
     if (grupo === 'precio') return (filtros.precioMin ? 1 : 0) + (filtros.precioMax ? 1 : 0);
@@ -482,6 +487,13 @@ export default function BuscarArriendos() {
               className="ba-compare-button"
             >
               Comparar seleccionadas
+            </button>
+            <button
+              type="button"
+              onClick={limpiarComparacion}
+              className="ba-compare-clear-button"
+            >
+              Limpiar selección
             </button>
           </div>
         )}
