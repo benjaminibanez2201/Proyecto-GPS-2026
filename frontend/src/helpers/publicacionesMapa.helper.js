@@ -1,4 +1,4 @@
-const COMMUNES = [
+export const COMMUNES = [
   {
     value: 'concepcion',
     name: 'Concepción',
@@ -38,6 +38,11 @@ const COMMUNES = [
 ];
 
 export const COMUNAS_PERMITIDAS = COMMUNES.map(({ value, name }) => ({ value, name }));
+
+export function getComunaCenter(comunaValue) {
+  const commune = COMMUNES.find((item) => item.value === comunaValue);
+  return commune ? commune.center : COMMUNES[0].center;
+}
 
 export function normalizeText(value = '') {
   return String(value)

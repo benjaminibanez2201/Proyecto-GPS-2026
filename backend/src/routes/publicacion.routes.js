@@ -1,9 +1,10 @@
 "use strict";
 import { Router } from "express";
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
-import { 
+import {
   createPublicacion,
   deletePublicacion,
+  geocodificarUbicacion,
   getPublicacionById,
   getPublicaciones,
   getPublicacionesPropias,
@@ -17,7 +18,8 @@ router.use(authenticateJwt);
 
 router.post("/", parsePublicacionUploads, createPublicacion); 
 router.get("/", getPublicaciones);
-router.get("/mis-publicaciones", getPublicacionesPropias); 
+router.get("/mis-publicaciones", getPublicacionesPropias);
+router.get("/geocodificar", geocodificarUbicacion);
 router.get("/:id", getPublicacionById);
 router.put("/:id", parsePublicacionUploads, updatePublicacion); 
 router.delete("/:id", deletePublicacion); 
