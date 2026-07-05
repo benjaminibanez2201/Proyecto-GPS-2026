@@ -23,6 +23,7 @@ import PageTransition from '@components/PageTransition';
 import { useAuth, AuthProvider } from '@context/AuthContext';
 import { obtenerCantidadNotificacionesNoLeidas } from '@services/notificacion.service.js';
 import { obtenerConversaciones } from '@services/mensaje.service.js';
+import { connectSocket, disconnectSocket } from '@services/socket.service.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import SpotlightTour from '@components/SpotlightTour.jsx';
 import FaqModal from '@components/FaqModal.jsx';
@@ -253,6 +254,20 @@ function PageRoot() {
     refreshUnreadCount();
     refreshUnreadMessagesCount();
   }, [refreshUnreadCount, refreshUnreadMessagesCount, location.pathname]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const socket = connectSocket();
+    if (!socket) return;
+
+    socket.on('nuevo-mensaje', refreshUnreadMessagesCount);
+
+    return () => {
+      socket.off('nuevo-mensaje', refreshUnreadMessagesCount);
+      disconnectSocket();
+    };
+  }, [user?.id, refreshUnreadMessagesCount]);
 
   useEffect(() => {
     if (!user?.id || normalizedRole !== 'estudiante') return;

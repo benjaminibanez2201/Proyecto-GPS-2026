@@ -1020,7 +1020,6 @@ const MisPublicaciones = () => {
                   ) : (
                     <button onClick={() => handleEditar(pub)} style={styles.btnEditar}>
                       <Pencil size={13} />
-                      Editar
                     </button>
                   )}
 
