@@ -11,9 +11,16 @@ const useEditUser = (setUsers) => {
     const [dataUser, setDataUser] = useState([]);
 
     const handleClickUpdate = () => {
-        if (dataUser.length > 0) {
-            setIsPopupOpen(true);
+        if (dataUser.length === 0) {
+            return;
         }
+
+        if (dataUser.length > 1) {
+            showErrorAlert('Selección inválida', 'Solo puedes editar un usuario a la vez.');
+            return;
+        }
+
+        setIsPopupOpen(true);
     };
 
     const handleUpdate = async (updatedUserData) => {
