@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, Home, MapPin, Star, Wallet, Wifi, X } from 'lucide-react';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
+import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
 
 const accent = '#0f766e';
 
@@ -28,6 +29,13 @@ function formatRating(arrendador) {
   if (!count) return 'Sin calificaciones';
 
   return `${rating.toFixed(1)} / 5 (${count})`;
+}
+
+function getPrimaryImage(publicacion) {
+  const fotos = Array.isArray(publicacion?.fotos) ? publicacion.fotos : [];
+  return fotos.length > 0
+    ? resolveFileUrl(fotos[0])
+    : 'https://via.placeholder.com/480x260?text=Sin+Imagen';
 }
 
 export default function ComparadorPublicacionesModal({ publicaciones, onClose }) {
@@ -134,6 +142,11 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
                   {detalles.map((publicacion) => (
                     <th key={getPublicacionId(publicacion)} style={styles.columnHeader}>
                       <div style={styles.publicationHeaderCard}>
+                        <img
+                          src={getPrimaryImage(publicacion)}
+                          alt={publicacion.titulo || 'Publicacion'}
+                          style={styles.publicationImage}
+                        />
                         <span style={styles.publicationType}>{publicacion.tipoInmueble || 'Publicacion'}</span>
                         <span style={styles.publicationTitle}>{publicacion.titulo || 'Sin titulo'}</span>
                         <span style={styles.publicationLocation}>{publicacion.ubicacion || 'Sin ubicacion'}</span>
@@ -295,7 +308,16 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '7px',
-    minHeight: '128px',
+    minHeight: '226px',
+  },
+  publicationImage: {
+    aspectRatio: '16 / 9',
+    backgroundColor: '#f1f5f9',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    display: 'block',
+    objectFit: 'cover',
+    width: '100%',
   },
   publicationType: {
     alignSelf: 'flex-start',
