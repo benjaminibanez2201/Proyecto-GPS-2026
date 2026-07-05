@@ -208,12 +208,6 @@ export async function updatePublicacion(req, res) {
     const { error: bodyError } = publicacionUpdateValidation.validate(normalizedBody);
     if (bodyError) return handleErrorClient(res, 400, "Error de validación", bodyError.message);
 
-    console.log("BODY NORMALIZADO");
-    console.log(normalizedBody);
-      
-    console.log("FILES");
-    console.log(files);
-
     const [publicacion, error] = await updatePublicacionService(publicacionId, arrendadorId, normalizedBody, files);
     if (error) return handleErrorClient(res, 400, error, "Error al editar publicación");
 

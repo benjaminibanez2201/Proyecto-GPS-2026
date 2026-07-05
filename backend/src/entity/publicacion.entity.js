@@ -127,11 +127,6 @@ const PublicacionSchema = new EntitySchema({
       onDelete: "CASCADE",
     },
   },
-  ocultadaPorArrendador: {
-  type: "boolean",
-  default: false,
-  nullable: false,
-},
 });
 
 export default PublicacionSchema;
