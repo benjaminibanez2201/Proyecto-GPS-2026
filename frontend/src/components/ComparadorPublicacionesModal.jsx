@@ -6,6 +6,17 @@ import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
 
 const accent = '#0f766e';
 
+const serviceLabels = {
+  agua: 'Agua',
+  luz: 'Luz',
+  gas: 'Gas',
+  internet: 'Internet',
+  tv_cable: 'TV Cable',
+  calefaccion: 'Calefaccion',
+  estacionamiento: 'Estacionamiento',
+  lavadora: 'Lavadora',
+};
+
 function getPublicacionId(publicacion) {
   return publicacion?.id_publicacion || publicacion?.id || publicacion?._id;
 }
@@ -20,6 +31,16 @@ function formatPrice(value) {
 function getServices(servicios) {
   if (!Array.isArray(servicios) || servicios.length === 0) return [];
   return servicios.filter(Boolean);
+}
+
+function formatService(servicio) {
+  if (!servicio) return 'Servicio';
+  if (serviceLabels[servicio]) return serviceLabels[servicio];
+
+  return servicio
+    .toString()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function formatRating(arrendador) {
@@ -101,7 +122,7 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
           <div style={styles.chipList}>
             {servicios.map((servicio) => (
               <span key={servicio} style={styles.serviceChip}>
-                {servicio}
+                {formatService(servicio)}
               </span>
             ))}
           </div>
