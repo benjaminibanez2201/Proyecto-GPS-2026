@@ -1,4 +1,5 @@
 "use strict";
+import http from "http";
 import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
@@ -14,6 +15,7 @@ import { cookieKey, HOST, PORT } from "./config/configEnv.js";
 import { connectDB } from "./config/configDb.js";
 import { createUsers } from "./config/initialSetup.js";
 import { passportJwtSetup } from "./auth/passport.auth.js";
+import { initSocket } from "./sockets/socket.js";
 
 async function setupServer() {
   try {
@@ -69,7 +71,10 @@ async function setupServer() {
     app.use("/mensajes", mensajeRoutes);
     app.use("/api/publicaciones", publicacionEstadisticasRoutes);
 
-    app.listen(PORT, () => {
+    const server = http.createServer(app);
+    initSocket(server);
+
+    server.listen(PORT, () => {
       console.log(`=> Servidor corriendo en ${HOST}:${PORT}/api`);
     });
   } catch (error) {

@@ -216,12 +216,10 @@ const Profile = () => {
 
   const personalFields = [
     { label: 'Nombre completo', field: 'nombreCompleto', placeholder: 'Tu nombre completo', icon: UserCircle2 },
+    { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678', icon: Phone },
     ...(profileData?.rol === 'estudiante' ? [
       { label: 'Universidad', field: 'universidad', placeholder: 'Tu universidad', icon: GraduationCap },
       { label: 'Carrera', field: 'carrera', placeholder: 'Tu carrera', icon: BookOpen },
-    ] : []),
-    ...(profileData?.rol === 'arrendador' ? [
-      { label: 'Teléfono', field: 'telefono', placeholder: '+56 9 1234 5678', icon: Phone },
     ] : []),
   ];
 
@@ -317,6 +315,7 @@ const Profile = () => {
     ? [
         { label: 'Nombre', valor: profileData?.nombreCompleto },
         { label: 'Correo electrónico', valor: profileData?.email },
+        { label: 'Teléfono', valor: profileData?.telefono },
         { label: 'Universidad', valor: profileData?.universidad },
         { label: 'Carrera', valor: profileData?.carrera },
         { label: 'Foto', valor: profileData?.fotoPerfil },
@@ -369,12 +368,12 @@ const Profile = () => {
             <h1 style={styles.heroTitle}>{profileData?.nombreCompleto || user?.nombreCompleto}</h1>
             <p style={styles.heroSubtitle}>{profileData?.email || user?.email}</p>
             <div style={styles.heroBadge}>
-              <span style={{ 
-                width: '8px', height: '8px', borderRadius: '50%', 
+              <span style={{
+                width: '8px', height: '8px', borderRadius: '50%',
                 backgroundColor: profileData?.estadoVerificacion === 'aprobado' ? '#4ade80' : '#fbbf24',
                 display: 'inline-block', marginRight: '6px'
               }}></span>
-              {(profileData?.estadoVerificacion || 'pendiente').charAt(0).toUpperCase() + 
+              {(profileData?.estadoVerificacion || 'pendiente').charAt(0).toUpperCase() +
                (profileData?.estadoVerificacion || 'pendiente').slice(1)}
             </div>
           </div>
@@ -480,6 +479,7 @@ const Profile = () => {
             onClick={() => {
               setEditMode(!editMode);
               handleCancelEditEmail();
+              setFotoSeleccionada(null);
             }}
             style={{ ...styles.iconButton, backgroundColor: editMode ? '#fee2e2' : `${accent}15`, color: editMode ? '#dc2626' : accent }}
           >
