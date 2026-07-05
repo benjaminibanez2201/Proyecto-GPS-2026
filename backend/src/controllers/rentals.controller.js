@@ -32,7 +32,7 @@ function agregarPublicIds(arriendo) {
 
 export async function crearArriendo(req, res) {
   try {
-    const [data, error] = await crearArriendoServicio(req.body);
+    const [data, error] = await crearArriendoServicio(req.body, req.user.id);
     if (error) return handleErrorClient(res, 400, error);
     return handleSuccess(res, 201, "Arriendo creado", agregarPublicIds(data));
   } catch (error) {

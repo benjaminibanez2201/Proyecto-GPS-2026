@@ -85,6 +85,16 @@ function getBrandAttachments() {
   ];
 }
 
+function getBannerOnlyAttachment() {
+  return [
+    {
+      filename: "slidebaar.png",
+      path: bannerPath,
+      cid: bannerCid,
+    },
+  ];
+}
+
 
 async function sendTemplateEmail({ attachments = [], data, subject, template, to }) {
   const { html, text } = await renderEmailTemplate(template, data);
@@ -174,7 +184,7 @@ export async function sendRentalCompleteEmail(rental) {
   try {
     const transporter = createTransporter();
     const baseUrl = normalizeBaseUrl(FRONTEND_URL);
-    const nextPath = `/arriendo/${rental.uuid}`;
+    const nextPath = `/arriendo/${rental.uuid}?origen=correo`;
     const loginWithNextUrl = `${baseUrl}/auth?next=${encodeURIComponent(nextPath)}`;
     const greetingNameArrendador = rental.arrendador?.nombreCompleto || "Arrendador";
     const greetingNameEstudiante = rental.estudiante?.nombreCompleto || "Estudiante";
@@ -261,7 +271,7 @@ export async function sendRentalCompleteEmail(rental) {
         "  </div>",
         "</div>",
       ].join("\n"),
-      attachments: getBrandAttachments(),
+      attachments: getBannerOnlyAttachment(),
     });
 
     if (rental.arrendador?.email) {
@@ -295,7 +305,7 @@ export async function sendCredentialChangedEmail(user, tiposCambio = []) {
     to: user.email, // se envía al correo anterior
     subject: "Aviso de seguridad: cambio de credenciales en ArriendU",
     template: "credenciales-cambio",
-    attachments: getBrandAttachments(),
+    attachments: getBannerOnlyAttachment(),
     data: {
       nombreCompleto: user.nombreCompleto,
       descripcion,
