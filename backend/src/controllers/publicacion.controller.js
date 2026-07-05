@@ -8,6 +8,7 @@ import {
   updatePublicacionService 
 } from "../services/publicacion.service.js";
 import { incrementarVisualizacionesPublicacionServicio } from "../services/publicacion.estadisticas.service.js";
+import { obtenerCoordenadasArriendo } from "../helpers/geocoding.helper.js";
 import {
   publicacionBodyValidation,
   publicacionQueryValidation,
@@ -243,6 +244,26 @@ export async function deletePublicacion(req, res) {
     if (error) return handleErrorClient(res, 400, "Error al eliminar publicación", error);
 
     handleSuccess(res, 200, "Publicación eliminada correctamente", null);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function geocodificarUbicacion(req, res) {
+  try {
+    const { rol } = req.user;
+    const { ubicacion, comuna } = req.query;
+
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden geocodificar direcciones");
+    }
+
+    if (!ubicacion || String(ubicacion).trim().length < 5) {
+      return handleErrorClient(res, 400, "Error de validación", "La ubicación debe tener al menos 5 caracteres");
+    }
+
+    const coordenadas = await obtenerCoordenadasArriendo(ubicacion, comuna);
+    handleSuccess(res, 200, "Coordenadas obtenidas", coordenadas);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

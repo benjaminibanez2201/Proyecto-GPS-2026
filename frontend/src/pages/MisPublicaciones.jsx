@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
 import { COMUNAS_PERMITIDAS } from '@helpers/publicacionesMapa.helper.js';
+import { crearSelectorUbicacion, conectarAutogeocoding } from '@helpers/ubicacionPicker.helper.js';
+import { geocodificarUbicacion } from '@services/publicacion.service.js';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
 
 const accent = '#0f766e';
@@ -137,6 +139,7 @@ const MisPublicaciones = () => {
 
   const handleEditar = async (pub) => {
     const initialPreviewUrl = (pub.fotos && pub.fotos[0]) ? resolveFileUrl(pub.fotos[0]) : '';
+    let selectorUbicacion = null;
 
     await Swal.fire({
       html: `
@@ -270,6 +273,14 @@ const MisPublicaciones = () => {
                   <span class="pub-error-text" id="err-edit-comuna"></span>
                 </div>
               </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label class="pub-label" style="margin-bottom:0;">Ubicación en el mapa</label>
+                <div id="swal-edit-map" class="pub-map-container"></div>
+                <div>
+                  <span class="pub-map-hint" id="swal-edit-map-hint"></span>
+                  <a href="#" class="pub-map-reset" id="swal-edit-map-reset">Restablecer ubicación automática</a>
+                </div>
+              </div>
             </div>
 
             <div class="pub-section">
@@ -320,6 +331,27 @@ const MisPublicaciones = () => {
         const editPreview = document.getElementById('swal-edit-preview');
         const editPreviewPlaceholder = document.getElementById('swal-edit-preview-placeholder');
         const editPhotoCounter = document.getElementById('swal-edit-photo-counter');
+
+        const latitudExistente = Number(pub.latitud);
+        const longitudExistente = Number(pub.longitud);
+        const tieneCoordenadas = Number.isFinite(latitudExistente) && Number.isFinite(longitudExistente);
+
+        selectorUbicacion = crearSelectorUbicacion({
+          contenedorId: 'swal-edit-map',
+          comunaSelectId: 'swal-edit-comuna',
+          hintId: 'swal-edit-map-hint',
+          resetButtonId: 'swal-edit-map-reset',
+          posicionInicial: tieneCoordenadas ? { lat: latitudExistente, lng: longitudExistente } : undefined,
+          esManualInicial: tieneCoordenadas,
+        });
+
+        conectarAutogeocoding({
+          ubicacionInputId: 'swal-edit-ubicacion',
+          comunaSelectId: 'swal-edit-comuna',
+          resetButtonId: 'swal-edit-map-reset',
+          selector: selectorUbicacion,
+          geocodeFn: geocodificarUbicacion,
+        });
 
         attachPriceFormatting(document.getElementById('swal-edit-precio'));
 
@@ -461,6 +493,12 @@ const MisPublicaciones = () => {
             formData.append('fotosPublicacion', file);
           });
 
+          if (selectorUbicacion?.isManual()) {
+            const posicion = selectorUbicacion.getPosicion();
+            formData.append('latitud', posicion.lat);
+            formData.append('longitud', posicion.lng);
+          }
+
           Swal.showLoading();
           const response = await editarPublicacion(pub.publicId, formData);
           if (response?.id) {
@@ -472,11 +510,15 @@ const MisPublicaciones = () => {
           }
         });
       },
+      didClose: () => {
+        selectorUbicacion?.destroy();
+      },
     });
   };
 
   const handleCrear = async () => {
     let archivosSeleccionados = [];
+    let selectorUbicacion = null;
 
     const { value: formValues } = await Swal.fire({
       html: `
@@ -605,6 +647,14 @@ const MisPublicaciones = () => {
                   <span class="pub-error-text" id="err-comuna"></span>
                 </div>
               </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label class="pub-label" style="margin-bottom:0;">Ubicación en el mapa</label>
+                <div id="swal-create-map" class="pub-map-container"></div>
+                <div>
+                  <span class="pub-map-hint" id="swal-create-map-hint"></span>
+                  <a href="#" class="pub-map-reset" id="swal-create-map-reset">Restablecer ubicación automática</a>
+                </div>
+              </div>
             </div>
 
             <div class="pub-section">
@@ -647,6 +697,21 @@ const MisPublicaciones = () => {
         const createPreview = document.getElementById('swal-create-preview');
         const createPreviewPlaceholder = document.getElementById('swal-create-preview-placeholder');
         const createPhotoCounter = document.getElementById('swal-create-photo-counter');
+
+        selectorUbicacion = crearSelectorUbicacion({
+          contenedorId: 'swal-create-map',
+          comunaSelectId: 'swal-comuna',
+          hintId: 'swal-create-map-hint',
+          resetButtonId: 'swal-create-map-reset',
+        });
+
+        conectarAutogeocoding({
+          ubicacionInputId: 'swal-ubicacion',
+          comunaSelectId: 'swal-comuna',
+          resetButtonId: 'swal-create-map-reset',
+          selector: selectorUbicacion,
+          geocodeFn: geocodificarUbicacion,
+        });
 
         attachPriceFormatting(document.getElementById('swal-precio'));
 
@@ -760,8 +825,17 @@ const MisPublicaciones = () => {
           formData.append('fotosPublicacion', file);
         });
 
+        if (selectorUbicacion?.isManual()) {
+          const posicion = selectorUbicacion.getPosicion();
+          formData.append('latitud', posicion.lat);
+          formData.append('longitud', posicion.lng);
+        }
+
         return formData;
-      }
+      },
+      didClose: () => {
+        selectorUbicacion?.destroy();
+      },
     });
 
     if (formValues) {
