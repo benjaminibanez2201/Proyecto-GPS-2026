@@ -138,7 +138,12 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={styles.rowHeader}>Atributo</th>
+                  <th style={styles.rowHeader}>
+                    <span style={styles.rowHeaderContent}>
+                      <Home size={16} strokeWidth={2.2} />
+                      Publicacion
+                    </span>
+                  </th>
                   {detalles.map((publicacion) => (
                     <th key={getPublicacionId(publicacion)} style={styles.columnHeader}>
                       <div style={styles.publicationHeaderCard}>
@@ -147,10 +152,7 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
                           alt={publicacion.titulo || 'Publicacion'}
                           style={styles.publicationImage}
                         />
-                        <span style={styles.publicationType}>{publicacion.tipoInmueble || 'Publicacion'}</span>
                         <span style={styles.publicationTitle}>{publicacion.titulo || 'Sin titulo'}</span>
-                        <span style={styles.publicationLocation}>{publicacion.ubicacion || 'Sin ubicacion'}</span>
-                        <span style={styles.headerPrice}>{formatPrice(publicacion.precioMensual)}</span>
                       </div>
                       <button
                         type="button"
@@ -307,8 +309,8 @@ const styles = {
   publicationHeaderCard: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '7px',
-    minHeight: '226px',
+    gap: '10px',
+    minHeight: '170px',
   },
   publicationImage: {
     aspectRatio: '16 / 9',
@@ -319,33 +321,12 @@ const styles = {
     objectFit: 'cover',
     width: '100%',
   },
-  publicationType: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#e0f2f1',
-    borderRadius: '999px',
-    color: '#0f766e',
-    fontSize: '11px',
-    fontWeight: 800,
-    padding: '4px 8px',
-    textTransform: 'uppercase',
-  },
   publicationTitle: {
     display: 'block',
     color: '#0f172a',
     fontSize: '15px',
     fontWeight: 700,
     lineHeight: 1.25,
-  },
-  publicationLocation: {
-    color: '#64748b',
-    fontSize: '12px',
-    lineHeight: 1.35,
-  },
-  headerPrice: {
-    color: '#0f766e',
-    fontSize: '17px',
-    fontWeight: 800,
-    marginTop: 'auto',
   },
   detailButton: {
     alignItems: 'center',
