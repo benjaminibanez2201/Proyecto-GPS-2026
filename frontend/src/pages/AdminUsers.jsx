@@ -272,7 +272,11 @@ const AdminUsers = () => {
                             type="button"
                             onClick={() => handleDelete(dataUser)}
                             disabled={dataUser.length === 0}
-                            style={{ ...styles.actionButton, ...styles.deleteButton }}
+                            style={{
+                                ...styles.actionButton,
+                                ...styles.deleteButton,
+                                ...(dataUser.length === 0 ? styles.disabledActionButton : {}),
+                            }}
                         >
                             Eliminar selección
                         </button>
