@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, Eye, Heart, MessageCircle, X, ArrowLeft, ExternalLink } from 'lucide-react';
+import { BarChart3, Eye, Heart, MessageCircle, X, ExternalLink } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { getEstadisticasPublicacion } from '@services/publicacion.service.js';
 
@@ -109,10 +109,6 @@ export default function EstadisticasPublicacionModal({ publicacion, open, onClos
         </div>
 
         <div style={styles.actions}>
-          <button type="button" onClick={onClose} style={styles.secondaryButton}>
-            <ArrowLeft size={16} strokeWidth={2.2} />
-            Volver a mis publicaciones
-          </button>
           <button type="button" onClick={() => onGoToDetalle?.(publicacion)} style={styles.primaryButton}>
             <ExternalLink size={16} strokeWidth={2.2} />
             Ir al detalle
@@ -274,18 +270,6 @@ const styles = {
     justifyContent: 'flex-end',
     gap: '12px',
     flexWrap: 'wrap',
-  },
-  secondaryButton: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    border: '1px solid #dbe4ee',
-    backgroundColor: '#ffffff',
-    color: '#334155',
-    borderRadius: '12px',
-    padding: '12px 16px',
-    fontWeight: 700,
-    cursor: 'pointer',
   },
   primaryButton: {
     display: 'inline-flex',

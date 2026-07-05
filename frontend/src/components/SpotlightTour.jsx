@@ -25,6 +25,13 @@ const STEPS = [
     text: 'Guárdalo aquí para compararlo más tarde sin perderlo de vista.',
   },
   {
+    id: 'comparar',
+    route: '/buscar',
+    selector: '[data-tour="comparar-btn"]',
+    title: 'Compara publicaciones',
+    text: 'Selecciona hasta tres publicaciones con este ícono y compáralas lado a lado antes de decidir.',
+  },
+  {
     id: 'contacto',
     dynamic: true,
     selector: '[data-tour="contactar-btn"]',
