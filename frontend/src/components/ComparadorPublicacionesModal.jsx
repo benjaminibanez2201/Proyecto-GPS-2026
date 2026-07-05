@@ -64,6 +64,9 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
   const [detalles, setDetalles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const comparisonColumnWidth = detalles.length > 0
+    ? `calc((100% - ${styles.rowHeader.width}) / ${detalles.length})`
+    : 'auto';
 
   useEffect(() => {
     let isMounted = true;
@@ -191,7 +194,13 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
                     </span>
                   </th>
                   {detalles.map((publicacion) => (
-                    <th key={getPublicacionId(publicacion)} style={styles.columnHeader}>
+                    <th
+                      key={getPublicacionId(publicacion)}
+                      style={{
+                        ...styles.columnHeader,
+                        width: comparisonColumnWidth,
+                      }}
+                    >
                       <div style={styles.publicationHeaderCard}>
                         <img
                           src={getPrimaryImage(publicacion)}
@@ -225,6 +234,7 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
                         key={`${row.label}-${getPublicacionId(publicacion)}`}
                         style={{
                           ...styles.cell,
+                          width: comparisonColumnWidth,
                           ...(row.highlight ? styles.highlightCell : {}),
                         }}
                       >
@@ -322,6 +332,7 @@ const styles = {
     borderCollapse: 'separate',
     borderSpacing: 0,
     minWidth: '760px',
+    tableLayout: 'fixed',
     width: '100%',
   },
   rowHeader: {
