@@ -35,7 +35,6 @@ body {
 	border: 1px solid rgba(15, 118, 110, 0.25);
 	box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
 	cursor: pointer;
-	margin-bottom: 20px;
 	transition: background-color 0.2s ease;
 }
 
