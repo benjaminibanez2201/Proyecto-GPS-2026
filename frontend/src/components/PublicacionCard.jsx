@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight, GitCompareArrows } from 'lucide-react';
 import '../styles/publicacionCard.css';
 import { useNavigate} from 'react-router-dom';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
@@ -162,19 +162,16 @@ export default function PublicacionCard({
         </button>
 
         {onToggleCompare && (
-          <label
-            className={`publicacion-compare-chip${selectedForCompare ? ' publicacion-compare-chip--selected' : ''}${compareDisabled ? ' publicacion-compare-chip--disabled' : ''}`}
-            title={compareDisabled ? 'Puedes comparar hasta tres publicaciones' : 'Seleccionar para comparar'}
+          <button
+            type="button"
+            className={`publicacion-compare-btn${selectedForCompare ? ' publicacion-compare-btn--selected' : ''}`}
+            disabled={compareDisabled}
+            onClick={() => onToggleCompare(publicacion)}
+            title={compareDisabled ? 'Puedes comparar hasta tres publicaciones' : selectedForCompare ? 'Quitar de comparación' : 'Seleccionar para comparar'}
+            aria-label={selectedForCompare ? 'Quitar de comparación' : 'Seleccionar para comparar'}
           >
-            <input
-              type="checkbox"
-              checked={selectedForCompare}
-              disabled={compareDisabled}
-              onChange={() => onToggleCompare(publicacion)}
-              className="publicacion-compare-checkbox"
-            />
-            <span>{selectedForCompare ? 'Seleccionada' : 'Comparar'}</span>
-          </label>
+            <GitCompareArrows size={18} strokeWidth={2.4} />
+          </button>
         )}
       </div>
 
