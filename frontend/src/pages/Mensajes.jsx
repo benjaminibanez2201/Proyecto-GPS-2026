@@ -12,6 +12,7 @@ import {
 } from '@services/mensaje.service.js';
 import { createArriendo, listarArriendos } from '@services/rentalsAndReviews.service.js';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
+import { connectSocket } from '@services/socket.service.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import '@styles/mensajes.css';
 
@@ -190,6 +191,24 @@ export default function Mensajes() {
     if (!threadRef.current) return;
     threadRef.current.scrollTop = threadRef.current.scrollHeight;
   }, [messages, selectedConversationId]);
+
+  useEffect(() => {
+    const socket = connectSocket();
+    if (!socket) return;
+
+    const handleNuevoMensaje = (payload) => {
+      if (payload?.conversacionId === selectedConversationId) {
+        setMessages((prev) => [...prev, payload.mensaje]);
+      }
+      fetchConversations();
+    };
+
+    socket.on('nuevo-mensaje', handleNuevoMensaje);
+
+    return () => {
+      socket.off('nuevo-mensaje', handleNuevoMensaje);
+    };
+  }, [selectedConversationId]);
 
   useEffect(() => {
     const init = async () => {
