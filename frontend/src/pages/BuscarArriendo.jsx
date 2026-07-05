@@ -110,12 +110,22 @@ export default function BuscarArriendos() {
 
   const handlePrecioMinTextoChange = (e) => {
     const value = e.target.value;
-    setFiltros((prev) => ({ ...prev, precioMin: value }));
+    if (value === '') {
+      setFiltros((prev) => ({ ...prev, precioMin: value }));
+      return;
+    }
+    const clamped = Math.min(Math.max(Number(value), PRECIO_MIN_RANGO), PRECIO_MAX_RANGO);
+    setFiltros((prev) => ({ ...prev, precioMin: String(clamped) }));
   };
 
   const handlePrecioMaxTextoChange = (e) => {
     const value = e.target.value;
-    setFiltros((prev) => ({ ...prev, precioMax: value }));
+    if (value === '') {
+      setFiltros((prev) => ({ ...prev, precioMax: value }));
+      return;
+    }
+    const clamped = Math.min(Math.max(Number(value), PRECIO_MIN_RANGO), PRECIO_MAX_RANGO);
+    setFiltros((prev) => ({ ...prev, precioMax: String(clamped) }));
   };
 
   const handleRangoMinChange = (e) => {
@@ -281,8 +291,8 @@ export default function BuscarArriendos() {
     return 0;
   };
 
-  const precioMinPorcentaje = ((Number(filtros.precioMin || PRECIO_MIN_RANGO) - PRECIO_MIN_RANGO) / (PRECIO_MAX_RANGO - PRECIO_MIN_RANGO)) * 100;
-  const precioMaxPorcentaje = ((Number(filtros.precioMax || PRECIO_MAX_RANGO) - PRECIO_MIN_RANGO) / (PRECIO_MAX_RANGO - PRECIO_MIN_RANGO)) * 100;
+  const precioMinPorcentaje = Math.min(100, Math.max(0, ((Number(filtros.precioMin || PRECIO_MIN_RANGO) - PRECIO_MIN_RANGO) / (PRECIO_MAX_RANGO - PRECIO_MIN_RANGO)) * 100));
+  const precioMaxPorcentaje = Math.min(100, Math.max(0, ((Number(filtros.precioMax || PRECIO_MAX_RANGO) - PRECIO_MIN_RANGO) / (PRECIO_MAX_RANGO - PRECIO_MIN_RANGO)) * 100));
 
   return (
     <div className="ba-page">
