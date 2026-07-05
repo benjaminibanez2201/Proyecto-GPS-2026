@@ -37,7 +37,7 @@ export default function ModalReportar({ publicacion, open, onClose, onSuccess })
 
     setCargando(true);
     const [, error] = await crearReportePublicacion({
-      id_publicacion: publicacion.id || publicacion._id,
+      id_publicacion: publicacion.publicId,
       motivo: motivoFinal,
     });
     setCargando(false);

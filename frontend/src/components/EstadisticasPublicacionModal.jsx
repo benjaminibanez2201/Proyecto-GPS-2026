@@ -10,11 +10,11 @@ export default function EstadisticasPublicacionModal({ publicacion, open, onClos
   const [cargando, setCargando] = useState(false);
 
   useEffect(() => {
-    if (!open || !publicacion?.id) return undefined;
+    if (!open || !publicacion?.publicId) return undefined;
 
     const cargar = async () => {
       setCargando(true);
-      const [data, error] = await getEstadisticasPublicacion(publicacion.id);
+      const [data, error] = await getEstadisticasPublicacion(publicacion.publicId);
       setCargando(false);
 
       if (error) {

@@ -6,14 +6,14 @@ import User from "../entity/user.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 import { createNotificacionService } from "./notificacion.service.js";
 
-export async function crearReporte(id_publicacion, reporterId, motivo) {
+export async function crearReporte(publicacionUuid, reporterId, motivo) {
   try {
     const repoReport = AppDataSource.getRepository(ReportePublicacion);
     const repoPublicacion = AppDataSource.getRepository(Publicacion);
     const repoUser = AppDataSource.getRepository(User);
 
-    const publicacion = await repoPublicacion.findOne({ 
-      where: { id: id_publicacion }, 
+    const publicacion = await repoPublicacion.findOne({
+      where: { uuid: publicacionUuid },
       relations: ["arrendador"] });
     if (!publicacion) return [null, "Publicación no encontrada"];
 
@@ -55,7 +55,7 @@ export async function listarPublicacionesReportadas() {
           fotos: true,
           estado: true,
           createdAt: true,
-          arrendador: { id: true, nombreCompleto: true, email: true },
+          arrendador: { id: true, uuid: true, nombreCompleto: true, email: true },
         },
       },
     });
@@ -119,7 +119,7 @@ export async function listarReportesDeUsuario(reporterId) {
           fotos: true,
           estado: true,
           createdAt: true,
-          arrendador: { id: true, nombreCompleto: true, email: true },
+          arrendador: { id: true, uuid: true, nombreCompleto: true, email: true },
         },
       },
     });
@@ -167,7 +167,7 @@ export async function obtenerDetalleReporte(reportId) {
           fotos: true,
           estado: true,
           createdAt: true,
-          arrendador: { id: true, nombreCompleto: true, email: true },
+          arrendador: { id: true, uuid: true, nombreCompleto: true, email: true },
         },
       },
     });
@@ -190,6 +190,55 @@ export async function obtenerDetalleReporte(reportId) {
     return [{ reporte, asociados }, null];
   } catch (error) {
     console.error("Error obtenerDetalleReporte:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function listarPublicacionesInactivas() {
+  try {
+    const repoPublicacion = AppDataSource.getRepository(Publicacion);
+    const repoAction = AppDataSource.getRepository(ReportAction);
+
+    const publicaciones = await repoPublicacion.find({
+      where: { estado: "inactiva" },
+      relations: ["arrendador"],
+      order: { updatedAt: "DESC" },
+      select: {
+        id: true,
+        uuid: true,
+        titulo: true,
+        tipoInmueble: true,
+        precioMensual: true,
+        ubicacion: true,
+        comuna: true,
+        fotos: true,
+        estado: true,
+        createdAt: true,
+        updatedAt: true,
+        arrendador: { id: true, uuid: true, nombreCompleto: true, email: true },
+      },
+    });
+
+    const resultado = [];
+    for (const publicacion of publicaciones) {
+      const ultimaAccion = await repoAction.findOne({
+        where: { publicacion: { id: publicacion.id } },
+        relations: ["administrador"],
+        order: { createdAt: "DESC" },
+        select: {
+          id: true,
+          accion: true,
+          observacion: true,
+          createdAt: true,
+          administrador: { id: true, nombreCompleto: true },
+        },
+      });
+      resultado.push({ publicacion, ultimaAccion });
+    }
+
+    return [resultado, null];
+  } catch (error) {
+    console.error("Error listarPublicacionesInactivas:", error);
     return [null, "Error interno del servidor"];
   }
 }
@@ -267,4 +316,4 @@ export async function resolverReporte(publicacionUuid, administradorId, accion, 
   }
 }
 
-export default { crearReporte, listarPublicacionesReportadas, listarReportesDeUsuario, obtenerDetalleReporte, resolverReporte };
+export default { crearReporte, listarPublicacionesReportadas, listarPublicacionesInactivas, listarReportesDeUsuario, obtenerDetalleReporte, resolverReporte };

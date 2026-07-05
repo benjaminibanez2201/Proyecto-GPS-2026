@@ -13,7 +13,7 @@ function formatPrice(value) {
 }
 
 function getPublicacionId(publicacion) {
-  return publicacion?.id_publicacion || publicacion?.id || publicacion?._id;
+  return publicacion?.publicId;
 }
 
 const MisFavoritos = () => {
@@ -162,7 +162,7 @@ const MisFavoritos = () => {
           <div style={styles.grid}>
             {favoritos.map((item) => {
               const publicacion = item.publicacion || item;
-              const publicacionId = publicacion.id_publicacion || publicacion.id;
+              const publicacionId = publicacion.publicId;
               
               const fallbackImage = 'https://via.placeholder.com/400x250?text=Imagen+no+disponible';
               const imagenPrincipal = publicacion.fotos && publicacion.fotos.length > 0

@@ -163,14 +163,17 @@ export async function obtenerArriendoPorIdServicio(uuid) {
   }
 }
 
-export async function finalizarArriendoPorPublicacionServicio(publicacionId, arrendadorId) {
+export async function finalizarArriendoPorPublicacionServicio(publicacionUuid, arrendadorId) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);
     const repositorioPublicacion = AppDataSource.getRepository(Publicacion);
 
+    const publicacion = await repositorioPublicacion.findOneBy({ uuid: publicacionUuid });
+    if (!publicacion) return [null, "La publicación no existe"];
+
     const arriendo = await repositorioArriendo.findOne({
       where: {
-        publicacionId: Number(publicacionId),
+        publicacionId: publicacion.id,
         arrendadorId: Number(arrendadorId),
         status: "COMPLETED",
       },
@@ -179,7 +182,7 @@ export async function finalizarArriendoPorPublicacionServicio(publicacionId, arr
     if (!arriendo) return [null, "No hay un arriendo activo para esta publicación"];
 
     await repositorioArriendo.update({ id: arriendo.id }, { status: "FINISHED", finishedAt: new Date() });
-    await repositorioPublicacion.update({ id: Number(publicacionId) }, { estado: "activa" });
+    await repositorioPublicacion.update({ id: publicacion.id }, { estado: "activa" });
 
     const actualizado = await repositorioArriendo.findOne({ where: { id: arriendo.id } });
 

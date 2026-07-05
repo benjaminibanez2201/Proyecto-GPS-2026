@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { BadgeCheck, Eye, FlagTriangleRight, RotateCcw, ShieldCheck, ShieldOff } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
-import { obtenerPublicacionesReportadas, resolverPublicacionReportada } from '@services/reportes.service.js';
+import {
+  obtenerPublicacionesInactivas,
+  obtenerPublicacionesReportadas,
+  resolverPublicacionReportada,
+} from '@services/reportes.service.js';
 
 const accent = '#008080';
 
@@ -32,8 +36,12 @@ const estadoLabels = {
 
 const formatLabel = (value, mapping) => {
   if (!value) return 'Sin dato';
-  return mapping[value] || value
-    .toString()
+  if (mapping[value]) return mapping[value];
+
+  const raw = value.toString();
+  if (!/^[a-z0-9_]+$/.test(raw)) return raw;
+
+  return raw
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
@@ -47,6 +55,7 @@ const AdminReportes = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [reportes, setReportes] = useState([]);
+  const [inactivas, setInactivas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -58,21 +67,26 @@ const AdminReportes = () => {
     setLoading(false);
   };
 
+  const cargarInactivas = async () => {
+    const [data] = await obtenerPublicacionesInactivas();
+    setInactivas(Array.isArray(data) ? data : []);
+  };
+
   useEffect(() => {
     cargarReportes();
+    cargarInactivas();
   }, []);
 
   const resumen = useMemo(() => {
     const totalReportes = reportes.reduce((sum, item) => sum + Number(item.cantidadReportes || 0), 0);
-    const inactivas = reportes.filter((item) => item.publicacion?.estado === 'inactiva').length;
     return [
       { label: 'Publicaciones reportadas', value: reportes.length, icon: FlagTriangleRight },
       { label: 'Reportes pendientes', value: totalReportes, icon: Eye },
-      { label: 'Inactivas', value: inactivas, icon: ShieldOff },
+      { label: 'Inactivas', value: inactivas.length, icon: ShieldOff },
     ];
-  }, [reportes]);
+  }, [reportes, inactivas]);
 
-  const resolver = async (item, accion) => {
+  const resolver = async (publicacion, accion) => {
     const textos = {
       mantener: 'mantener activa',
       desactivar: 'desactivar',
@@ -93,7 +107,7 @@ const AdminReportes = () => {
 
     if (!isConfirmed) return;
 
-    const [_, err] = await resolverPublicacionReportada(item.publicacion.publicId, { accion, observacion });
+    const [_, err] = await resolverPublicacionReportada(publicacion.publicId, { accion, observacion });
     if (err) {
       Swal.fire({ icon: 'error', title: 'No se pudo resolver', text: err, confirmButtonColor: accent });
       return;
@@ -101,6 +115,7 @@ const AdminReportes = () => {
 
     Swal.fire({ icon: 'success', title: 'Reporte resuelto', confirmButtonColor: accent });
     cargarReportes();
+    cargarInactivas();
   };
 
   return (
@@ -201,20 +216,64 @@ const AdminReportes = () => {
                   >
                     <Eye size={16} /> Ver publicación
                   </button>
-                  <button type="button" onClick={() => resolver(item, 'mantener')} style={styles.actionButton}>
+                  <button type="button" onClick={() => resolver(publicacion, 'mantener')} style={styles.actionButton}>
                     <ShieldCheck size={16} /> Mantener
                   </button>
-                  <button type="button" onClick={() => resolver(item, 'desactivar')} style={{ ...styles.actionButton, ...styles.dangerButton }}>
+                  <button type="button" onClick={() => resolver(publicacion, 'desactivar')} style={{ ...styles.actionButton, ...styles.dangerButton }}>
                     <ShieldOff size={16} /> Desactivar
-                  </button>
-                  <button type="button" onClick={() => resolver(item, 'reactivar')} style={styles.secondaryButton}>
-                    <RotateCcw size={16} /> Reactivar
                   </button>
                 </div>
               </article>
             );
           })}
         </div>
+      </section>
+
+      <section style={styles.contentCard}>
+        <h2 style={styles.sectionTitle}>Publicaciones inactivas</h2>
+
+        {inactivas.length === 0 ? (
+          <p style={styles.muted}>No hay publicaciones inactivas.</p>
+        ) : (
+          <div style={styles.list}>
+            {inactivas.map(({ publicacion, ultimaAccion }) => (
+              <article key={publicacion.publicId} style={styles.reportCard}>
+                <div style={styles.reportHeader}>
+                  <div>
+                    <p style={styles.eyebrow}>{publicacion.tipoInmueble || 'Publicación'}</p>
+                    <h3 style={styles.cardTitle}>{publicacion.titulo || 'Sin título'}</h3>
+                    <p style={styles.cardSubtitle}>{publicacion.ubicacion || 'Sin ubicación'}</p>
+                    <p style={styles.cardSubtitle}>
+                      Arrendador: {publicacion.arrendador?.nombreCompleto || publicacion.arrendador?.email || 'Sin datos'}
+                    </p>
+                    {ultimaAccion && (
+                      <p style={styles.cardSubtitle}>
+                        Desactivada por {ultimaAccion.administrador?.nombreCompleto || 'un administrador'} el {formatDate(ultimaAccion.createdAt)}
+                        {ultimaAccion.observacion ? ` · ${ultimaAccion.observacion}` : ''}
+                      </p>
+                    )}
+                  </div>
+                  <span style={{ ...styles.statusBadge, backgroundColor: '#fee2e2', color: '#dc2626' }}>
+                    inactiva
+                  </span>
+                </div>
+
+                <div style={styles.actions}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/publicacion/${publicacion.publicId}`)}
+                    style={styles.secondaryButton}
+                  >
+                    <Eye size={16} /> Ver publicación
+                  </button>
+                  <button type="button" onClick={() => resolver(publicacion, 'reactivar')} style={styles.actionButton}>
+                    <RotateCcw size={16} /> Reactivar
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
@@ -237,6 +296,7 @@ const styles = {
   statLabel: { margin: '0 0 4px', fontSize: '13px', color: '#64748b' },
   statValue: { margin: 0, fontSize: '28px', lineHeight: 1.1, color: '#0f172a' },
   contentCard: { borderRadius: '22px', padding: '22px', backgroundColor: '#fff', border: '1px solid rgba(15, 23, 42, 0.06)', boxShadow: '0 12px 30px rgba(15, 23, 42, 0.07)' },
+  sectionTitle: { margin: '0 0 6px', fontSize: '20px', color: '#0f172a' },
   list: { display: 'grid', gap: '14px' },
   reportCard: { border: '1px solid #e2e8f0', borderRadius: '18px', padding: '18px', backgroundColor: '#f8fafc' },
   reportHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' },

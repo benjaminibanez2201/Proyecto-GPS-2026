@@ -209,6 +209,10 @@ export async function updatePublicacion(req, res) {
       return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden editar publicaciones");
     }
 
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la publicación no es válido");
+    }
+
     const normalizedBody = normalizePublicacionBody(body);
     const { error: bodyError } = publicacionUpdateValidation.validate(normalizedBody);
     if (bodyError) return handleErrorClient(res, 400, "Error de validación", bodyError.message);
@@ -231,61 +235,14 @@ export async function deletePublicacion(req, res) {
       return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden eliminar publicaciones");
     }
 
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la publicación no es válido");
+    }
+
     const [deleted, error] = await deletePublicacionService(publicacionId, arrendadorId);
     if (error) return handleErrorClient(res, 400, "Error al eliminar publicación", error);
 
     handleSuccess(res, 200, "Publicación eliminada correctamente", null);
-  } catch (error) {
-    handleErrorServer(res, 500, error.message);
-  }
-}
-
-export async function getFavoritos(req, res) {
-  try {
-    const { id: usuarioId } = req.user;
-
-    const [favoritos, error] = await getFavoritosUsuarioService(usuarioId);
-    if (error) return handleErrorClient(res, 400, "Error al obtener favoritos", error);
-
-    handleSuccess(res, 200, "Favoritos obtenidos correctamente", favoritos);
-  } catch (error) {
-    handleErrorServer(res, 500, error.message);
-  }
-}
-
-export async function addFavorito(req, res) {
-  try {
-    const { id } = req.params;
-    const publicacionId = Number(id);
-    const { id: usuarioId } = req.user;
-
-    if (!Number.isInteger(publicacionId)) {
-      return handleErrorClient(res, 400, "ID de publicación inválido");
-    }
-
-    const [favorito, error] = await addFavoritoService(publicacionId, usuarioId);
-    if (error) return handleErrorClient(res, 400, "Error al guardar favorito", error);
-
-    handleSuccess(res, 201, "Publicación agregada a favoritos", favorito);
-  } catch (error) {
-    handleErrorServer(res, 500, error.message);
-  }
-}
-
-export async function removeFavorito(req, res) {
-  try {
-    const { id } = req.params;
-    const publicacionId = Number(id);
-    const { id: usuarioId } = req.user;
-
-    if (!Number.isInteger(publicacionId)) {
-      return handleErrorClient(res, 400, "ID de publicación inválido");
-    }
-
-    const [eliminado, error] = await removeFavoritoService(publicacionId, usuarioId);
-    if (error) return handleErrorClient(res, 400, "Error al eliminar favorito", error);
-
-    handleSuccess(res, 200, "Publicación eliminada de favoritos", eliminado);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

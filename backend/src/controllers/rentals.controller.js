@@ -34,7 +34,7 @@ export async function crearArriendo(req, res) {
   try {
     const [data, error] = await crearArriendoServicio(req.body);
     if (error) return handleErrorClient(res, 400, error);
-    return handleSuccess(res, 201, "Arriendo creado", data);
+    return handleSuccess(res, 201, "Arriendo creado", agregarPublicIds(data));
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
@@ -64,9 +64,14 @@ export async function finalizarArriendoPorPublicacion(req, res) {
   try {
     const { publicacionId } = req.params;
     const arrendadorId = req.user.id;
-    const [data, error] = await finalizarArriendoPorPublicacionServicio(Number(publicacionId), arrendadorId);
+
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la publicación no es válido");
+    }
+
+    const [data, error] = await finalizarArriendoPorPublicacionServicio(publicacionId, arrendadorId);
     if (error) return handleErrorClient(res, 400, error);
-    return handleSuccess(res, 200, "Arriendo finalizado", data);
+    return handleSuccess(res, 200, "Arriendo finalizado", agregarPublicIds(data));
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
@@ -89,7 +94,7 @@ export async function actualizarArriendo(req, res) {
     const body = req.body;
     const [data, error] = await actualizarArriendoServicio(Number(id), body);
     if (error) return handleErrorClient(res, 400, error);
-    return handleSuccess(res, 200, "Arriendo actualizado", data);
+    return handleSuccess(res, 200, "Arriendo actualizado", agregarPublicIds(data));
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
@@ -100,7 +105,7 @@ export async function eliminarArriendo(req, res) {
     const { id } = req.params;
     const [data, error] = await eliminarArriendoServicio(Number(id));
     if (error) return handleErrorClient(res, 400, error);
-    return handleSuccess(res, 200, "Arriendo eliminado", data);
+    return handleSuccess(res, 200, "Arriendo eliminado", agregarPublicIds(data));
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
