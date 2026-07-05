@@ -673,7 +673,16 @@ const styles = {
   },
   completionHeader: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '18px' },
   completionRingWrap: { position: 'relative', width: '72px', height: '72px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  completionRingLabel: { position: 'absolute', fontSize: '15px', fontWeight: '800', color: accent },
+  completionRingLabel: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    fontSize: '12px',
+    fontWeight: '800',
+    color: accent,
+    whiteSpace: 'nowrap',
+  },
   completionChips: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
   completionChip: {
     display: 'inline-flex', alignItems: 'center', gap: '5px',

@@ -435,7 +435,6 @@ export default function Mensajes() {
           </div>
 
           <label className="mensajes-search">
-            <span>Buscar</span>
             <input
               type="text"
               value={searchText}
