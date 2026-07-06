@@ -217,6 +217,20 @@ export async function updateUserService(query, body) {
 
     const { password, ...userUpdated } = userData;
 
+    if (adminId) {
+      try {
+        const registroAuditoria = auditoriaRepository.create({
+          accion: "EDITAR_USUARIO",
+          usuarioAfectadoId: userUpdated.id,
+          usuarioAfectadoEmail: userUpdated.email,
+          adminResponsable: { id: adminId },
+        });
+        await auditoriaRepository.save(registroAuditoria);
+      } catch (auditoriaError) {
+        console.error("Error al registrar auditoria de edicion de usuario:", auditoriaError);
+      }
+    }
+
     return [userUpdated, null];
   } catch (error) {
     console.error("Error al modificar un usuario:", error);

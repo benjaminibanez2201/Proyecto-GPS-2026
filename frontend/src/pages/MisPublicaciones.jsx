@@ -986,7 +986,7 @@ const MisPublicaciones = () => {
             <h2 style={styles.cardTitle}>Tus propiedades publicadas</h2>
             <p style={styles.cardSubtitle}>Aquí aparecen todas las publicaciones que has creado.</p>
           </div>
-          <button onClick={handleCrear} style={styles.button}>
+          <button onClick={handleCrear} style={styles.button} data-tour="publicar-btn">
             <span>Publicar Inmueble</span>
           </button>
         </header>
@@ -1040,7 +1040,7 @@ const MisPublicaciones = () => {
                     {pub.estado}
                   </span>
                   <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <button onClick={() => abrirEstadisticas(pub)} style={styles.btnStats}>
+                    <button onClick={() => abrirEstadisticas(pub)} style={styles.btnStats} data-tour="estadisticas-btn">
                       <BarChart3 size={14} strokeWidth={2.2} />
                       Estadísticas
                     </button>
@@ -1092,15 +1092,16 @@ const MisPublicaciones = () => {
                       No editable
                     </span>
                   ) : (
-                    <button onClick={() => handleEditar(pub)} style={styles.btnEditar}>
+                    <button onClick={() => handleEditar(pub)} style={styles.btnEditar} data-tour="editar-btn">
                       <Pencil size={13} />
                     </button>
                   )}
 
                   <button
                     onClick={() => handleEliminar(pub.publicId)}
-                    style={{ ...styles.iconBtnAction, color: '#dc2626', backgroundColor: '#fef2f2' }}
+                    style={{ ...styles.iconBtnAction, color: '#dc2626', backgroundColor: '#fef2f2' } }
                     title="Eliminar"
+                    data-tour="eliminar-btn"
                   >
                     <Trash2 size={16} />
                   </button>

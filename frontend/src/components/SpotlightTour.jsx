@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { getPublicaciones } from '@services/publicacion.service.js';
+import { getMisPublicaciones } from '@services/user.service.js';
 import '@styles/spotlightTour.css';
 
 const POLL_INTERVAL_MS = 150;
@@ -9,7 +10,7 @@ const POLL_TIMEOUT_MS = 6000;
 const TOOLTIP_WIDTH = 320;
 const VIEWPORT_MARGIN = 16;
 
-const STEPS = [
+export const ESTUDIANTE_STEPS = [
   {
     id: 'filtros',
     route: '/buscar',
@@ -40,11 +41,68 @@ const STEPS = [
   },
 ];
 
+export const ARRENDADOR_STEPS = [
+  {
+    id: 'publicar',
+    route: '/mis-publicaciones',
+    selector: '[data-tour="publicar-btn"]',
+    title: 'Publica tu primer inmueble',
+    text: 'Crea una publicación con fotos, precio y servicios incluidos para que los estudiantes te encuentren.',
+  },
+  {
+    id: 'editar',
+    route: '/mis-publicaciones',
+    selector: '[data-tour="editar-btn"]',
+    title: 'Edita cuando quieras',
+    text: 'Actualiza el precio, las fotos o los datos de tu publicación en cualquier momento.',
+    checkExists: async () => {
+      const data = await getMisPublicaciones();
+      return Array.isArray(data) && data.length > 0;
+    },
+  },
+  {
+    id: 'eliminar',
+    route: '/mis-publicaciones',
+    selector: '[data-tour="eliminar-btn"]',
+    title: 'Elimina si ya no está disponible',
+    text: 'Si arrendaste la propiedad o ya no quieres publicarla, puedes eliminarla desde aquí. Esta acción no se puede deshacer.',
+    checkExists: async () => {
+      const data = await getMisPublicaciones();
+      return Array.isArray(data) && data.length > 0;
+    },
+  },
+  {
+    id: 'estadisticas',
+    route: '/mis-publicaciones',
+    selector: '[data-tour="estadisticas-btn"]',
+    title: 'Revisa tu desempeño',
+    text: 'Consulta cuántas visitas, favoritos y conversaciones ha generado tu publicación.',
+    checkExists: async () => {
+      const data = await getMisPublicaciones();
+      return Array.isArray(data) && data.length > 0;
+    },
+  },
+  {
+    id: 'mensajes',
+    route: '/mis-publicaciones',
+    selector: '[data-tour="mensajes-nav"]',
+    title: 'Habla con tus interesados',
+    text: 'Aquí verás y responderás los mensajes de los estudiantes interesados en tus propiedades.',
+  },
+  {
+    id: 'historial',
+    route: '/mis-publicaciones',
+    selector: '[data-tour="historial-nav"]',
+    title: 'Historial de arriendos',
+    text: 'Aquí puedes ver el registro de todos los arriendos que has concretado en la plataforma.',
+  },
+];
+
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-export default function SpotlightTour({ active, onClose, onFinish }) {
+export default function SpotlightTour({ active, onClose, onFinish, steps = ESTUDIANTE_STEPS }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [stepIndex, setStepIndex] = useState(0);
@@ -64,7 +122,8 @@ export default function SpotlightTour({ active, onClose, onFinish }) {
 
     cancelledRef.current = false;
     setRect(null);
-    const step = STEPS[stepIndex];
+    const step = steps[stepIndex];
+    if (!step) return undefined;
 
     const measure = (el) => {
       const box = el.getBoundingClientRect();
@@ -98,6 +157,15 @@ export default function SpotlightTour({ active, onClose, onFinish }) {
     };
 
     const prepareStep = async () => {
+      if (step.checkExists) {
+        const existe = await step.checkExists();
+        if (cancelledRef.current) return;
+        if (!existe) {
+          handleSkipStep();
+          return;
+        }
+      }
+
       if (step.dynamic) {
         let targetPath = contactoPath;
 
@@ -122,7 +190,7 @@ export default function SpotlightTour({ active, onClose, onFinish }) {
           navigate(targetPath);
           return;
         }
-      } else if (location.pathname !== step.route) {
+      } else if (step.route && location.pathname !== step.route) {
         navigate(step.route);
         return;
       }
@@ -136,12 +204,14 @@ export default function SpotlightTour({ active, onClose, onFinish }) {
       cancelledRef.current = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, stepIndex, location.pathname]);
+  }, [active, stepIndex, location.pathname, steps]);
 
   useEffect(() => {
     if (!rect) return undefined;
 
-    const step = STEPS[stepIndex];
+    const step = steps[stepIndex];
+    if (!step) return undefined;
+
     const update = () => {
       const el = document.querySelector(step.selector);
       if (el) {
@@ -162,9 +232,9 @@ export default function SpotlightTour({ active, onClose, onFinish }) {
       window.removeEventListener('scroll', update, true);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Boolean(rect), stepIndex]);
+  }, [Boolean(rect), stepIndex, steps]);
 
-  const isLast = stepIndex === STEPS.length - 1;
+  const isLast = stepIndex === steps.length - 1;
   const isFirst = stepIndex === 0;
 
   const handleSkipStep = () => {
@@ -198,7 +268,7 @@ export default function SpotlightTour({ active, onClose, onFinish }) {
 
   if (!active || !rect) return null;
 
-  const step = STEPS[stepIndex];
+  const step = steps[stepIndex];
   const spaceBelow = window.innerHeight - (rect.top + rect.height);
   const showBelow = spaceBelow > 220;
   const tooltipLeft = clamp(rect.left, VIEWPORT_MARGIN, window.innerWidth - TOOLTIP_WIDTH - VIEWPORT_MARGIN);
@@ -218,7 +288,7 @@ export default function SpotlightTour({ active, onClose, onFinish }) {
           <X size={16} />
         </button>
 
-        <span className="spotlight-step-count">Paso {stepIndex + 1} de {STEPS.length}</span>
+        <span className="spotlight-step-count">Paso {stepIndex + 1} de {steps.length}</span>
         <h3>{step.title}</h3>
         <p>{step.text}</p>
 
