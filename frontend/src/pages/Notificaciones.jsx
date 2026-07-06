@@ -3,9 +3,24 @@ import useNotificaciones from '@hooks/notificaciones/useNotificaciones.jsx';
 import '@styles/notificaciones.css';
 
 export default function Notificaciones() {
-  const { notificaciones, loading, error, unreadCount, loadNotificaciones, loadUnreadCount, markAsRead, markAllRead, removeNotification } = useNotificaciones();
+  const {
+    notificaciones,
+    paginacion,
+    loading,
+    error,
+    unreadCount,
+    loadNotificaciones,
+    loadUnreadCount,
+    markAsRead,
+    markAllRead,
+    removeNotification,
+  } = useNotificaciones();
   const [page, setPage] = useState(0);
   const limit = 20;
+  const totalPaginas = paginacion.totalPaginas;
+  const visibleTotalPaginas = Math.max(totalPaginas, 1);
+  const currentPage = totalPaginas === 0 ? 1 : page + 1;
+  const hasNextPage = totalPaginas > 0 && currentPage < totalPaginas;
 
   useEffect(() => {
     loadNotificaciones({ limit, offset: page * limit });
@@ -44,7 +59,10 @@ export default function Notificaciones() {
 
         <footer className="noti-footer">
           <button disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))} className="btn">Anterior</button>
-          <button disabled={notificaciones.length < limit} onClick={() => setPage((p) => p + 1)} className="btn">Siguiente</button>
+          <span className="noti-pagination-label">
+            Página {currentPage} de {visibleTotalPaginas}
+          </span>
+          <button disabled={!hasNextPage} onClick={() => setPage((p) => p + 1)} className="btn">Siguiente</button>
         </footer>
       </div>
     </div>

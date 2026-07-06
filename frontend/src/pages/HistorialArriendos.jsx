@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Archive, CheckCircle, Clock, Eye, Inbox, MessageSquareText, Star, X, Landmark} from 'lucide-react';
+import { ArrowRight, Archive, CheckCircle, ChevronLeft, ChevronRight, Eye, Inbox, MessageSquareText, RotateCcw, Star, X, Landmark} from 'lucide-react';
 import { listarArriendos, crearResena } from '../services/rentalsAndReviews.service.js';
 import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -18,6 +18,14 @@ export default function HistorialArriendos() {
 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
+  const [anonimo, setAnonimo] = useState(false);
+
+  const [statusFilter, setStatusFilter] = useState('todos');
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const PAGE_SIZE = 20;
 
   const { user } = useAuth();
 
@@ -31,13 +39,15 @@ export default function HistorialArriendos() {
     }
     setError('');
 
-    const enriched = (Array.isArray(data) ? data : []).map((r) => ({
-      ...r,
-      contratanteNombre: Number(user?.id) === r.arrendadorId ? r.estudiante?.nombreCompleto : r.arrendador?.nombreCompleto || '—',
-      contratanteId: Number(user?.id) === r.arrendadorId ? r.estudiante?.id : r.arrendador?.id || null,
-      contratantePublicId: Number(user?.id) === r.arrendadorId ? r.estudiante?.publicId : r.arrendador?.publicId || null,
-      contratanteAvatar: (Number(user?.id) === r.arrendadorId ? r.estudiante?.fotoPerfil : r.arrendador?.fotoPerfil) || null,
-    }));
+    const enriched = (Array.isArray(data) ? data : [])
+      .filter((r) => r.status === 'COMPLETED' || r.status === 'FINISHED')
+      .map((r) => ({
+        ...r,
+        contratanteNombre: Number(user?.id) === r.arrendadorId ? r.estudiante?.nombreCompleto : r.arrendador?.nombreCompleto || '—',
+        contratanteId: Number(user?.id) === r.arrendadorId ? r.estudiante?.id : r.arrendador?.id || null,
+        contratantePublicId: Number(user?.id) === r.arrendadorId ? r.estudiante?.publicId : r.arrendador?.publicId || null,
+        contratanteAvatar: (Number(user?.id) === r.arrendadorId ? r.estudiante?.fotoPerfil : r.arrendador?.fotoPerfil) || null,
+      }));
 
     setArriendos(enriched);
     setLoading(false);
@@ -47,6 +57,44 @@ export default function HistorialArriendos() {
     cargarDatos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  const hayFiltrosActivos = statusFilter !== 'todos' || Boolean(fechaDesde) || Boolean(fechaHasta);
+
+  const limpiarFiltros = () => {
+    setStatusFilter('todos');
+    setFechaDesde('');
+    setFechaHasta('');
+  };
+
+  const arriendosFiltrados = useMemo(() => {
+    return arriendos.filter((item) => {
+      if (statusFilter !== 'todos' && item.status !== statusFilter) return false;
+
+      if (fechaDesde || fechaHasta) {
+        if (!item.completedAt) return false;
+        const fecha = new Date(item.completedAt);
+        if (fechaDesde && fecha < new Date(`${fechaDesde}T00:00:00`)) return false;
+        if (fechaHasta && fecha > new Date(`${fechaHasta}T23:59:59`)) return false;
+      }
+
+      return true;
+    });
+  }, [arriendos, statusFilter, fechaDesde, fechaHasta]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, fechaDesde, fechaHasta]);
+
+  const totalPages = Math.max(1, Math.ceil(arriendosFiltrados.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
+  const arriendosPaginados = useMemo(() => {
+    const inicio = (currentPage - 1) * PAGE_SIZE;
+    return arriendosFiltrados.slice(inicio, inicio + PAGE_SIZE);
+  }, [arriendosFiltrados, currentPage]);
 
   const abrirModalCalificar = (arriendo) => {
     setArriendoSeleccionado(arriendo);
@@ -58,6 +106,7 @@ export default function HistorialArriendos() {
     setArriendoSeleccionado(null);
     setComment('');
     setRating(5);
+    setAnonimo(false);
     setSendingReview(false);
   };
 
@@ -69,7 +118,7 @@ export default function HistorialArriendos() {
       ? arriendoSeleccionado.estudianteId
       : arriendoSeleccionado.arrendadorId;
 
-    const payload = { rentalId: arriendoSeleccionado.id, targetUserId, rating, comment };
+    const payload = { rentalId: arriendoSeleccionado.id, targetUserId, rating, comment, isAnonymous: anonimo };
 
     try {
       setSendingReview(true);
@@ -107,6 +156,65 @@ export default function HistorialArriendos() {
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
+      <div className="historial-filters">
+        <div className="filter-group">
+          <span className="filter-group-label">Estado</span>
+          <div className="filter-pills" role="group" aria-label="Filtrar por estado del arriendo">
+            <button
+              type="button"
+              className={`filter-pill ${statusFilter === 'todos' ? 'filter-pill--active' : ''}`}
+              onClick={() => setStatusFilter('todos')}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              className={`filter-pill ${statusFilter === 'COMPLETED' ? 'filter-pill--active' : ''}`}
+              onClick={() => setStatusFilter('COMPLETED')}
+            >
+              <CheckCircle size={14} /> Concretados
+            </button>
+            <button
+              type="button"
+              className={`filter-pill ${statusFilter === 'FINISHED' ? 'filter-pill--active' : ''}`}
+              onClick={() => setStatusFilter('FINISHED')}
+            >
+              <Archive size={14} /> Finalizados
+            </button>
+          </div>
+        </div>
+
+        <div className="filter-group filter-group--dates">
+          <div className="filter-date-range">
+            <label className="filter-date-field">
+              <span className="filter-group-label">Desde</span>
+              <input
+                type="date"
+                value={fechaDesde}
+                max={fechaHasta || undefined}
+                onChange={(e) => setFechaDesde(e.target.value)}
+              />
+            </label>
+            <span className="filter-date-divider" aria-hidden="true" />
+            <label className="filter-date-field">
+              <span className="filter-group-label">Hasta</span>
+              <input
+                type="date"
+                value={fechaHasta}
+                min={fechaDesde || undefined}
+                onChange={(e) => setFechaHasta(e.target.value)}
+              />
+            </label>
+          </div>
+          {hayFiltrosActivos && (
+            <button type="button" className="filter-clear-button" onClick={limpiarFiltros}>
+              <RotateCcw size={14} /> Limpiar filtros
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="historial-table-wrap">
       <table className="historial-table">
         <thead>
           <tr>
@@ -127,79 +235,96 @@ export default function HistorialArriendos() {
           ) : arriendos.length === 0 ? (
             <tr>
               <td colSpan="5" style={{ padding: 0 }}>
-                <div className="empty-state">
-                  <div className="empty-icon"><Inbox size={28} /></div>
-                  <h3 className="empty-title">No hay arriendos todavía</h3>
-                  <p className="empty-text">Cuando concretes tu primer arriendo, aparecerá aquí con sus opciones para calificar.</p>
+                <div className="historial-empty-state">
+                  <div className="historial-empty-icon"><Inbox size={28} /></div>
+                  <h3 className="historial-empty-title">No hay arriendos todavía</h3>
+                  <p className="historial-empty-text">Cuando concretes tu primer arriendo, aparecerá aquí con sus opciones para calificar.</p>
                 </div>
               </td>
             </tr>
-          ) : arriendos.map((item) => {
-            const yaConfirme = Number(user?.id) === item.arrendadorId
-              ? item.confirmedByArrendador
-              : item.confirmedByEstudiante;
-            const estaConcluido = item.status === 'COMPLETED' || item.status === 'FINISHED';
-
-            return (
-              <tr key={item.id}>
-                <td>
-                  {item.contratanteId ? (
-                    <Link to={`/perfil/${item.contratantePublicId}`} className="person-link">
-                      <AvatarCirculo nombre={item.contratanteNombre} foto={item.contratanteAvatar} />
-                      <span>{item.contratanteNombre || '—'}</span>
-                    </Link>
-                  ) : (
-                    <span className="person-link person-link--static">
-                      <AvatarCirculo nombre={item.contratanteNombre} foto={item.contratanteAvatar} />
-                      <span>{item.contratanteNombre || '—'}</span>
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {item.status === 'FINISHED' ? (
-                    <span className="finished-chip"><Archive size={16} /> Arriendo finalizado</span>
-                  ) : item.status === 'COMPLETED' ? (
-                    <span className="reviewed-chip"><CheckCircle size={16} /> Arriendo concretado</span>
-                  ) : yaConfirme ? (
-                    <span className="waiting-chip"><Clock size={16} /> Esperando confirmación...</span>
-                  ) : (
-                    <span className="waiting-chip"><MessageSquareText size={16} /> Confirma en conversación</span>
-                  )}
-                </td>
-                <td>
-                  {item.completedAt ? (
-                    <span className="fecha-confirmacion">
-                      {new Date(item.completedAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}
-                    </span>
-                  ) : '—'}
-                </td>
-                <td>
-                  {estaConcluido && item.puedeCalificar ? (
-                    <button onClick={() => abrirModalCalificar(item)} className="calificar-button">
-                      <span><Star size={16} /></span>
-                      <span className="calificar-title">Comparte tu opinión</span>
-                      <ArrowRight size={16} />
-                    </button>
-                  ) : estaConcluido && item.miResena ? (
-                    <span className="reviewed-chip"><CheckCircle size={16} /> Ya calificaste</span>
-                  ) : estaConcluido ? (
-                    <span className="reviewed-chip"><CheckCircle size={16} /> Arriendo concretado</span>
-                  ) : (
-                    <span style={{ color: '#aaa', fontSize: '13px', fontStyle: 'italic' }}>Faltan confirmaciones</span>
-                  )}
-                </td>
-                <td>
-                  {estaConcluido ? (
-                    <button onClick={() => navigate(`/arriendo/${item.publicId}`)} className="ver-detalle-button">
-                      <Eye size={14} /> Ver detalle
-                    </button>
-                  ) : '—'}
-                </td>
-              </tr>
-            );
-          })}
+          ) : arriendosFiltrados.length === 0 ? (
+            <tr>
+              <td colSpan="5" style={{ padding: 0 }}>
+                <div className="historial-empty-state">
+                  <div className="historial-empty-icon"><Inbox size={28} /></div>
+                  <h3 className="historial-empty-title">Sin resultados para estos filtros</h3>
+                  <p className="historial-empty-text">Prueba con otro estado o con otro rango de fechas.</p>
+                  <button type="button" className="ver-detalle-button" onClick={limpiarFiltros}>Limpiar filtros</button>
+                </div>
+              </td>
+            </tr>
+          ) : arriendosPaginados.map((item) => (
+            <tr key={item.id}>
+              <td>
+                {item.contratanteId ? (
+                  <Link to={`/perfil/${item.contratantePublicId}`} className="person-link">
+                    <AvatarCirculo nombre={item.contratanteNombre} foto={item.contratanteAvatar} />
+                    <span>{item.contratanteNombre || '—'}</span>
+                  </Link>
+                ) : (
+                  <span className="person-link person-link--static">
+                    <AvatarCirculo nombre={item.contratanteNombre} foto={item.contratanteAvatar} />
+                    <span>{item.contratanteNombre || '—'}</span>
+                  </span>
+                )}
+              </td>
+              <td>
+                {item.status === 'FINISHED' ? (
+                  <span className="finished-chip"><Archive size={16} /> Arriendo finalizado</span>
+                ) : (
+                  <span className="reviewed-chip"><CheckCircle size={16} /> Arriendo concretado</span>
+                )}
+              </td>
+              <td>
+                {item.completedAt ? (
+                  <span className="fecha-confirmacion">
+                    {new Date(item.completedAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  </span>
+                ) : '—'}
+              </td>
+              <td>
+                {item.puedeCalificar ? (
+                  <button onClick={() => abrirModalCalificar(item)} className="calificar-button">
+                    <span><Star size={16} /></span>
+                    <span className="calificar-title">Comparte tu opinión</span>
+                    <ArrowRight size={16} />
+                  </button>
+                ) : (
+                  <span className="reviewed-chip"><CheckCircle size={16} /> Ya calificaste</span>
+                )}
+              </td>
+              <td>
+                <button onClick={() => navigate(`/arriendo/${item.publicId}`)} className="ver-detalle-button">
+                  <Eye size={14} /> Ver detalle
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
+      </div>
+
+      {arriendos.length > 0 && (
+        <div className="historial-pagination">
+          <button
+            type="button"
+            className="pagination-button"
+            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft size={16} /> Anterior
+          </button>
+          <span className="pagination-info">Página {currentPage} de {totalPages}</span>
+          <button
+            type="button"
+            className="pagination-button"
+            onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Siguiente <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
 
       {/* MODAL DE CALIFICACIÓN */}
       {modalAbierto && (
@@ -243,6 +368,14 @@ export default function HistorialArriendos() {
                   className="textarea-input"
                   placeholder="Escribe una reseña honesta y concreta..."
                 />
+              </label>
+              <label className="anonimo-label">
+                <input
+                  type="checkbox"
+                  checked={anonimo}
+                  onChange={(e) => setAnonimo(e.target.checked)}
+                />
+                <span>Enviar como anónimo</span>
               </label>
               <div className="footer-actions">
                 <button type="button" onClick={cerrarModalCalificacion} className="secondary-button" disabled={sendingReview}>Cancelar</button>

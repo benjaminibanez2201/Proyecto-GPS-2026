@@ -1,7 +1,7 @@
 .pu-page {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   padding: 4px 0 24px;
 }
 
@@ -139,12 +139,6 @@
   margin: 0;
   font-weight: 700;
   color: #0f172a;
-  text-decoration: none;
-  transition: color 160ms ease;
-}
-
-.pu-author-name:hover {
-  color: #0f766e;
 }
 
 .pu-meta-line {

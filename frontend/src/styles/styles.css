@@ -35,7 +35,6 @@ body {
 	border: 1px solid rgba(15, 118, 110, 0.25);
 	box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
 	cursor: pointer;
-	margin-bottom: 20px;
 	transition: background-color 0.2s ease;
 }
 
@@ -61,8 +60,9 @@ img:hover {
 	opacity: 0.98;
 }
 
-/* Disable hover transform for images inside the login page */
-.login-page img:hover {
+/* Disable hover transform for images inside the login and register pages */
+.login-page img:hover,
+.register-container img:hover {
   transform: none !important;
   box-shadow: none !important;
   opacity: 1 !important;

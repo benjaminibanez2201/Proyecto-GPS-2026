@@ -1,6 +1,6 @@
 /* --- CONTENEDOR GENERAL --- */
 .historial-page {
-  padding: 30px 20px;
+  padding: 4px 20px 16px;
   background-color: #f9f8f6;
   min-height: 100vh;
   font-family: 'Inter', system-ui, sans-serif;
@@ -16,7 +16,11 @@
   color: #ffffff;
   background: linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%);
   box-shadow: 0 10px 25px rgba(11, 34, 45, 0.15);
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+.historial-table-wrap {
+  overflow-x: auto;
 }
 
 .hero-title {
@@ -31,9 +35,158 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* --- FILTROS --- */
+.historial-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 20px;
+  padding: 18px 24px;
+  margin-bottom: 16px;
+  background-color: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-group--dates {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.filter-group-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.filter-pill:hover {
+  border-color: #008080;
+  color: #008080;
+}
+
+.filter-pill--active,
+.filter-pill--active:hover {
+  background-color: #008080;
+  border-color: #008080;
+  color: #ffffff;
+}
+
+.filter-date-range {
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-date-range:focus-within {
+  border-color: #008080;
+  box-shadow: 0 0 0 4px rgba(0, 128, 128, 0.12);
+  background-color: #ffffff;
+}
+
+.filter-date-divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 10px 0;
+  background-color: #e2e8f0;
+}
+
+.filter-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 16px;
+}
+
+.filter-date-field input[type="date"] {
+  padding: 0;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: #2c3e50;
+  background: transparent;
+  outline: none;
+  min-width: 116px;
+}
+
+.filter-clear-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #b91c1c;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.filter-clear-button:hover {
+  background-color: #fef2f2;
+}
+
+@media (max-width: 720px) {
+  .historial-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group--dates {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .filter-date-range {
+    flex: 1;
+  }
+
+  .filter-date-field {
+    flex: 1;
+  }
+}
+
 /* --- TABLA --- */
 .historial-table {
   width: 100%;
+  min-width: 720px;
   text-align: left;
   border-collapse: collapse;
   background-color: #ffffff;
@@ -160,23 +313,71 @@
   background-color: #eef6f5;
 }
 
+/* --- PAGINACIÓN --- */
+.historial-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.pagination-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 128, 128, 0.25);
+  background-color: #ffffff;
+  color: #008080;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: #008080;
+  color: #ffffff;
+}
+
+.pagination-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+@media (max-width: 480px) {
+  .historial-pagination {
+    gap: 12px;
+  }
+
+  .pagination-info {
+    order: 3;
+    width: 100%;
+    text-align: center;
+  }
+}
+
 /* --- ESTADO VACÍO (CENTRADOS) --- */
-.empty-state {
+.historial-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin: 20px;
-  padding: 36px 20px;
-  border-radius: 20px;
-  border: 1px dashed #cbd5e1;
-  background-color: #f8fafc;
+  padding: 48px 20px;
   text-align: center;
   color: #2c3e50;
 }
 
-.empty-icon {
+.historial-empty-icon {
   width: 56px;
   height: 56px;
   border-radius: 18px;
@@ -187,13 +388,13 @@
   color: #008080;
 }
 
-.empty-title {
+.historial-empty-title {
   margin: 0;
   color: #0f172a;
   font-size: 18px;
 }
 
-.empty-text {
+.historial-empty-text {
   max-width: 400px;
   color: #64748b;
   font-size: 14px;
@@ -243,6 +444,8 @@
 .star-button:hover { transform: scale(1.15); }
 .textarea-input { width: 100%; padding: 14px; border-radius: 16px; border: 1px solid #e2e8f0; min-height: 120px; font-family: inherit; resize: vertical; box-sizing: border-box; outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
 .textarea-input:focus { border-color: #008080; box-shadow: 0 0 0 4px rgba(0, 128, 128, 0.12); }
+.anonimo-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; }
+.anonimo-label input { width: 16px; height: 16px; cursor: pointer; accent-color: #008080; }
 .footer-actions { display: flex; justify-content: flex-end; gap: 12px; }
 .secondary-button { padding: 12px 18px; border-radius: 14px; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; font-weight: 700; }
 .primary-button { padding: 12px 18px; border-radius: 14px; border: none; background: #008080; color: #fff; cursor: pointer; font-weight: 700; }

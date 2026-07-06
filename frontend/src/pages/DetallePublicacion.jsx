@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
 import { Heart, ArrowLeft, MapPin, Star, FlagTriangleRight, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { getPublicacionPorId } from '../services/publicacion.service.js';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
@@ -66,9 +65,10 @@ export default function DetallePublicacion() {
   const [fotoActivaIndex, setFotoActivaIndex] = useState(0);
   const [lightboxAbierto, setLightboxAbierto] = useState(false);
   const esArrendador = user?.rol === 'arrendador' || user?.rol === 'Arrendador';
+  const esAdmin = user?.rol === 'admin' || user?.rol === 'administrador';
   const esAutorPublicacion = String(publicacion?.arrendador?.id) === String(user?.id);
 
-  const idPublicacion = publicacion?.id || publicacion?._id;
+  const idPublicacion = publicacion?.publicId;
   const arrendador = publicacion?.arrendador;
 
   useEffect(() => {
@@ -95,11 +95,8 @@ export default function DetallePublicacion() {
 
   useEffect(() => {
     if (favoritos.length > 0 && idPublicacion) {
-      const isFav = favoritos.some(fav => 
-        String(fav.publicacionId) === String(idPublicacion) || 
-        String(fav?.publicacion?.id) === String(idPublicacion) || 
-        String(fav?.publicacion?._id) === String(idPublicacion) ||
-        String(fav.id) === String(idPublicacion)
+      const isFav = favoritos.some(fav =>
+        String(fav?.publicacion?.publicId) === String(idPublicacion)
       );
       setEsFavorito(isFav);
     } else {
@@ -113,21 +110,6 @@ export default function DetallePublicacion() {
     if (procesando || !idPublicacion) return;
 
     const estadoAnterior = esFavorito;
-
-    if (estadoAnterior) {
-      const confirmacion = await Swal.fire({
-        title: '¿Seguro que quieres eliminarlo de tus favoritos?',
-        text: 'La publicación seguirá disponible para volver a guardarla más adelante.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#008080',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-      });
-
-      if (!confirmacion.isConfirmed) return;
-    }
 
     setProcesando(true);
     setEsFavorito(!estadoAnterior);
@@ -213,8 +195,8 @@ export default function DetallePublicacion() {
         <ArrowLeft size={18} /> Volver
       </button>
 
-      <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-        
+      <div style={{ backgroundColor: '#fff', padding: '28px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -227,14 +209,14 @@ export default function DetallePublicacion() {
                 </span>
               )}
             </div>
-            <h1 style={{ marginTop: '15px', color: '#2c3e50', fontSize: '32px' }}>
+            <h1 style={{ marginTop: '10px', color: '#2c3e50', fontSize: '32px' }}>
               {publicacion.titulo || 'Sin título'}
             </h1>
-            <p style={{ color: '#64748b', fontSize: '14px', marginTop: '5px' }}>
+            <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
               Publicado el: {fechaPublicacion}
             </p>
           </div>
-          
+
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontSize: '28px', color: '#008080', fontWeight: 'bold', margin: '0' }}>
               {formatPriceCLP(publicacion.precioMensual)}
@@ -243,9 +225,9 @@ export default function DetallePublicacion() {
           </div>
         </div>
 
-        <hr style={{ margin: '30px 0', borderColor: '#e2e8f0', opacity: 0.5 }}/>
-        
-        <div style={{ position: 'relative', marginBottom: '30px' }}>
+        <hr style={{ margin: '20px 0', borderColor: '#e2e8f0', opacity: 0.5 }}/>
+
+        <div style={{ position: 'relative', marginBottom: '20px' }}>
           <img
             src={imagenActiva}
             alt={publicacion.titulo || 'Imagen del arriendo'}
@@ -267,8 +249,8 @@ export default function DetallePublicacion() {
             </>
           )}
 
-          {!esArrendador && (
-            <button 
+          {!esArrendador && !esAdmin && (
+            <button
               type="button"
               onClick={toggleFavorito}
               disabled={procesando}
@@ -304,7 +286,7 @@ export default function DetallePublicacion() {
         </div>
 
         {fotosResueltas.length > 1 && (
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '30px', overflowX: 'auto' }}>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', overflowX: 'auto' }}>
             {fotosResueltas.map((foto, index) => (
               <img
                 key={foto}
@@ -327,7 +309,7 @@ export default function DetallePublicacion() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '28px' }}>
           <div>
             <h3 style={{ color: '#2c3e50', marginBottom: '15px' }}>Ubicación</h3>
             <p style={{ color: '#475569', lineHeight: '1.6', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -341,7 +323,7 @@ export default function DetallePublicacion() {
               </p>
             )}
 
-            <h3 style={{ color: '#2c3e50', marginTop: '30px', marginBottom: '15px' }}>Reglas de Convivencia</h3>
+            <h3 style={{ color: '#2c3e50', marginTop: '20px', marginBottom: '15px' }}>Reglas de Convivencia</h3>
             <p style={{ color: '#475569', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
               {publicacion.reglasConvivencia || 'El dueño no ha especificado reglas de convivencia.'}
             </p>
@@ -352,7 +334,16 @@ export default function DetallePublicacion() {
             {arrendador && (
               <div style={{ backgroundColor: '#f8fafc', padding: '24px', borderRadius: '12px' }}>
                 <h3 style={{ margin: '0 0 16px 0', color: '#2c3e50', fontSize: '18px' }}>Propietario</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '14px',
+                    cursor: arrendador.publicId ? 'pointer' : 'default',
+                  }}
+                  onClick={() => arrendador.publicId && navigate(`/perfil/${arrendador.publicId}`)}
+                >
                   <AvatarCirculo nombre={arrendador.nombreCompleto} foto={arrendador.fotoPerfil} size={52} />
                   <div>
                     <p style={{ margin: 0, fontWeight: 'bold', color: '#2c3e50', fontSize: '15px' }}>
@@ -388,10 +379,11 @@ export default function DetallePublicacion() {
                 )}
               </ul>
 
-              {!esArrendador && (
+              {!esArrendador && !esAdmin && (
                 <button
                   type="button"
                   className="confirm-btn"
+                  data-tour="contactar-btn"
                   onClick={() => navigate(`/mensajes?publicacion=${id}`)}
                   style={{ width: '100%', marginTop: '30px' }}
                 >
@@ -399,7 +391,7 @@ export default function DetallePublicacion() {
                 </button>
               )}
 
-              {!esAutorPublicacion && (
+              {!esAutorPublicacion && !esAdmin && (
                 <button
                   type="button"
                   onClick={() => setMostrarModalReporte(true)}

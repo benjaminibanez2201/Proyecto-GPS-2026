@@ -10,6 +10,12 @@ const PublicacionSchema = new EntitySchema({
       primary: true,
       generated: true,
     },
+    uuid: {
+      type: "uuid",
+      generated: "uuid",
+      unique: true,
+      nullable: false,
+    },
     titulo: {
       type: "varchar",
       length: 255,
@@ -127,11 +133,6 @@ const PublicacionSchema = new EntitySchema({
       onDelete: "CASCADE",
     },
   },
-  ocultadaPorArrendador: {
-  type: "boolean",
-  default: false,
-  nullable: false,
-},
 });
 
 export default PublicacionSchema;

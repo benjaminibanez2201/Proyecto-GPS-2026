@@ -100,6 +100,7 @@ export async function getPublicacionesService(filtros) {
     query.orderBy(`publicacion.${campoOrden}`, direccion);
     query.select([
       "publicacion.id",
+      "publicacion.uuid",
       "publicacion.titulo",
       "publicacion.precioMensual",
       "publicacion.tipoInmueble",
@@ -134,14 +135,15 @@ export async function getPublicacionesService(filtros) {
   }
 }
 
-export async function getPublicacionDetalleService(id) {
+export async function getPublicacionDetalleService(uuid) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
-    
+
     const publicacion = await publicacionRepository.createQueryBuilder("publicacion")
       .leftJoin("publicacion.arrendador", "arrendador")
       .select([
         "publicacion.id",
+        "publicacion.uuid",
         "publicacion.titulo",
         "publicacion.precioMensual",
         "publicacion.tipoInmueble",
@@ -157,6 +159,7 @@ export async function getPublicacionDetalleService(id) {
       ])
       .addSelect([
         "arrendador.id",
+        "arrendador.uuid",
         "arrendador.nombreCompleto",
         "arrendador.email",
         "arrendador.fotoPerfil",
@@ -164,8 +167,7 @@ export async function getPublicacionDetalleService(id) {
         "arrendador.avgRating",
         "arrendador.reviewsCount",
       ])
-      .where("publicacion.id = :id", { id: parseInt(id) })
-      .andWhere("publicacion.estado IN (:...estados)", { estados: ["activa", "disponible", "arrendada"] })
+      .where("publicacion.uuid = :uuid", { uuid })
       .getOne();
 
     if (!publicacion) {
@@ -192,15 +194,19 @@ export async function obtenerPublicacionesArrendadorService(arrendadorId) {
   }
 }
 
-export async function updatePublicacionService(publicacionId, arrendadorId, body, files) {
+export async function updatePublicacionService(publicacionUuid, arrendadorId, body, files) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
-    
+
     const publicacion = await publicacionRepository.findOne({
-      where: { id: publicacionId, arrendador: { id: arrendadorId } }
+      where: { uuid: publicacionUuid, arrendador: { id: arrendadorId } }
     });
 
     if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];
+
+    if (publicacion.estado === "inactiva") {
+      return [null, "Esta publicación fue dada de baja por incumplir las normas y no se puede editar. Solo puedes eliminarla."];
+    }
 
     const comunaCambio = body.comuna && body.comuna !== publicacion.comuna;
     const faltanCoordenadas = body.latitud == null || body.longitud == null;
@@ -240,12 +246,12 @@ export async function updatePublicacionService(publicacionId, arrendadorId, body
   }
 }
 
-export async function deletePublicacionService(publicacionId, arrendadorId) {
+export async function deletePublicacionService(publicacionUuid, arrendadorId) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
 
     const publicacion = await publicacionRepository.findOne({
-      where: { id: publicacionId, arrendador: { id: arrendadorId } }
+      where: { uuid: publicacionUuid, arrendador: { id: arrendadorId } }
     });
 
     if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];

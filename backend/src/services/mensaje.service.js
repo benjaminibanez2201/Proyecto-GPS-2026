@@ -10,6 +10,7 @@ import {
   buscarConversacionPorPublicacionYEstudiante,
   crearConversacion,
 } from "./conversacion.service.js";
+import { getIO } from "../sockets/socket.js";
 
 function getMessageNotificationData(conversacion, remitenteId) {
   const estudianteId = Number(conversacion.estudiante?.id);
@@ -101,6 +102,23 @@ export async function enviarMensaje({ conversacionId = null, id_publicacion = nu
     await repositorioConversacion.save(conversacion);
 
     if (notificationData?.userId) {
+      try {
+        const io = getIO();
+        if (io) {
+          const mensajeParaSocket = await repositorioMensaje.findOne({
+            where: { id: mensajeGuardado.id },
+            relations: ["remitente"],
+          });
+
+          io.to(`user:${notificationData.userId}`).emit("nuevo-mensaje", {
+            conversacionId: conversacion.uuid,
+            mensaje: mensajeParaSocket,
+          });
+        }
+      } catch (socketError) {
+        console.error("Error emitiendo mensaje por socket:", socketError);
+      }
+
       try {
         const notificationPayload = {
           userId: notificationData.userId,

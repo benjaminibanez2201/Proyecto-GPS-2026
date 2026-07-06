@@ -1,15 +1,16 @@
 "use strict";
 import { AppDataSource } from "../config/configDb.js";
-import FavoritoSchema from "../entity/favorito.entity.js"; 
+import FavoritoSchema from "../entity/favorito.entity.js";
 import PublicacionSchema from "../entity/publicacion.entity.js";
+import RentalSchema from "../entity/rental.entity.js";
 
-export async function createFavoritoService(estudianteId, publicacionId) {
+export async function createFavoritoService(estudianteId, publicacionUuid) {
   try {
     const favoritoRepository = AppDataSource.getRepository(FavoritoSchema);
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
 
-    const publicacion = await publicacionRepository.findOneBy({ 
-      id: parseInt(publicacionId),
+    const publicacion = await publicacionRepository.findOneBy({
+      uuid: publicacionUuid,
     });
 
     if (!publicacion) {
@@ -19,7 +20,7 @@ export async function createFavoritoService(estudianteId, publicacionId) {
     const favoritoExistente = await favoritoRepository.findOne({
       where: {
         estudiante: { id: estudianteId },
-        publicacion: { id: parseInt(publicacionId) }
+        publicacion: { id: publicacion.id }
       }
     });
 
@@ -29,15 +30,15 @@ export async function createFavoritoService(estudianteId, publicacionId) {
 
     const nuevoFavorito = favoritoRepository.create({
       estudiante: { id: estudianteId },
-      publicacion: { id: parseInt(publicacionId) }
+      publicacion: { id: publicacion.id }
     });
 
     await favoritoRepository.save(nuevoFavorito);
     await publicacionRepository
       .createQueryBuilder()
       .update(PublicacionSchema)
-      .set({ contadorFavoritos: () => "\"contadorFavoritos\" + 1" })
-      .where("id = :id", { id: parseInt(publicacionId) })
+      .set({ contadorFavoritos: () => '"contadorFavoritos" + 1' })
+      .where('id = :id', { id: publicacion.id })
       .execute();
 
     return [nuevoFavorito, null];
@@ -47,24 +48,31 @@ export async function createFavoritoService(estudianteId, publicacionId) {
   }
 }
 
-export async function deleteFavoritoService(estudianteId, publicacionId) {
+export async function deleteFavoritoService(estudianteId, publicacionUuid) {
   try {
     const favoritoRepository = AppDataSource.getRepository(FavoritoSchema);
+    const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
+
+    const publicacion = await publicacionRepository.findOneBy({ uuid: publicacionUuid });
+
+    if (!publicacion) {
+      return [null, "La publicación no existe o no está disponible."];
+    }
 
     const resultado = await favoritoRepository.delete({
       estudiante: { id: estudianteId },
-      publicacion: { id: parseInt(publicacionId) }
+      publicacion: { id: publicacion.id }
     });
 
     if (resultado.affected === 0) {
       return [null, "La publicación no estaba en tus favoritos o ya fue eliminada."];
     }
 
-    await AppDataSource.getRepository(PublicacionSchema)
+    await publicacionRepository
       .createQueryBuilder()
       .update(PublicacionSchema)
-      .set({ contadorFavoritos: () => "GREATEST(\"contadorFavoritos\" - 1, 0)" })
-      .where("id = :id", { id: parseInt(publicacionId) })
+      .set({ contadorFavoritos: () => 'GREATEST("contadorFavoritos" - 1, 0)' })
+      .where('id = :id', { id: publicacion.id })
       .execute();
 
     return [true, null];
@@ -81,12 +89,21 @@ export async function getFavoritosService(estudianteId) {
 
     const favoritos = await favoritoRepository.createQueryBuilder("favorito")
       .innerJoinAndSelect("favorito.publicacion", "publicacion")
+      .leftJoin(
+        RentalSchema,
+        "arriendo",
+        "arriendo.publicacionId = publicacion.id AND arriendo.estudianteId = :estudianteId AND arriendo.status = :statusArrendado",
+        { estudianteId, statusArrendado: "COMPLETED" },
+      )
       .where("favorito.estudiante_id = :estudianteId", { estudianteId })
+      .andWhere("publicacion.estado != :estadoInactiva", { estadoInactiva: "inactiva" })
+      .andWhere("(publicacion.estado != :estadoArrendada OR arriendo.id IS NOT NULL)", { estadoArrendada: "arrendada" })
       .orderBy("favorito.createdAt", "DESC")
       .select([
         "favorito.id",
         "favorito.createdAt",
         "publicacion.id",
+        "publicacion.uuid",
         "publicacion.titulo",
         "publicacion.precioMensual",
         "publicacion.tipoInmueble",
