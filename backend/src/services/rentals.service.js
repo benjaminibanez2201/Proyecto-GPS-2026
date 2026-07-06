@@ -202,6 +202,138 @@ export async function finalizarArriendoPorPublicacionServicio(publicacionUuid, a
   }
 }
 
+export async function confirmarArriendoServicio(arriendoId, userId) {
+  try {
+    const repositorioArriendo = AppDataSource.getRepository(Rental);
+    const repositorioPublicacion = AppDataSource.getRepository(Publicacion);
+    const repositorioConversacion = AppDataSource.getRepository(Conversacion);
+
+    const arriendo = await repositorioArriendo.findOne({
+      where: { id: arriendoId },
+      relations: { arrendador: true, estudiante: true },
+    });
+    if (!arriendo) return [null, "Arriendo no encontrado"];
+
+    const esArrendador = arriendo.arrendadorId === Number(userId);
+    if (!esArrendador) return [null, "Solo el arrendador puede aceptar el arriendo"];
+
+    const conversacionExistente = await repositorioConversacion.findOne({
+      where: {
+        publicacion: { id: arriendo.publicacionId },
+        estudiante: { id: arriendo.estudianteId },
+        arrendador: { id: arriendo.arrendadorId },
+      },
+      relations: ["publicacion", "estudiante", "arrendador"],
+    });
+
+    if (!conversacionExistente) {
+      return [null, "Debes haber iniciado un contacto en la mensajería para aceptar el arriendo"];
+    }
+
+    const publicacion = await repositorioPublicacion.findOne({ where: { id: Number(arriendo.publicacionId) } });
+    if (!publicacion) return [null, "Publicación no encontrada"];
+    if (publicacion.estado === "arrendada") {
+      await repositorioArriendo.update(
+        { id: arriendo.id },
+        { status: "COMPLETED", completedAt: arriendo.completedAt || new Date() },
+      );
+      return [arriendo, null];
+    }
+
+    await repositorioArriendo.update({ id: arriendo.id }, { status: "COMPLETED", completedAt: new Date() });
+    await repositorioPublicacion.update({ id: publicacion.id }, { estado: "arrendada" });
+
+    const final = await repositorioArriendo.findOne({
+      where: { id: arriendoId },
+      relations: { arrendador: true, estudiante: true },
+    });
+
+    try {
+      if (final?.arrendador?.id) {
+        await createNotificacionService({
+          userId: final.arrendador.id,
+          tipo: "RENTAL_COMPLETED",
+          mensaje: "El arriendo ha sido aceptado por el arrendador",
+          targetType: "rental",
+          targetId: final.id,
+        });
+      }
+
+      if (final?.estudiante?.id) {
+        await createNotificacionService({
+          userId: final.estudiante.id,
+          tipo: "RENTAL_COMPLETED",
+          mensaje: "El arriendo ha sido aceptado por el arrendador",
+          targetType: "rental",
+          targetId: final.id,
+        });
+      }
+    } catch (notifError) {
+      console.error("Error creando notificaciones de arriendo completado:", notifError);
+    }
+
+    try {
+      await sendRentalCompleteEmail(final);
+    } catch (emailError) {
+      console.error("Error enviando correo de arriendo completado:", emailError);
+    }
+
+    return [final, null];
+  } catch (error) {
+    console.error("Error confirmarArriendoServicio:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function anularArriendoServicio(arriendoId, userId) {
+  try {
+    const repositorioArriendo = AppDataSource.getRepository(Rental);
+    const repositorioPublicacion = AppDataSource.getRepository(Publicacion);
+
+    const arriendo = await repositorioArriendo.findOne({
+      where: { id: arriendoId },
+      relations: { arrendador: true, estudiante: true },
+    });
+    if (!arriendo) return [null, "Arriendo no encontrado"];
+
+    const esArrendador = arriendo.arrendadorId === Number(userId);
+    const esEstudiante = arriendo.estudianteId === Number(userId);
+    if (!esArrendador && !esEstudiante) return [null, "No eres parte de este arriendo"];
+    if (arriendo.status === "CANCELLED") return [null, "Este arriendo ya fue anulado"];
+
+    if (arriendo.status === "COMPLETED") {
+      const publicacion = await repositorioPublicacion.findOne({ where: { id: Number(arriendo.publicacionId) } });
+      if (!publicacion) return [null, "Publicación no encontrada"];
+
+      await repositorioArriendo.update({ id: arriendo.id }, { status: "CANCELLED" });
+      await repositorioPublicacion.update({ id: publicacion.id }, { estado: "activa" });
+
+      const actualizado = await repositorioArriendo.findOne({ where: { id: arriendoId } });
+      return [actualizado, null];
+    }
+
+    const actualizacion = {
+      status: "PENDING",
+    };
+
+    if (esArrendador) {
+      actualizacion.confirmedByArrendador = false;
+    }
+
+    if (esEstudiante) {
+      actualizacion.confirmedByEstudiante = false;
+    }
+
+    await repositorioArriendo.update({ id: arriendo.id }, actualizacion);
+
+    const actualizado = await repositorioArriendo.findOne({ where: { id: arriendoId } });
+    return [actualizado, null];
+  } catch (error) {
+    console.error("Error anularArriendoServicio:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
 export async function listarArriendosServicio(userId) {
   try {
     const repositorioArriendo = AppDataSource.getRepository(Rental);

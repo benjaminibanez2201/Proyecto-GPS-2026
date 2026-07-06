@@ -4,7 +4,6 @@ import { ArrowLeft, FlagTriangleRight, Clock3, BadgeCheck, TriangleAlert, Shield
 import Swal from 'sweetalert2';
 import { obtenerMisReportes } from '@services/reportes.service.js';
 import { obtenerMisReportesUsuario } from '@services/reportesUsuario.service.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 
@@ -215,7 +214,7 @@ export default function MisReportes() {
 
                       <button
                         type="button"
-                        onClick={() => navigate(`/publicacion/${encodePublicId(reporte.publicacion?.id)}`)}
+                        onClick={() => navigate(`/publicacion/${reporte.publicacion?.publicId}`)}
                         style={styles.linkButton}
                       >
                         Ver publicación

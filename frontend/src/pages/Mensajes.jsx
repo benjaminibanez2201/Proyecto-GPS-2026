@@ -14,7 +14,6 @@ import {
 import { createArriendo, listarArriendos } from '@services/rentalsAndReviews.service.js';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
 import ModalReportarUsuario from '@components/ModalReportarUsuario.jsx';
-import { decodePublicId, encodePublicId } from '@helpers/publicId.helper.js';
 import { connectSocket } from '@services/socket.service.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import '@styles/mensajes.css';
