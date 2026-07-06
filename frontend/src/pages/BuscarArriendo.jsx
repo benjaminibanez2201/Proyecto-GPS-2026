@@ -308,6 +308,45 @@ export default function BuscarArriendos() {
         </div>
       </section>
 
+      <section className="ba-search-bar">
+        <label className="ba-filter-field ba-filter-field--grow">
+          <div className="ba-filter-input-icon-wrap">
+            <Search size={16} color="#94a3b8" />
+            <input
+              type="text"
+              name="titulo"
+              placeholder="Busca por título"
+              aria-label="Buscar por título"
+              value={filtros.titulo}
+              onChange={handleInputChange}
+              onKeyDown={(e) => { if (e.key === 'Enter') aplicarFiltros(); }}
+              className="ba-filter-input ba-filter-input--icon"
+            />
+          </div>
+        </label>
+
+        <label className="ba-filter-field ba-filter-field--fixed">
+          <span className="ba-filter-label">
+            <SlidersHorizontal size={13} />
+            Ordenar por
+          </span>
+          <select
+            name="direccionOrden"
+            value={filtros.direccionOrden}
+            onChange={handleInputChange}
+            className="ba-filter-input"
+          >
+            <option value="">Sin ordenar</option>
+            <option value="ASC">Precio: Menor a Mayor</option>
+            <option value="DESC">Precio: Mayor a Menor</option>
+          </select>
+        </label>
+
+        <button type="button" onClick={aplicarFiltros} className="ba-search-button">
+          Buscar
+        </button>
+      </section>
+
       <section className="ba-filters-panel">
         <div className="ba-filters-header">
           <button
@@ -317,10 +356,10 @@ export default function BuscarArriendos() {
             aria-expanded={filtrosVisibles}
           >
             <span className="ba-filters-eyebrow">
-              Filtros de búsqueda
+              Más filtros
               <ChevronDown size={16} className={`ba-filters-chevron${filtrosVisibles ? ' ba-filters-chevron--open' : ''}`} />
             </span>
-            <span className="ba-filters-subtitle">Ajusta los filtros que necesites y presiona Buscar.</span>
+            <span className="ba-filters-subtitle">Filtra por tipo de inmueble, servicios y precio.</span>
           </button>
           <button type="button" onClick={limpiarFiltros} className="ba-filters-clear-button">
             Limpiar filtros
@@ -330,40 +369,6 @@ export default function BuscarArriendos() {
         {filtrosVisibles && (
           <>
             <div className="ba-filters-grid">
-              <div className="ba-filters-row-top">
-                <label className="ba-filter-field ba-filter-field--grow">
-                  <span className="ba-filter-label">Título</span>
-                  <div className="ba-filter-input-icon-wrap">
-                    <Search size={16} color="#94a3b8" />
-                    <input
-                      type="text"
-                      name="titulo"
-                      placeholder="Busca por título"
-                      value={filtros.titulo}
-                      onChange={handleInputChange}
-                      className="ba-filter-input ba-filter-input--icon"
-                    />
-                  </div>
-                </label>
-
-                <label className="ba-filter-field ba-filter-field--fixed">
-                  <span className="ba-filter-label">
-                    <SlidersHorizontal size={13} />
-                    Ordenar por
-                  </span>
-                  <select
-                    name="direccionOrden"
-                    value={filtros.direccionOrden}
-                    onChange={handleInputChange}
-                    className="ba-filter-input"
-                  >
-                    <option value="">Sin ordenar</option>
-                    <option value="ASC">Precio: Menor a Mayor</option>
-                    <option value="DESC">Precio: Mayor a Menor</option>
-                  </select>
-                </label>
-              </div>
-
               <div className="ba-filter-field">
                 <span className="ba-filter-label">
                   Tipo de inmueble
@@ -404,13 +409,12 @@ export default function BuscarArriendos() {
                 </div>
               </div>
 
-              <div className="ba-filters-row-bottom">
-                <div className="ba-filter-field">
-                  <span className="ba-filter-label">
-                    Precio mensual
-                    {contarActivos('precio') > 0 && <span className="ba-badge-count">{contarActivos('precio')}</span>}
-                  </span>
-                  <div className="ba-filter-price-box">
+              <div className="ba-filter-field">
+                <span className="ba-filter-label">
+                  Precio mensual
+                  {contarActivos('precio') > 0 && <span className="ba-badge-count">{contarActivos('precio')}</span>}
+                </span>
+                <div className="ba-filter-price-box">
                     <div className="ba-price-inputs">
                       <div className="ba-price-input-wrap">
                         <span className="ba-price-currency">$</span>
@@ -466,13 +470,8 @@ export default function BuscarArriendos() {
                     </div>
                   </div>
                 </div>
-
-                <button type="button" onClick={aplicarFiltros} className="ba-search-button">
-                  Buscar
-                </button>
               </div>
-            </div>
-          </>
+            </>
         )}
       </section>
 
