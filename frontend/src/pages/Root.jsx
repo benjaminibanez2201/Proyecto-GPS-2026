@@ -12,6 +12,7 @@ import {
   Bell,
   Users,
   FlagTriangleRight,
+  ShieldAlert,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -77,6 +78,7 @@ function PageRoot() {
         { label: 'Panel Administrador', icon: Home, to: '/admin' },
         { label: 'Gestión de Usuarios', icon: Users, to: '/admin/users?estado=todos' },
         { label: 'Publicaciones Reportadas', icon: FlagTriangleRight, to: '/admin/reportes' },
+        { label: 'Usuarios Reportados', icon: ShieldAlert, to: '/admin/reportes-usuarios' },
         { label: 'Auditoría', icon: History, to: '/admin/auditoria' },
       ],
     },
