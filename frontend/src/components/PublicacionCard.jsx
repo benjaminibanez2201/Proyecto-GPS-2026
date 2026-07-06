@@ -1,7 +1,28 @@
 import { useState, useEffect } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import '../styles/publicacionCard.css';
 import { useNavigate} from 'react-router-dom';
+import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
+import { encodePublicId } from '@helpers/publicId.helper.js';
+
+const cardArrowStyle = {
+  position: 'absolute',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  zIndex: 5,
+  background: 'rgba(255, 255, 255, 0.85)',
+  border: 'none',
+  borderRadius: '50%',
+  width: '28px',
+  height: '28px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+  color: '#0f172a',
+  padding: 0,
+};
 
 export default function PublicacionCard({ 
   publicacion, 
@@ -18,6 +39,7 @@ export default function PublicacionCard({
 
   const [esFavorito, setEsFavorito] = useState(false);
   const [procesando, setProcesando] = useState(false);
+  const [fotoActivaIndex, setFotoActivaIndex] = useState(0);
 
   useEffect(() => {
     if (!idPublicacion) return;
@@ -58,9 +80,18 @@ export default function PublicacionCard({
 
   const { titulo, tipoInmueble, precioMensual, ubicacion, fotos } = publicacion;
 
-  const imagenPrincipal = fotos && fotos.length > 0 
-    ? fotos[0] 
-    : 'https://via.placeholder.com/400x250?text=Sin+Imagen';
+  const fotosResueltas = fotos && fotos.length > 0 ? fotos.map(resolveFileUrl) : [];
+  const imagenActiva = fotosResueltas[fotoActivaIndex] || fotosResueltas[0] || 'https://via.placeholder.com/400x250?text=Sin+Imagen';
+
+  const irFotoAnterior = (e) => {
+    e.stopPropagation();
+    setFotoActivaIndex((prev) => (prev - 1 + fotosResueltas.length) % fotosResueltas.length);
+  };
+
+  const irFotoSiguiente = (e) => {
+    e.stopPropagation();
+    setFotoActivaIndex((prev) => (prev + 1) % fotosResueltas.length);
+  };
 
   const precioFormateado = new Intl.NumberFormat('es-CL', {
     style: 'currency',
@@ -69,18 +100,44 @@ export default function PublicacionCard({
 
   const handleVerDetalles = () => {
     if (idPublicacion) {
-      navigate(`/publicacion/${idPublicacion}`);
+      navigate(`/publicacion/${encodePublicId(idPublicacion)}`);
     }
   };
 
   return (
     <div className="publicacion-card">
       <div className="publicacion-image-container" style={{ position: 'relative' }}>
-        <img src={imagenPrincipal} alt={titulo} className="publicacion-image" />
-        
-        <button 
+        <img src={imagenActiva} alt={titulo} className="publicacion-image" />
+
+        {fotosResueltas.length > 1 && (
+          <>
+            <button onClick={irFotoAnterior} style={{ ...cardArrowStyle, left: '8px' }} title="Foto anterior">
+              <ChevronLeft size={16} />
+            </button>
+            <button onClick={irFotoSiguiente} style={{ ...cardArrowStyle, right: '8px' }} title="Foto siguiente">
+              <ChevronRight size={16} />
+            </button>
+            <div style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '5px', zIndex: 5 }}>
+              {fotosResueltas.map((_, index) => (
+                <span
+                  key={index}
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: index === fotoActivaIndex ? '#ffffff' : 'rgba(255,255,255,0.55)',
+                    boxShadow: '0 0 2px rgba(0,0,0,0.5)',
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        <button
           onClick={toggleFavorito}
           disabled={procesando}
+          data-tour="favorito-btn"
           title={esFavorito ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
           style={{ 
             position: 'absolute', 

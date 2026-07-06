@@ -11,12 +11,14 @@ import Root from '@pages/Root';
 import ProtectedRoute from '@components/ProtectedRoute';
 import Profile from '@pages/Profile';
 import AdminPanel from '@pages/AdminPanel';
+import PageTransition from '@components/PageTransition';
 import '@styles/styles.css';
 import HistorialArriendos from './pages/HistorialArriendos.jsx';
 import PerfilUsuario from './pages/PerfilUsuario.jsx';
 import Notificaciones from '@pages/Notificaciones';
 import BuscarArriendos from '@pages/BuscarArriendo.jsx';
 import DetallePublicacion from '@pages/DetallePublicacion.jsx';
+import DetalleArriendo from '@pages/DetalleArriendo.jsx';
 import MisPublicaciones from '@pages/MisPublicaciones';
 import CalificacionesRecibidas from './pages/CalificacionesRecibidas.jsx';
 import MisFavoritos from '@pages/MisFavoritos';
@@ -27,6 +29,12 @@ import AdminReportes from '@pages/AdminReportes.jsx';
 import AdminReportesUsuarios from '@pages/AdminReportesUsuarios.jsx';
 
 const APP_NAME = 'ArriendU';
+
+const withPageTransition = (page) => (
+  <PageTransition>
+    {page}
+  </PageTransition>
+);
 
 function getTitleFromPath(pathname) {
   const titleRules = [
@@ -47,6 +55,7 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/buscar\/?$/, title: `Buscar arriendos - ${APP_NAME}` }, 
     { pattern: /^\/favoritos\/?$/, title: `Mis favoritos - ${APP_NAME}` },
     { pattern: /^\/historial\/?$/, title: `Historial de arriendos - ${APP_NAME}` },
+    {pattern: /^\/arriendo\/[^/]+\/?$/, title: `Detalle de arriendo - ${APP_NAME}` },
     
     // Arrendador
     { pattern: /^\/mis-publicaciones\/?$/, title: `Mis publicaciones - ${APP_NAME}` }, 
@@ -72,7 +81,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <Root/>,
-    errorElement: <Error404/>,
+    errorElement: withPageTransition(<Error404/>),
     children: [
       {
         // Esto soluciona el 404: si entran a "/" los manda al "/home" que ya estaban conf
@@ -184,10 +193,18 @@ const router = createBrowserRouter([
         )
       },
       {
-        path: 'publicacion/:id', 
+        path: 'publicacion/:id',
         element: (
           <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
             <DetallePublicacion />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'arriendo/:id',
+        element: (
+          <ProtectedRoute allowedRoles={['estudiante', 'arrendador']}>
+            <DetalleArriendo />
           </ProtectedRoute>
         )
       },
@@ -211,19 +228,19 @@ const router = createBrowserRouter([
   },
   {
     path: '/auth',
-    element: <Login/>
+    element: withPageTransition(<Login/>)
   },
   {
     path: '/forgot-password',
-    element: <ForgotPassword/>
+    element: withPageTransition(<ForgotPassword/>)
   },
   {
     path: '/reset-password/:token',
-    element: <ResetPassword/>
+    element: withPageTransition(<ResetPassword/>)
   },
   {
     path: '/register',
-    element: <Register/>
+    element: withPageTransition(<Register/>)
   }
 ])
 

@@ -64,13 +64,8 @@ export const publicacionBodyValidation = Joi.object({
       "number.max": "La longitud debe estar entre -180 y 180.",
     }),
   fotos: Joi.array()
-    .items(Joi.string().uri())
-    .min(1)
-    .required()
-    .messages({
-      "any.required": "Debes agregar al menos una foto.",
-      "array.min": "Debes agregar al menos una foto.",
-    }),
+    .items(Joi.string().uri({ allowRelative: true }))
+    .optional(),
   serviciosIncluidos: Joi.array()
     .items(
       Joi.string().valid("agua", "luz", "gas", "internet", "tv_cable", "calefaccion", "estacionamiento", "lavadora")
@@ -88,6 +83,7 @@ export const publicacionBodyValidation = Joi.object({
   reglasConvivencia: Joi.string()
     .allow("")
     .max(1000)
+    .allow('')
     .optional()
     .messages({
       "string.max": "Las reglas de convivencia no pueden superar los 1000 caracteres.",
@@ -96,6 +92,7 @@ export const publicacionBodyValidation = Joi.object({
     .allow("")
     .max(1000)
     .optional()
+    .allow('')
     .messages({
       "string.max": "Las reglas de convivencia no pueden superar los 1000 caracteres.",
     }),
@@ -198,7 +195,10 @@ export const publicacionIdValidation = Joi.object({
 });
 
 export const publicacionUpdateValidation = Joi.object({
-  titulo: Joi.string().min(5).max(255).messages({
+  titulo: Joi.string()
+    .min(5)
+    .max(255)
+    .messages({
     "string.min": "El título debe tener como mínimo 5 caracteres.",
     "string.max": "El título debe tener como máximo 255 caracteres.",
   }),
@@ -207,11 +207,17 @@ export const publicacionUpdateValidation = Joi.object({
     .messages({
       "any.only": "El tipo de inmueble debe ser: departamento, casa, pieza o estudio.",
     }),
-  precioMensual: Joi.number().integer().positive().messages({
+  precioMensual: Joi.number()
+    .integer()
+    .positive()
+    .messages({
     "number.base": "El precio mensual debe ser un número.",
     "number.positive": "El precio mensual debe ser positivo.",
   }),
-  ubicacion: Joi.string().min(5).max(255).messages({
+  ubicacion: Joi.string()
+    .min(5)
+    .max(255)
+    .messages({
     "string.min": "La ubicación debe tener como mínimo 5 caracteres.",
     "string.max": "La ubicación debe tener como máximo 255 caracteres.",
   }),
@@ -220,28 +226,46 @@ export const publicacionUpdateValidation = Joi.object({
     .messages({
       "any.only": "La comuna debe ser una de las comunas del Gran Concepción.",
     }),
-  latitud: Joi.number().min(-90).max(90).messages({
+  latitud: Joi.number()
+    .min(-90)
+    .max(90)
+    .messages({
     "number.base": "La latitud debe ser un número.",
     "number.min": "La latitud debe estar entre -90 y 90.",
     "number.max": "La latitud debe estar entre -90 y 90.",
   }),
-  longitud: Joi.number().min(-180).max(180).messages({
+  longitud: Joi.number()
+    .min(-180)
+    .max(180).messages({
     "number.base": "La longitud debe ser un número.",
     "number.min": "La longitud debe estar entre -180 y 180.",
     "number.max": "La longitud debe estar entre -180 y 180.",
   }),
-  fotos: Joi.array().items(Joi.string().uri()),
-  serviciosIncluidos: Joi.array().items(
-    Joi.string().valid("agua", "luz", "gas", "internet", "tv_cable", "calefaccion", "estacionamiento", "lavadora")
+  fotos: Joi.array()
+    .items(Joi.string().uri({ allowRelative: true }))
+    .optional(),
+  serviciosIncluidos: Joi.array()
+    .items(
+    Joi.string() 
+    .valid("agua", "luz", "gas", "internet", "tv_cable", "calefaccion", "estacionamiento", "lavadora")
   ),
-  distanciaCampus: Joi.number().integer().positive().allow(null).messages({
+  distanciaCampus: Joi.number()
+    .integer()
+    .positive()
+    .allow(null)
+    .messages({
     "number.base": "La distancia al campus debe ser un número.",
     "number.positive": "La distancia al campus debe ser positiva.",
   }),
-  reglasConvivencia: Joi.string().allow("").max(1000).messages({
+  reglasConvivencia: Joi.string()
+    .max(1000)
+    .allow('')
+    .optional()
+    .messages({
     "string.max": "Las reglas no pueden superar los 1000 caracteres.",
   }),
-  estado: Joi.string().valid("activa", "arrendada", "disponible", "inactiva"),
+  estado: Joi.string()
+    .valid("activa", "arrendada"),
 })
   .or(
     "titulo",

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
+import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 
@@ -101,7 +102,7 @@ export default function ComparadorPublicacionesModal({ publicaciones, onClose })
                       <span style={styles.publicationTitle}>{publicacion.titulo || 'Sin titulo'}</span>
                       <button
                         type="button"
-                        onClick={() => navigate(`/publicacion/${getPublicacionId(publicacion)}`)}
+                        onClick={() => navigate(`/publicacion/${encodePublicId(getPublicacionId(publicacion))}`)}
                         style={styles.detailButton}
                       >
                         Ver detalle

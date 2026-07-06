@@ -1,14 +1,71 @@
-## Proyecto GPS 2026
+<div align="center">
 
-Aplicación web para gestión de arriendos de estudiantes universitarios.
-## Resumen
+<img src="frontend/src/assets/miLogo.png" alt="ArriendU" width="110" />
 
-El repositorio está dividido en dos partes:
+# ArriendU
 
-- `backend`: API, autenticación, base de datos, correos y lógica de negocio.
-- `frontend`: interfaz web, navegación, formularios y consumo de la API.
+**Plataforma web de arriendos para estudiantes universitarios del Gran Concepción**
+
+![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-DB-4169E1?logo=postgresql&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-brightgreen)
+
+</div>
+
+---
+
+Conecta a **estudiantes** que buscan alojamiento con **arrendadores** verificados en Concepción, San Pedro de la Paz, Talcahuano, Chiguayante, Hualpén y Penco, e incluye un **panel administrativo** para moderar cuentas, publicaciones y reportes.
+
+## Tabla de contenidos
+
+- [Funcionalidades](#funcionalidades)
+- [Tecnologías utilizadas](#tecnologías-utilizadas)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Requisitos](#requisitos)
+- [Instalación](#instalación)
+- [Variables de entorno](#variables-de-entorno)
+- [Ejecución](#ejecución)
+- [Scripts disponibles](#scripts-disponibles)
+- [Documentación adicional](#documentación-adicional)
+- [Licencia](#licencia)
+
+## Funcionalidades
+
+#### Estudiantes
+- Búsqueda de arriendos con filtros (precio, tipo de inmueble, servicios, distancia al campus) y mapa interactivo por comuna.
+- Favoritos y comparador de hasta 3 publicaciones lado a lado.
+- Mensajería directa por publicación con el arrendador.
+- Solicitud y confirmación de arriendos, historial y calificaciones a arrendadores.
+- Reporte de publicaciones inapropiadas.
+
+#### Arrendadores
+- Publicación de inmuebles con fotos, servicios incluidos, reglas de convivencia y geolocalización automática por dirección/comuna.
+- Gestión de publicaciones (editar, marcar como arrendada/disponible, eliminar) y estadísticas de visualizaciones, favoritos y conversaciones.
+- Verificación de cuenta mediante documentos de identidad y comprobante de residencia.
+
+#### Administradores
+- Panel de auditoría, gestión y bloqueo de usuarios.
+- Revisión y seguimiento de reportes de publicaciones.
+
+#### Transversal
+- Autenticación con JWT, recuperación de contraseña por correo y verificación de cuentas por email.
+- Notificaciones dentro de la plataforma.
+- Perfiles de usuario con foto, calificación promedio y reseñas recibidas.
+
+## Tecnologías utilizadas
+
+| Área | Tecnologías |
+| --- | --- |
+| **Backend** | Node.js · Express · TypeORM · PostgreSQL · JWT · Passport · Joi · Nodemailer · Multer |
+| **Frontend** | React · Vite · React Router DOM · React Hook Form · Axios · Leaflet / React-Leaflet · SweetAlert2 · Lucide Icons |
 
 ## Estructura del repositorio
+
+<details>
+<summary>Ver árbol de carpetas</summary>
 
 ```text
 .
@@ -35,65 +92,56 @@ El repositorio está dividido en dos partes:
 │   │   ├── services/
 │   │   └── styles/
 │   └── package.json
+├── docs/
 └── README.md
 ```
 
-## Tecnologias utilizadas
-
-- Node.js, Express y TypeORM.
-- PostgreSQL.
-- React, Vite y React Router DOM.
-- Axios, React Hook Form y SweetAlert2.
+</details>
 
 ## Requisitos
 
-- Node.js 18 o superior.
-- npm.
-- PostgreSQL.
+- Node.js 18 o superior
+- npm
+- PostgreSQL
 
-## Instalacion
+## Instalación
 
 1. Clona el repositorio.
-2. Instala dependencias en cada proyecto:
+2. Instala las dependencias de cada proyecto:
 
-```bash
-cd backend
-npm install
+   ```bash
+   cd backend
+   npm install
 
-cd ../frontend
-npm install
-```
+   cd ../frontend
+   npm install
+   ```
 
-3. Crea los archivos de entorno a partir de los ejemplos disponibles:
-
-- `backend/.env.example`
-- `frontend/.env.example`
-
-4. Configura las variables de entorno con tus datos locales.
+3. Crea los archivos de entorno a partir de los ejemplos disponibles (`backend/.env.example` y `frontend/.env.example`) y configúralos con tus datos locales.
 
 ## Variables de entorno
 
-### Backend
-
-Configura `backend/.env` con valores similares a estos:
+### Backend (`backend/.env`)
 
 ```env
 HOST=localhost
 PORT=3000
 FRONTEND_URL=http://localhost:5173
+BACKEND_URL=http://localhost:3000
 DB_USERNAME=postgres
 PASSWORD=tu_password
 DATABASE=postgres
 DB_PORT=5432
 JWT_SECRET=tu_jwt_secret
 COOKIE_KEY=tu_cookie_key
+
+# Nodemailer
 EMAIL_USER=email_de_la_app
-EMAIL_PASS=password
+EMAIL_PASS=app_password_de_gmail
+EMAIL_FROM=ArriendU <email_de_la_app>
 ```
 
-### Frontend
-
-Configura `frontend/.env`:
+### Frontend (`frontend/.env`)
 
 ```env
 VITE_BASE_URL=http://localhost:3000/api
@@ -115,10 +163,27 @@ cd frontend
 npm run dev
 ```
 
-## Estado del proyecto
+## Scripts disponibles
 
-El proyecto está en desarrollo y algunas funcionalidades siguen en ajustándose.
+| Proyecto | Script | Descripción |
+| --- | --- | --- |
+| backend | `npm run dev` | Levanta el servidor con recarga automática (nodemon) |
+| backend | `npm start` | Levanta el servidor en modo producción |
+| backend | `npm run lint` / `lint:fix` | Revisa y corrige el estilo de código |
+| backend | `npm run format` | Formatea el código con Prettier |
+| frontend | `npm run dev` | Levanta el entorno de desarrollo (Vite) |
+| frontend | `npm run build` | Genera el build de producción |
+| frontend | `npm run preview` | Sirve el build de producción localmente |
+| frontend | `npm run lint` | Revisa el estilo de código |
+
+## Documentación adicional
+
+- [docs/CURL_AUTH_REGISTRO.md](docs/CURL_AUTH_REGISTRO.md) — ejemplos de uso de la API de autenticación y registro con `curl`.
 
 ## Licencia
 
-MIT
+<div align="center">
+
+Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+
+</div>

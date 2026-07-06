@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, UserRound, Sparkles, CheckCircle, ShieldAlert } from 'lucide-react';
+import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle, ShieldAlert } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
 import {
@@ -13,6 +13,8 @@ import {
 import { createArriendo, listarArriendos } from '@services/rentalsAndReviews.service.js';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
 import ModalReportarUsuario from '@components/ModalReportarUsuario.jsx';
+import { decodePublicId, encodePublicId } from '@helpers/publicId.helper.js';
+import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import '@styles/mensajes.css';
 
 function formatDate(value) {
@@ -109,7 +111,7 @@ export default function Mensajes() {
   const [loadingRentalConfirmation, setLoadingRentalConfirmation] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
-  const publicationTargetId = publicationIdParam ? Number(publicationIdParam) : null;
+  const publicationTargetId = publicationIdParam ? decodePublicId(publicationIdParam) : null;
   const conversationTargetId = conversationIdParam ? Number(conversationIdParam) : null;
 
   const fetchConversations = async () => {
@@ -201,8 +203,11 @@ export default function Mensajes() {
         if (existingConversation) {
           setSelectedConversationId(existingConversation.id);
           await loadConversationDetail(existingConversation.id);
-          return;
+        } else {
+          setSelectedConversationId(null);
+          await loadConversationDetail(null);
         }
+        return;
       }
 
       if (currentConversations.length > 0) {
@@ -382,6 +387,19 @@ export default function Mensajes() {
       return;
     }
 
+    const confirm = await Swal.fire({
+      title: '¿Quiere aceptar este arriendo?',
+      text: 'La publicación pasará a estado arrendada y ya no estará disponible para otros interesados.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#0f766e',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, aceptar',
+      cancelButtonText: 'Cancelar',
+    });
+
+    if (!confirm.isConfirmed) return;
+
     setLoadingRentalConfirmation(true);
 
     const [acceptedRental, errorResponse] = await createArriendo({
@@ -450,8 +468,12 @@ export default function Mensajes() {
             {!loadingConversations && filteredConversations.length === 0 && (
               <div className="mensajes-empty">
                 <Inbox size={22} />
-                <p>No tienes conversaciones todavía.</p>
-                {isContactComposerVisible && <span>Escribe un mensaje desde una publicación para empezar.</span>}
+                <p>Aquí aparecerán tus conversaciones con los arrendadores.</p>
+                <span>
+                  {isContactComposerVisible
+                    ? 'Escribe un mensaje desde una publicación para empezar.'
+                    : '¡Empieza a buscar y envía tu primer mensaje!'}
+                </span>
               </div>
             )}
 
@@ -467,9 +489,7 @@ export default function Mensajes() {
                     className={`mensajes-list-item ${isSelected ? 'is-selected' : ''}`}
                     onClick={() => handleSelectConversation(conversation.id)}
                   >
-                    <div className="mensajes-avatar">
-                      <UserRound size={18} />
-                    </div>
+                    <AvatarCirculo nombre={otherParticipant?.nombreCompleto} foto={otherParticipant?.fotoPerfil} size={44} shape="square" />
                     <div className="mensajes-list-item__body">
                       <div className="mensajes-list-item__top">
                         <strong>{otherParticipant?.nombreCompleto || 'Sin nombre'}</strong>
@@ -491,7 +511,18 @@ export default function Mensajes() {
         <main className="mensajes-main">
           {error && <div className="mensajes-error">{error}</div>}
 
-          {!hasSelectedConversation && !isContactComposerVisible && (
+          {!hasSelectedConversation && !isContactComposerVisible && !loadingConversations && conversations.length === 0 && (
+            <div className="mensajes-placeholder">
+              <MessageCircle size={42} />
+              <h2>Aún no tienes conversaciones</h2>
+              <p>Aquí aparecerán tus conversaciones con los arrendadores. ¡Empieza a buscar y envía tu primer mensaje!</p>
+              <button type="button" className="mensajes-send-btn" onClick={() => navigate('/buscar')}>
+                Buscar arriendos
+              </button>
+            </div>
+          )}
+
+          {!hasSelectedConversation && !isContactComposerVisible && (loadingConversations || conversations.length > 0) && (
             <div className="mensajes-placeholder">
               <MessageCircle size={42} />
               <h2>Selecciona una conversación</h2>
@@ -511,7 +542,7 @@ export default function Mensajes() {
                     <h2>{publicacionObjetivo?.titulo || 'Iniciar conversación'}</h2>
                     <p className="mensajes-detail__meta">{publicacionObjetivo?.ubicacion || 'La publicación seleccionada'}</p>
                   </div>
-                  <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${publicationTargetId}`)}>
+                  <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${encodePublicId(publicationTargetId)}`)}>
                     Ver publicación
                   </button>
                 </div>
@@ -544,14 +575,13 @@ export default function Mensajes() {
               <div className="mensajes-detail__card">
                 <div className="mensajes-detail__header">
                   <div>
-                    <p className="mensajes-eyebrow">Conversación activa</p>
                     <h2>{getConversationTitle(selectedConversation)}</h2>
                     <p className="mensajes-detail__meta">
                       Con {selectedOtherParticipant?.nombreCompleto || 'Sin participante'} · {selectedConversation?.publicacion?.ubicacion || 'Sin ubicación'}
                     </p>
                   </div>
                   <div className="mensajes-detail__header-actions">
-                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${selectedConversation?.publicacion?.id}`)}>
+                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${encodePublicId(selectedConversation?.publicacion?.id)}`)}>
                       Ver publicación
                     </button>
                     <button type="button" className="mensajes-icon-btn mensajes-icon-btn--danger" onClick={() => setReportModalOpen(true)}>
@@ -574,9 +604,6 @@ export default function Mensajes() {
                         <CheckCircle size={18} /> Arriendo aceptado
                       </button>
                     )}
-                    <button type="button" className="mensajes-icon-btn" onClick={handleRefresh}>
-                      <RefreshCw size={18} />
-                    </button>
                   </div>
                 </div>
 
