@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FlagTriangleRight, Clock3, BadgeCheck, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, FlagTriangleRight, Clock3, BadgeCheck, TriangleAlert, ShieldAlert } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { obtenerMisReportes } from '@services/reportes.service.js';
+import { obtenerMisReportesUsuario } from '@services/reportesUsuario.service.js';
+import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 
@@ -52,7 +54,9 @@ const formatDate = (value) => {
 
 export default function MisReportes() {
   const navigate = useNavigate();
+  const [tab, setTab] = useState('publicaciones');
   const [reportes, setReportes] = useState([]);
+  const [reportesUsuario, setReportesUsuario] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -61,27 +65,33 @@ export default function MisReportes() {
 
   const cargarReportes = async () => {
     setCargando(true);
-    const [data, error] = await obtenerMisReportes();
+    const [[data, error], [dataUsuario, errorUsuario]] = await Promise.all([
+      obtenerMisReportes(),
+      obtenerMisReportesUsuario(),
+    ]);
     setCargando(false);
 
-    if (error) {
+    if (error || errorUsuario) {
       Swal.fire({
         icon: 'error',
         title: 'No se pudieron cargar tus reportes',
-        text: error,
+        text: error || errorUsuario,
         confirmButtonColor: accent,
       });
-      return;
     }
 
     setReportes(Array.isArray(data) ? data : []);
+    setReportesUsuario(Array.isArray(dataUsuario) ? dataUsuario : []);
   };
 
-  const resumen = useMemo(() => ({
-    total: reportes.length,
-    pendientes: reportes.filter((reporte) => reporte.estado === 'pendiente').length,
-    revisados: reportes.filter((reporte) => reporte.estado === 'revisado').length,
-  }), [reportes]);
+  const resumen = useMemo(() => {
+    const listaActiva = tab === 'publicaciones' ? reportes : reportesUsuario;
+    return {
+      total: listaActiva.length,
+      pendientes: listaActiva.filter((reporte) => reporte.estado === 'pendiente').length,
+      revisados: listaActiva.filter((reporte) => reporte.estado === 'revisado').length,
+    };
+  }, [reportes, reportesUsuario, tab]);
 
   return (
     <div style={styles.page}>
@@ -104,6 +114,23 @@ export default function MisReportes() {
         </div>
       </section>
 
+      <div style={styles.tabRow}>
+        <button
+          type="button"
+          onClick={() => setTab('publicaciones')}
+          style={{ ...styles.tabButton, ...(tab === 'publicaciones' ? styles.tabButtonActive : {}) }}
+        >
+          <FlagTriangleRight size={16} /> Publicaciones
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('usuarios')}
+          style={{ ...styles.tabButton, ...(tab === 'usuarios' ? styles.tabButtonActive : {}) }}
+        >
+          <ShieldAlert size={16} /> Usuarios
+        </button>
+      </div>
+
       <section style={styles.summaryGrid}>
         <article style={styles.summaryCard}>
           <p style={styles.summaryLabel}>Total reportes</p>
@@ -124,7 +151,9 @@ export default function MisReportes() {
           <div>
             <h2 style={styles.cardTitle}>Trazabilidad de tus reportes</h2>
             <p style={styles.cardSubtitle}>
-              Aquí verás cada reporte, la publicación asociada y si ya fue revisado por el equipo.
+              {tab === 'publicaciones'
+                ? 'Aquí verás cada reporte, la publicación asociada y si ya fue revisado por el equipo.'
+                : 'Aquí verás cada reporte de usuario enviado desde el chat y si ya fue revisado por el equipo.'}
             </p>
           </div>
           <button type="button" onClick={cargarReportes} style={styles.refreshButton}>
@@ -134,17 +163,80 @@ export default function MisReportes() {
 
         {cargando ? (
           <p style={styles.emptyState}>Cargando tus reportes...</p>
-        ) : reportes.length === 0 ? (
+        ) : tab === 'publicaciones' ? (
+          reportes.length === 0 ? (
+            <div style={styles.emptyBox}>
+              <TriangleAlert size={30} strokeWidth={1.9} />
+              <h3 style={styles.emptyTitle}>Todavía no has enviado reportes</h3>
+              <p style={styles.emptyText}>
+                Cuando reportes una publicación desde su detalle, aparecerá aquí con su estado de seguimiento.
+              </p>
+            </div>
+          ) : (
+            <div style={styles.list}>
+              {reportes.map((reporte) => {
+                const estadoMeta = reporte.estado === 'revisado'
+                  ? { label: 'Revisado', color: '#15803d', backgroundColor: '#dcfce7', Icon: BadgeCheck }
+                  : { label: 'Pendiente', color: '#b45309', backgroundColor: '#fef3c7', Icon: Clock3 };
+
+                const EstadoIcon = estadoMeta.Icon;
+
+                return (
+                  <article key={reporte.id} style={styles.reportCard}>
+                    <div style={styles.reportHeader}>
+                      <div>
+                        <p style={styles.reportTitle}>{reporte.publicacion?.titulo || 'Publicación eliminada o no disponible'}</p>
+                        <p style={styles.reportMeta}>
+                          Publicado: {formatDate(reporte.publicacion?.createdAt)} · Reportado: {formatDate(reporte.createdAt)}
+                        </p>
+                      </div>
+
+                      <span
+                        style={{
+                          ...styles.statusBadge,
+                          color: estadoMeta.color,
+                          backgroundColor: estadoMeta.backgroundColor,
+                        }}
+                      >
+                        <EstadoIcon size={14} strokeWidth={2.2} />
+                        {estadoMeta.label}
+                      </span>
+                    </div>
+
+                    <p style={styles.reportReason}>
+                      <strong>Motivo:</strong> {reporte.motivo}
+                    </p>
+
+                    <div style={styles.reportFooter}>
+                      <div style={styles.reportChipRow}>
+                        <span style={styles.chip}>Acción: {reporte.accion || 'sin acción'}</span>
+                        <span style={styles.chip}>ID reporte #{reporte.id}</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/publicacion/${encodePublicId(reporte.publicacion?.id)}`)}
+                        style={styles.linkButton}
+                      >
+                        Ver publicación
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )
+        ) : reportesUsuario.length === 0 ? (
           <div style={styles.emptyBox}>
             <TriangleAlert size={30} strokeWidth={1.9} />
-            <h3 style={styles.emptyTitle}>Todavía no has enviado reportes</h3>
+            <h3 style={styles.emptyTitle}>Todavía no has reportado usuarios</h3>
             <p style={styles.emptyText}>
-              Cuando reportes una publicación desde su detalle, aparecerá aquí con su estado de seguimiento.
+              Cuando reportes a alguien desde una conversación, aparecerá aquí con su estado de seguimiento.
             </p>
           </div>
         ) : (
           <div style={styles.list}>
-            {reportes.map((reporte) => {
+            {reportesUsuario.map((reporte) => {
               const estadoMeta = reporte.estado === 'revisado'
                 ? { label: 'Revisado', color: '#15803d', backgroundColor: '#dcfce7', Icon: BadgeCheck }
                 : { label: 'Pendiente', color: '#b45309', backgroundColor: '#fef3c7', Icon: Clock3 };
@@ -155,10 +247,8 @@ export default function MisReportes() {
                 <article key={reporte.id} style={styles.reportCard}>
                   <div style={styles.reportHeader}>
                     <div>
-                      <p style={styles.reportTitle}>{reporte.publicacion?.titulo || 'Publicación eliminada o no disponible'}</p>
-                      <p style={styles.reportMeta}>
-                        Publicado: {formatDate(reporte.publicacion?.createdAt)} · Reportado: {formatDate(reporte.createdAt)}
-                      </p>
+                      <p style={styles.reportTitle}>{reporte.reportado?.nombreCompleto || 'Usuario eliminado o no disponible'}</p>
+                      <p style={styles.reportMeta}>Reportado: {formatDate(reporte.createdAt)}</p>
                     </div>
 
                     <span
@@ -182,6 +272,15 @@ export default function MisReportes() {
                       <span style={styles.chip}>Acción: {formatLabel(reporte.accion, accionLabels)}</span>
                     </div>
 
+                    {reporte.conversacionId && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/mensajes?conversacion=${reporte.conversacionId}`)}
+                        style={styles.linkButton}
+                      >
+                        Ver conversación
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => navigate(`/publicacion/${reporte.publicacion?.publicId}`)}
@@ -245,19 +344,27 @@ const styles = {
     fontSize: '14px',
     color: 'rgba(255,255,255,0.82)',
   },
-  button: {
+  tabRow: {
+    display: 'flex',
+    gap: '10px',
+  },
+  tabButton: {
     display: 'inline-flex',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: '8px',
-    padding: '12px 18px',
-    borderRadius: '12px',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    color: '#ffffff',
+    border: '1px solid #dbe4ee',
+    backgroundColor: '#ffffff',
+    color: '#334155',
+    borderRadius: '999px',
+    padding: '10px 18px',
     fontWeight: 700,
     fontSize: '14px',
-    border: '1px solid rgba(255,255,255,0.28)',
     cursor: 'pointer',
+  },
+  tabButtonActive: {
+    backgroundColor: accent,
+    borderColor: accent,
+    color: '#ffffff',
   },
   summaryGrid: {
     display: 'grid',
