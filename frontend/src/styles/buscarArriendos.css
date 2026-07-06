@@ -56,6 +56,18 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+.ba-search-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background-color: #ffffff;
+  border: 1px solid var(--ba-border-light);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  flex-wrap: wrap;
+}
+
 .ba-filters-panel {
   padding: 18px;
   border-radius: 18px;
