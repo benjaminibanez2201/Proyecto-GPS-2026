@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Clock, Inbox, MessageSquareText, Star, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, Archive, CheckCircle, Clock, Eye, Inbox, MessageSquareText, Star, X, Landmark} from 'lucide-react';
 import { listarArriendos, crearResena } from '../services/rentalsAndReviews.service.js';
 import { showSuccessConfirm, showErrorAlert } from '@helpers/sweetAlert';
 import { useAuth } from '../context/AuthContext.jsx';
-import '@styles/HistorialArriendos.css';
+import AvatarCirculo from '@components/AvatarCirculo.jsx';
+import { encodePublicId } from '@helpers/publicId.helper.js';
+import '@styles/historialArriendos.css';
 
 export default function HistorialArriendos() {
+  const navigate = useNavigate();
   const [arriendos, setArriendos] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -33,7 +36,7 @@ export default function HistorialArriendos() {
       ...r,
       contratanteNombre: Number(user?.id) === r.arrendadorId ? r.estudiante?.nombreCompleto : r.arrendador?.nombreCompleto || '—',
       contratanteId: Number(user?.id) === r.arrendadorId ? r.estudiante?.id : r.arrendador?.id || null,
-      contratanteAvatar: Number(user?.id) === r.arrendadorId ? r.estudiante?.avatar : r.arrendador?.avatar || null,
+      contratanteAvatar: (Number(user?.id) === r.arrendadorId ? r.estudiante?.fotoPerfil : r.arrendador?.fotoPerfil) || null,
     }));
 
     setArriendos(enriched);
@@ -93,6 +96,9 @@ export default function HistorialArriendos() {
   return (
     <div className="historial-page">
       <section className="historial-hero">
+        <div className= "heroIcon">
+          <Landmark size={28} strokeWidth={2} />
+            </div>
         <div>
           <h2 className="hero-title">Arriendos concretados</h2>
           <p className="hero-subtitle">Revisa tus arriendos, dale a confirmar y deja una calificación.</p>
@@ -108,18 +114,19 @@ export default function HistorialArriendos() {
             <th>Estado de confirmación</th>
             <th>Fecha de confirmación</th>
             <th>Evaluación mutua</th>
+            <th>Detalle</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan="4" style={{ textAlign: 'center', padding: '40px' }}>
+              <td colSpan="5" style={{ textAlign: 'center', padding: '40px' }}>
                 Cargando historial de arriendos...
               </td>
             </tr>
           ) : arriendos.length === 0 ? (
             <tr>
-              <td colSpan="4" style={{ padding: 0 }}>
+              <td colSpan="5" style={{ padding: 0 }}>
                 <div className="empty-state">
                   <div className="empty-icon"><Inbox size={28} /></div>
                   <strong>No hay arriendos todavía</strong>
@@ -131,27 +138,27 @@ export default function HistorialArriendos() {
             const yaConfirme = Number(user?.id) === item.arrendadorId
               ? item.confirmedByArrendador
               : item.confirmedByEstudiante;
+            const estaConcluido = item.status === 'COMPLETED' || item.status === 'FINISHED';
 
             return (
               <tr key={item.id}>
                 <td>
                   {item.contratanteId ? (
-                    <Link to={`/perfil/${item.contratanteId}`} className="person-link">
-                      <div className="avatar">
-                        {item.contratanteAvatar ? (
-                          <img src={item.contratanteAvatar} alt="avatar" className="avatar-img" />
-                        ) : (
-                          (item.contratanteNombre || '—').charAt(0)
-                        )}
-                      </div>
+                    <Link to={`/perfil/${encodePublicId(item.contratanteId)}`} className="person-link">
+                      <AvatarCirculo nombre={item.contratanteNombre} foto={item.contratanteAvatar} />
                       <span>{item.contratanteNombre || '—'}</span>
                     </Link>
                   ) : (
-                    <span style={{ fontWeight: '600' }}>{item.contratanteNombre || '—'}</span>
+                    <span className="person-link person-link--static">
+                      <AvatarCirculo nombre={item.contratanteNombre} foto={item.contratanteAvatar} />
+                      <span>{item.contratanteNombre || '—'}</span>
+                    </span>
                   )}
                 </td>
                 <td>
-                  {item.status === 'COMPLETED' ? (
+                  {item.status === 'FINISHED' ? (
+                    <span className="finished-chip"><Archive size={16} /> Arriendo finalizado</span>
+                  ) : item.status === 'COMPLETED' ? (
                     <span className="reviewed-chip"><CheckCircle size={16} /> Arriendo concretado</span>
                   ) : yaConfirme ? (
                     <span className="waiting-chip"><Clock size={16} /> Esperando confirmación...</span>
@@ -161,25 +168,32 @@ export default function HistorialArriendos() {
                 </td>
                 <td>
                   {item.completedAt ? (
-                    <span style={{ fontWeight: 600 }}>
+                    <span className="fecha-confirmacion">
                       {new Date(item.completedAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}
                     </span>
                   ) : '—'}
                 </td>
                 <td>
-                  {item.status === 'COMPLETED' && item.puedeCalificar ? (
+                  {estaConcluido && item.puedeCalificar ? (
                     <button onClick={() => abrirModalCalificar(item)} className="calificar-button">
                       <span><Star size={16} /></span>
                       <span className="calificar-title">Comparte tu opinión</span>
                       <ArrowRight size={16} />
                     </button>
-                  ) : item.status === 'COMPLETED' && item.miResena ? (
+                  ) : estaConcluido && item.miResena ? (
                     <span className="reviewed-chip"><CheckCircle size={16} /> Ya calificaste</span>
-                  ) : item.status === 'COMPLETED' ? (
+                  ) : estaConcluido ? (
                     <span className="reviewed-chip"><CheckCircle size={16} /> Arriendo concretado</span>
                   ) : (
                     <span style={{ color: '#aaa', fontSize: '13px', fontStyle: 'italic' }}>Faltan confirmaciones</span>
                   )}
+                </td>
+                <td>
+                  {estaConcluido ? (
+                    <button onClick={() => navigate(`/arriendo/${encodePublicId(item.id)}`)} className="ver-detalle-button">
+                      <Eye size={14} /> Ver detalle
+                    </button>
+                  ) : '—'}
                 </td>
               </tr>
             );

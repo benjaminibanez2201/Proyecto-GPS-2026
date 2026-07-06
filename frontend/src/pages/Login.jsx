@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate, Link, useLocation} from 'react-router-dom';
 import { login } from '@services/auth.service.js';
 import Form from '@components/Form';
@@ -13,6 +14,24 @@ const Login = () => {
         errorData,
         handleInputChange
     } = useLogin();
+
+    useEffect(() => {
+        const storedUser = JSON.parse(sessionStorage.getItem('usuario')) || null;
+        if (!storedUser) return;
+
+        const params = new URLSearchParams(location.search);
+        const nextParam = params.get('next');
+        const originUrl = nextParam || location.state?.from?.pathname;
+
+        if (storedUser.rol === 'admin' || storedUser.rol === 'administrador') {
+            navigate('/admin', { replace: true });
+        } else if (originUrl) {
+            navigate(originUrl, { replace: true });
+        } else {
+            navigate('/home', { replace: true });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const loginSubmit = async (data) => {
         try {
@@ -68,7 +87,7 @@ const Login = () => {
                 <section
                     style={{
                         flex: 1,
-                        backgroundColor: '#008080',
+                        background: 'linear-gradient(145deg, #008080 0%, #006b6b 54%, #004d40 100%)',
                         color: '#ffffff',
                         display: 'flex',
                         flexDirection: 'column',
@@ -115,7 +134,7 @@ const Login = () => {
                                 {
                                     label: "Correo electrónico",
                                     name: "email",
-                                    placeholder: "example@gmail.cl",
+                                    placeholder: "ejemplo@gmail.cl",
                                     fieldType: 'input',
                                     type: "email",
                                     required: true,

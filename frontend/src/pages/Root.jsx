@@ -1,7 +1,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import {
   Home,
   User,
@@ -15,10 +15,17 @@ import {
   ShieldAlert,
   ChevronLeft,
   ChevronRight,
+  HelpCircle,
+  Compass,
+  X,
 } from 'lucide-react';
+import PageTransition from '@components/PageTransition';
 import { useAuth, AuthProvider } from '@context/AuthContext';
 import { obtenerCantidadNotificacionesNoLeidas } from '@services/notificacion.service.js';
 import { obtenerConversaciones } from '@services/mensaje.service.js';
+import AvatarCirculo from '@components/AvatarCirculo.jsx';
+import SpotlightTour from '@components/SpotlightTour.jsx';
+import FaqModal from '@components/FaqModal.jsx';
 import slidebaar from '../assets/slidebaar.png';
 import miLogo from '../assets/miLogo.png';
 
@@ -33,6 +40,7 @@ function Root() {
 function PageRoot() {
   const navigate = useNavigate();
   const location = useLocation();
+  const outlet = useOutlet();
   const { user } = useAuth();
   const userRole = (user?.rol || '').toString().toLowerCase();
   const normalizedRole = userRole === 'admin' ? 'administrador' : userRole;
@@ -40,6 +48,9 @@ function PageRoot() {
   const [hoveredItem, setHoveredItem] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [tourActive, setTourActive] = useState(false);
+  const [showHelpMenu, setShowHelpMenu] = useState(false);
+  const [showFaq, setShowFaq] = useState(false);
 
   const colores = {
     principal: '#008080',
@@ -87,10 +98,12 @@ function PageRoot() {
   const menu = menus[normalizedRole] || menus.estudiante;
   const unreadMessagesBadge = menu.items.some((item) => item.label === 'Mensajes') ? unreadMessagesCount : 0;
   const handleBannerClick = () => {
-    navigate(normalizedRole === 'administrador' ? '/admin' : '/home');
+    const destination = normalizedRole === 'administrador' ? '/admin' : '/home';
+    if (location.pathname === destination) return;
+    navigate(destination);
   };
 
-  const getSidebarItemStyle = ({ active = false, hovered = false, disabled = false }) => {
+  const getSidebarItemStyle = ({ active = false, hovered = false, disabled = false, current = false }) => {
     const highlight = active || hovered;
 
     return {
@@ -101,10 +114,31 @@ function PageRoot() {
       transform: highlight ? 'translateY(-1px)' : 'translateY(0)',
       transition: 'background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
       opacity: disabled ? 0.6 : 1,
-      cursor: disabled ? 'not-allowed' : 'pointer',
+      cursor: disabled ? 'not-allowed' : current ? 'default' : 'pointer',
       justifyContent: isSidebarCollapsed ? 'center' : 'flex-start',
       padding: isSidebarCollapsed ? '12px 10px' : '12px',
     };
+  };
+
+  const getPathnameFromTo = (to) => {
+    const [pathname] = String(to || '').split('?');
+    return pathname.startsWith('/') ? pathname : `/${pathname}`;
+  };
+
+  const isSidebarItemCurrent = (item) => {
+    if (!item?.to) return false;
+
+    if (item.to.startsWith('/admin/users')) {
+      return location.pathname === '/admin/users';
+    }
+
+    return location.pathname === getPathnameFromTo(item.to);
+  };
+
+  const preventCurrentSectionNavigation = (event, item) => {
+    if (isSidebarItemCurrent(item)) {
+      event.preventDefault();
+    }
   };
 
   const isSidebarItemActive = (item, routerIsActive) => {
@@ -119,6 +153,7 @@ function PageRoot() {
     const Icon = item.icon;
     const hoverKey = item.label;
     const messageBadgeCount = item.label === 'Mensajes' ? unreadMessagesBadge : 0;
+    const current = isSidebarItemCurrent(item);
 
     if (item.disabled) {
       return (
@@ -142,12 +177,15 @@ function PageRoot() {
       <NavLink
         key={item.label}
         to={item.to}
+        onClick={(event) => preventCurrentSectionNavigation(event, item)}
         onMouseEnter={() => setHoveredItem(hoverKey)}
         onMouseLeave={() => setHoveredItem(null)}
         style={({ isActive }) => getSidebarItemStyle({
           active: isSidebarItemActive(item, isActive),
           hovered: hoveredItem === hoverKey,
+          current,
         })}
+        aria-disabled={current}
         end
       >
         <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -216,6 +254,42 @@ function PageRoot() {
     refreshUnreadCount();
     refreshUnreadMessagesCount();
   }, [refreshUnreadCount, refreshUnreadMessagesCount, location.pathname]);
+
+  useEffect(() => {
+    if (!user?.id || normalizedRole !== 'estudiante') return;
+
+    const seenKey = `tourVisto_estudiante_${user.id}`;
+    if (!localStorage.getItem(seenKey)) {
+      navigate('/buscar');
+      setTourActive(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, normalizedRole]);
+
+  const markTourAsSeen = () => {
+    if (user?.id) {
+      localStorage.setItem(`tourVisto_estudiante_${user.id}`, '1');
+    }
+  };
+
+  const closeTour = () => {
+    markTourAsSeen();
+    setTourActive(false);
+  };
+
+  const finishTour = () => {
+    markTourAsSeen();
+    setTourActive(false);
+  };
+
+  const restartTour = () => {
+    setShowHelpMenu(false);
+    navigate('/buscar');
+    setTourActive(true);
+  };
+
+  const notificationsItem = { to: '/notificaciones' };
+  const isNotificationsCurrent = isSidebarItemCurrent(notificationsItem);
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: 'sans-serif' }}>
@@ -304,9 +378,15 @@ function PageRoot() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <NavLink
             to="/notificaciones"
+            onClick={(event) => preventCurrentSectionNavigation(event, notificationsItem)}
             onMouseEnter={() => setHoveredItem('notificaciones')}
             onMouseLeave={() => setHoveredItem(null)}
-            style={({ isActive }) => getSidebarItemStyle({ active: isActive, hovered: hoveredItem === 'notificaciones' })}
+            style={({ isActive }) => getSidebarItemStyle({
+              active: isActive,
+              hovered: hoveredItem === 'notificaciones',
+              current: isNotificationsCurrent,
+            })}
+            aria-disabled={isNotificationsCurrent}
             end
           >
             <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -339,6 +419,19 @@ function PageRoot() {
             </span>
             {!isSidebarCollapsed && <span>Centro de Notificaciones</span>}
           </NavLink>
+
+          {normalizedRole === 'estudiante' && (
+            <button
+              type="button"
+              onClick={restartTour}
+              onMouseEnter={() => setHoveredItem('tutorial')}
+              onMouseLeave={() => setHoveredItem(null)}
+              style={getSidebarItemStyle({ hovered: hoveredItem === 'tutorial' })}
+            >
+              <Compass size={20} strokeWidth={2} />
+              {!isSidebarCollapsed && <span>Ver tour de la página</span>}
+            </button>
+          )}
 
           <button
             onClick={handleLogout}
@@ -373,34 +466,66 @@ function PageRoot() {
             padding: '0 30px 0 80px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: colores.secundario,
-                color: colores.textoOscuro,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-                fontSize: '14px',
-              }}
-            >
-              {(() => {
-                const name = user?.nombreCompleto || '';
-                return name.trim() ? name.trim().charAt(0).toUpperCase() : 'U';
-              })()}
-            </div>
+          <button
+            type="button"
+            onClick={() => navigate('/profile')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+            }}
+          >
+            <AvatarCirculo nombre={user?.nombreCompleto || 'Usuario'} foto={user?.fotoPerfil} size={32} />
             <span style={{ fontSize: '14px', fontWeight: '500', color: colores.textoOscuro }}>{user?.nombreCompleto || 'Usuario'}</span>
-          </div>
+          </button>
         </header>
 
-        <main style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px' }}>
-          <Outlet />
+        <main
+          className="app-content"
+          style={{ flex: 1, minWidth: 0, overflowY: 'auto', overflowX: 'hidden', padding: '20px' }}
+        >
+          <PageTransition>{outlet}</PageTransition>
         </main>
       </div>
+
+      <SpotlightTour active={tourActive} onClose={closeTour} onFinish={finishTour} />
+
+      {normalizedRole === 'estudiante' && (
+        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1500 }}>
+          {showHelpMenu && (
+            <div style={styles.helpMenu}>
+              <button type="button" style={styles.helpMenuItem} onClick={restartTour}>
+                <Compass size={16} /> Ver tour de la página otra vez
+              </button>
+              <button
+                type="button"
+                style={styles.helpMenuItem}
+                onClick={() => {
+                  setShowHelpMenu(false);
+                  setShowFaq(true);
+                }}
+              >
+                <HelpCircle size={16} /> Preguntas frecuentes
+              </button>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setShowHelpMenu((prev) => !prev)}
+            aria-label={showHelpMenu ? 'Cerrar ayuda' : 'Abrir ayuda'}
+            style={styles.helpFab}
+          >
+            {showHelpMenu ? <X size={22} /> : <HelpCircle size={22} />}
+          </button>
+        </div>
+      )}
+
+      <FaqModal open={showFaq} onClose={() => setShowFaq(false)} />
     </div>
   );
 }
@@ -417,6 +542,45 @@ const styles = {
     fontSize: '15px',
     fontWeight: '500',
     cursor: 'pointer',
+  },
+  helpFab: {
+    width: '52px',
+    height: '52px',
+    borderRadius: '999px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #008080, #0f9d9d)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    boxShadow: '0 14px 28px rgba(0, 128, 128, 0.32)',
+    marginLeft: 'auto',
+  },
+  helpMenu: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    padding: '8px',
+    marginBottom: '10px',
+    boxShadow: '0 20px 45px rgba(15, 23, 42, 0.22)',
+    minWidth: '240px',
+  },
+  helpMenuItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 12px',
+    border: 'none',
+    background: 'transparent',
+    borderRadius: '10px',
+    fontSize: '13.5px',
+    fontWeight: '600',
+    color: '#0f172a',
+    cursor: 'pointer',
+    textAlign: 'left',
   },
 };
 

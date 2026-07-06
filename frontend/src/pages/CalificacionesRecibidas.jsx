@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, ChevronRight, MessageSquareQuote, Star, UserRound } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronRight, MessageSquareText, Star, UserRound, UserStar } from 'lucide-react';
 import { useAuth } from '@context/AuthContext';
 import { obtenerPerfilUsuario, obtenerResenasRecibidas } from '../services/rentalsAndReviews.service.js';
+import AvatarCirculo from '@components/AvatarCirculo.jsx';
+import { encodePublicId } from '@helpers/publicId.helper.js';
 import '@styles/calificaciones.css';
 
 function renderStars(rating) {
@@ -27,10 +29,6 @@ function formatDate(value) {
     month: 'short',
     day: 'numeric',
   });
-}
-
-function getInitial(name) {
-  return (name || 'U').trim().charAt(0).toUpperCase();
 }
 
 export default function CalificacionesRecibidas() {
@@ -64,28 +62,27 @@ export default function CalificacionesRecibidas() {
 
   return (
     <div className="page">
+      <Link to="/profile" className="back-link">
+        <ArrowLeft size={16} strokeWidth={2.4} />
+        Volver a mi perfil
+      </Link>
       <section className="hero">
-        <div className="top-row">
-          <Link to="/profile" className="back-link">
-            <ArrowLeft size={16} strokeWidth={2.4} />
-            Volver a mi perfil
-          </Link>
-          
-          <article className="stat-card">
-            <p className="stat-label">Promedio de calificaciones</p>
-            <div className="rating-line">
-              {renderStars(avgRating)}
-              <strong className="stat-value">{avgRating.toFixed(1)}</strong>
-            </div>
-          </article>
-        </div>
-
         <div className="hero-content">
-          <div className="avatar">{getInitial(perfil?.nombreCompleto || user?.nombreCompleto)}</div>
+          <div className="hero-icon">
+            <UserStar size={28} strokeWidth={2} />
+          </div>
           <div>
             <h1 className="title">Calificaciones recibidas</h1>
           </div>
         </div>
+
+        <article className="stat-card">
+          <p className="stat-label">Promedio de calificaciones</p>
+          <div className="rating-line">
+            {renderStars(avgRating)}
+            <strong className="stat-value">{avgRating.toFixed(1)}</strong>
+          </div>
+        </article>
       </section>
 
       <section className="section">
@@ -98,7 +95,7 @@ export default function CalificacionesRecibidas() {
 
         {resenas.length === 0 ? (
           <div className="empty-state">
-            <MessageSquareQuote size={38} strokeWidth={1.9} />
+            <MessageSquareText size={38} strokeWidth={1.9} />
             <h3 className="empty-title">Aún no tienes calificaciones visibles</h3>
             <p className="empty-text">Cuando recibas una, aparecerán aquí con el detalle completo.</p>
           </div>
@@ -108,11 +105,11 @@ export default function CalificacionesRecibidas() {
               <article key={resena.id} className="card">
                 <div className="card-top">
                   <div className="author-block">
-                    <div className="author-avatar">{getInitial(resena.author?.nombreCompleto)}</div>
+                    <AvatarCirculo nombre={resena.author?.nombreCompleto} foto={resena.author?.fotoPerfil} size={46} />
                     <div>
                       <div className="author-line">
                         <UserRound size={14} strokeWidth={2.1} />
-                        <Link to={`/perfil/${resena.author?.id}`} className="author-link">
+                        <Link to={`/perfil/${encodePublicId(resena.author?.id)}`} className="author-link">
                           {resena.author?.nombreCompleto || 'Usuario anónimo'}
                         </Link>
                       </div>
@@ -126,12 +123,14 @@ export default function CalificacionesRecibidas() {
                   <div className="stars-wrap">{renderStars(resena.rating)}</div>
                 </div>
 
-                <div className="comment-box">
-                  <p className="comment-text">{resena.comment || 'Sin comentarios de texto.'}</p>
-                </div>
+                {resena.comment && (
+                  <div className="comment-box">
+                    <p className="comment-text">{resena.comment}</p>
+                  </div>
+                )}
 
                 <div className="card-footer">
-                  <Link to={`/perfil/${resena.author?.id}`} className="profile-link">
+                  <Link to={`/perfil/${encodePublicId(resena.author?.id)}`} className="profile-link">
                     Revisar perfil
                     <ChevronRight size={15} strokeWidth={2.4} />
                   </Link>

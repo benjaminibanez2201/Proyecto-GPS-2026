@@ -5,6 +5,7 @@ import {
   anularArriendo,
   confirmarArriendo,
   crearArriendo,
+  finalizarArriendoPorPublicacion,
   obtenerArriendo,
 } from "../controllers/rentals.controller.js";
 import {
@@ -27,5 +28,6 @@ router.delete("/:id", eliminarArriendo);
 //confirmacion del arriendo
 router.post("/:id/confirm", confirmarArriendo);
 router.post("/:id/cancel", anularArriendo);
+router.post("/publicacion/:publicacionId/finalizar", finalizarArriendoPorPublicacion);
 
 export default router;

@@ -6,6 +6,7 @@ import {
   confirmarArriendoServicio,
   crearArriendoServicio,
   eliminarArriendoServicio,
+  finalizarArriendoPorPublicacionServicio,
   listarArriendosServicio,
   obtenerArriendoPorIdServicio,
 } from "../services/rentals.service.js";
@@ -25,7 +26,24 @@ export async function obtenerArriendo(req, res) {
     const { id } = req.params;
     const [data, error] = await obtenerArriendoPorIdServicio(Number(id));
     if (error) return handleErrorClient(res, 404, error);
+
+    const userId = Number(req.user.id);
+    const esParticipante = userId === Number(data.arrendadorId) || userId === Number(data.estudianteId);
+    if (!esParticipante) return handleErrorClient(res, 403, "No autorizado para ver este arriendo");
+
     return handleSuccess(res, 200, "Arriendo obtenido", data);
+  } catch (error) {
+    return handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function finalizarArriendoPorPublicacion(req, res) {
+  try {
+    const { publicacionId } = req.params;
+    const arrendadorId = req.user.id;
+    const [data, error] = await finalizarArriendoPorPublicacionServicio(Number(publicacionId), arrendadorId);
+    if (error) return handleErrorClient(res, 400, error);
+    return handleSuccess(res, 200, "Arriendo finalizado", data);
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }

@@ -1,5 +1,6 @@
 .mensajes-page {
-  min-height: 100vh;
+  height: 100%;
+  min-height: 100%;
   background:
     radial-gradient(circle at top left, rgba(0, 128, 128, 0.18), transparent 35%),
     linear-gradient(180deg, #f8fbfb 0%, #eef6f5 100%);
@@ -8,9 +9,8 @@
 }
 
 .mensajes-shell {
-  width: min(1400px, 100%);
-  margin: 0 auto;
-  height: calc(100vh - 48px);
+  width: 100%;
+  height: 100%;
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 20px;
@@ -86,6 +86,7 @@
 .mensajes-icon-btn {
   width: 42px;
   height: 42px;
+  flex-shrink: 0;
   background: linear-gradient(135deg, #008080, #0f9d9d);
   color: #fff;
   box-shadow: 0 12px 24px rgba(0, 128, 128, 0.24);
@@ -258,17 +259,6 @@ transform: translateY(-2px);
   box-shadow: 0 18px 34px rgba(0, 128, 128, 0.1);
 }
 
-.mensajes-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(0, 128, 128, 0.16), rgba(15, 23, 42, 0.05));
-  color: #008080;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .mensajes-list-item__body {
   display: grid;
   gap: 6px;
@@ -320,6 +310,10 @@ transform: translateY(-2px);
   color: #64748b;
 }
 
+.mensajes-placeholder .mensajes-send-btn {
+  margin-top: 8px;
+}
+
 .mensajes-empty {
   background: rgba(248, 250, 252, 0.9);
   border: 1px dashed rgba(100, 116, 139, 0.2);
@@ -349,7 +343,7 @@ transform: translateY(-2px);
 }
 
 .mensajes-detail__card {
-  height: calc(100vh - 48px);
+  height: 100%;
   border-radius: 22px;
   padding: 24px;
   display: flex;
@@ -392,6 +386,7 @@ transform: translateY(-2px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 8px;
   padding-right: 6px;
 }
@@ -523,7 +518,7 @@ transform: translateY(-2px);
   .mensajes-shell {
     grid-template-columns: 1fr;
     height: auto;
-    min-height: calc(100vh - 48px);
+    min-height: 100%;
   }
 
   .mensajes-sidebar {

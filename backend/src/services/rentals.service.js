@@ -45,7 +45,7 @@ export async function crearArriendoServicio(body) {
       relations: { arrendador: true, estudiante: true },
     });
 
-    if (arriendoExistente) {
+    if (arriendoExistente && arriendoExistente.status !== "FINISHED") {
       if (arriendoExistente.status === "COMPLETED") {
         return [arriendoExistente, null];
       }
@@ -150,6 +150,7 @@ export async function obtenerArriendoPorIdServicio(id) {
       relations: {
         arrendador: true,
         estudiante: true,
+        publicacion: true,
       },
     });
 
@@ -158,6 +159,45 @@ export async function obtenerArriendoPorIdServicio(id) {
     return [arriendo, null];
   } catch (error) {
     console.error("Error obtenerArriendoPorIdServicio:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function finalizarArriendoPorPublicacionServicio(publicacionId, arrendadorId) {
+  try {
+    const repositorioArriendo = AppDataSource.getRepository(Rental);
+    const repositorioPublicacion = AppDataSource.getRepository(Publicacion);
+
+    const arriendo = await repositorioArriendo.findOne({
+      where: {
+        publicacionId: Number(publicacionId),
+        arrendadorId: Number(arrendadorId),
+        status: "COMPLETED",
+      },
+    });
+
+    if (!arriendo) return [null, "No hay un arriendo activo para esta publicación"];
+
+    await repositorioArriendo.update({ id: arriendo.id }, { status: "FINISHED", finishedAt: new Date() });
+    await repositorioPublicacion.update({ id: Number(publicacionId) }, { estado: "activa" });
+
+    const actualizado = await repositorioArriendo.findOne({ where: { id: arriendo.id } });
+
+    try {
+      await createNotificacionService({
+        userId: arriendo.estudianteId,
+        tipo: "RENTAL_FINISHED",
+        mensaje: "El arrendador marcó tu arriendo como finalizado",
+        targetType: "rental",
+        targetId: arriendo.id,
+      });
+    } catch (notifError) {
+      console.error("Error creando notificación de arriendo finalizado:", notifError);
+    }
+
+    return [actualizado, null];
+  } catch (error) {
+    console.error("Error finalizarArriendoPorPublicacionServicio:", error);
     return [null, "Error interno del servidor"];
   }
 }
@@ -329,7 +369,7 @@ export async function listarArriendosServicio(userId) {
       return {
         ...arriendo,
         miResena,
-        puedeCalificar: arriendo.status === "COMPLETED" && !miResena,
+        puedeCalificar: (arriendo.status === "COMPLETED" || arriendo.status === "FINISHED") && !miResena,
       };
     });
     
