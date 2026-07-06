@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle, Trash2, XCircle } from 'lucide-react';
+
+import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle, ShieldAlert, XCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
 import {
@@ -12,6 +13,7 @@ import {
 } from '@services/mensaje.service.js';
 import { createArriendo, listarArriendos } from '@services/rentalsAndReviews.service.js';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
+import ModalReportarUsuario from '@components/ModalReportarUsuario.jsx';
 import { connectSocket } from '@services/socket.service.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import '@styles/mensajes.css';
@@ -108,6 +110,7 @@ export default function Mensajes() {
   const [searchText, setSearchText] = useState('');
   const [rentalForConversation, setRentalForConversation] = useState(null);
   const [loadingRentalConfirmation, setLoadingRentalConfirmation] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const threadRef = useRef(null);
 
   const publicationTargetId = publicationIdParam || null;
@@ -530,16 +533,6 @@ export default function Mensajes() {
                       <span className="mensajes-list-item__date">{formatDate(conversation?.ultimaFechaMensaje || conversation?.updatedAt)}</span>
                     </div>
                   </button>
-
-                  <button
-                    type="button"
-                    className="mensajes-list-delete-btn"
-                    onClick={() => handleDeleteConversation(conversation)}
-                    title="Ocultar conversación"
-                    aria-label="Ocultar conversación"
-                  >
-                    <Trash2 size={14} />
-                  </button>
                 </div>
               );
             })}
@@ -636,6 +629,9 @@ export default function Mensajes() {
                     <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${selectedConversation?.publicacion?.publicId}`)}>
                       Ver publicación
                     </button>
+                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--danger" onClick={() => setReportModalOpen(true)}>
+                      <ShieldAlert size={16} /> Reportar usuario
+                    </button>
                     <button type="button" className="mensajes-icon-btn mensajes-icon-btn--danger" onClick={() => handleDeleteConversation(selectedConversation)}>
                       Ocultar chat
                     </button>
@@ -727,6 +723,13 @@ export default function Mensajes() {
           )}
         </main>
       </div>
+
+      <ModalReportarUsuario
+        conversacionId={selectedConversation?.id}
+        usuarioReportado={selectedOtherParticipant}
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+      />
     </div>
   );
 }

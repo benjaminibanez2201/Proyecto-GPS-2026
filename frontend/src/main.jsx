@@ -3,9 +3,11 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import Login from '@pages/Login';
 import ForgotPassword from '@pages/ForgotPassword';
 import ResetPassword from '@pages/ResetPassword';
+import ConfirmEmail from '@pages/ConfirmEmail';
 import Home from '@pages/Home';
 import AdminUsers from '@pages/AdminUsers';
 import Register from '@pages/Register';
+import RegisterPending from '@pages/RegisterPending';
 import Error404 from '@pages/Error404';
 import Root from '@pages/Root';
 import ProtectedRoute from '@components/ProtectedRoute';
@@ -26,6 +28,7 @@ import AdminAuditoria from '@pages/AdminAuditoria';
 import Mensajes from '@pages/Mensajes.jsx';
 import MisReportes from '@pages/MisReportes.jsx';
 import AdminReportes from '@pages/AdminReportes.jsx';
+import AdminReportesUsuarios from '@pages/AdminReportesUsuarios.jsx';
 
 const APP_NAME = 'ArriendU';
 
@@ -41,8 +44,10 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/home\/?$/, title: APP_NAME },
     { pattern: /^\/auth\/?$/, title: `Iniciar sesión - ${APP_NAME}` },
     { pattern: /^\/register\/?$/, title: `Crear una cuenta - ${APP_NAME}` },
+    { pattern: /^\/register\/pending\/?$/, title: `Registro pendiente - ${APP_NAME}` },
     { pattern: /^\/forgot-password\/?$/, title: `Recuperar contraseña - ${APP_NAME}` },
     { pattern: /^\/reset-password\/[^/]+\/?$/, title: `Restablecer contraseña - ${APP_NAME}` },
+    { pattern: /^\/auth\/confirm-email\/[^/]+\/?$/, title: `Registro confirmado - ${APP_NAME}` },
     
     // Perfiles y Usuarios
     { pattern: /^\/profile\/?$/, title: `Mi perfil - ${APP_NAME}` },
@@ -67,6 +72,7 @@ function getTitleFromPath(pathname) {
     // Administrador
     { pattern: /^\/admin\/?$/, title: `Panel administrador - ${APP_NAME}` },
     { pattern: /^\/admin\/reportes\/?$/, title: `Publicaciones reportadas - ${APP_NAME}` },
+    { pattern: /^\/admin\/reportes-usuarios\/?$/, title: `Usuarios reportados - ${APP_NAME}` },
     { pattern: /^\/admin\/users\/?$/, title: `Gestión de usuarios - ${APP_NAME}` }, 
   ];
 
@@ -107,6 +113,14 @@ const router = createBrowserRouter([
         element: (
         <ProtectedRoute allowedRoles={['admin', 'administrador']}>
           <AdminReportes />
+        </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admin/reportes-usuarios',
+        element: (
+        <ProtectedRoute allowedRoles={['admin', 'administrador']}>
+          <AdminReportesUsuarios />
         </ProtectedRoute>
         ),
       },
@@ -233,8 +247,16 @@ const router = createBrowserRouter([
     element: withPageTransition(<ResetPassword/>)
   },
   {
+    path: '/auth/confirm-email/:token',
+    element: withPageTransition(<ConfirmEmail/>)
+  },
+  {
     path: '/register',
     element: withPageTransition(<Register/>)
+  },
+  {
+    path: '/register/pending',
+    element: withPageTransition(<RegisterPending/>)
   }
 ])
 

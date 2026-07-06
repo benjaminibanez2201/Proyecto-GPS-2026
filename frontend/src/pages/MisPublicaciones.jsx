@@ -1097,7 +1097,7 @@ const MisPublicaciones = () => {
                     </button>
                   )}
 
-                  <button 
+                  <button
                     onClick={() => handleEliminar(pub.publicId)}
                     style={{ ...styles.iconBtnAction, color: '#dc2626', backgroundColor: '#fef2f2' } }
                     title="Eliminar"

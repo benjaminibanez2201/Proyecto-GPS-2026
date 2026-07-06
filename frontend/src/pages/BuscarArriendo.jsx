@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { usePublicaciones } from '../hooks/publicaciones/usePublicacion';
 import { useFavoritos } from '../hooks/favoritos/useFavoritos';
 import ComparadorPublicacionesModal from '../components/ComparadorPublicacionesModal';
@@ -144,27 +144,7 @@ export default function BuscarArriendos() {
     });
   };
 
-  useEffect(() => {
-    if (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al aplicar filtros',
-        text: error.message || 'Ocurrió un problema al aplicar los filtros. Se restablecerán los valores por defecto.',
-        confirmButtonColor: '#008080',
-      });
-      limpiarFiltros();
-    }
-  }, [error]);
-
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(COMPARACION_STORAGE_KEY, JSON.stringify(comparacion));
-    } catch {
-      // Si el navegador bloquea sessionStorage, la comparación sigue funcionando en memoria.
-    }
-  }, [comparacion]);
-
-  const limpiarFiltros = () => {
+  const limpiarFiltros = useCallback(() => {
     setFiltros({
       titulo: "",
       tipoInmueble: [],
@@ -176,7 +156,27 @@ export default function BuscarArriendos() {
     setMostrarMapa(false);
     setFiltrosAplicados({});
     cargarPublicaciones({});
-  };
+  }, [cargarPublicaciones]);
+
+  useEffect(() => {
+    if (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al aplicar filtros',
+        text: error.message || 'Ocurrió un problema al aplicar los filtros. Se restablecerán los valores por defecto.',
+        confirmButtonColor: '#008080',
+      });
+      limpiarFiltros();
+    }
+  }, [error, limpiarFiltros]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(COMPARACION_STORAGE_KEY, JSON.stringify(comparacion));
+    } catch {
+      // Si el navegador bloquea sessionStorage, la comparación sigue funcionando en memoria.
+    }
+  }, [comparacion]);
 
   const aplicarFiltros = async () => {
     if (filtros.precioMin && filtros.precioMax) {

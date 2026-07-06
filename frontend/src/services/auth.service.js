@@ -156,3 +156,16 @@ export async function resetPassword(token, newPassword) {
         };
     }
 }
+
+export async function confirmEmail(token) {
+    try {
+        const response = await axios.get(`/auth/confirm-email/${encodeURIComponent(token)}`);
+        return response.data;
+    } catch (error) {
+        return error.response?.data || {
+            status: 'Server error',
+            message: 'Error al conectar con el servidor',
+            details: null,
+        };
+    }
+}
