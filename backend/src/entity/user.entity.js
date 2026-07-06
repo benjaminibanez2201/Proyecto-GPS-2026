@@ -10,6 +10,12 @@ const UserSchema = new EntitySchema({
       primary: true,
       generated: true,
     },
+    uuid: {
+      type: "uuid",
+      generated: "uuid",
+      unique: true,
+      nullable: false,
+    },
     nombreCompleto: {
       type: "varchar",
       length: 255,

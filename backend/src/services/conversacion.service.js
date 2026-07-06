@@ -10,7 +10,7 @@ export async function buscarConversacionPorPublicacionYEstudiante(id_publicacion
 
     const conversacion = await repositorioConversacion.findOne({
       where: {
-        publicacion: { id: id_publicacion },
+        publicacion: { uuid: id_publicacion },
         estudiante: { id: id_estudiante },
       },
       relations: ["publicacion", "estudiante", "arrendador"],
@@ -31,7 +31,7 @@ export async function crearConversacion(id_publicacion, id_estudiante) {
       const repositorioConversacion = manager.getRepository(Conversacion);
 
       const publicacion = await repositorioPublicacion.findOne({
-        where: { id: id_publicacion },
+        where: { uuid: id_publicacion },
         relations: ["arrendador"],
       });
 
@@ -51,7 +51,7 @@ export async function crearConversacion(id_publicacion, id_estudiante) {
       });
 
       const conversacionCreada = await repositorioConversacion.save(nuevaConversacion);
-      await repositorioPublicacion.increment({ id: id_publicacion }, "contadorConversaciones", 1);
+      await repositorioPublicacion.increment({ uuid: id_publicacion }, "contadorConversaciones", 1);
 
       return [conversacionCreada, null];
     });
@@ -91,12 +91,12 @@ export async function obtenerConversacionesDeUsuario(usuario) {
   }
 }
 
-export async function obtenerConversacionPorId(conversacionId) {
+export async function obtenerConversacionPorId(conversacionUuid) {
   try {
     const repositorioConversacion = AppDataSource.getRepository(Conversacion);
 
     const conversacion = await repositorioConversacion.findOne({
-      where: { id: conversacionId },
+      where: { uuid: conversacionUuid },
       relations: ["publicacion", "estudiante", "arrendador"],
     });
 

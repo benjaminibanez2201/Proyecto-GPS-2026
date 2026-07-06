@@ -8,9 +8,9 @@ import {
   updatePublicacionService 
 } from "../services/publicacion.service.js";
 import { incrementarVisualizacionesPublicacionServicio } from "../services/publicacion.estadisticas.service.js";
-import { 
+import { obtenerCoordenadasArriendo } from "../helpers/geocoding.helper.js";
+import {
   publicacionBodyValidation,
-  publicacionIdValidation,
   publicacionQueryValidation,
   publicacionUpdateValidation
 } from "../validations/publicacion.validation.js";
@@ -19,6 +19,23 @@ import {
   handleErrorServer,
   handleSuccess,
 } from "../handlers/responseHandlers.js";
+import { isValidPublicId } from "../helpers/publicId.helper.js";
+
+function agregarPublicId(publicacion) {
+  if (!publicacion) return publicacion;
+  const resultado = { ...publicacion, publicId: publicacion.uuid };
+
+  if (publicacion.arrendador) {
+    resultado.arrendador = { ...publicacion.arrendador, publicId: publicacion.arrendador.uuid };
+  }
+
+  return resultado;
+}
+
+function agregarPublicIdALista(publicaciones) {
+  if (!Array.isArray(publicaciones)) return publicaciones;
+  return publicaciones.map(agregarPublicId);
+}
 
 function normalizePublicacionBody(body = {}) {
   const normalized = { ...body };
@@ -97,7 +114,7 @@ export async function createPublicacion(req, res) {
 
     if (publicacionError) return handleErrorClient(res, 400, "Error creando publicación", publicacionError);
 
-    handleSuccess(res, 201, "Publicación creada correctamente", publicacion);
+    handleSuccess(res, 201, "Publicación creada correctamente", agregarPublicId(publicacion));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -122,7 +139,10 @@ export async function getPublicaciones(req, res) {
       return handleErrorClient(res, 400, "Error al buscar publicaciones", error);
     }
 
-    handleSuccess(res, 200, "Búsqueda realizada con éxito", publicaciones);
+    handleSuccess(res, 200, "Búsqueda realizada con éxito", {
+      ...publicaciones,
+      data: agregarPublicIdALista(publicaciones.data),
+    });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -139,7 +159,7 @@ export async function getPublicacionesPropias(req, res) {
     const [publicaciones, error] = await obtenerPublicacionesArrendadorService(id);
     if (error) return handleErrorClient(res, 400, "Error al obtener publicaciones", error);
 
-    handleSuccess(res, 200, "Publicaciones obtenidas correctamente", publicaciones);
+    handleSuccess(res, 200, "Publicaciones obtenidas correctamente", agregarPublicIdALista(publicaciones));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -147,24 +167,34 @@ export async function getPublicacionesPropias(req, res) {
 
 export async function getPublicacionById(req, res) {
   try {
-    const { id: publicacionId } = req.params;
-    const { rol } = req.user;
+    const { id: publicacionUuid } = req.params;
 
-    const { error: paramError, value: paramsValidados } = publicacionIdValidation.validate(req.params);
-    if (paramError) {
-      return handleErrorClient(res, 400, "ID inválido", paramError.message);
+    if (!isValidPublicId(publicacionUuid)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la publicación no es válido");
     }
 
-    const [publicacion, error] = await getPublicacionDetalleService(paramsValidados.id);
+    const [publicacion, error] = await getPublicacionDetalleService(publicacionUuid);
     if (error) {
-      return handleErrorClient(res, 404, "Publicación no encontrada", error);
+      return handleErrorClient(res, 404, error, "Publicación no encontrada");
+    }
+
+    const esPropietario = publicacion?.arrendador?.id && Number(publicacion.arrendador.id) === Number(req.user.id);
+    const esAdmin = req.user?.rol === "admin";
+
+    if (publicacion.estado === "inactiva" && !esPropietario && !esAdmin) {
+      return handleErrorClient(
+        res,
+        404,
+        "Esta publicación fue dada de baja de la plataforma por incumplir las normas.",
+        "Publicación inactiva",
+      );
     }
 
     if (publicacion?.arrendador?.id && Number(publicacion.arrendador.id) !== Number(req.user.id)) {
-      await incrementarVisualizacionesPublicacionServicio(paramsValidados.id);
+      await incrementarVisualizacionesPublicacionServicio(publicacion.id);
     }
 
-    handleSuccess(res, 200, "Detalle de la publicación obtenido", publicacion);
+    handleSuccess(res, 200, "Detalle de la publicación obtenido", agregarPublicId(publicacion));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -180,20 +210,18 @@ export async function updatePublicacion(req, res) {
       return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden editar publicaciones");
     }
 
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la publicación no es válido");
+    }
+
     const normalizedBody = normalizePublicacionBody(body);
     const { error: bodyError } = publicacionUpdateValidation.validate(normalizedBody);
     if (bodyError) return handleErrorClient(res, 400, "Error de validación", bodyError.message);
 
-    console.log("BODY NORMALIZADO");
-    console.log(normalizedBody);
-      
-    console.log("FILES");
-    console.log(files);
-
     const [publicacion, error] = await updatePublicacionService(publicacionId, arrendadorId, normalizedBody, files);
-    if (error) return handleErrorClient(res, 400, "Error al editar publicación", error);
+    if (error) return handleErrorClient(res, 400, error, "Error al editar publicación");
 
-    handleSuccess(res, 200, "Publicación actualizada correctamente", publicacion);
+    handleSuccess(res, 200, "Publicación actualizada correctamente", agregarPublicId(publicacion));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -208,6 +236,10 @@ export async function deletePublicacion(req, res) {
       return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden eliminar publicaciones");
     }
 
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la publicación no es válido");
+    }
+
     const [deleted, error] = await deletePublicacionService(publicacionId, arrendadorId);
     if (error) return handleErrorClient(res, 400, "Error al eliminar publicación", error);
 
@@ -217,52 +249,21 @@ export async function deletePublicacion(req, res) {
   }
 }
 
-export async function getFavoritos(req, res) {
+export async function geocodificarUbicacion(req, res) {
   try {
-    const { id: usuarioId } = req.user;
+    const { rol } = req.user;
+    const { ubicacion, comuna } = req.query;
 
-    const [favoritos, error] = await getFavoritosUsuarioService(usuarioId);
-    if (error) return handleErrorClient(res, 400, "Error al obtener favoritos", error);
-
-    handleSuccess(res, 200, "Favoritos obtenidos correctamente", favoritos);
-  } catch (error) {
-    handleErrorServer(res, 500, error.message);
-  }
-}
-
-export async function addFavorito(req, res) {
-  try {
-    const { id } = req.params;
-    const publicacionId = Number(id);
-    const { id: usuarioId } = req.user;
-
-    if (!Number.isInteger(publicacionId)) {
-      return handleErrorClient(res, 400, "ID de publicación inválido");
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden geocodificar direcciones");
     }
 
-    const [favorito, error] = await addFavoritoService(publicacionId, usuarioId);
-    if (error) return handleErrorClient(res, 400, "Error al guardar favorito", error);
-
-    handleSuccess(res, 201, "Publicación agregada a favoritos", favorito);
-  } catch (error) {
-    handleErrorServer(res, 500, error.message);
-  }
-}
-
-export async function removeFavorito(req, res) {
-  try {
-    const { id } = req.params;
-    const publicacionId = Number(id);
-    const { id: usuarioId } = req.user;
-
-    if (!Number.isInteger(publicacionId)) {
-      return handleErrorClient(res, 400, "ID de publicación inválido");
+    if (!ubicacion || String(ubicacion).trim().length < 5) {
+      return handleErrorClient(res, 400, "Error de validación", "La ubicación debe tener al menos 5 caracteres");
     }
 
-    const [eliminado, error] = await removeFavoritoService(publicacionId, usuarioId);
-    if (error) return handleErrorClient(res, 400, "Error al eliminar favorito", error);
-
-    handleSuccess(res, 200, "Publicación eliminada de favoritos", eliminado);
+    const coordenadas = await obtenerCoordenadasArriendo(ubicacion, comuna);
+    handleSuccess(res, 200, "Coordenadas obtenidas", coordenadas);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

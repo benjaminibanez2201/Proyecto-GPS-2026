@@ -98,6 +98,7 @@ export async function getUserService(query) {
       where: [{ id: id }, { rut: rut }, { email: email }],
       select: {
         id: true,
+        uuid: true,
         nombreCompleto: true,
         rut: true,
         email: true,
@@ -405,6 +406,16 @@ export async function updateProfileService(id, body) {
 
     if (!userFound) return [null, "Usuario no encontrado"];
 
+    if ((body.email && body.email !== userFound.email) || body.newPassword) {
+      if (!body.passwordActual) {
+        return [null, "Se requiere la contraseña actual para cambiar las credenciales"];
+      }
+      const isMatch = await comparePassword(body.passwordActual, userFound.password);
+      if (!isMatch) return [null, "Contraseña incorrecta"];
+    }
+
+    delete body.passwordActual;
+
     if (body.email && body.email !== userFound.email) {
       const existingEmail = await userRepository.findOne({ where: { email: body.email } });
       if (existingEmail && existingEmail.id !== userFound.id) {
@@ -476,6 +487,24 @@ export async function getProfileService(id) {
     return [userData, null];
   } catch (error) {
     console.error("Error al obtener perfil:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
+export async function getPublicProfileService(uuid) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({
+      where: { uuid },
+      select: ["id", "uuid", "nombreCompleto", "fotoPerfil", "rol", "avgRating", "reviewsCount"],
+    });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+
+    return [userFound, null];
+  } catch (error) {
+    console.error("Error al obtener perfil público:", error);
     return [null, "Error interno del servidor"];
   }
 }

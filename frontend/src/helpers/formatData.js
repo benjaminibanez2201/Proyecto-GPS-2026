@@ -13,7 +13,9 @@ export function formatUserData(user) {
             ? formatTempo(user.verificacionRevisadaEn, "DD-MM-YYYY HH:mm")
             : user.verificacionRevisadaEn,
         createdAtRaw: user.createdAt,
-        createdAt: formatTempo(user.createdAt, "DD-MM-YYYY")
+        createdAt: formatTempo(user.createdAt, "DD-MM-YYYY"),
+        updatedAtRaw: user.updatedAt,
+        updatedAt: user.updatedAt ? formatTempo(user.updatedAt, "DD-MM-YYYY HH:mm") : user.updatedAt,
     };
 }
 
@@ -38,6 +40,8 @@ export function formatPostUpdate(user) {
             ? formatTempo(user.verificacionRevisadaEn, "DD-MM-YYYY HH:mm")
             : user.verificacionRevisadaEn,
         createdAtRaw: user.createdAt,
-        createdAt: formatTempo(user.createdAt, "DD-MM-YYYY")
+        createdAt: formatTempo(user.createdAt, "DD-MM-YYYY"),
+        updatedAtRaw: user.updatedAt,
+        updatedAt: user.updatedAt ? formatTempo(user.updatedAt, "DD-MM-YYYY HH:mm") : user.updatedAt,
     };
 }

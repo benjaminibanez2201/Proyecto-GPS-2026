@@ -36,7 +36,7 @@ const buildRentalItems = (arriendos) => arriendos
   .map((item) => {
     const completed = normalizeText(item.status) === 'completed';
     return {
-      title: `Arriendo #${item.id}`,
+      title: item.publicacion?.titulo || 'Arriendo sin título',
       detail: completed
         ? `Concretado el ${formatDate(item.completedAt || item.updatedAt || item.createdAt)}`
         : 'Pendiente de confirmacion desde el historial',
@@ -400,13 +400,15 @@ function PanelInicio() {
         <PanelCard title={config.secondary.title} subtitle={config.secondary.subtitle} accent={config.accent} items={config.secondary.items} icon={MessageSquareMore} />
         <PanelCard title={config.tertiary.title} subtitle={config.tertiary.subtitle} accent={config.accent} items={config.tertiary.items} icon={TrendingUp} />
 
-        <aside style={{ ...styles.noteCard, borderColor: `${config.accent}33` }}>
-          <div style={styles.noteIcon}><Clock3 size={20} strokeWidth={2.1} /></div>
-          <p style={styles.noteText}>{config.note}</p>
-          <Link to={config.noteLink || '/historial'} style={{ ...styles.noteLink, color: config.accent }}>
-            {config.noteLinkText || 'Ver historial'}
-          </Link>
-        </aside>
+        {userRole !== 'estudiante' && (
+          <aside style={{ ...styles.noteCard, borderColor: `${config.accent}33` }}>
+            <div style={styles.noteIcon}><Clock3 size={20} strokeWidth={2.1} /></div>
+            <p style={styles.noteText}>{config.note}</p>
+            <Link to={config.noteLink || '/historial'} style={{ ...styles.noteLink, color: config.accent }}>
+              {config.noteLinkText || 'Ver historial'}
+            </Link>
+          </aside>
+        )}
       </section>
     </div>
   );

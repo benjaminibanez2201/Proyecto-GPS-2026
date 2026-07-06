@@ -4,13 +4,13 @@ import {
   obtenerEstadisticasPublicacionRepositorio,
 } from "../repositories/publicacion.estadisticas.repository.js";
 
-export async function obtenerEstadisticasPublicacionServicio(id_publicacion, usuarioAutenticado) {
+export async function obtenerEstadisticasPublicacionServicio(publicacionUuid, usuarioAutenticado) {
   try {
     if (!usuarioAutenticado || usuarioAutenticado.rol !== "arrendador") {
       return [null, "Solo un arrendador puede consultar estas estadísticas"];
     }
 
-    const [estadisticas, errorEstadisticas] = await obtenerEstadisticasPublicacionRepositorio(id_publicacion);
+    const [estadisticas, errorEstadisticas] = await obtenerEstadisticasPublicacionRepositorio(publicacionUuid);
     if (errorEstadisticas) return [null, errorEstadisticas];
     if (!estadisticas) return [null, "Publicación no encontrada"];
 
@@ -21,6 +21,7 @@ export async function obtenerEstadisticasPublicacionServicio(id_publicacion, usu
     return [
       {
         id_publicacion: Number(estadisticas.id_publicacion),
+        publicId: estadisticas.uuid,
         titulo: estadisticas.titulo,
         contador_views: Number(estadisticas.contador_views || 0),
         contador_favoritos: Number(estadisticas.contador_favoritos || 0),

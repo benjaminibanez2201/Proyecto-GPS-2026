@@ -16,19 +16,39 @@ import {
   handleErrorServer,
   handleSuccess,
 } from "../handlers/responseHandlers.js";
+import { isValidPublicId } from "../helpers/publicId.helper.js";
+
+function agregarPublicIdConversacion(conversacion) {
+  if (!conversacion) return conversacion;
+
+  const resultado = { ...conversacion, publicId: conversacion.uuid };
+
+  if (conversacion.publicacion) {
+    resultado.publicacion = { ...conversacion.publicacion, publicId: conversacion.publicacion.uuid };
+  }
+
+  if (conversacion.estudiante) {
+    resultado.estudiante = { ...conversacion.estudiante, publicId: conversacion.estudiante.uuid };
+  }
+
+  if (conversacion.arrendador) {
+    resultado.arrendador = { ...conversacion.arrendador, publicId: conversacion.arrendador.uuid };
+  }
+
+  return resultado;
+}
 
 export async function contactarPublicacion(req, res) {
   try {
     const { id_publicacion, contenido } = req.body;
-    const publicacionId = id_publicacion;
     const remitenteId = req.user.id;
 
-    if (!publicacionId || !contenido) {
+    if (!isValidPublicId(id_publicacion) || !contenido) {
       return handleErrorClient(res, 400, "Faltan parámetros");
     }
 
     const [mensaje, errorMensaje] = await enviarMensaje({
-      id_publicacion: Number(publicacionId),
+      id_publicacion,
       remitenteId,
       contenido,
     });
@@ -37,7 +57,11 @@ export async function contactarPublicacion(req, res) {
       return handleErrorClient(res, 400, "No se pudo enviar el mensaje", errorMensaje);
     }
 
-    handleSuccess(res, 201, "Mensaje enviado", mensaje);
+    const mensajeConPublicId = mensaje?.conversacion
+      ? { ...mensaje, conversacion: agregarPublicIdConversacion(mensaje.conversacion) }
+      : mensaje;
+
+    handleSuccess(res, 201, "Mensaje enviado", mensajeConPublicId);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -54,7 +78,7 @@ export async function listarConversaciones(req, res) {
       return handleErrorServer(res, 500, errorConversaciones);
     }
 
-    handleSuccess(res, 200, "Conversaciones encontradas", conversaciones);
+    handleSuccess(res, 200, "Conversaciones encontradas", conversaciones.map(agregarPublicIdConversacion));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -62,10 +86,14 @@ export async function listarConversaciones(req, res) {
 
 export async function obtenerDetalleConversacion(req, res) {
   try {
-    const { id } = req.params;
+    const { id: conversacionUuid } = req.params;
     const usuarioId = req.user.id;
 
-    const [conversacion, errorConversacion] = await obtenerConversacionPorId(Number(id));
+    if (!isValidPublicId(conversacionUuid)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la conversación no es válido");
+    }
+
+    const [conversacion, errorConversacion] = await obtenerConversacionPorId(conversacionUuid);
     if (errorConversacion) return handleErrorClient(res, 404, errorConversacion);
 
     if (
@@ -75,14 +103,19 @@ export async function obtenerDetalleConversacion(req, res) {
       return handleErrorClient(res, 403, "No autorizado para ver esta conversación");
     }
 
-    const [mensajes, errorMensajes] = await obtenerMensajesPorConversacion(Number(id));
+    const id = conversacion.id;
+
+    const [mensajes, errorMensajes] = await obtenerMensajesPorConversacion(id);
     if (errorMensajes) return handleErrorServer(res, 500, errorMensajes);
 
-    await marcarMensajesLeidos(Number(id), usuarioId);
-    await marcarConversacionLeidaParaUsuario(Number(id), usuarioId);
-    await marcarNotificacionesPorTargetLeidasService(usuarioId, "conversation", Number(id));
+    await marcarMensajesLeidos(id, usuarioId);
+    await marcarConversacionLeidaParaUsuario(id, usuarioId);
+    await marcarNotificacionesPorTargetLeidasService(usuarioId, "conversation", id);
 
-    handleSuccess(res, 200, "Detalle de conversación", { conversacion, mensajes });
+    handleSuccess(res, 200, "Detalle de conversación", {
+      conversacion: agregarPublicIdConversacion(conversacion),
+      mensajes,
+    });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -90,15 +123,19 @@ export async function obtenerDetalleConversacion(req, res) {
 
 export async function responderConversacion(req, res) {
   try {
-    const { id } = req.params;
+    const { id: conversacionUuid } = req.params;
     const { contenido } = req.body;
     const remitenteId = req.user.id;
+
+    if (!isValidPublicId(conversacionUuid)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la conversación no es válido");
+    }
 
     if (!contenido) {
       return handleErrorClient(res, 400, "Falta el contenido del mensaje");
     }
 
-    const [conversacion, errorConversacion] = await obtenerConversacionPorId(Number(id));
+    const [conversacion, errorConversacion] = await obtenerConversacionPorId(conversacionUuid);
     if (errorConversacion) return handleErrorClient(res, 404, errorConversacion);
 
     if (
@@ -109,14 +146,18 @@ export async function responderConversacion(req, res) {
     }
 
     const [mensaje, errorMensaje] = await enviarMensaje({
-      conversacionId: Number(id),
+      conversacionId: conversacion.id,
       remitenteId,
       contenido,
     });
 
     if (errorMensaje) return handleErrorServer(res, 500, errorMensaje);
 
-    handleSuccess(res, 201, "Mensaje enviado", mensaje);
+    const mensajeConPublicId = mensaje?.conversacion
+      ? { ...mensaje, conversacion: agregarPublicIdConversacion(mensaje.conversacion) }
+      : mensaje;
+
+    handleSuccess(res, 201, "Mensaje enviado", mensajeConPublicId);
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -124,14 +165,23 @@ export async function responderConversacion(req, res) {
 
 export async function marcarComoLeido(req, res) {
   try {
-    const { id } = req.params;
+    const { id: conversacionUuid } = req.params;
     const usuarioId = req.user.id;
 
-    const [resultado, errorResultado] = await marcarMensajesLeidos(Number(id), usuarioId);
+    if (!isValidPublicId(conversacionUuid)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la conversación no es válido");
+    }
+
+    const [conversacion, errorConversacion] = await obtenerConversacionPorId(conversacionUuid);
+    if (errorConversacion) return handleErrorClient(res, 404, errorConversacion);
+
+    const id = conversacion.id;
+
+    const [resultado, errorResultado] = await marcarMensajesLeidos(id, usuarioId);
     if (errorResultado) return handleErrorServer(res, 500, errorResultado);
 
-    await marcarConversacionLeidaParaUsuario(Number(id), usuarioId);
-    await marcarNotificacionesPorTargetLeidasService(usuarioId, "conversation", Number(id));
+    await marcarConversacionLeidaParaUsuario(id, usuarioId);
+    await marcarNotificacionesPorTargetLeidasService(usuarioId, "conversation", id);
 
     handleSuccess(res, 200, "Mensajes marcados como leídos", resultado);
   } catch (error) {
@@ -141,10 +191,17 @@ export async function marcarComoLeido(req, res) {
 
 export async function eliminarConversacion(req, res) {
   try {
-    const { id } = req.params;
+    const { id: conversacionUuid } = req.params;
     const usuarioId = req.user.id;
 
-    const [resultado, errorResultado] = await eliminarConversacionPorUsuario(Number(id), usuarioId);
+    if (!isValidPublicId(conversacionUuid)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador de la conversación no es válido");
+    }
+
+    const [conversacion, errorConversacion] = await obtenerConversacionPorId(conversacionUuid);
+    if (errorConversacion) return handleErrorClient(res, 404, errorConversacion);
+
+    const [resultado, errorResultado] = await eliminarConversacionPorUsuario(conversacion.id, usuarioId);
     if (errorResultado === "Conversación no encontrada") {
       return handleErrorClient(res, 404, errorResultado);
     }
