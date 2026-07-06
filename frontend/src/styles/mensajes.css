@@ -135,7 +135,7 @@ transform: translateY(-2px);
   box-shadow: 0 14px 28px rgba(220, 38, 38, 0.26);
 }
 
-.mensajes-detail__header-actions .mensajes-icon-btn:not(.mensajes-icon-btn--secondary) {
+.mensajes-detail__header-actions .mensajes-icon-btn:not(.mensajes-icon-btn--secondary):not(.mensajes-icon-btn--danger) {
   display: none !important;
 }
 
