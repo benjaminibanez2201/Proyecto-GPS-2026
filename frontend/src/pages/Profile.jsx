@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -31,10 +31,6 @@ const Profile = () => {
 
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  useEffect(() => {
     trigger('confirmEmail');
   }, [emailValue, trigger]);
 
@@ -52,7 +48,7 @@ const Profile = () => {
     };
   }, [fotoSeleccionada]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     const data = await getProfile();
     if (data) {
       setProfileData(data);
@@ -71,7 +67,11 @@ const Profile = () => {
         }
       }
     }
-  };
+  }, [setValue]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const onSubmit = async (data) => {
     const filteredData = Object.fromEntries(

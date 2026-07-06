@@ -160,7 +160,7 @@ const AdminUsers = () => {
             formatter: () => '<button type="button" class="table-view-button">Ver</button>',
             cellClick: (e, cell) => handleViewUser(cell.getRow().getData()),
         },
-    ]), [handleToggleStatus, handleViewUser]);
+    ]), [handleViewUser]);
 
     const colores = {
         principal: '#008080',
