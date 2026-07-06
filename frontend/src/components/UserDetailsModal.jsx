@@ -862,9 +862,9 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                     </button>
 
                     <div style={{ padding: '0' }}>
-                        <section style={{ background: 'linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%)', color: '#ffffff', padding: '28px 32px 26px', borderTopLeftRadius: '22px', borderTopRightRadius: '22px' }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
-                                <div style={{ maxWidth: 'calc(100% - 90px)' }}>
+                        <section style={{ background: 'linear-gradient(135deg, #008080 0%, #0b6b7a 45%, #163d4f 100%)', color: '#ffffff', padding: '28px 76px 26px 32px', borderTopLeftRadius: '22px', borderTopRightRadius: '22px' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '18px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: '1 1 360px', minWidth: 0 }}>
                                     <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', opacity: 0.9 }}>
                                         Vista detallada
                                     </p>
@@ -876,7 +876,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                     </p>
                                 </div>
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '0 0 auto', minWidth: 0 }}>
                                     <div
                                         style={{
                                             width: '56px',
@@ -890,6 +890,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                             fontWeight: 800,
                                             fontSize: '18px',
                                             border: '1px solid rgba(255,255,255,0.16)',
+                                            flexShrink: 0,
                                         }}
                                     >
                                         {initials || 'U'}
@@ -899,6 +900,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                         style={{
                                             display: 'inline-flex',
                                             alignItems: 'center',
+                                            justifyContent: 'center',
                                             padding: '6px 12px',
                                             borderRadius: '999px',
                                             backgroundColor: 'rgba(255,255,255,0.14)',
@@ -907,6 +909,7 @@ export default function UserDetailsModal({ show, setShow, user, onVerificationAc
                                             fontSize: '12px',
                                             textTransform: 'capitalize',
                                             border: '1px solid rgba(255,255,255,0.16)',
+                                            whiteSpace: 'nowrap',
                                         }}
                                     >
                                         {formatValue(user?.estadoVerificacion)}

@@ -2,6 +2,7 @@
 import {
   deleteUserService,
   getProfileService,
+  getPublicProfileService,
   getUserService,
   getUsersService,
   updateProfileService,
@@ -23,6 +24,12 @@ import {
   handleSuccess,
 } from "../handlers/responseHandlers.js";
 import { commitProfilePhotoUpload } from "../helpers/upload.helper.js";
+import { isValidPublicId } from "../helpers/publicId.helper.js";
+
+function agregarPublicId(user) {
+  if (!user) return user;
+  return { ...user, publicId: user.uuid };
+}
 
 export async function getUser(req, res) {
   try {
@@ -36,7 +43,7 @@ export async function getUser(req, res) {
 
     if (errorUser) return handleErrorClient(res, 404, errorUser);
 
-    handleSuccess(res, 200, "Usuario encontrado", user);
+    handleSuccess(res, 200, "Usuario encontrado", agregarPublicId(user));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -50,7 +57,7 @@ export async function getUsers(req, res) {
 
     users.length === 0
       ? handleSuccess(res, 204)
-      : handleSuccess(res, 200, "Usuarios encontrados", users);
+      : handleSuccess(res, 200, "Usuarios encontrados", users.map(agregarPublicId));
   } catch (error) {
     handleErrorServer(
       res,
@@ -94,7 +101,7 @@ export async function updateUser(req, res) {
 
     if (userError) return handleErrorClient(res, 400, "Error modificando al usuario", userError);
 
-    handleSuccess(res, 200, "Usuario modificado correctamente", user);
+    handleSuccess(res, 200, "Usuario modificado correctamente", agregarPublicId(user));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -140,7 +147,7 @@ export async function updateUserVerificationStatus(req, res) {
 
     if (userError) return handleErrorClient(res, 400, "Error modificando estado del usuario", userError);
 
-    handleSuccess(res, 200, "Estado de verificacion actualizado correctamente", user);
+    handleSuccess(res, 200, "Estado de verificacion actualizado correctamente", agregarPublicId(user));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -173,7 +180,7 @@ export async function deleteUser(req, res) {
 
     if (errorUserDelete) return handleErrorClient(res, 404, "Error eliminado al usuario", errorUserDelete);
 
-    handleSuccess(res, 200, "Usuario eliminado correctamente", userDelete);
+    handleSuccess(res, 200, "Usuario eliminado correctamente", agregarPublicId(userDelete));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -203,7 +210,7 @@ export async function updateProfile(req, res) {
 
     if (userError) return handleErrorClient(res, 400, "Error actualizando perfil", userError);
 
-    handleSuccess(res, 200, "Perfil actualizado correctamente", user);
+    handleSuccess(res, 200, "Perfil actualizado correctamente", agregarPublicId(user));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -243,7 +250,7 @@ export async function getProfile(req, res) {
 
     if (userError) return handleErrorClient(res, 404, "Error obteniendo perfil", userError);
 
-    handleSuccess(res, 200, "Perfil obtenido correctamente", user);
+    handleSuccess(res, 200, "Perfil obtenido correctamente", agregarPublicId(user));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -251,13 +258,17 @@ export async function getProfile(req, res) {
 
 export async function getProfileById(req, res) {
   try {
-    const { id } = req.params;
+    const { id: usuarioUuid } = req.params;
 
-    const [user, userError] = await getProfileService(Number(id));
+    if (!isValidPublicId(usuarioUuid)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador del perfil no es válido");
+    }
+
+    const [user, userError] = await getPublicProfileService(usuarioUuid);
 
     if (userError) return handleErrorClient(res, 404, "Error obteniendo perfil", userError);
 
-    handleSuccess(res, 200, "Perfil obtenido correctamente", user);
+    handleSuccess(res, 200, "Perfil obtenido correctamente", agregarPublicId(user));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -291,7 +302,7 @@ export async function updateArrendadorProfile(req, res) {
 
     if (userError) return handleErrorClient(res, 400, "Error actualizando perfil", userError);
 
-    handleSuccess(res, 200, "Perfil actualizado correctamente", user);
+    handleSuccess(res, 200, "Perfil actualizado correctamente", agregarPublicId(user));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }
@@ -361,7 +372,7 @@ export async function toggleUserStatus(req, res) {
       ? "Cuenta de usuario suspendida correctamente"
       : "Cuenta de usuario reactivada correctamente";
 
-    handleSuccess(res, 200, mensaje, user);
+    handleSuccess(res, 200, mensaje, agregarPublicId(user));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

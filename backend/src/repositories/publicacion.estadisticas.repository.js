@@ -8,7 +8,7 @@ const CONTADOR_PERMITIDO = {
   contadorConversaciones: "contadorConversaciones",
 };
 
-export async function obtenerEstadisticasPublicacionRepositorio(id_publicacion) {
+export async function obtenerEstadisticasPublicacionRepositorio(publicacionUuid) {
   try {
     const repositorioPublicacion = AppDataSource.getRepository(Publicacion);
 
@@ -16,6 +16,7 @@ export async function obtenerEstadisticasPublicacionRepositorio(id_publicacion) 
       .createQueryBuilder("publicacion")
       .leftJoin("publicacion.arrendador", "arrendador")
       .select("publicacion.id", "id_publicacion")
+      .addSelect("publicacion.uuid", "uuid")
       .addSelect("publicacion.titulo", "titulo")
       .addSelect("publicacion.contadorViews", "contador_views")
       .addSelect("publicacion.contadorFavoritos", "contador_favoritos")
@@ -23,7 +24,7 @@ export async function obtenerEstadisticasPublicacionRepositorio(id_publicacion) 
       .addSelect("publicacion.createdAt", "createdAt")
       .addSelect("publicacion.estado", "estado")
       .addSelect("arrendador.id", "arrendador_id")
-      .where("publicacion.id = :id_publicacion", { id_publicacion })
+      .where("publicacion.uuid = :uuid", { uuid: publicacionUuid })
       .getRawOne();
 
     return [estadisticas, null];

@@ -5,7 +5,7 @@ import '@styles/faqModal.css';
 const FAQS = [
   {
     question: '¿Cómo busco un arriendo?',
-    answer: 'Ve a "Buscar Arriendos" en el menú lateral. Puedes filtrar por tipo de inmueble, precio, servicios incluidos (como internet) o distancia a tu universidad.',
+    answer: 'Ve a "Buscar Arriendos" en el menú lateral. Puedes filtrar por tipo de inmueble, precio y servicios incluidos (como internet).',
   },
   {
     question: '¿Cómo guardo una publicación para verla después?',

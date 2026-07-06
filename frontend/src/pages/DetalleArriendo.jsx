@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, CalendarCheck, CheckCircle, Archive, XCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { obtenerArriendoPorId } from '../services/rentalsAndReviews.service.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { resolveFileUrl } from '../helpers/resolveFileUrl.js';
-import { decodePublicId } from '../helpers/publicId.helper.js';
 import AvatarCirculo from '../components/AvatarCirculo.jsx';
 import '@styles/detalleArriendo.css';
 
@@ -48,9 +47,10 @@ const ESTADO_META = {
 };
 
 export default function DetalleArriendo() {
-  const { id: idParam } = useParams();
-  const id = decodePublicId(idParam);
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const vieneDelCorreo = searchParams.get('origen') === 'correo';
   const { user } = useAuth();
   const [arriendo, setArriendo] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -71,7 +71,7 @@ export default function DetalleArriendo() {
       setCargando(false);
     };
 
-    if (id != null) {
+    if (id) {
       cargarArriendo();
     } else {
       setError('No se encontró este arriendo.');
@@ -105,9 +105,11 @@ export default function DetalleArriendo() {
   if (error || !arriendo) {
     return (
       <div className="detalle-arriendo-page">
-        <button onClick={() => navigate(-1)} className="back-pill-button">
-          <ArrowLeft size={18} /> Volver
-        </button>
+        {!vieneDelCorreo && (
+          <button onClick={() => navigate(-1)} className="back-pill-button">
+            <ArrowLeft size={18} /> Volver
+          </button>
+        )}
         <div className="detalle-arriendo-estado detalle-arriendo-estado--error">
           {error || 'Arriendo no encontrado.'}
         </div>
@@ -139,9 +141,11 @@ export default function DetalleArriendo() {
 
   return (
     <div className="detalle-arriendo-page">
-      <button onClick={() => navigate(-1)} className="back-pill-button">
-        <ArrowLeft size={18} /> Volver
-      </button>
+      {!vieneDelCorreo && (
+        <button onClick={() => navigate(-1)} className="back-pill-button">
+          <ArrowLeft size={18} /> Volver
+        </button>
+      )}
 
       <div className="detalle-arriendo-card">
         <div className="detalle-arriendo-header">
@@ -228,7 +232,11 @@ export default function DetalleArriendo() {
           <div className="detalle-arriendo-sidebar">
             <div className="detalle-arriendo-info-card">
               <h3>{esArrendador ? 'Estudiante' : 'Arrendador'}</h3>
-              <div className="detalle-arriendo-persona">
+              <div
+                className="detalle-arriendo-persona"
+                style={{ cursor: otraPersona?.publicId ? 'pointer' : 'default' }}
+                onClick={() => otraPersona?.publicId && navigate(`/perfil/${otraPersona.publicId}`)}
+              >
                 <AvatarCirculo nombre={otraPersona?.nombreCompleto} foto={otraPersona?.fotoPerfil} size={48} />
                 <span>{otraPersona?.nombreCompleto || 'Sin nombre'}</span>
               </div>

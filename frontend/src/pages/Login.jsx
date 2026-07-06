@@ -59,7 +59,7 @@ const Login = () => {
                 errorData(response.details);
             }
         } catch (error) {
-            console.log(error);
+            console.error('Error al iniciar sesión:', error.message);
         }
     };
 

@@ -349,18 +349,93 @@
 	padding: 28px 16px;
 	box-sizing: border-box;
 	overflow-y: auto;
-	background-color: #f8fafa;
+	background-color: #eaf3f2;
 	background-image: radial-gradient(rgba(0, 112, 112, 0.25) 1.5px, transparent 1.5px);
 	background-size: 20px 20px;
+	flex-direction: column;
 }
 
 .register-container .form {
 	width: min(460px, 100%);
-	padding: 28px;
-	border-radius: 8px;
+	padding: 0;
 	box-sizing: border-box;
-	background-color: #96cdb0;
-	box-shadow: 0 18px 40px rgba(0, 61, 41, 0.18);
+	background-color: transparent;
+}
+
+.register-card {
+	width: min(1100px, 100%);
+	min-height: 560px;
+	border-radius: 16px;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+	display: flex;
+	overflow: hidden;
+	background-color: #07bcbc;
+}
+
+.register-card-banner {
+	flex: 0 0 300px;
+	background: linear-gradient(145deg, #008080 0%, #006b6b 54%, #004d40 100%);
+	color: #ffffff;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 40px 28px;
+	text-align: center;
+	gap: 16px;
+	box-sizing: border-box;
+}
+
+.register-card-banner img {
+	width: 100%;
+	max-width: 220px;
+	height: auto;
+}
+
+.register-card-banner p {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.7;
+	opacity: 0.95;
+	max-width: 260px;
+}
+
+.register-card-form {
+	flex: 1;
+	min-width: 0;
+	background-color: #ffffff;
+	display: flex;
+	justify-content: center;
+	padding: 32px 24px;
+	box-sizing: border-box;
+}
+
+@media (max-width: 760px) {
+	.register-card {
+		flex-direction: column;
+	}
+
+	.register-card-banner {
+		flex: 0 0 auto;
+		padding: 24px 20px;
+	}
+
+	.register-card-banner p {
+		max-width: none;
+	}
+}
+
+.register-container .form button[type='submit'] {
+	border-radius: 10px;
+}
+
+.form .file-upload-control.file-upload-identity-card {
+	background: #ffffff;
+	border-color: #d7ebe9;
+}
+
+.form .file-upload-control.file-upload-identity-card::before {
+	opacity: 0.04;
 }
 
 .register-container .form button[type='submit'] {

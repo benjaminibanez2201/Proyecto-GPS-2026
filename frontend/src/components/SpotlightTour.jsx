@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { getPublicaciones } from '@services/publicacion.service.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 import '@styles/spotlightTour.css';
 
 const POLL_INTERVAL_MS = 150;
@@ -14,7 +13,7 @@ const STEPS = [
   {
     id: 'filtros',
     route: '/buscar',
-    selector: '.ba-filter-bar',
+    selector: '.ba-filters-panel',
     title: 'Filtros a tu medida',
     text: 'Encuentra piezas con internet incluido o cerca de tu universidad aquí.',
   },
@@ -24,6 +23,13 @@ const STEPS = [
     selector: '[data-tour="favorito-btn"]',
     title: '¿Te gustó un aviso?',
     text: 'Guárdalo aquí para compararlo más tarde sin perderlo de vista.',
+  },
+  {
+    id: 'comparar',
+    route: '/buscar',
+    selector: '[data-tour="comparar-btn"]',
+    title: 'Compara publicaciones',
+    text: 'Selecciona hasta tres publicaciones con este ícono y compáralas lado a lado antes de decidir.',
   },
   {
     id: 'contacto',
@@ -101,14 +107,14 @@ export default function SpotlightTour({ active, onClose, onFinish }) {
 
           const list = Array.isArray(data) ? data : (data?.data || []);
           const primera = list[0];
-          const id = primera?.id || primera?._id;
+          const publicId = primera?.publicId;
 
-          if (error || !id) {
+          if (error || !publicId) {
             handleFinishTour();
             return;
           }
 
-          targetPath = `/publicacion/${encodePublicId(id)}`;
+          targetPath = `/publicacion/${publicId}`;
           setContactoPath(targetPath);
         }
 
