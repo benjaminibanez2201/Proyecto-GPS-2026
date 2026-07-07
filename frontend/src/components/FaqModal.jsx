@@ -17,7 +17,11 @@ const FAQS = [
   },
   {
     question: '¿Puedo ocultar una conversación?',
-    answer: 'Sí. Desde tu bandeja de Mensajes, toca el ícono de basurero junto a la conversación. Solo se oculta para ti; el otro participante la seguirá viendo.',
+    answer: 'Sí. Desde el chat, toca el ícono de tres puntos y elige "Ocultar chat". Solo se oculta para ti; el otro participante la seguirá viendo.',
+  },
+  {
+    question: '¿Cómo se confirma que un arriendo se concretó?',
+    answer: 'Tanto el arrendador como el estudiante deben tocar "Aceptar arriendo" desde el hilo de conversación correspondiente. El arriendo queda concretado recién cuando ambas partes aceptaron; mientras falte una, verás el mensaje de que sigue pendiente.',
   },
   {
     question: '¿Cómo edito mi perfil?',
