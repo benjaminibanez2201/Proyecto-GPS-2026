@@ -49,13 +49,16 @@ export async function listarUsuariosReportados() {
   try {
     const repoReporte = AppDataSource.getRepository(ReporteUsuario);
 
-    const pendientes = await repoReporte.find({
-      where: { estado: "pendiente" },
+    const todos = await repoReporte.find({
       relations: ["reportado", "reporter", "conversacion"],
+      order: { createdAt: "DESC" },
     });
 
     const map = new Map();
-    for (const r of pendientes) {
+    for (const r of todos) {
+      const estaSuspendido = r.reportado?.estadoCuenta === "suspendido";
+      if (r.estado !== "pendiente" && !estaSuspendido) continue;
+
       const reportadoId = r.reportado.id;
       if (!map.has(reportadoId)) map.set(reportadoId, { reportado: r.reportado, reportes: [] });
       map.get(reportadoId).reportes.push(r);
