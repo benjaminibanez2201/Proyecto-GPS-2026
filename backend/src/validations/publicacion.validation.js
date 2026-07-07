@@ -185,6 +185,35 @@ export const publicacionQueryValidation = Joi.object({
   "object.unknown": "No se permiten parámetros de búsqueda adicionales."
 });
 
+export const publicacionPatrocinioValidation = Joi.object({
+  metodoPago: Joi.string()
+    .valid("tarjeta", "transferencia")
+    .required()
+    .messages({
+      "any.required": "El metodo de pago es obligatorio.",
+      "any.only": "El metodo de pago debe ser tarjeta o transferencia.",
+    }),
+  monto: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      "any.required": "El monto del patrocinio es obligatorio.",
+      "number.base": "El monto debe ser un numero.",
+      "number.positive": "El monto debe ser positivo.",
+    }),
+  plan: Joi.string()
+    .max(80)
+    .optional(),
+  vigenciaDias: Joi.number()
+    .integer()
+    .min(1)
+    .max(30)
+    .optional(),
+}).unknown(false).messages({
+  "object.unknown": "No se permiten propiedades adicionales.",
+});
+
 export const publicacionIdValidation = Joi.object({
   id: Joi.number()
     .integer()
