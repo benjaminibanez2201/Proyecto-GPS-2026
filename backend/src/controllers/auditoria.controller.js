@@ -2,9 +2,9 @@
 import { getAuditoriaService } from "../services/auditoria.service.js";
 import { auditoriaQueryValidation } from "../validations/auditoria.validation.js";
 import {
-  handleSuccess,
   handleErrorClient,
   handleErrorServer,
+  handleSuccess,
 } from "../handlers/responseHandlers.js"; 
 
 export async function getAuditoria(req, res) {

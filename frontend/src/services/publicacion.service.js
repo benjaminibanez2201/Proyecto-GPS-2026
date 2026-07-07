@@ -38,6 +38,15 @@ export async function crearPublicacion(publicacionData) {
   }
 }
 
+export async function geocodificarUbicacion(ubicacion, comuna) {
+  try {
+    const response = await axios.get('/publicacion/geocodificar', { params: { ubicacion, comuna } });
+    return [response.data.data, null];
+  } catch (error) {
+    return [null, error.response?.data?.message || 'Error al geocodificar la ubicación'];
+  }
+}
+
 export async function getMisPublicaciones() {
   try {
     const response = await axios.get('/publicacion/mis-publicaciones');

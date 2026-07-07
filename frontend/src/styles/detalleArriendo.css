@@ -1,6 +1,7 @@
 .detalle-arriendo-page {
   display: flex;
   flex-direction: column;
+  gap: 14px;
   padding: 4px 0 24px;
 }
 

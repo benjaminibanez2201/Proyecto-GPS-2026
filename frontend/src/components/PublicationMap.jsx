@@ -8,7 +8,6 @@ import {
   formatMoneyCLP,
   resolvePublicationLocation,
 } from '@helpers/publicacionesMapa.helper.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 
 function getPublicacionId(publicacion) {
   return publicacion?.id_publicacion || publicacion?.id || publicacion?._id;
@@ -146,8 +145,8 @@ export default function PublicationMap({ publicaciones = [] }) {
                 icon={crearIconoPrecio(publicacion?.precioMensual)}
                 eventHandlers={{
                   click: () => {
-                    if (idPublicacion) {
-                      navigate(`/publicacion/${encodePublicId(idPublicacion)}`);
+                    if (publicacion?.publicId) {
+                      navigate(`/publicacion/${publicacion.publicId}`);
                     }
                   },
                   mouseover: (e) => {

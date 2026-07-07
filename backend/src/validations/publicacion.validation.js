@@ -83,7 +83,7 @@ export const publicacionBodyValidation = Joi.object({
   reglasConvivencia: Joi.string()
     .allow("")
     .max(1000)
-    .allow('')
+    .allow("")
     .optional()
     .messages({
       "string.max": "Las reglas de convivencia no pueden superar los 1000 caracteres.",
@@ -92,7 +92,7 @@ export const publicacionBodyValidation = Joi.object({
     .allow("")
     .max(1000)
     .optional()
-    .allow('')
+    .allow("")
     .messages({
       "string.max": "Las reglas de convivencia no pueden superar los 1000 caracteres.",
     }),
@@ -131,11 +131,16 @@ export const publicacionQueryValidation = Joi.object({
       "number.base": "El precio máximo debe ser un número.",
       "number.positive": "El precio máximo debe ser positivo."
     }),
-  tipoInmueble: Joi.string()
-    .valid("departamento", "casa", "pieza", "estudio")
+  tipoInmueble: Joi.alternatives()
+    .try(
+      Joi.array().items(
+        Joi.string().valid("departamento", "casa", "pieza", "estudio")
+      ),
+      Joi.string()
+    )
     .optional()
     .messages({
-      "any.only": "El tipo de inmueble a buscar debe ser: departamento, casa, pieza o estudio."
+      "alternatives.match": "El tipo de inmueble a buscar debe ser: departamento, casa, pieza o estudio."
     }),
   distanciaCampus: Joi.number()
     .integer()
@@ -178,6 +183,35 @@ export const publicacionQueryValidation = Joi.object({
     })
 }).unknown(false).messages({
   "object.unknown": "No se permiten parámetros de búsqueda adicionales."
+});
+
+export const publicacionPatrocinioValidation = Joi.object({
+  metodoPago: Joi.string()
+    .valid("tarjeta", "transferencia")
+    .required()
+    .messages({
+      "any.required": "El metodo de pago es obligatorio.",
+      "any.only": "El metodo de pago debe ser tarjeta o transferencia.",
+    }),
+  monto: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      "any.required": "El monto del patrocinio es obligatorio.",
+      "number.base": "El monto debe ser un numero.",
+      "number.positive": "El monto debe ser positivo.",
+    }),
+  plan: Joi.string()
+    .max(80)
+    .optional(),
+  vigenciaDias: Joi.number()
+    .integer()
+    .min(1)
+    .max(30)
+    .optional(),
+}).unknown(false).messages({
+  "object.unknown": "No se permiten propiedades adicionales.",
 });
 
 export const publicacionIdValidation = Joi.object({
@@ -259,7 +293,7 @@ export const publicacionUpdateValidation = Joi.object({
   }),
   reglasConvivencia: Joi.string()
     .max(1000)
-    .allow('')
+    .allow("")
     .optional()
     .messages({
     "string.max": "Las reglas no pueden superar los 1000 caracteres.",

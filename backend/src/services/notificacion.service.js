@@ -39,17 +39,28 @@ export async function getNotificacionesByUserIdService(userId, options = {}) {
     try {
         const notificacionRepository = AppDataSource.getRepository(Notificacion);
 
-        const limit = options.limit ?? 50;
-        const offset = options.offset ?? 0;
+        const requestedLimit = Number(options.limit);
+        const requestedOffset = Number(options.offset);
+        const limit = Number.isInteger(requestedLimit) && requestedLimit > 0 ? Math.min(requestedLimit, 20) : 20;
+        const offset = Number.isInteger(requestedOffset) && requestedOffset > 0 ? requestedOffset : 0;
 
-        const notificaciones = await notificacionRepository.find({
+        const [notificaciones, total] = await notificacionRepository.findAndCount({
             where: { userId: userId },
             order: { createdAt: "DESC" },
             take: limit,
             skip: offset,
         });
 
-        return [notificaciones, null];
+        return [{
+            notificaciones,
+            paginacion: {
+                total,
+                limit,
+                offset,
+                paginaActual: Math.floor(offset / limit) + 1,
+                totalPaginas: Math.ceil(total / limit),
+            },
+        }, null];
     } catch (error) {
         console.error("Error al obtener las notificaciones:", error);
         return [null, "Error interno del servidor"];
@@ -129,11 +140,14 @@ export async function marcarNotificacionesPorTargetLeidasService(userId, targetT
             .createQueryBuilder()
             .update()
             .set({ leida: true, readAt: () => "CURRENT_TIMESTAMP" })
-            .where("\"userId\" = :userId AND \"targetType\" = :targetType AND \"targetId\" = :targetId AND leida = false", {
-                userId,
-                targetType,
-                targetId,
-            })
+            .where(
+                "\"userId\" = :userId AND \"targetType\" = :targetType AND \"targetId\" = :targetId AND leida = false",
+                {
+                    userId,
+                    targetType,
+                    targetId,
+                },
+            )
             .execute();
 
         return [result, null];
