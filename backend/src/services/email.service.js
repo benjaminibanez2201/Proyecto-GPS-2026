@@ -153,6 +153,7 @@ export async function sendRentalCompleteEmail(rental) {
   try {
     const transporter = createTransporter();
     const baseUrl = normalizeBaseUrl(FRONTEND_URL);
+    const rentalRef = rental.uuid || rental.id;
     const nextPath = `/arriendo/${rental.uuid}?origen=correo`;
     const loginWithNextUrl = `${baseUrl}/auth?next=${encodeURIComponent(nextPath)}`;
     const greetingNameArrendador = rental.arrendador?.nombreCompleto || "Arrendador";
@@ -244,24 +245,38 @@ export async function sendRentalCompleteEmail(rental) {
     });
 
     if (rental.arrendador?.email) {
-      await transporter.sendMail(buildMail({
-        name: greetingNameArrendador,
-        otherName: greetingNameEstudiante,
-        subject: "Arriendo confirmado",
-        to: rental.arrendador.email,
-      }));
+      try {
+        await transporter.sendMail(buildMail({
+          name: greetingNameArrendador,
+          otherName: greetingNameEstudiante,
+          subject: "Arriendo confirmado",
+          to: rental.arrendador.email,
+        }));
+        console.log(`Correo de arriendo ${rentalRef} enviado a arrendador (${rental.arrendador.email})`);
+      } catch (error) {
+        console.error(`Error al enviar correo de arriendo ${rentalRef} a arrendador:`, error);
+      }
+    } else {
+      console.warn(`Arriendo ${rentalRef}: no se envio correo al arrendador (sin email)`);
     }
 
     if (rental.estudiante?.email) {
-      await transporter.sendMail(buildMail({
-        name: greetingNameEstudiante,
-        otherName: greetingNameArrendador,
-        subject: "Arriendo confirmado",
-        to: rental.estudiante.email,
-      }));
+      try {
+        await transporter.sendMail(buildMail({
+          name: greetingNameEstudiante,
+          otherName: greetingNameArrendador,
+          subject: "Arriendo confirmado",
+          to: rental.estudiante.email,
+        }));
+        console.log(`Correo de arriendo ${rentalRef} enviado a estudiante (${rental.estudiante.email})`);
+      } catch (error) {
+        console.error(`Error al enviar correo de arriendo ${rentalRef} a estudiante:`, error);
+      }
+    } else {
+      console.warn(`Arriendo ${rentalRef}: no se envio correo al estudiante (sin email)`);
     }
   } catch (error) {
-    console.error("Error al enviar correos de arriendo completado:", error);
+    console.error(`Error al preparar correos de arriendo completado - arriendo ${rental?.uuid || rental?.id}:`, error);
   }
 }
 
