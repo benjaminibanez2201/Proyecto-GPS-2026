@@ -102,6 +102,24 @@ const PublicacionSchema = new EntitySchema({
       default: 0,
       nullable: false,
     },
+    patrocinada: {
+      type: "boolean",
+      default: false,
+      nullable: false,
+    },
+    patrocinadaHasta: {
+      type: "timestamp with time zone",
+      nullable: true,
+    },
+    patrocinioMetodo: {
+      type: "varchar",
+      length: 30,
+      nullable: true,
+    },
+    patrocinioMonto: {
+      type: "int",
+      nullable: true,
+    },
     estado: {
       type: "enum",
       enum: ["activa", "arrendada", "disponible", "inactiva"],
