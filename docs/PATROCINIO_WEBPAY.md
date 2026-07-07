@@ -2,6 +2,19 @@
 
 El flujo de patrocinio permite que un arrendador destaque una publicacion desde `Mis publicaciones`.
 
+## Implementacion
+
+El patrocinio queda asociado directamente a la publicacion. No se creo una tabla nueva; se extendio la entidad `Publicacion` con estos campos:
+
+- `patrocinada`: booleano que indica si la publicacion esta destacada.
+- `patrocinadaHasta`: fecha de termino del plan contratado.
+- `patrocinioMetodo`: medio usado para activarlo (`webpay` o `transferencia`).
+- `patrocinioMonto`: monto del plan seleccionado.
+
+El proyecto usa TypeORM con `synchronize: true`, por lo que en desarrollo estas columnas se crean desde la entidad. En un ambiente sin sincronizacion automatica se debe agregar una migracion equivalente.
+
+La activacion valida que el usuario sea arrendador, que la publicacion le pertenezca y que no este `inactiva` ni `arrendada`. El listado publico ordena primero las publicaciones patrocinadas y luego aplica el orden normal solicitado.
+
 ## Flujo
 
 1. El arrendador presiona el boton con trueno en una publicacion activa.
@@ -27,6 +40,20 @@ Payload esperado:
 ```
 
 La opcion de transferencia sigue siendo una confirmacion dentro de la app y usa el mismo endpoint cuando termina la espera.
+
+## WebPay simulado
+
+La pasarela WebPay es una pantalla frontend en `/webpay`. Al abrirla, `MisPublicaciones.jsx` genera un `token` y guarda una orden pendiente en `localStorage` con:
+
+- `publicacionId`
+- plan seleccionado
+- monto
+- dias de vigencia
+- ruta de retorno `returnTo`
+
+Esto evita que el pago quede sin contexto si la pestaña de WebPay se recarga o queda sola. Cuando no existe `window.opener`, WebPay usa ese contexto guardado para activar el plan y volver a `/publicacion/:id`.
+
+La tarjeta no procesa un pago real. Solo valida formato de numero, vencimiento y CVV, espera una autorizacion simulada y luego avisa a la pagina anterior o ejecuta el fallback contra el endpoint real.
 
 ## Editar o cortar patrocinio
 
