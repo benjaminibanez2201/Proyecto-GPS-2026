@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion } from '@services/user.service.js';
+import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion, patrocinarPublicacion } from '@services/user.service.js';
 import { finalizarArriendoPorPublicacion } from '@services/rentalsAndReviews.service.js';
-import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, RotateCcw, TrendingUp, Image, Lock } from 'lucide-react';
+import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, RotateCcw, TrendingUp, Image, Lock, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import EstadisticasPublicacionModal from '@components/EstadisticasPublicacionModal.jsx';
@@ -11,7 +11,24 @@ import { geocodificarUbicacion } from '@services/publicacion.service.js';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
 
 const accent = '#0f766e';
+const sponsorshipPlans = [
+  { id: 'destacado_1_dia', label: '1 dia', durationLabel: '24 horas', days: 1, price: 1990, detail: 'Prueba rapida para subir tu publicacion hoy.' },
+  { id: 'destacado_1_semana', label: '1 semana', durationLabel: '7 dias', days: 7, price: 9990, detail: 'La opcion equilibrada para recibir mas contactos.' },
+  { id: 'destacado_1_mes', label: '1 mes', durationLabel: '30 dias', days: 30, price: 29990, detail: 'Maxima exposicion para publicaciones clave.' },
+];
+const defaultSponsorshipPlan = sponsorshipPlans[1];
 const toCount = (value) => Number(value || 0);
+
+const isPublicacionPatrocinada = (publicacion) => {
+  if (!publicacion?.patrocinada) return false;
+  if (!publicacion.patrocinadaHasta) return true;
+  return new Date(publicacion.patrocinadaHasta).getTime() > Date.now();
+};
+
+const formatSponsorshipDate = (value) => {
+  if (!value) return 'vigente';
+  return new Date(value).toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
+};
 
 const comunaOptionsHtml = (selectedValue) => COMUNAS_PERMITIDAS
   .map(({ value, name }) => `<option value="${value}" ${value === selectedValue ? 'selected' : ''}>${name}</option>`)
@@ -45,6 +62,402 @@ const setFieldError = (input, errorEl, message) => {
   if (errorEl) errorEl.textContent = message || '';
 };
 
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+}[char]));
+
+const WEBPAY_APPROVED_MESSAGE = 'ARRENDU_WEBPAY_APPROVED';
+
+const abrirPasarelaPatrocinio = async (pub) => {
+  let paymentPayload = null;
+  let timerId = null;
+  let closeWebpayListener = null;
+  let webpayWindow = null;
+  let selectedPlan = defaultSponsorshipPlan;
+
+  const planOptionsHtml = sponsorshipPlans.map((plan) => `
+    <button
+      type="button"
+      class="sponsor-plan-option ${plan.id === selectedPlan.id ? 'active' : ''}"
+      data-plan-id="${plan.id}"
+    >
+      <span class="sponsor-plan-title">${plan.label}</span>
+      <strong>$${plan.price.toLocaleString('es-CL')}</strong>
+      <span>${plan.durationLabel}</span>
+      <small>${plan.detail}</small>
+    </button>
+  `).join('');
+
+  const result = await Swal.fire({
+    html: `
+      <style>
+        @keyframes webpay-card-shine { 0% { transform: translateX(-140%) rotate(18deg); } 55%, 100% { transform: translateX(140%) rotate(18deg); } }
+        .sponsor-modal { text-align:left; font-family:'Segoe UI',Roboto,sans-serif; color:#0f172a; }
+        .sponsor-header { display:flex; align-items:flex-start; gap:14px; margin-bottom:18px; }
+        .sponsor-icon { width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:#fef3c7; color:#b45309; border:1px solid #fde68a; }
+        .sponsor-title { margin:0 0 4px; font-size:22px; font-weight:800; }
+        .sponsor-subtitle { margin:0; color:#64748b; font-size:13px; line-height:1.45; }
+        .sponsor-summary { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; padding:14px; border:1px solid #e2e8f0; border-radius:14px; background:#f8fafc; margin-bottom:16px; }
+        .sponsor-summary-label { margin:0 0 3px; font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.06em; }
+        .sponsor-summary-title { margin:0; font-size:15px; font-weight:800; color:#0f172a; }
+        .sponsor-price { display:flex; flex-direction:column; align-items:flex-end; gap:2px; color:#0f766e; font-weight:900; font-size:22px; }
+        .sponsor-price strong { color:#0f766e; font-size:22px; font-weight:900; line-height:1; }
+        .sponsor-price span { color:#64748b; font-size:11px; font-weight:700; }
+        .sponsor-plan-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
+        .sponsor-plan-option { min-height:172px; text-align:left; border:1.5px solid #dbe4ee; background:#fff; border-radius:16px; padding:16px; cursor:pointer; display:flex; flex-direction:column; gap:8px; transition:all 0.18s ease; }
+        .sponsor-plan-option:hover { transform:translateY(-2px); border-color:#0f766e; box-shadow:0 12px 24px rgba(15,23,42,0.08); }
+        .sponsor-plan-option.active { border-color:#0f766e; background:#f0fdfa; box-shadow:0 12px 28px rgba(15,118,110,0.18); }
+        .sponsor-plan-title { color:#0f766e; font-weight:900; font-size:14px; text-transform:uppercase; }
+        .sponsor-plan-option strong { font-size:24px; color:#0f172a; line-height:1; }
+        .sponsor-plan-option span:not(.sponsor-plan-title) { color:#334155; font-size:13px; font-weight:800; }
+        .sponsor-plan-option small { color:#64748b; font-size:12px; line-height:1.35; }
+        .sponsor-payment-step { display:none; }
+        .sponsor-selected-plan { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; border:1px solid #ccfbf1; border-radius:14px; background:#f0fdfa; padding:12px 14px; margin-bottom:14px; }
+        .sponsor-selected-plan p { margin:0; color:#0f172a; font-size:14px; font-weight:800; }
+        .sponsor-selected-plan span { color:#64748b; font-size:12px; }
+        .sponsor-tabs { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+        .sponsor-tab { border:1px solid #dbe4ee; background:#fff; color:#334155; border-radius:12px; padding:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:800; transition:all 0.16s ease; }
+        .sponsor-tab.active { background:#0f766e; color:#fff; border-color:#0f766e; box-shadow:0 8px 18px rgba(15,118,110,0.18); }
+        .sponsor-panel { border:1px solid #e2e8f0; border-radius:14px; padding:16px; background:#ffffff; min-height:210px; }
+        .sponsor-label { font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.06em; }
+        .webpay-hero { display:grid; grid-template-columns:minmax(230px, 0.9fr) 1.1fr; gap:18px; align-items:center; }
+        .webpay-card { position:relative; min-height:160px; border-radius:18px; overflow:hidden; padding:20px; color:#fff; background:linear-gradient(135deg,#c1121f 0%,#8f1119 58%,#24110f 100%); box-shadow:0 20px 34px rgba(127,29,29,0.24); }
+        .webpay-card::after { content:""; position:absolute; inset:-50%; width:58%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.32),transparent); animation:webpay-card-shine 3.2s ease-in-out infinite; pointer-events:none; }
+        .webpay-logo { position:relative; z-index:1; font-size:28px; font-weight:900; letter-spacing:0; }
+        .webpay-logo small { display:block; margin-top:2px; color:#fecaca; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; }
+        .webpay-card p { position:relative; z-index:1; margin:26px 0 0; color:#fee2e2; font-weight:700; }
+        .webpay-card-footer { position:absolute; z-index:1; left:20px; right:20px; bottom:18px; display:flex; justify-content:space-between; color:#fff; font-size:12px; font-weight:800; text-transform:uppercase; }
+        .webpay-terminal { display:flex; flex-direction:column; gap:10px; }
+        .webpay-terminal h3 { margin:0; color:#0f172a; font-size:20px; font-weight:900; }
+        .webpay-terminal p { margin:0; color:#64748b; font-size:13px; line-height:1.45; }
+        .webpay-terminal-row { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid #edf2f7; color:#475569; font-size:13px; }
+        .webpay-terminal-row strong { color:#0f172a; text-align:right; }
+        .sponsor-transfer-box { display:flex; flex-direction:column; gap:10px; padding:14px; border-radius:12px; background:#f8fafc; border:1px dashed #cbd5e1; }
+        .sponsor-transfer-row { display:flex; justify-content:space-between; gap:12px; font-size:13px; color:#334155; }
+        .sponsor-transfer-row strong { color:#0f172a; text-align:right; }
+        .sponsor-error { min-height:18px; margin:10px 0 0; color:#dc2626; font-size:12px; font-weight:700; }
+        .sponsor-progress { display:none; margin-top:14px; padding:12px; border-radius:12px; background:#ecfeff; border:1px solid #99f6e4; }
+        .sponsor-progress-text { margin:0 0 8px; font-size:13px; font-weight:800; color:#0f766e; }
+        .sponsor-progress-track { height:8px; border-radius:999px; background:#ccfbf1; overflow:hidden; }
+        .sponsor-progress-fill { width:0%; height:100%; background:#0f766e; transition:width 0.9s linear; }
+        .sponsor-footer { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+        .sponsor-cancel { border:1px solid #dbe4ee; background:#fff; color:#64748b; border-radius:12px; padding:11px 16px; font-size:14px; font-weight:800; cursor:pointer; }
+        .sponsor-submit { border:none; background:#0f766e; color:#fff; border-radius:12px; padding:11px 18px; font-size:14px; font-weight:900; cursor:pointer; box-shadow:0 8px 18px rgba(15,118,110,0.18); }
+        .sponsor-submit:disabled, .sponsor-cancel:disabled, .sponsor-tab:disabled, .sponsor-plan-option:disabled { cursor:wait; opacity:0.72; }
+        .sponsor-hidden-confirm { display:none !important; }
+        @media (max-width:720px) {
+          .sponsor-plan-grid { grid-template-columns:1fr; }
+          .webpay-hero { grid-template-columns:1fr; }
+        }
+      </style>
+      <div class="sponsor-modal">
+        <div class="sponsor-header">
+          <div class="sponsor-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#facc15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          </div>
+          <div>
+            <h2 class="sponsor-title">Patrocinar publicacion</h2>
+            <p id="sponsor-step-copy" class="sponsor-subtitle">Elige cuanto tiempo quieres destacar esta publicacion.</p>
+          </div>
+        </div>
+
+        <div class="sponsor-summary">
+          <div>
+            <p class="sponsor-summary-label">Publicacion elegida</p>
+            <p class="sponsor-summary-title">${escapeHtml(pub?.titulo || 'Publicacion')}</p>
+          </div>
+          <div class="sponsor-price"><strong id="sponsor-main-price">$${selectedPlan.price.toLocaleString('es-CL')}</strong><span id="sponsor-main-duration">${selectedPlan.durationLabel}</span></div>
+        </div>
+
+        <section id="sponsor-plan-step">
+          <div class="sponsor-plan-grid">
+            ${planOptionsHtml}
+          </div>
+          <div class="sponsor-footer">
+            <button id="sponsor-plan-cancel" type="button" class="sponsor-cancel">Cancelar</button>
+            <button id="sponsor-plan-continue" type="button" class="sponsor-submit">Confirmar plan y pagar</button>
+          </div>
+        </section>
+
+        <section id="sponsor-payment-step" class="sponsor-payment-step">
+          <div class="sponsor-selected-plan">
+            <div>
+              <p id="sponsor-selected-plan-title">${selectedPlan.label} - $${selectedPlan.price.toLocaleString('es-CL')}</p>
+              <span id="sponsor-selected-plan-detail">${selectedPlan.detail}</span>
+            </div>
+            <span id="sponsor-selected-plan-duration">${selectedPlan.durationLabel}</span>
+          </div>
+
+          <div class="sponsor-tabs">
+            <button type="button" class="sponsor-tab active" data-method="webpay">
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>
+              WebPay tarjeta
+            </button>
+            <button type="button" class="sponsor-tab" data-method="transferencia">
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"></line><line x1="6" x2="6" y1="18" y2="11"></line><line x1="10" x2="10" y1="18" y2="11"></line><line x1="14" x2="14" y1="18" y2="11"></line><line x1="18" x2="18" y1="18" y2="11"></line><polygon points="12 2 20 7 4 7"></polygon></svg>
+              Transferencia
+            </button>
+          </div>
+
+          <div id="sponsor-card-panel" class="sponsor-panel">
+            <div class="webpay-hero">
+              <div class="webpay-card">
+                <div class="webpay-logo">WebPay<small>Plus</small></div>
+                <p>Pago seguro con tarjeta</p>
+                <div class="webpay-card-footer"><span>ArriendU</span><span>CLP</span></div>
+              </div>
+              <div class="webpay-terminal">
+                <span class="sponsor-label">Pago con tarjeta</span>
+                <h3>Continua en WebPay</h3>
+                <p>Se abrira una ventana de autorizacion. Al aprobar, vuelve a esta pagina para ver el plan activo.</p>
+                <div class="webpay-terminal-row"><span>Comercio</span><strong>ArriendU</strong></div>
+                <div class="webpay-terminal-row"><span>Plan</span><strong id="sponsor-webpay-plan">${selectedPlan.label}</strong></div>
+                <div class="webpay-terminal-row"><span>Monto</span><strong id="sponsor-webpay-amount">$${selectedPlan.price.toLocaleString('es-CL')}</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="sponsor-transfer-panel" class="sponsor-panel" style="display:none;">
+            <div class="sponsor-transfer-box">
+              <div class="sponsor-transfer-row"><span>Banco</span><strong>Banco Simulado GPS</strong></div>
+              <div class="sponsor-transfer-row"><span>Cuenta</span><strong>000-123456-7</strong></div>
+              <div class="sponsor-transfer-row"><span>RUT</span><strong>76.000.000-0</strong></div>
+              <div class="sponsor-transfer-row"><span>Monto</span><strong id="sponsor-transfer-amount">$${selectedPlan.price.toLocaleString('es-CL')}</strong></div>
+              <div class="sponsor-transfer-row"><span>Asunto</span><strong id="sponsor-transfer-subject">Patrocinio ${selectedPlan.label} ${escapeHtml(pub?.publicId || '')}</strong></div>
+            </div>
+          </div>
+
+          <p id="sponsor-error" class="sponsor-error"></p>
+          <div id="sponsor-progress" class="sponsor-progress">
+            <p id="sponsor-progress-text" class="sponsor-progress-text">Esperando confirmacion bancaria: 10 segundos</p>
+            <div class="sponsor-progress-track"><div id="sponsor-progress-fill" class="sponsor-progress-fill"></div></div>
+          </div>
+
+          <div class="sponsor-footer">
+            <button id="sponsor-back" type="button" class="sponsor-cancel">Cambiar plan</button>
+            <button id="sponsor-cancel" type="button" class="sponsor-cancel">Cancelar</button>
+            <button id="sponsor-submit" type="button" class="sponsor-submit">Continuar a WebPay</button>
+          </div>
+        </section>
+      </div>
+    `,
+    width: '820px',
+    showConfirmButton: true,
+    confirmButtonText: 'Confirmar',
+    showCancelButton: false,
+    showCloseButton: true,
+    customClass: { confirmButton: 'sponsor-hidden-confirm' },
+    focusConfirm: false,
+    allowOutsideClick: () => !Swal.isLoading(),
+    allowEscapeKey: () => !Swal.isLoading(),
+    preConfirm: () => paymentPayload,
+    willClose: () => {
+      if (timerId) clearInterval(timerId);
+      if (closeWebpayListener) closeWebpayListener();
+      if (webpayWindow && !webpayWindow.closed && !paymentPayload) webpayWindow.close();
+    },
+    didOpen: () => {
+      let metodoPago = 'webpay';
+      const root = Swal.getPopup();
+      const get = (id) => root?.querySelector(`#${id}`);
+      const planButtons = root?.querySelectorAll('.sponsor-plan-option') || [];
+      const tabs = root?.querySelectorAll('.sponsor-tab') || [];
+      const planStep = get('sponsor-plan-step');
+      const paymentStep = get('sponsor-payment-step');
+      const stepCopy = get('sponsor-step-copy');
+      const cardPanel = get('sponsor-card-panel');
+      const transferPanel = get('sponsor-transfer-panel');
+      const submitButton = get('sponsor-submit');
+      const cancelButton = get('sponsor-cancel');
+      const planCancelButton = get('sponsor-plan-cancel');
+      const planContinueButton = get('sponsor-plan-continue');
+      const backButton = get('sponsor-back');
+      const errorText = get('sponsor-error');
+      const progress = get('sponsor-progress');
+      const progressText = get('sponsor-progress-text');
+      const progressFill = get('sponsor-progress-fill');
+
+      const setError = (message = '') => {
+        if (errorText) errorText.textContent = message;
+      };
+
+      const buildPaymentPayload = (method) => ({
+        metodoPago: method,
+        monto: selectedPlan.price,
+        plan: selectedPlan.id,
+        vigenciaDias: selectedPlan.days,
+      });
+
+      const updatePlanUi = () => {
+        planButtons.forEach((button) => button.classList.toggle('active', button.dataset.planId === selectedPlan.id));
+        if (get('sponsor-main-price')) get('sponsor-main-price').textContent = `$${selectedPlan.price.toLocaleString('es-CL')}`;
+        if (get('sponsor-main-duration')) get('sponsor-main-duration').textContent = selectedPlan.durationLabel;
+        if (get('sponsor-selected-plan-title')) {
+          get('sponsor-selected-plan-title').textContent = `${selectedPlan.label} - $${selectedPlan.price.toLocaleString('es-CL')}`;
+        }
+        if (get('sponsor-selected-plan-detail')) get('sponsor-selected-plan-detail').textContent = selectedPlan.detail;
+        if (get('sponsor-selected-plan-duration')) get('sponsor-selected-plan-duration').textContent = selectedPlan.durationLabel;
+        if (get('sponsor-transfer-amount')) get('sponsor-transfer-amount').textContent = `$${selectedPlan.price.toLocaleString('es-CL')}`;
+        if (get('sponsor-transfer-subject')) {
+          get('sponsor-transfer-subject').textContent = `Patrocinio ${selectedPlan.label} ${pub?.publicId || ''}`;
+        }
+        if (get('sponsor-webpay-plan')) get('sponsor-webpay-plan').textContent = selectedPlan.label;
+        if (get('sponsor-webpay-amount')) get('sponsor-webpay-amount').textContent = `$${selectedPlan.price.toLocaleString('es-CL')}`;
+      };
+
+      const setMetodoPago = (nextMethod) => {
+        metodoPago = nextMethod;
+        tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.method === nextMethod));
+        if (cardPanel) cardPanel.style.display = nextMethod === 'webpay' ? 'block' : 'none';
+        if (transferPanel) transferPanel.style.display = nextMethod === 'transferencia' ? 'block' : 'none';
+        if (submitButton) submitButton.textContent = nextMethod === 'webpay' ? 'Continuar a WebPay' : 'Confirmar transferencia';
+        setError('');
+      };
+
+      const showPaymentStep = () => {
+        if (planStep) planStep.style.display = 'none';
+        if (paymentStep) paymentStep.style.display = 'block';
+        if (stepCopy) stepCopy.textContent = 'Elige como pagar para activar la promocion.';
+        updatePlanUi();
+      };
+
+      const showPlanStep = () => {
+        if (paymentStep) paymentStep.style.display = 'none';
+        if (planStep) planStep.style.display = 'block';
+        if (stepCopy) stepCopy.textContent = 'Elige cuanto tiempo quieres destacar esta publicacion.';
+        setError('');
+      };
+
+      const lockControls = () => {
+        root?.querySelectorAll('button').forEach((control) => {
+          if (control.classList.contains('swal2-confirm')) return;
+          control.disabled = true;
+        });
+        if (progress) progress.style.display = 'block';
+        Swal.showLoading();
+      };
+
+      const setWebpayPending = (pending) => {
+        tabs.forEach((tab) => {
+          tab.disabled = pending;
+        });
+        if (backButton) backButton.disabled = pending;
+        if (submitButton) {
+          submitButton.disabled = pending;
+          submitButton.textContent = pending ? 'Esperando WebPay' : 'Continuar a WebPay';
+        }
+      };
+
+      const openWebpay = () => {
+        setError('');
+        const token = `webpay-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const params = new URLSearchParams({
+          token,
+          title: pub?.titulo || 'Publicacion',
+          plan: selectedPlan.label,
+          amount: String(selectedPlan.price),
+          days: String(selectedPlan.days),
+        });
+
+        const handleWebpayMessage = (event) => {
+          if (event.origin !== window.location.origin) return;
+          const data = event.data || {};
+          if (data.type !== WEBPAY_APPROVED_MESSAGE || data.token !== token) return;
+          paymentPayload = buildPaymentPayload('webpay');
+          if (timerId) clearInterval(timerId);
+          if (closeWebpayListener) closeWebpayListener();
+          closeWebpayListener = null;
+          Swal.clickConfirm();
+        };
+
+        if (closeWebpayListener) closeWebpayListener();
+        window.addEventListener('message', handleWebpayMessage);
+        closeWebpayListener = () => window.removeEventListener('message', handleWebpayMessage);
+
+        webpayWindow = window.open(
+          `${window.location.origin}/webpay?${params.toString()}`,
+          token,
+          'popup=yes,width=540,height=760,resizable=yes,scrollbars=yes',
+        );
+
+        if (!webpayWindow) {
+          if (closeWebpayListener) closeWebpayListener();
+          closeWebpayListener = null;
+          setError('El navegador bloqueo la ventana de WebPay. Habilita ventanas emergentes para continuar.');
+          return;
+        }
+
+        webpayWindow.focus();
+        setWebpayPending(true);
+
+        timerId = setInterval(() => {
+          if (webpayWindow?.closed && !paymentPayload) {
+            clearInterval(timerId);
+            if (closeWebpayListener) closeWebpayListener();
+            closeWebpayListener = null;
+            setWebpayPending(false);
+            setError('La ventana de WebPay se cerro antes de autorizar el pago.');
+          }
+        }, 800);
+      };
+
+      const confirmTransfer = () => {
+        setError('');
+        lockControls();
+
+        let remaining = 10;
+        if (progressText) progressText.textContent = 'Esperando confirmacion bancaria: 10 segundos';
+        if (progressFill) progressFill.style.width = '0%';
+
+        timerId = setInterval(() => {
+          remaining -= 1;
+          if (progressText) {
+            progressText.textContent = `Esperando confirmacion bancaria: ${remaining} segundos`;
+          }
+          if (progressFill) progressFill.style.width = `${((10 - remaining) / 10) * 100}%`;
+
+          if (remaining <= 0) {
+            clearInterval(timerId);
+            paymentPayload = buildPaymentPayload('transferencia');
+            Swal.hideLoading();
+            Swal.clickConfirm();
+          }
+        }, 1000);
+      };
+
+      const beginPayment = () => {
+        if (metodoPago === 'webpay') {
+          openWebpay();
+          return;
+        }
+
+        confirmTransfer();
+      };
+
+      planButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          selectedPlan = sponsorshipPlans.find((plan) => plan.id === button.dataset.planId) || defaultSponsorshipPlan;
+          updatePlanUi();
+        });
+      });
+      tabs.forEach((tab) => tab.addEventListener('click', () => setMetodoPago(tab.dataset.method)));
+      planContinueButton?.addEventListener('click', showPaymentStep);
+      backButton?.addEventListener('click', showPlanStep);
+      submitButton?.addEventListener('click', beginPayment);
+      cancelButton?.addEventListener('click', () => Swal.close());
+      planCancelButton?.addEventListener('click', () => Swal.close());
+
+      updatePlanUi();
+    },
+  });
+
+  return result.isConfirmed ? result.value : null;
+};
+
 const MisPublicaciones = () => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [publicacionSeleccionada, setPublicacionSeleccionada] = useState(null);
@@ -56,9 +469,11 @@ const MisPublicaciones = () => {
     const favoritos = toCount(publicacion.contadorFavoritos);
     const conversaciones = toCount(publicacion.contadorConversaciones);
     const estaActiva = publicacion.estado === 'activa';
+    const estaPatrocinada = isPublicacionPatrocinada(publicacion);
 
     acumulado.total += 1;
     acumulado.activas += estaActiva ? 1 : 0;
+    acumulado.patrocinadas += estaPatrocinada ? 1 : 0;
     acumulado.visualizaciones += visualizaciones;
     acumulado.favoritos += favoritos;
     acumulado.conversaciones += conversaciones;
@@ -67,6 +482,7 @@ const MisPublicaciones = () => {
   }, {
     total: 0,
     activas: 0,
+    patrocinadas: 0,
     visualizaciones: 0,
     favoritos: 0,
     conversaciones: 0,
@@ -75,9 +491,16 @@ const MisPublicaciones = () => {
   const tarjetasResumen = [
     { label: 'Publicaciones totales', value: resumen.total, icon: Building2, detail: 'Tus anuncios en la plataforma' },
     { label: 'Publicaciones activas', value: resumen.activas, icon: TrendingUp, detail: 'Publicaciones visibles hoy' },
+    { label: 'Patrocinadas', value: resumen.patrocinadas, icon: Zap, detail: 'Anuncios destacados arriba' },
     { label: 'Visualizaciones', value: resumen.visualizaciones, icon: Eye, detail: 'Visitas acumuladas' },
     { label: 'Favoritos y chats', value: resumen.favoritos + resumen.conversaciones, icon: Heart, detail: 'Interacciones recibidas' },
   ];
+
+  const publicacionesOrdenadas = [...publicaciones].sort((a, b) => {
+    const patrocinioDiff = Number(isPublicacionPatrocinada(b)) - Number(isPublicacionPatrocinada(a));
+    if (patrocinioDiff !== 0) return patrocinioDiff;
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  });
 
   useEffect(() => {
     fetchPublicaciones();
@@ -112,6 +535,61 @@ const MisPublicaciones = () => {
 
     Swal.fire({ icon: 'success', title: 'Publicación disponible de nuevo', confirmButtonColor: accent });
     fetchPublicaciones();
+  };
+
+  const handlePatrocinar = async (pub) => {
+    if (!pub?.publicId) return;
+
+    if (isPublicacionPatrocinada(pub)) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Publicacion ya patrocinada',
+        text: `Este destaque sigue vigente hasta ${formatSponsorshipDate(pub.patrocinadaHasta)}.`,
+        confirmButtonColor: accent,
+      });
+      return;
+    }
+
+    if (pub.estado === 'inactiva' || pub.estado === 'arrendada') {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No se puede patrocinar',
+        text: 'Solo puedes patrocinar publicaciones activas o disponibles.',
+        confirmButtonColor: accent,
+      });
+      return;
+    }
+
+    const paymentPayload = await abrirPasarelaPatrocinio(pub);
+    if (!paymentPayload) return;
+
+    Swal.fire({
+      title: 'Activando patrocinio',
+      text: 'Guardando el plan promocionado.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    const response = await patrocinarPublicacion(pub.publicId, paymentPayload);
+
+    if (response?.status === 'Success') {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Publicacion patrocinada',
+        text: `Tu publicacion quedo destacada por ${paymentPayload.vigenciaDias} dia${paymentPayload.vigenciaDias === 1 ? '' : 's'}.`,
+        confirmButtonColor: accent,
+      });
+      fetchPublicaciones();
+      return;
+    }
+
+    Swal.fire({
+      icon: 'error',
+      title: 'No se pudo patrocinar',
+      text: response?.details || response?.message || 'No se pudo activar el patrocinio.',
+      confirmButtonColor: accent,
+    });
   };
 
   const handleEliminar = async (id) => {
@@ -995,7 +1473,11 @@ const MisPublicaciones = () => {
           <p style={{ color: '#64748b', fontSize: '14px' }}>No tienes publicaciones aún.</p>
         ) : (
           <div style={styles.pubListContainer}>
-            {publicaciones.map((pub) => (
+            {publicacionesOrdenadas.map((pub) => {
+              const patrocinada = isPublicacionPatrocinada(pub);
+              const patrocinioBloqueado = pub.estado === 'inactiva' || pub.estado === 'arrendada';
+
+              return (
               <div 
                 key={pub.id} 
                 style={styles.pubItem}
@@ -1039,7 +1521,13 @@ const MisPublicaciones = () => {
                   }}>
                     {pub.estado}
                   </span>
-                  <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={styles.topRightActions}>
+                    {patrocinada && (
+                      <span style={styles.sponsorBadge} title={`Vigente hasta ${formatSponsorshipDate(pub.patrocinadaHasta)}`}>
+                        <Zap size={12} fill="#facc15" strokeWidth={2.4} />
+                        Destacado
+                      </span>
+                    )}
                     <button onClick={() => abrirEstadisticas(pub)} style={styles.btnStats}>
                       <BarChart3 size={14} strokeWidth={2.2} />
                       Estadísticas
@@ -1078,7 +1566,7 @@ const MisPublicaciones = () => {
                 {/* Botones de acción abajo */}
                 <div style={{
                   ...styles.rightSection,
-                  gridTemplateColumns: pub.estado === 'arrendada' ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr',
+                  gridTemplateColumns: pub.estado === 'arrendada' ? '1.2fr repeat(4, 1fr)' : 'repeat(4, 1fr)',
                 }}>
                   {pub.estado === 'arrendada' && (
                     <button onClick={() => handleFinalizarArriendo(pub)} style={styles.btnDisponible}>
@@ -1098,6 +1586,19 @@ const MisPublicaciones = () => {
                   )}
 
                   <button
+                    onClick={() => handlePatrocinar(pub)}
+                    style={{
+                      ...styles.btnSponsor,
+                      ...(patrocinada ? styles.btnSponsorActive : {}),
+                      ...(!patrocinada && patrocinioBloqueado ? styles.btnSponsorDisabled : {}),
+                    }}
+                    title={patrocinada ? 'Publicacion destacada' : 'Patrocinar publicacion'}
+                    aria-label={patrocinada ? 'Publicacion destacada' : 'Patrocinar publicacion'}
+                  >
+                    <Zap size={16} fill={patrocinada ? '#facc15' : 'none'} strokeWidth={2.4} />
+                  </button>
+
+                  <button
                     onClick={() => handleEliminar(pub.publicId)}
                     style={{ ...styles.iconBtnAction, color: '#dc2626', backgroundColor: '#fef2f2' }}
                     title="Eliminar"
@@ -1115,7 +1616,8 @@ const MisPublicaciones = () => {
                 </div>
 
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -1306,6 +1808,29 @@ const styles = {
     textTransform: 'uppercase',
     boxShadow: '0 4px 6px -1px rgba(0,0,0,0.08)',
   },
+  topRightActions: {
+    position: 'absolute',
+    top: '8px',
+    right: '8px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: '8px',
+  },
+  sponsorBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 10px',
+    borderRadius: '999px',
+    backgroundColor: '#fffbeb',
+    color: '#92400e',
+    border: '1px solid #fde68a',
+    boxShadow: '0 6px 14px rgba(15, 23, 42, 0.12)',
+    fontSize: '11px',
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
   infoContainer: {
     padding: '20px',
     display: 'flex',
@@ -1417,6 +1942,31 @@ const styles = {
     gap: '6px',
     borderRight: '1px solid #f1f5f9',
     cursor: 'not-allowed',
+  },
+  btnSponsor: {
+    border: 'none',
+    outline: 'none',
+    background: 'none',
+    padding: '14px',
+    cursor: 'pointer',
+    color: '#b45309',
+    fontSize: '13px',
+    fontWeight: '700',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    borderRight: '1px solid #f1f5f9',
+  },
+  btnSponsorActive: {
+    backgroundColor: '#fffbeb',
+    color: '#92400e',
+    cursor: 'pointer',
+  },
+  btnSponsorDisabled: {
+    color: '#94a3b8',
+    cursor: 'pointer',
+    opacity: 0.72,
   },
   btnStats: {
     border: '1px solid #dbe4ee',

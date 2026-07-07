@@ -8,6 +8,7 @@ import {
   getPublicacionById,
   getPublicaciones,
   getPublicacionesPropias,
+  patrocinarPublicacion,
   updatePublicacion,
 } from "../controllers/publicacion.controller.js";
 import { parsePublicacionUploads } from "../middlewares/upload.middleware.js";
@@ -20,6 +21,7 @@ router.post("/", parsePublicacionUploads, createPublicacion);
 router.get("/", getPublicaciones);
 router.get("/mis-publicaciones", getPublicacionesPropias);
 router.get("/geocodificar", geocodificarUbicacion);
+router.post("/:id/patrocinio", patrocinarPublicacion);
 router.get("/:id", getPublicacionById);
 router.put("/:id", parsePublicacionUploads, updatePublicacion); 
 router.delete("/:id", deletePublicacion); 

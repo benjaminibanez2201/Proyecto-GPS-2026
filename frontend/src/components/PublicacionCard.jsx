@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, ChevronLeft, ChevronRight, GitCompareArrows } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight, GitCompareArrows, Zap } from 'lucide-react';
 import '../styles/publicacionCard.css';
 import { useNavigate} from 'react-router-dom';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
@@ -73,6 +73,9 @@ export default function PublicacionCard({
   if (!publicacion) return null;
 
   const { titulo, tipoInmueble, precioMensual, ubicacion, fotos } = publicacion;
+  const estaPatrocinada = Boolean(publicacion.patrocinada) && (
+    !publicacion.patrocinadaHasta || new Date(publicacion.patrocinadaHasta).getTime() > Date.now()
+  );
 
   const fotosResueltas = fotos && fotos.length > 0 ? fotos.map(resolveFileUrl) : [];
   const imagenActiva = fotosResueltas[fotoActivaIndex] || fotosResueltas[0] || 'https://via.placeholder.com/400x250?text=Sin+Imagen';
@@ -102,6 +105,13 @@ export default function PublicacionCard({
     <div className="publicacion-card">
       <div className="publicacion-image-container" style={{ position: 'relative' }}>
         <img src={imagenActiva} alt={titulo} className="publicacion-image" />
+
+        {estaPatrocinada && (
+          <span className="publicacion-sponsored-badge" title="Publicacion promocionada">
+            <Zap size={13} fill="#facc15" strokeWidth={2.4} />
+            Promocionado
+          </span>
+        )}
 
         {fotosResueltas.length > 1 && (
           <>
