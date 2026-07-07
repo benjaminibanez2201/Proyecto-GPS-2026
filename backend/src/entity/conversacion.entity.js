@@ -10,6 +10,12 @@ const ConversacionSchema = new EntitySchema({
       primary: true,
       generated: true,
     },
+    uuid: {
+      type: "uuid",
+      generated: "uuid",
+      unique: true,
+      nullable: false,
+    },
     ultimaFechaMensaje: {
       type: "timestamp with time zone",
       nullable: true,

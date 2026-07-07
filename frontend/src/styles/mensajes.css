@@ -1,5 +1,6 @@
 .mensajes-page {
-  min-height: 100vh;
+  height: 100%;
+  min-height: 100%;
   background:
     radial-gradient(circle at top left, rgba(0, 128, 128, 0.18), transparent 35%),
     linear-gradient(180deg, #f8fbfb 0%, #eef6f5 100%);
@@ -8,11 +9,11 @@
 }
 
 .mensajes-shell {
-  width: min(1400px, 100%);
-  margin: 0 auto;
-  height: calc(100vh - 48px);
+  width: 100%;
+  height: 100%;
   display: grid;
   grid-template-columns: 360px 1fr;
+  grid-template-rows: minmax(0, 1fr);
   gap: 20px;
   align-items: stretch;
 }
@@ -36,12 +37,78 @@
   min-height: 0;
 }
 
-.mensajes-sidebar__header,
-.mensajes-detail__header {
+.mensajes-sidebar__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
+}
+
+.mensajes-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.mensajes-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: #0f766e;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  border: 1px solid rgba(15, 118, 110, 0.25);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.mensajes-pill-btn:hover {
+  background-color: #e6f4f1;
+}
+
+.mensajes-pill-btn--solid {
+  color: #ffffff;
+  background: linear-gradient(135deg, #008080, #0f9d9d);
+  border: none;
+  box-shadow: 0 12px 24px rgba(0, 128, 128, 0.2);
+}
+
+.mensajes-pill-btn--solid:hover {
+  background: linear-gradient(135deg, #0f9d9d, #008080);
+  box-shadow: 0 14px 28px rgba(0, 128, 128, 0.28);
+}
+
+.mensajes-detail__header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mensajes-detail__avatar-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease;
+}
+
+.mensajes-detail__avatar-btn:hover {
+  opacity: 0.8;
+}
+
+.mensajes-detail__participant-name {
+  color: #0f766e;
+  font-weight: 700;
 }
 
 .mensajes-sidebar h1,
@@ -69,9 +136,7 @@
   font-size: 14px;
 }
 
-.mensajes-icon-btn,
-.mensajes-icon-btn--secondary,
-.mensajes-back {
+.mensajes-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -86,62 +151,83 @@
 .mensajes-icon-btn {
   width: 42px;
   height: 42px;
+  flex-shrink: 0;
   background: linear-gradient(135deg, #008080, #0f9d9d);
   color: #fff;
   box-shadow: 0 12px 24px rgba(0, 128, 128, 0.24);
 }
 
-.mensajes-back {
-  width: auto;
-  padding: 11px 16px;
-  background: #fff;
-  color: #0f172a;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-}
-
-.mensajes-icon-btn--secondary {
-  width: auto;
-  padding: 10px 16px;
-background: linear-gradient(135deg, #008080, #0f9d9d); 
-  color: #fff;               
-  box-shadow: 0 12px 24px rgba(0, 128, 128, 0.2);
-  border: none;
-  border-radius: 14px;
-  font-size: 13px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease;
-}
-
-.mensajes-icon-btn--danger {
-  width: auto;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  color: #fff;
-  box-shadow: 0 12px 24px rgba(220, 38, 38, 0.2);
-}
-
-.mensajes-icon-btn--secondary:hover {
-transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(0, 128, 128, 0.28);
-}
-
-.mensajes-icon-btn--danger:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(220, 38, 38, 0.26);
-}
-
-.mensajes-detail__header-actions .mensajes-icon-btn:not(.mensajes-icon-btn--secondary) {
+.mensajes-detail__header-actions .mensajes-icon-btn:not(.mensajes-menu-trigger) {
   display: none !important;
 }
 
+.mensajes-menu-wrap {
+  position: relative;
+}
+
+.mensajes-menu-trigger {
+  background: rgba(15, 23, 42, 0.06);
+  color: #334155;
+  box-shadow: none;
+}
+
+.mensajes-menu-trigger:hover {
+  background: rgba(15, 23, 42, 0.12);
+  transform: translateY(-2px);
+}
+
+.mensajes-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 6px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.mensajes-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 140ms ease;
+}
+
+.mensajes-menu__item:hover {
+  background-color: rgba(15, 23, 42, 0.06);
+}
+
+.mensajes-menu__item--danger {
+  color: #dc2626;
+}
+
+.mensajes-menu__item--danger:hover {
+  background-color: rgba(220, 38, 38, 0.08);
+}
+
+.mensajes-detail__header-actions .mensajes-send-btn {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 14px;
+  box-shadow: 0 12px 24px rgba(0, 128, 128, 0.2);
+}
+
 .mensajes-icon-btn:hover,
-.mensajes-icon-btn--secondary:hover,
-.mensajes-back:hover,
 .mensajes-send-btn:hover,
 .mensajes-list-item:hover {
   transform: translateY(-2px);
@@ -309,6 +395,10 @@ transform: translateY(-2px);
   color: #64748b;
 }
 
+.mensajes-placeholder .mensajes-send-btn {
+  margin-top: 8px;
+}
+
 .mensajes-empty {
   background: rgba(248, 250, 252, 0.9);
   border: 1px dashed rgba(100, 116, 139, 0.2);
@@ -338,7 +428,8 @@ transform: translateY(-2px);
 }
 
 .mensajes-detail__card {
-  height: calc(100vh - 48px);
+  height: 100%;
+  min-height: 0;
   border-radius: 22px;
   padding: 24px;
   display: flex;
@@ -378,6 +469,7 @@ transform: translateY(-2px);
 .mensajes-thread {
   margin-top: 18px;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -512,7 +604,7 @@ transform: translateY(-2px);
   .mensajes-shell {
     grid-template-columns: 1fr;
     height: auto;
-    min-height: calc(100vh - 48px);
+    min-height: 100%;
   }
 
   .mensajes-sidebar {

@@ -20,26 +20,6 @@ export async function createArriendo(data) {
   }
 }
 
-// Confirmar arriendo
-export async function confirmarArriendo(id) {
-  try {
-    const response = await axios.post(`/rentals/${id}/confirm`);
-    return [response.data.data, null];
-  } catch (error) {
-    return [null, error.response?.data?.message || "Error al confirmar arriendo"];
-  }
-}
-
-// Anular arriendo
-export async function anularArriendo(id) {
-  try {
-    const response = await axios.post(`/rentals/${id}/cancel`);
-    return [response.data.data, null];
-  } catch (error) {
-    return [null, error.response?.data?.message || "Error al anular arriendo"];
-  }
-}
-
 // Obtener detalle de un arriendo (con la publicación incluida)
 export async function obtenerArriendoPorId(id) {
   try {

@@ -6,9 +6,9 @@ import {
   deleteUser,
   getUser,
   getUsers,
+  toggleUserStatus,
   updateUser,
   updateUserVerificationStatus,
-  toggleUserStatus,
 } from "../controllers/user.controller.js";
 
 const router = Router();

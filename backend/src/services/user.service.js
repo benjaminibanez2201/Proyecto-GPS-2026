@@ -98,6 +98,7 @@ export async function getUserService(query) {
       where: [{ id: id }, { rut: rut }, { email: email }],
       select: {
         id: true,
+        uuid: true,
         nombreCompleto: true,
         rut: true,
         email: true,
@@ -215,6 +216,20 @@ export async function updateUserService(query, body) {
     }
 
     const { password, ...userUpdated } = userData;
+
+    if (adminId) {
+      try {
+        const registroAuditoria = auditoriaRepository.create({
+          accion: "EDITAR_USUARIO",
+          usuarioAfectadoId: userUpdated.id,
+          usuarioAfectadoEmail: userUpdated.email,
+          adminResponsable: { id: adminId },
+        });
+        await auditoriaRepository.save(registroAuditoria);
+      } catch (auditoriaError) {
+        console.error("Error al registrar auditoria de edicion de usuario:", auditoriaError);
+      }
+    }
 
     return [userUpdated, null];
   } catch (error) {
@@ -400,10 +415,20 @@ export async function updateProfileService(id, body) {
 
     const userFound = await userRepository.findOne({ 
       where: { id },
-      select: ['id', 'nombreCompleto', 'universidad', 'carrera', 'telefono', 'fotoPerfil', 'password', 'email']
+      select: ["id", "nombreCompleto", "universidad", "carrera", "telefono", "fotoPerfil", "password", "email"]
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];
+
+    if ((body.email && body.email !== userFound.email) || body.newPassword) {
+      if (!body.passwordActual) {
+        return [null, "Se requiere la contraseña actual para cambiar las credenciales"];
+      }
+      const isMatch = await comparePassword(body.passwordActual, userFound.password);
+      if (!isMatch) return [null, "Contraseña incorrecta"];
+    }
+
+    delete body.passwordActual;
 
     if (body.email && body.email !== userFound.email) {
       const existingEmail = await userRepository.findOne({ where: { email: body.email } });
@@ -422,7 +447,7 @@ export async function updateProfileService(id, body) {
       updatedAt: new Date(),
     };
 
-    if (body.newPassword && body.newPassword.trim() !== '') {
+    if (body.newPassword && body.newPassword.trim() !== "") {
       dataToUpdate.password = await encryptPassword(body.newPassword);
     }
 
@@ -436,7 +461,7 @@ export async function updateProfileService(id, body) {
       try {
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
-          ['password']
+          ["password"]
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
@@ -447,7 +472,7 @@ export async function updateProfileService(id, body) {
       try {
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
-          ['email']
+          ["email"]
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
@@ -480,13 +505,31 @@ export async function getProfileService(id) {
   }
 }
 
+export async function getPublicProfileService(uuid) {
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+
+    const userFound = await userRepository.findOne({
+      where: { uuid },
+      select: ["id", "uuid", "nombreCompleto", "fotoPerfil", "rol", "avgRating", "reviewsCount"],
+    });
+
+    if (!userFound) return [null, "Usuario no encontrado"];
+
+    return [userFound, null];
+  } catch (error) {
+    console.error("Error al obtener perfil público:", error);
+    return [null, "Error interno del servidor"];
+  }
+}
+
 export async function updateArrendadorProfileService(id, body) {
   try {
     const userRepository = AppDataSource.getRepository(User);
 
     const userFound = await userRepository.findOne({ 
       where: { id },
-      select: ['id', 'nombreCompleto', 'email', 'telefono', 'fotoPerfil', 'rol', 'estadoVerificacion', 'password']
+      select: ["id", "nombreCompleto", "email", "telefono", "fotoPerfil", "rol", "estadoVerificacion", "password"]
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];
@@ -517,7 +560,7 @@ export async function updateArrendadorProfileService(id, body) {
       updatedAt: new Date(),
     };
 
-    if (body.newPassword && body.newPassword.trim() !== '') {
+    if (body.newPassword && body.newPassword.trim() !== "") {
       dataToUpdate.password = await encryptPassword(body.newPassword);
     }
 
@@ -533,7 +576,7 @@ export async function updateArrendadorProfileService(id, body) {
       try {
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
-          ['email']
+          ["email"]
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
@@ -544,7 +587,7 @@ export async function updateArrendadorProfileService(id, body) {
       try {
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
-          ['password']
+          ["password"]
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
@@ -564,7 +607,7 @@ export async function verifyPasswordService(id, password) {
 
     const userFound = await userRepository.findOne({ 
       where: { id },
-      select: ['id', 'password']
+      select: ["id", "password"]
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];

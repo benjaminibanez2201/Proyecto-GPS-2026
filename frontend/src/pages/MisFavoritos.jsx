@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, MapPin, Trash2 } from 'lucide-react';
+import { GitCompareArrows, Heart, MapPin, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import ComparadorPublicacionesModal from '@components/ComparadorPublicacionesModal';
 import { eliminarFavorito, getMisFavoritos } from '@services/user.service.js';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const accent = '#0f766e';
 
@@ -14,7 +13,7 @@ function formatPrice(value) {
 }
 
 function getPublicacionId(publicacion) {
-  return publicacion?.id_publicacion || publicacion?.id || publicacion?._id;
+  return publicacion?.publicId;
 }
 
 const MisFavoritos = () => {
@@ -113,6 +112,11 @@ const MisFavoritos = () => {
     setComparadorAbierto(true);
   };
 
+  const limpiarComparacion = () => {
+    setComparacion([]);
+    setComparadorAbierto(false);
+  };
+
   return (
     <div style={styles.page}>
       <section style={styles.hero}>
@@ -133,12 +137,17 @@ const MisFavoritos = () => {
           <p style={styles.cardSubtitle}>Desde aquí puedes revisar o quitar publicaciones de tu lista.</p>
         </header>
 
-        {!loading && favoritos.length > 0 && (
+        {!loading && favoritos.length > 0 && comparacion.length > 0 && (
           <div style={styles.compareToolbar}>
             <span style={styles.compareCounter}>Seleccionadas: {comparacion.length}/3</span>
-            <button type="button" onClick={abrirComparador} style={styles.compareButton}>
-              Comparar seleccionadas
-            </button>
+            <div style={styles.compareActions}>
+              <button type="button" onClick={abrirComparador} style={styles.compareButton}>
+                Comparar seleccionadas
+              </button>
+              <button type="button" onClick={limpiarComparacion} style={styles.compareClearButton}>
+                Limpiar selecciÃ³n
+              </button>
+            </div>
           </div>
         )}
 
@@ -163,7 +172,9 @@ const MisFavoritos = () => {
           <div style={styles.grid}>
             {favoritos.map((item) => {
               const publicacion = item.publicacion || item;
-              const publicacionId = publicacion.id_publicacion || publicacion.id;
+              const publicacionId = publicacion.publicId;
+              const seleccionadaParaComparar = comparacion.some((item) => getPublicacionId(item) === publicacionId);
+              const comparacionDeshabilitada = comparacion.length >= 3 && !seleccionadaParaComparar;
               
               const fallbackImage = 'https://via.placeholder.com/400x250?text=Imagen+no+disponible';
               const imagenPrincipal = publicacion.fotos && publicacion.fotos.length > 0
@@ -175,6 +186,20 @@ const MisFavoritos = () => {
                   {/* SECCIÓN DE IMAGEN CON BADGE ABSOLUTO */}
                   <div style={styles.cardImageSection}>
                     <img src={imagenPrincipal} alt={publicacion.titulo} style={styles.cardImage} />
+                    <button
+                      type="button"
+                      onClick={() => toggleComparacion(publicacion)}
+                      disabled={comparacionDeshabilitada}
+                      style={{
+                        ...styles.compareIconButton,
+                        ...(seleccionadaParaComparar ? styles.compareIconButtonSelected : {}),
+                        ...(comparacionDeshabilitada ? styles.compareIconButtonDisabled : {}),
+                      }}
+                      title={comparacionDeshabilitada ? 'Puedes comparar hasta tres publicaciones' : seleccionadaParaComparar ? 'Quitar de comparaciÃ³n' : 'Seleccionar para comparar'}
+                      aria-label={seleccionadaParaComparar ? 'Quitar de comparaciÃ³n' : 'Seleccionar para comparar'}
+                    >
+                      <GitCompareArrows size={18} strokeWidth={2.4} />
+                    </button>
                     <span style={styles.badge}>{publicacion.estado || 'activa'}</span>
                   </div>
 
@@ -195,27 +220,10 @@ const MisFavoritos = () => {
 
                     {/* SECCIÓN DE ACCIONES FINAL: COMPARAR, VER DETALLES Y ELIMINAR */}
                     <div style={styles.cardActionsSection}>
-                      <label
-                        style={{
-                          ...styles.compareLabel,
-                          ...(comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === publicacionId)
-                            ? styles.compareLabelDisabled
-                            : {}),
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={comparacion.some((item) => getPublicacionId(item) === publicacionId)}
-                          disabled={comparacion.length >= 3 && !comparacion.some((item) => getPublicacionId(item) === publicacionId)}
-                          onChange={() => toggleComparacion(publicacion)}
-                        />
-                        Comparar
-                      </label>
-
                       <div style={styles.actionButtonsGroup}>
                         <button
                           type="button"
-                          onClick={() => navigate(`/publicacion/${encodePublicId(publicacionId)}`)}
+                          onClick={() => navigate(`/publicacion/${publicacion.publicId}`)}
                           style={styles.verDetallesButton}
                         >
                           Ver Detalles
@@ -338,6 +346,24 @@ const styles = {
     padding: '10px 14px',
     transition: 'background-color 0.2s ease',
   },
+  compareActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+  },
+  compareClearButton: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #dbe4ee',
+    borderRadius: '10px',
+    color: '#334155',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: 700,
+    padding: '10px 14px',
+    transition: 'background-color 0.2s ease',
+  },
   emptyState: {
     padding: '36px 20px',
     borderRadius: '20px',
@@ -371,7 +397,7 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
     gap: '16px',
   },
   favoriteCard: {
@@ -399,6 +425,34 @@ const styles = {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
+  },
+  compareIconButton: {
+    position: 'absolute',
+    top: '12px',
+    left: '12px',
+    zIndex: 2,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '36px',
+    height: '36px',
+    padding: 0,
+    borderRadius: '50%',
+    border: 'none',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    color: accent,
+    boxShadow: '0 2px 6px rgba(0,0,0,0.14)',
+    cursor: 'pointer',
+    backdropFilter: 'blur(6px)',
+    transition: 'background-color 160ms ease, color 160ms ease, transform 120ms ease',
+  },
+  compareIconButtonSelected: {
+    backgroundColor: accent,
+    color: '#ffffff',
+  },
+  compareIconButtonDisabled: {
+    cursor: 'not-allowed',
+    opacity: 0.72,
   },
   badge: {
     position: 'absolute',
@@ -484,19 +538,6 @@ const styles = {
     gap: '10px',
     paddingTop: '10px',
     borderTop: '1px solid #e2e8f0',
-  },
-  compareLabel: {
-    alignItems: 'center',
-    color: '#334155',
-    cursor: 'pointer',
-    display: 'inline-flex',
-    fontSize: '13px',
-    fontWeight: 700,
-    gap: '8px',
-  },
-  compareLabelDisabled: {
-    color: '#94a3b8',
-    cursor: 'not-allowed',
   },
   removeButton: {
     flex: '1 1 0',

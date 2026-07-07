@@ -21,10 +21,8 @@ export async function obtenerUsuarios() {
 export async function updateUser(data, rut) {
     try {
         const response = await axios.patch(`/user/detail/?rut=${rut}`, data);
-        console.log(response);
         return response.data.data;
     } catch (error) {
-        console.log(error);
         return error.response.data;
     }
 }
@@ -132,6 +130,24 @@ export async function crearPublicacion(data) {
     }
 }
 
+export async function patrocinarPublicacion(id, data) {
+    try {
+        const response = await axios.post(`/publicacion/${id}/patrocinio`, data);
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { message: 'Error al patrocinar publicacion' };
+    }
+}
+
+export async function cancelarPatrocinioPublicacion(id) {
+    try {
+        const response = await axios.delete(`/publicacion/${id}/patrocinio`);
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { message: 'Error al cancelar patrocinio' };
+    }
+}
+
 export async function getMisFavoritos() {
     try {
         const response = await axios.get('/favoritos');
@@ -179,15 +195,6 @@ export async function toggleUserStatusRequest(id, estadoCuenta) {
         return response.data;
     } catch (error) {
         const payload = error.response?.data;
-        console.log('--- DEBUG toggleUserStatusRequest ---');
-        console.log('URL:', error.config?.url);
-        console.log('Method:', error.config?.method?.toUpperCase());
-        console.log('Params sent:', error.config?.params);
-        console.log('Body sent:', error.config?.data);
-        console.log('Status:', error.response?.status);
-        console.log('Response data:', payload);
-        console.log('Full error:', error);
-        console.log('--- END DEBUG toggleUserStatusRequest ---');
         return payload || { message: 'Error al cambiar el estado del usuario' };
     }
 }

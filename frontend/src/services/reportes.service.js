@@ -27,6 +27,15 @@ export async function obtenerPublicacionesReportadas() {
   }
 }
 
+export async function obtenerPublicacionesInactivas() {
+  try {
+    const response = await axios.get('/reportes/inactivas');
+    return [response.data.data ?? [], null];
+  } catch (error) {
+    return [null, error.response?.data?.message || 'Error al obtener publicaciones inactivas'];
+  }
+}
+
 export async function resolverPublicacionReportada(idPublicacion, data) {
   try {
     const response = await axios.patch(`/reportes/${idPublicacion}/review`, data);
