@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight, GitCompareArrows, Zap } from 'lucide-react';
 import '../styles/publicacionCard.css';
 import { useNavigate} from 'react-router-dom';
 import { resolveFileUrl } from '@helpers/resolveFileUrl.js';
-import { encodePublicId } from '@helpers/publicId.helper.js';
 
 const cardArrowStyle = {
   position: 'absolute',
@@ -35,7 +34,7 @@ export default function PublicacionCard({
 }) {
   const navigate = useNavigate();
   
-  const idPublicacion = publicacion?.id || publicacion?._id;
+  const idPublicacion = publicacion?.publicId;
 
   const [esFavorito, setEsFavorito] = useState(false);
   const [procesando, setProcesando] = useState(false);
@@ -43,14 +42,9 @@ export default function PublicacionCard({
 
   useEffect(() => {
     if (!idPublicacion) return;
-    
-    const isFav = favoritos.some(fav => 
-      String(fav.publicacionId) === String(idPublicacion) || 
-      String(fav?.publicacion?.id) === String(idPublicacion) || 
-      String(fav?.publicacion?._id) === String(idPublicacion) ||
-      String(fav.id) === String(idPublicacion)
-    );
-    
+
+    const isFav = favoritos.some(fav => String(fav?.publicacion?.publicId) === String(idPublicacion));
+
     setEsFavorito(isFav);
   }, [favoritos, idPublicacion]);
 
@@ -79,6 +73,9 @@ export default function PublicacionCard({
   if (!publicacion) return null;
 
   const { titulo, tipoInmueble, precioMensual, ubicacion, fotos } = publicacion;
+  const estaPatrocinada = Boolean(publicacion.patrocinada) && (
+    !publicacion.patrocinadaHasta || new Date(publicacion.patrocinadaHasta).getTime() > Date.now()
+  );
 
   const fotosResueltas = fotos && fotos.length > 0 ? fotos.map(resolveFileUrl) : [];
   const imagenActiva = fotosResueltas[fotoActivaIndex] || fotosResueltas[0] || 'https://via.placeholder.com/400x250?text=Sin+Imagen';
@@ -99,8 +96,8 @@ export default function PublicacionCard({
   }).format(precioMensual || 0);
 
   const handleVerDetalles = () => {
-    if (idPublicacion) {
-      navigate(`/publicacion/${encodePublicId(idPublicacion)}`);
+    if (publicacion?.publicId) {
+      navigate(`/publicacion/${publicacion.publicId}`);
     }
   };
 
@@ -108,6 +105,13 @@ export default function PublicacionCard({
     <div className="publicacion-card">
       <div className="publicacion-image-container" style={{ position: 'relative' }}>
         <img src={imagenActiva} alt={titulo} className="publicacion-image" />
+
+        {estaPatrocinada && (
+          <span className="publicacion-sponsored-badge" title="Publicacion promocionada">
+            <Zap size={13} fill="#facc15" strokeWidth={2.4} />
+            Promocionado
+          </span>
+        )}
 
         {fotosResueltas.length > 1 && (
           <>
@@ -137,6 +141,7 @@ export default function PublicacionCard({
         <button
           onClick={toggleFavorito}
           disabled={procesando}
+          data-tour="favorito-btn"
           title={esFavorito ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
           style={{ 
             position: 'absolute', 
@@ -165,6 +170,20 @@ export default function PublicacionCard({
             strokeWidth={2}
           />
         </button>
+
+        {onToggleCompare && (
+          <button
+            type="button"
+            data-tour="comparar-btn"
+            className={`publicacion-compare-btn${selectedForCompare ? ' publicacion-compare-btn--selected' : ''}`}
+            disabled={compareDisabled}
+            onClick={() => onToggleCompare(publicacion)}
+            title={compareDisabled ? 'Puedes comparar hasta tres publicaciones' : selectedForCompare ? 'Quitar de comparación' : 'Seleccionar para comparar'}
+            aria-label={selectedForCompare ? 'Quitar de comparación' : 'Seleccionar para comparar'}
+          >
+            <GitCompareArrows size={18} strokeWidth={2.4} />
+          </button>
+        )}
       </div>
 
       <div className="publicacion-info">
@@ -173,30 +192,6 @@ export default function PublicacionCard({
         </span>
         <h3 className="publicacion-title">{titulo || 'Sin título'}</h3>
         <p className="publicacion-location">{ubicacion || 'Ubicación no disponible'}</p>
-        
-        {onToggleCompare && (
-          <label
-            style={{
-              alignItems: 'center',
-              color: compareDisabled ? '#94a3b8' : '#334155',
-              cursor: compareDisabled ? 'not-allowed' : 'pointer',
-              display: 'inline-flex',
-              fontSize: '13px',
-              fontWeight: 700,
-              gap: '8px',
-              marginBottom: '12px',
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={selectedForCompare}
-              disabled={compareDisabled}
-              onChange={() => onToggleCompare(publicacion)}
-            />
-            Comparar
-          </label>
-        )}
-
         <div className="publicacion-footer">
           <span className="publicacion-price">{precioFormateado} <small>/mes</small></span>
           <button 

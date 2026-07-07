@@ -76,7 +76,8 @@ export async function getPublicacionesService(filtros) {
     }
 
     if (tipoInmueble) {
-      query.andWhere("publicacion.tipoInmueble = :tipoInmueble", { tipoInmueble });
+      const tiposArray = Array.isArray(tipoInmueble) ? tipoInmueble : tipoInmueble.split(",");
+      query.andWhere("publicacion.tipoInmueble IN (:...tiposArray)", { tiposArray });
     }
 
     if (distanciaCampus) {
@@ -96,9 +97,12 @@ export async function getPublicacionesService(filtros) {
     const campoOrden = opcionesOrdenValidas.includes(ordenarPor) ? ordenarPor : "precioMensual";
     const direccion = direccionOrden?.toUpperCase() === "DESC" ? "DESC" : "ASC";
 
-    query.orderBy(`publicacion.${campoOrden}`, direccion);
+    query.orderBy("publicacion.patrocinada", "DESC");
+    query.addOrderBy("publicacion.patrocinadaHasta", "DESC", "NULLS LAST");
+    query.addOrderBy(`publicacion.${campoOrden}`, direccion);
     query.select([
       "publicacion.id",
+      "publicacion.uuid",
       "publicacion.titulo",
       "publicacion.precioMensual",
       "publicacion.tipoInmueble",
@@ -109,6 +113,8 @@ export async function getPublicacionesService(filtros) {
       "publicacion.fotos",
       "publicacion.serviciosIncluidos",
       "publicacion.distanciaCampus",
+      "publicacion.patrocinada",
+      "publicacion.patrocinadaHasta",
     ]);
 
     const limite = 20; 
@@ -133,14 +139,78 @@ export async function getPublicacionesService(filtros) {
   }
 }
 
-export async function getPublicacionDetalleService(id) {
+export async function patrocinarPublicacionService(publicacionUuid, arrendadorId, datosPatrocinio) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
-    
+
+    const publicacion = await publicacionRepository.findOne({
+      where: { uuid: publicacionUuid, arrendador: { id: arrendadorId } },
+    });
+
+    if (!publicacion) return [null, "La publicacion no existe o no tienes permisos"];
+
+    if (publicacion.estado === "inactiva") {
+      return [null, "Esta publicacion fue dada de baja y no se puede patrocinar."];
+    }
+
+    if (publicacion.estado === "arrendada") {
+      return [null, "No puedes patrocinar una publicacion que ya esta arrendada."];
+    }
+
+    const vigenciaDias = Number(datosPatrocinio?.vigenciaDias || 7);
+    const patrocinadaHasta = new Date(Date.now() + vigenciaDias * 24 * 60 * 60 * 1000);
+
+    publicacion.patrocinada = true;
+    publicacion.patrocinadaHasta = patrocinadaHasta;
+    publicacion.patrocinioMetodo = datosPatrocinio.metodoPago;
+    publicacion.patrocinioMonto = datosPatrocinio.monto;
+
+    await publicacionRepository.save(publicacion);
+
+    return [publicacion, null];
+  } catch (error) {
+    console.error("Error al patrocinar publicacion:", error);
+    return [null, "Error interno del servidor al patrocinar la publicacion"];
+  }
+}
+
+export async function cancelarPatrocinioPublicacionService(publicacionUuid, arrendadorId) {
+  try {
+    const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
+
+    const publicacion = await publicacionRepository.findOne({
+      where: { uuid: publicacionUuid, arrendador: { id: arrendadorId } },
+    });
+
+    if (!publicacion) return [null, "La publicacion no existe o no tienes permisos"];
+
+    if (!publicacion.patrocinada) {
+      return [null, "La publicacion no tiene un patrocinio activo."];
+    }
+
+    publicacion.patrocinada = false;
+    publicacion.patrocinadaHasta = null;
+    publicacion.patrocinioMetodo = null;
+    publicacion.patrocinioMonto = null;
+
+    await publicacionRepository.save(publicacion);
+
+    return [publicacion, null];
+  } catch (error) {
+    console.error("Error al cancelar patrocinio:", error);
+    return [null, "Error interno del servidor al cancelar el patrocinio"];
+  }
+}
+
+export async function getPublicacionDetalleService(uuid) {
+  try {
+    const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
+
     const publicacion = await publicacionRepository.createQueryBuilder("publicacion")
       .leftJoin("publicacion.arrendador", "arrendador")
       .select([
         "publicacion.id",
+        "publicacion.uuid",
         "publicacion.titulo",
         "publicacion.precioMensual",
         "publicacion.tipoInmueble",
@@ -151,11 +221,14 @@ export async function getPublicacionDetalleService(id) {
         "publicacion.distanciaCampus",  
         "publicacion.reglasConvivencia", 
         "publicacion.estado",
+        "publicacion.patrocinada",
+        "publicacion.patrocinadaHasta",
         "publicacion.createdAt",          
         "publicacion.updatedAt"
       ])
       .addSelect([
         "arrendador.id",
+        "arrendador.uuid",
         "arrendador.nombreCompleto",
         "arrendador.email",
         "arrendador.fotoPerfil",
@@ -163,8 +236,7 @@ export async function getPublicacionDetalleService(id) {
         "arrendador.avgRating",
         "arrendador.reviewsCount",
       ])
-      .where("publicacion.id = :id", { id: parseInt(id) })
-      .andWhere("publicacion.estado IN (:...estados)", { estados: ["activa", "disponible", "arrendada"] })
+      .where("publicacion.uuid = :uuid", { uuid })
       .getOne();
 
     if (!publicacion) {
@@ -191,15 +263,19 @@ export async function obtenerPublicacionesArrendadorService(arrendadorId) {
   }
 }
 
-export async function updatePublicacionService(publicacionId, arrendadorId, body, files) {
+export async function updatePublicacionService(publicacionUuid, arrendadorId, body, files) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
-    
+
     const publicacion = await publicacionRepository.findOne({
-      where: { id: publicacionId, arrendador: { id: arrendadorId } }
+      where: { uuid: publicacionUuid, arrendador: { id: arrendadorId } }
     });
 
     if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];
+
+    if (publicacion.estado === "inactiva") {
+      return [null, "Esta publicación fue dada de baja por incumplir las normas y no se puede editar. Solo puedes eliminarla."];
+    }
 
     const comunaCambio = body.comuna && body.comuna !== publicacion.comuna;
     const faltanCoordenadas = body.latitud == null || body.longitud == null;
@@ -239,12 +315,12 @@ export async function updatePublicacionService(publicacionId, arrendadorId, body
   }
 }
 
-export async function deletePublicacionService(publicacionId, arrendadorId) {
+export async function deletePublicacionService(publicacionUuid, arrendadorId) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
 
     const publicacion = await publicacionRepository.findOne({
-      where: { id: publicacionId, arrendador: { id: arrendadorId } }
+      where: { uuid: publicacionUuid, arrendador: { id: arrendadorId } }
     });
 
     if (!publicacion) return [null, "La publicación no existe o no tienes permisos"];

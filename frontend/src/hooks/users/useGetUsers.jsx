@@ -1,25 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getUsers } from '@services/user.service.js';
 
 const useUsers = () => {
     const [users, setUsers] = useState([]);
 
-    const fetchUsers = async () => {
-        try {
-            const response = await getUsers();
-            const formattedData = Array.isArray(response) ? [...response] : [];
-            dataLogged(formattedData);
-            setUsers(formattedData);
-        } catch (error) {
-            console.error("Error: ", error);
-        }
-    };
-
-    useEffect(() => {
-        fetchUsers();
-    }, []);
-
-    const dataLogged = (formattedData) => {
+    const dataLogged = useCallback((formattedData) => {
         try {
             const { rut } = JSON.parse(sessionStorage.getItem('usuario'));
             for(let i = 0; i < formattedData.length ; i++) {
@@ -31,7 +16,22 @@ const useUsers = () => {
         } catch (error) {
             console.error("Error: ", error)
         }
-    };
+    }, []);
+
+    const fetchUsers = useCallback(async () => {
+        try {
+            const response = await getUsers();
+            const formattedData = Array.isArray(response) ? [...response] : [];
+            dataLogged(formattedData);
+            setUsers(formattedData);
+        } catch (error) {
+            console.error("Error: ", error);
+        }
+    }, [dataLogged]);
+
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
 
     return { users, fetchUsers, setUsers };
 };

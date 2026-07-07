@@ -7,6 +7,7 @@ const ACCION_LABELS = {
   BLOQUEAR: 'Suspendió la cuenta',
   DESBLOQUEAR: 'Reactivó la cuenta',
   ELIMINAR: 'Eliminó al usuario',
+   EDITAR_USUARIO: 'Editó los datos del usuario',
   APROBAR_DOCUMENTOS: 'Aprobó los documentos',
   RECHAZAR_DOCUMENTOS: 'Rechazó los documentos',
   SOLICITAR_ANTECEDENTES: 'Solicitó antecedentes adicionales',
@@ -17,6 +18,7 @@ const ACCION_COLORES = {
   BLOQUEAR: { bg: '#fef2f2', color: '#dc2626' },
   DESBLOQUEAR: { bg: '#f0fdf4', color: '#16a34a' },
   ELIMINAR: { bg: '#fef2f2', color: '#b91c1c' },
+  EDITAR_USUARIO: { bg: '#eff6ff', color: '#1d4ed8' },
   APROBAR_DOCUMENTOS: { bg: '#f0fdf4', color: '#0f766e' },
   RECHAZAR_DOCUMENTOS: { bg: '#fef2f2', color: '#b91c1c' },
   SOLICITAR_ANTECEDENTES: { bg: '#fffbeb', color: '#b45309' },
@@ -149,7 +151,6 @@ const AdminAuditoria = () => {
       <section style={styles.contentCard}>
         <header style={styles.cardHeader}>
           <div>
-            <p style={{ ...styles.cardEyebrow, color: '#008080' }}>Administración</p>
             <h3 style={styles.cardTitle}>Registros de auditoría</h3>
             <p style={styles.cardSubtitle}>
               Filtra por administrador responsable, tipo de acción o rango de fechas.

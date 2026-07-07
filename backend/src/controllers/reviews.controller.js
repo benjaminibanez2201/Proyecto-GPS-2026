@@ -8,6 +8,12 @@ import {
   obtenerResenasPorUsuarioServicio,
   obtenerResenasRecibidasServicio,
 } from "../services/reviews.service.js";
+import { isValidPublicId } from "../helpers/publicId.helper.js";
+
+function agregarPublicIdAutor(resena) {
+  if (!resena?.author) return resena;
+  return { ...resena, author: { ...resena.author, publicId: resena.author.uuid } };
+}
 
 export async function crearResena(req, res) {
   try {
@@ -23,10 +29,14 @@ export async function crearResena(req, res) {
 
 export async function obtenerResenasPorUsuario(req, res) {
   try {
-    const { id } = req.params;
-    const [data, error] = await obtenerResenasPorUsuarioServicio(Number(id));
+    const { id: usuarioUuid } = req.params;
+    if (!isValidPublicId(usuarioUuid)) {
+      return handleErrorClient(res, 400, "ID inválido", "El identificador del usuario no es válido");
+    }
+
+    const [data, error] = await obtenerResenasPorUsuarioServicio(usuarioUuid);
     if (error) return handleErrorClient(res, 400, error);
-    return handleSuccess(res, 200, "Reviews del usuario", data);
+    return handleSuccess(res, 200, "Reviews del usuario", data.map(agregarPublicIdAutor));
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }
@@ -37,7 +47,7 @@ export async function obtenerResenasRecibidas(req, res) {
     const { id } = req.user;
     const [data, error] = await obtenerResenasRecibidasServicio(Number(id));
     if (error) return handleErrorClient(res, 400, error);
-    return handleSuccess(res, 200, "Reviews recibidas", data);
+    return handleSuccess(res, 200, "Reviews recibidas", data.map(agregarPublicIdAutor));
   } catch (error) {
     return handleErrorServer(res, 500, error.message);
   }

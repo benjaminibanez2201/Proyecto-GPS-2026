@@ -3,14 +3,12 @@ import nodemailer from "nodemailer";
 import { fileURLToPath } from "url";
 import path from "path";
 import {
-  BACKEND_URL,
   EMAIL_FROM,
   EMAIL_PASS,
   EMAIL_USER,
   FRONTEND_URL,
 } from "../config/configEnv.js";
 import { renderEmailTemplate } from "../helpers/emailTemplate.helper.js";
-import { encodePublicId } from "../helpers/publicId.helper.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,38 +35,8 @@ function normalizeBaseUrl(url = "http://localhost:5173") {
   return url.replace(/\/$/, "");
 }
 
-function buildPublicBackendUrl() {
-  if (process.env.BACKEND_URL) {
-    return normalizeBaseUrl(process.env.BACKEND_URL);
-  }
-
-  const frontendUrl = normalizeBaseUrl(FRONTEND_URL);
-  const isLocalFrontend = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(frontendUrl);
-
-  if (!isLocalFrontend) {
-    try {
-      const publicBackendUrl = new URL(frontendUrl);
-      const frontendPort = Number(publicBackendUrl.port);
-
-      publicBackendUrl.pathname = "";
-      publicBackendUrl.search = "";
-      publicBackendUrl.hash = "";
-
-      if (frontendPort > 1) {
-        publicBackendUrl.port = String(frontendPort - 1);
-      }
-
-      return normalizeBaseUrl(publicBackendUrl.toString());
-    } catch {
-      return frontendUrl;
-    }
-  }
-
-  return normalizeBaseUrl(BACKEND_URL);
-}
-
 function buildEmailConfirmationUrl(token) {
-  return `${buildPublicBackendUrl()}/auth/confirm-email/${encodeURIComponent(token)}`;
+  return `${normalizeBaseUrl(FRONTEND_URL)}/auth/confirm-email/${encodeURIComponent(token)}`;
 }
 
 function getBrandAttachments() {
@@ -82,6 +50,16 @@ function getBrandAttachments() {
       filename: "miLogo.png",
       path: logoPath,
       cid: logoCid,
+    },
+  ];
+}
+
+function getBannerOnlyAttachment() {
+  return [
+    {
+      filename: "slidebaar.png",
+      path: bannerPath,
+      cid: bannerCid,
     },
   ];
 }
@@ -175,7 +153,7 @@ export async function sendRentalCompleteEmail(rental) {
   try {
     const transporter = createTransporter();
     const baseUrl = normalizeBaseUrl(FRONTEND_URL);
-    const nextPath = `/arriendo/${encodePublicId(rental.id)}`;
+    const nextPath = `/arriendo/${rental.uuid}?origen=correo`;
     const loginWithNextUrl = `${baseUrl}/auth?next=${encodeURIComponent(nextPath)}`;
     const greetingNameArrendador = rental.arrendador?.nombreCompleto || "Arrendador";
     const greetingNameEstudiante = rental.estudiante?.nombreCompleto || "Estudiante";
@@ -262,7 +240,7 @@ export async function sendRentalCompleteEmail(rental) {
         "  </div>",
         "</div>",
       ].join("\n"),
-      attachments: getBrandAttachments(),
+      attachments: getBannerOnlyAttachment(),
     });
 
     if (rental.arrendador?.email) {
@@ -296,7 +274,7 @@ export async function sendCredentialChangedEmail(user, tiposCambio = []) {
     to: user.email, // se envía al correo anterior
     subject: "Aviso de seguridad: cambio de credenciales en ArriendU",
     template: "credenciales-cambio",
-    attachments: getBrandAttachments(),
+    attachments: getBannerOnlyAttachment(),
     data: {
       nombreCompleto: user.nombreCompleto,
       descripcion,

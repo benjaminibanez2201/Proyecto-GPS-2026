@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle, Trash2 } from 'lucide-react';
+
+import { MessageCircle, Send, RefreshCw, Inbox, Sparkles, CheckCircle, ShieldAlert, XCircle, MoreVertical, Eye } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
 import {
@@ -12,7 +13,8 @@ import {
 } from '@services/mensaje.service.js';
 import { createArriendo, listarArriendos } from '@services/rentalsAndReviews.service.js';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
-import { decodePublicId, encodePublicId } from '@helpers/publicId.helper.js';
+import ModalReportarUsuario from '@components/ModalReportarUsuario.jsx';
+import { connectSocket } from '@services/socket.service.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import '@styles/mensajes.css';
 
@@ -108,9 +110,30 @@ export default function Mensajes() {
   const [searchText, setSearchText] = useState('');
   const [rentalForConversation, setRentalForConversation] = useState(null);
   const [loadingRentalConfirmation, setLoadingRentalConfirmation] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [menuOpcionesAbierto, setMenuOpcionesAbierto] = useState(false);
+  const menuOpcionesRef = useRef(null);
+  const threadRef = useRef(null);
 
-  const publicationTargetId = publicationIdParam ? decodePublicId(publicationIdParam) : null;
-  const conversationTargetId = conversationIdParam ? Number(conversationIdParam) : null;
+  const publicationTargetId = publicationIdParam || null;
+  const conversationTargetId = conversationIdParam || null;
+
+  useEffect(() => {
+    setMenuOpcionesAbierto(false);
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    if (!menuOpcionesAbierto) return undefined;
+
+    const handleClickOutside = (event) => {
+      if (menuOpcionesRef.current && !menuOpcionesRef.current.contains(event.target)) {
+        setMenuOpcionesAbierto(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpcionesAbierto]);
 
   const fetchConversations = async () => {
     setLoadingConversations(true);
@@ -187,6 +210,29 @@ export default function Mensajes() {
   }, [loadRentalForConversation, selectedConversation, user?.id]);
 
   useEffect(() => {
+    if (!threadRef.current) return;
+    threadRef.current.scrollTop = threadRef.current.scrollHeight;
+  }, [messages, selectedConversationId]);
+
+  useEffect(() => {
+    const socket = connectSocket();
+    if (!socket) return;
+
+    const handleNuevoMensaje = (payload) => {
+      if (payload?.conversacionId === selectedConversationId) {
+        setMessages((prev) => [...prev, payload.mensaje]);
+      }
+      fetchConversations();
+    };
+
+    socket.on('nuevo-mensaje', handleNuevoMensaje);
+
+    return () => {
+      socket.off('nuevo-mensaje', handleNuevoMensaje);
+    };
+  }, [selectedConversationId]);
+
+  useEffect(() => {
     const init = async () => {
       const currentConversations = await fetchConversations();
 
@@ -197,10 +243,10 @@ export default function Mensajes() {
       }
 
       if (publicationTargetId) {
-        const existingConversation = currentConversations.find((conversation) => String(conversation?.publicacion?.id) === String(publicationTargetId));
+        const existingConversation = currentConversations.find((conversation) => conversation?.publicacion?.publicId === publicationTargetId);
         if (existingConversation) {
-          setSelectedConversationId(existingConversation.id);
-          await loadConversationDetail(existingConversation.id);
+          setSelectedConversationId(existingConversation.publicId);
+          await loadConversationDetail(existingConversation.publicId);
         } else {
           setSelectedConversationId(null);
           await loadConversationDetail(null);
@@ -209,8 +255,8 @@ export default function Mensajes() {
       }
 
       if (currentConversations.length > 0) {
-        setSelectedConversationId(currentConversations[0].id);
-        await loadConversationDetail(currentConversations[0].id);
+        setSelectedConversationId(currentConversations[0].publicId);
+        await loadConversationDetail(currentConversations[0].publicId);
       }
     };
 
@@ -252,15 +298,22 @@ export default function Mensajes() {
 
   const isRentalCompleted = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'COMPLETED');
   const isRentalCancelled = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'CANCELLED');
+  const isRentalFinished = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'FINISHED');
   const isCurrentUserArrendador = Boolean(
     selectedConversation?.arrendador?.id && Number(user?.id) === Number(selectedConversation.arrendador.id),
   );
+  const currentUserConfirmed = !isRentalFinished && Boolean(
+    isCurrentUserArrendador ? rentalForConversation?.confirmedByArrendador : rentalForConversation?.confirmedByEstudiante,
+  );
+  const isPublicacionArrendadaPorOtro = Boolean(
+    selectedConversation?.publicacion?.estado === 'arrendada' && !isRentalCompleted,
+  );
   const shouldShowConfirmRentalButton = Boolean(
-    selectedConversation?.publicacion?.id && selectedConversation?.arrendador?.id && selectedConversation?.estudiante?.id && isCurrentUserArrendador,
-  ) && !isRentalCompleted && !isRentalCancelled;
+    selectedConversation?.publicacion?.id && selectedConversation?.arrendador?.id && selectedConversation?.estudiante?.id,
+  ) && !isRentalCompleted && !isRentalCancelled && !isPublicacionArrendadaPorOtro;
 
   const handleSelectConversation = async (conversationId) => {
-    setSearchParams({ conversacion: String(conversationId) });
+    setSearchParams({ conversacion: conversationId });
     setSelectedConversationId(conversationId);
     await loadConversationDetail(conversationId);
   };
@@ -292,16 +345,16 @@ export default function Mensajes() {
 
     setComposeText('');
     const refreshedConversations = await fetchConversations();
-    const createdConversation = refreshedConversations.find((conversation) => String(conversation?.publicacion?.id) === String(publicationTargetId));
+    const createdConversation = refreshedConversations.find((conversation) => conversation?.publicacion?.publicId === publicationTargetId);
 
     if (createdConversation) {
-      setSelectedConversationId(createdConversation.id);
-      await loadConversationDetail(createdConversation.id);
-      setSearchParams({ conversacion: String(createdConversation.id) });
-    } else if (result?.conversacion?.id) {
-      setSelectedConversationId(result.conversacion.id);
-      await loadConversationDetail(result.conversacion.id);
-      setSearchParams({ conversacion: String(result.conversacion.id) });
+      setSelectedConversationId(createdConversation.publicId);
+      await loadConversationDetail(createdConversation.publicId);
+      setSearchParams({ conversacion: createdConversation.publicId });
+    } else if (result?.conversacion?.publicId) {
+      setSelectedConversationId(result.conversacion.publicId);
+      await loadConversationDetail(result.conversacion.publicId);
+      setSearchParams({ conversacion: result.conversacion.publicId });
     }
   };
 
@@ -340,7 +393,7 @@ export default function Mensajes() {
   };
 
   const handleDeleteConversation = async (conversation) => {
-    if (!conversation?.id) return;
+    if (!conversation?.publicId) return;
 
     const confirmation = await Swal.fire({
       title: '¿Ocultar conversación?',
@@ -355,7 +408,7 @@ export default function Mensajes() {
 
     if (!confirmation.isConfirmed) return;
 
-    const [, errorResponse] = await eliminarConversacion(conversation.id);
+    const [, errorResponse] = await eliminarConversacion(conversation.publicId);
 
     if (errorResponse) {
       await Swal.fire('No se pudo ocultar', errorResponse, 'error');
@@ -380,14 +433,9 @@ export default function Mensajes() {
       return;
     }
 
-    if (!isCurrentUserArrendador) {
-      await Swal.fire('No autorizado', 'Solo el arrendador puede aceptar el arriendo desde el chat.', 'warning');
-      return;
-    }
-
     const confirm = await Swal.fire({
       title: '¿Quiere aceptar este arriendo?',
-      text: 'La publicación pasará a estado arrendada y ya no estará disponible para otros interesados.',
+      text: 'Al aceptar, queda confirmado de tu lado. Cuando la otra persona también acepte, el arriendo quedará cerrado.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#0f766e',
@@ -414,7 +462,13 @@ export default function Mensajes() {
     }
 
     setRentalForConversation(acceptedRental || null);
-    await Swal.fire('Arriendo aceptado', 'El arriendo quedó concretado y la publicación pasó a estado arrendada.', 'success');
+
+    if (acceptedRental?.status === 'COMPLETED') {
+      await Swal.fire('Arriendo aceptado', 'El arriendo quedó concretado y la publicación pasó a estado arrendada.', 'success');
+    } else {
+      await Swal.fire('Confirmación registrada', 'Falta que la otra parte también acepte para concretar el arriendo.', 'success');
+    }
+
     await loadRentalForConversation(selectedConversation);
   };
 
@@ -427,7 +481,6 @@ export default function Mensajes() {
         <aside className="mensajes-sidebar">
           <div className="mensajes-sidebar__header">
             <div>
-              <p className="mensajes-eyebrow">Mensajes</p>
               <h1>Tu bandeja</h1>
               <p className="mensajes-subtitle">Revisa conversaciones, responde y sigue el hilo de cada arriendo.</p>
             </div>
@@ -437,7 +490,6 @@ export default function Mensajes() {
           </div>
 
           <label className="mensajes-search">
-            <span>Buscar</span>
             <input
               type="text"
               value={searchText}
@@ -466,14 +518,18 @@ export default function Mensajes() {
             {!loadingConversations && filteredConversations.length === 0 && (
               <div className="mensajes-empty">
                 <Inbox size={22} />
-                <p>No tienes conversaciones todavía.</p>
-                {isContactComposerVisible && <span>Escribe un mensaje desde una publicación para empezar.</span>}
+                <p>Aquí aparecerán tus conversaciones con los arrendadores.</p>
+                <span>
+                  {isContactComposerVisible
+                    ? 'Escribe un mensaje desde una publicación para empezar.'
+                    : '¡Empieza a buscar y envía tu primer mensaje!'}
+                </span>
               </div>
             )}
 
             {filteredConversations.map((conversation) => {
               const otherParticipant = getOtherParticipant(conversation, user?.id, userRole);
-              const isSelected = String(conversation.id) === String(selectedConversationId);
+              const isSelected = conversation.publicId === selectedConversationId;
               const unreadCount = getUnreadConversationBadgeCount(conversation, userRole);
 
               return (
@@ -481,7 +537,7 @@ export default function Mensajes() {
                   <button
                     type="button"
                     className={`mensajes-list-item ${isSelected ? 'is-selected' : ''}`}
-                    onClick={() => handleSelectConversation(conversation.id)}
+                    onClick={() => handleSelectConversation(conversation.publicId)}
                   >
                     <AvatarCirculo nombre={otherParticipant?.nombreCompleto} foto={otherParticipant?.fotoPerfil} size={44} shape="square" />
                     <div className="mensajes-list-item__body">
@@ -496,16 +552,6 @@ export default function Mensajes() {
                       <span className="mensajes-list-item__date">{formatDate(conversation?.ultimaFechaMensaje || conversation?.updatedAt)}</span>
                     </div>
                   </button>
-
-                  <button
-                    type="button"
-                    className="mensajes-list-delete-btn"
-                    onClick={() => handleDeleteConversation(conversation)}
-                    title="Ocultar conversación"
-                    aria-label="Ocultar conversación"
-                  >
-                    <Trash2 size={14} />
-                  </button>
                 </div>
               );
             })}
@@ -515,7 +561,18 @@ export default function Mensajes() {
         <main className="mensajes-main">
           {error && <div className="mensajes-error">{error}</div>}
 
-          {!hasSelectedConversation && !isContactComposerVisible && (
+          {!hasSelectedConversation && !isContactComposerVisible && !loadingConversations && conversations.length === 0 && (
+            <div className="mensajes-placeholder">
+              <MessageCircle size={42} />
+              <h2>Aún no tienes conversaciones</h2>
+              <p>Aquí aparecerán tus conversaciones con los arrendadores. ¡Empieza a buscar y envía tu primer mensaje!</p>
+              <button type="button" className="mensajes-send-btn" onClick={() => navigate('/buscar')}>
+                Buscar arriendos
+              </button>
+            </div>
+          )}
+
+          {!hasSelectedConversation && !isContactComposerVisible && (loadingConversations || conversations.length > 0) && (
             <div className="mensajes-placeholder">
               <MessageCircle size={42} />
               <h2>Selecciona una conversación</h2>
@@ -525,9 +582,6 @@ export default function Mensajes() {
 
           {isContactComposerVisible && !hasSelectedConversation && (
             <section className="mensajes-detail">
-              <button type="button" className="mensajes-back" onClick={() => navigate(-1)}>
-                <ArrowLeft size={18} /> Volver a la publicación
-              </button>
               <div className="mensajes-detail__card mensajes-detail__card--compact">
                 <div className="mensajes-detail__header">
                   <div>
@@ -535,7 +589,7 @@ export default function Mensajes() {
                     <h2>{publicacionObjetivo?.titulo || 'Iniciar conversación'}</h2>
                     <p className="mensajes-detail__meta">{publicacionObjetivo?.ubicacion || 'La publicación seleccionada'}</p>
                   </div>
-                  <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${encodePublicId(publicationTargetId)}`)}>
+                  <button type="button" className="mensajes-pill-btn mensajes-pill-btn--solid" onClick={() => navigate(`/publicacion/${publicationTargetId}`)}>
                     Ver publicación
                   </button>
                 </div>
@@ -567,20 +621,33 @@ export default function Mensajes() {
             <section className="mensajes-detail">
               <div className="mensajes-detail__card">
                 <div className="mensajes-detail__header">
-                  <div>
-                    <h2>{getConversationTitle(selectedConversation)}</h2>
-                    <p className="mensajes-detail__meta">
-                      Con {selectedOtherParticipant?.nombreCompleto || 'Sin participante'} · {selectedConversation?.publicacion?.ubicacion || 'Sin ubicación'}
-                    </p>
+                  <div className="mensajes-detail__header-info">
+                    {selectedOtherParticipant?.publicId ? (
+                      <button
+                        type="button"
+                        className="mensajes-detail__avatar-btn"
+                        onClick={() => navigate(`/perfil/${selectedOtherParticipant.publicId}`)}
+                        title="Ver perfil"
+                      >
+                        <AvatarCirculo nombre={selectedOtherParticipant?.nombreCompleto} foto={selectedOtherParticipant?.fotoPerfil} size={44} />
+                      </button>
+                    ) : (
+                      <AvatarCirculo nombre={selectedOtherParticipant?.nombreCompleto} foto={selectedOtherParticipant?.fotoPerfil} size={44} />
+                    )}
+                    <div>
+                      <h2>{getConversationTitle(selectedConversation)}</h2>
+                      <p className="mensajes-detail__meta">
+                        Con <span className="mensajes-detail__participant-name">{selectedOtherParticipant?.nombreCompleto || 'Sin participante'}</span> · {selectedConversation?.publicacion?.ubicacion || 'Sin ubicación'}
+                      </p>
+                    </div>
                   </div>
                   <div className="mensajes-detail__header-actions">
-                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${encodePublicId(selectedConversation?.publicacion?.id)}`)}>
-                      Ver publicación
-                    </button>
-                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--danger" onClick={() => handleDeleteConversation(selectedConversation)}>
-                      Ocultar chat
-                    </button>
-                    {shouldShowConfirmRentalButton && (
+                    {isPublicacionArrendadaPorOtro && (
+                      <button type="button" className="mensajes-send-btn" disabled>
+                        <XCircle size={18} /> Está Arrendado
+                      </button>
+                    )}
+                    {shouldShowConfirmRentalButton && !currentUserConfirmed && (
                       <button type="button" className="mensajes-send-btn" onClick={handleConfirmRental} disabled={loadingRentalConfirmation}>
                         {loadingRentalConfirmation ? (
                           <><RefreshCw size={18} className="spin" /> Aceptando...</>
@@ -589,21 +656,62 @@ export default function Mensajes() {
                         )}
                       </button>
                     )}
+                    {shouldShowConfirmRentalButton && currentUserConfirmed && (
+                      <button type="button" className="mensajes-send-btn" disabled>
+                        <CheckCircle size={18} /> Ya aceptaste, falta la otra persona
+                      </button>
+                    )}
                     {isRentalCompleted && (
                       <button type="button" className="mensajes-send-btn" disabled>
                         <CheckCircle size={18} /> Arriendo aceptado
                       </button>
                     )}
-                    <button type="button" className="mensajes-icon-btn" onClick={handleRefresh}>
-                      <RefreshCw size={18} />
-                    </button>
+                    <div className="mensajes-menu-wrap" ref={menuOpcionesRef}>
+                      <button
+                        type="button"
+                        className="mensajes-icon-btn mensajes-menu-trigger"
+                        onClick={() => setMenuOpcionesAbierto((prev) => !prev)}
+                        aria-haspopup="true"
+                        aria-expanded={menuOpcionesAbierto}
+                        aria-label="Más opciones"
+                        title="Más opciones"
+                      >
+                        <MoreVertical size={18} />
+                      </button>
+
+                      {menuOpcionesAbierto && (
+                        <div className="mensajes-menu">
+                          <button
+                            type="button"
+                            className="mensajes-menu__item"
+                            onClick={() => { setMenuOpcionesAbierto(false); navigate(`/publicacion/${selectedConversation?.publicacion?.publicId}`); }}
+                          >
+                            <Eye size={16} /> Ver publicación
+                          </button>
+                          <button
+                            type="button"
+                            className="mensajes-menu__item"
+                            onClick={() => { setMenuOpcionesAbierto(false); setReportModalOpen(true); }}
+                          >
+                            <ShieldAlert size={16} /> Reportar usuario
+                          </button>
+                          <button
+                            type="button"
+                            className="mensajes-menu__item mensajes-menu__item--danger"
+                            onClick={() => { setMenuOpcionesAbierto(false); handleDeleteConversation(selectedConversation); }}
+                          >
+                            <XCircle size={16} /> Ocultar chat
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {loadingDetail ? (
                   <div className="mensajes-empty mensajes-empty--detail">Cargando mensajes...</div>
                 ) : (
-                  <div className="mensajes-thread">
+                  <div className="mensajes-thread" ref={threadRef}>
                     {messages.length === 0 ? (
                       <div className="mensajes-empty mensajes-empty--detail">Todavía no hay mensajes en esta conversación.</div>
                     ) : (
@@ -661,6 +769,13 @@ export default function Mensajes() {
           )}
         </main>
       </div>
+
+      <ModalReportarUsuario
+        conversacionId={selectedConversation?.id}
+        usuarioReportado={selectedOtherParticipant}
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+      />
     </div>
   );
 }

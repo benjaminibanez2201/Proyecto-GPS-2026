@@ -10,6 +10,12 @@ const PublicacionSchema = new EntitySchema({
       primary: true,
       generated: true,
     },
+    uuid: {
+      type: "uuid",
+      generated: "uuid",
+      unique: true,
+      nullable: false,
+    },
     titulo: {
       type: "varchar",
       length: 255,
@@ -96,6 +102,24 @@ const PublicacionSchema = new EntitySchema({
       default: 0,
       nullable: false,
     },
+    patrocinada: {
+      type: "boolean",
+      default: false,
+      nullable: false,
+    },
+    patrocinadaHasta: {
+      type: "timestamp with time zone",
+      nullable: true,
+    },
+    patrocinioMetodo: {
+      type: "varchar",
+      length: 30,
+      nullable: true,
+    },
+    patrocinioMonto: {
+      type: "int",
+      nullable: true,
+    },
     estado: {
       type: "enum",
       enum: ["activa", "arrendada", "disponible", "inactiva"],
@@ -127,11 +151,6 @@ const PublicacionSchema = new EntitySchema({
       onDelete: "CASCADE",
     },
   },
-  ocultadaPorArrendador: {
-  type: "boolean",
-  default: false,
-  nullable: false,
-},
 });
 
 export default PublicacionSchema;

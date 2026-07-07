@@ -30,13 +30,14 @@ export default function ModalReportar({ publicacion, open, onClose, onSuccess })
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    const motivoLabel = motivos.find((item) => item.value === motivo)?.label || motivo;
     const motivoFinal = detalle.trim()
-      ? `${motivo}: ${detalle.trim()}`
-      : motivo;
+      ? `${motivoLabel}: ${detalle.trim()}`
+      : motivoLabel;
 
     setCargando(true);
     const [, error] = await crearReportePublicacion({
-      id_publicacion: publicacion.id || publicacion._id,
+      id_publicacion: publicacion.publicId,
       motivo: motivoFinal,
     });
     setCargando(false);
