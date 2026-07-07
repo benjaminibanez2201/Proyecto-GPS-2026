@@ -168,8 +168,66 @@ transform: translateY(-2px);
   box-shadow: 0 14px 28px rgba(220, 38, 38, 0.26);
 }
 
-.mensajes-detail__header-actions .mensajes-icon-btn:not(.mensajes-icon-btn--secondary):not(.mensajes-icon-btn--danger) {
+.mensajes-detail__header-actions .mensajes-icon-btn:not(.mensajes-icon-btn--secondary):not(.mensajes-icon-btn--danger):not(.mensajes-menu-trigger) {
   display: none !important;
+}
+
+.mensajes-menu-wrap {
+  position: relative;
+}
+
+.mensajes-menu-trigger {
+  background: rgba(15, 23, 42, 0.06);
+  color: #334155;
+  box-shadow: none;
+}
+
+.mensajes-menu-trigger:hover {
+  background: rgba(15, 23, 42, 0.12);
+  transform: translateY(-2px);
+}
+
+.mensajes-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 6px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.mensajes-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 140ms ease;
+}
+
+.mensajes-menu__item:hover {
+  background-color: rgba(15, 23, 42, 0.06);
+}
+
+.mensajes-menu__item--danger {
+  color: #dc2626;
+}
+
+.mensajes-menu__item--danger:hover {
+  background-color: rgba(220, 38, 38, 0.08);
 }
 
 .mensajes-detail__header-actions .mensajes-send-btn {
