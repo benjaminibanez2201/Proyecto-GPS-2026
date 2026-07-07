@@ -12,12 +12,22 @@ const formatAmount = (value) => {
 const WebpaySimulado = () => {
   const searchParams = useMemo(() => new URLSearchParams(window.location.search), []);
   const token = searchParams.get('token') || '';
-  const plan = searchParams.get('plan') || 'Plan promocional';
-  const planId = searchParams.get('planId') || '';
-  const amount = searchParams.get('amount') || '0';
-  const days = searchParams.get('days') || '';
-  const title = searchParams.get('title') || 'Publicacion';
-  const publicacionId = searchParams.get('publicacionId') || '';
+  const storedContext = useMemo(() => {
+    if (!token) return {};
+
+    try {
+      return JSON.parse(window.localStorage.getItem(`arriendu:webpay:${token}`) || '{}');
+    } catch (_) {
+      return {};
+    }
+  }, [token]);
+  const plan = searchParams.get('plan') || storedContext.plan || 'Plan promocional';
+  const planId = searchParams.get('planId') || storedContext.planId || '';
+  const amount = searchParams.get('amount') || storedContext.amount || '0';
+  const days = searchParams.get('days') || storedContext.days || '';
+  const title = searchParams.get('title') || storedContext.title || 'Publicacion';
+  const publicacionId = searchParams.get('publicacionId') || storedContext.publicacionId || '';
+  const returnTo = searchParams.get('returnTo') || storedContext.returnTo || (publicacionId ? `/publicacion/${publicacionId}` : '/mis-publicaciones');
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -33,13 +43,25 @@ const WebpaySimulado = () => {
       type: WEBPAY_APPROVED_MESSAGE,
       token,
       approved: true,
+      publicacionId,
+      returnTo,
     }, window.location.origin);
     return true;
   };
 
+  const clearPendingContext = () => {
+    if (!token) return;
+
+    try {
+      window.localStorage.removeItem(`arriendu:webpay:${token}`);
+    } catch (_) {
+      // No requiere accion si el navegador no permite modificar storage.
+    }
+  };
+
   const fallbackActivatePlan = async () => {
     if (!publicacionId) {
-      throw new Error('No se encontro la publicacion para activar el plan.');
+      throw new Error('Esta orden no tiene una publicacion asociada. Vuelve a Mis Publicaciones e inicia el pago nuevamente.');
     }
 
     return patrocinarPublicacion(publicacionId, {
@@ -82,6 +104,7 @@ const WebpaySimulado = () => {
     window.setTimeout(async () => {
       try {
         if (notifyPreviousPage()) {
+          clearPendingContext();
           setStatus('approved');
           return;
         }
@@ -91,6 +114,7 @@ const WebpaySimulado = () => {
           throw new Error(response?.details || response?.message || 'No se pudo activar el patrocinio.');
         }
 
+        clearPendingContext();
         setStatus('approved');
       } catch (paymentError) {
         setStatus('idle');
@@ -116,7 +140,7 @@ const WebpaySimulado = () => {
       return;
     }
 
-    window.location.assign('/mis-publicaciones');
+    window.location.assign(returnTo);
   };
 
   const isAuthorizing = status === 'authorizing';

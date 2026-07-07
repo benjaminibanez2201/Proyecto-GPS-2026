@@ -355,7 +355,7 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
       const openWebpay = () => {
         setError('');
         const token = `webpay-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-        const params = new URLSearchParams({
+        const webpayContext = {
           token,
           publicacionId: pub?.publicId || '',
           title: pub?.titulo || 'Publicacion',
@@ -363,7 +363,19 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
           plan: selectedPlan.label,
           amount: String(selectedPlan.price),
           days: String(selectedPlan.days),
-        });
+          returnTo: pub?.publicId ? `/publicacion/${pub.publicId}` : '/mis-publicaciones',
+        };
+
+        try {
+          window.localStorage.setItem(
+            `arriendu:webpay:${token}`,
+            JSON.stringify({ ...webpayContext, createdAt: Date.now() }),
+          );
+        } catch (_) {
+          // El query string mantiene el contexto principal si storage no esta disponible.
+        }
+
+        const params = new URLSearchParams(webpayContext);
 
         const handleWebpayMessage = (event) => {
           if (event.origin !== window.location.origin) return;
