@@ -71,6 +71,15 @@ const AdminReportesUsuarios = () => {
     ];
   }, [reportes]);
 
+  const reportesActivos = useMemo(
+    () => reportes.filter((item) => item.reportado?.estadoCuenta !== 'suspendido'),
+    [reportes],
+  );
+  const reportesSuspendidos = useMemo(
+    () => reportes.filter((item) => item.reportado?.estadoCuenta === 'suspendido'),
+    [reportes],
+  );
+
   const resolver = async (item, accion) => {
     const textos = {
       mantener: 'mantener activa',
@@ -100,6 +109,82 @@ const AdminReportesUsuarios = () => {
 
     Swal.fire({ icon: 'success', title: 'Reporte resuelto', confirmButtonColor: accent });
     cargarReportes();
+  };
+
+  const renderCard = (item, { suspendido }) => {
+    const reportado = item.reportado || {};
+    const reportesDetalle = Array.isArray(item.reportes) ? item.reportes : [];
+    return (
+      <article key={reportado.id} style={styles.reportCard}>
+        <div style={styles.reportHeader}>
+          <div>
+            <div style={styles.badgeRow}>
+              <span style={styles.reportCountBadge}>{item.cantidadReportes}</span>
+              <p style={styles.eyebrow}>{reportado.rol || 'Usuario'}</p>
+            </div>
+            <h3 style={styles.cardTitle}>{reportado.nombreCompleto || 'Sin nombre'}</h3>
+            <p style={styles.cardSubtitle}>{reportado.email || 'Sin correo'}</p>
+          </div>
+          <span style={{
+            ...styles.statusBadge,
+            backgroundColor: reportado.estadoCuenta === 'activo' ? '#dcfce7' : '#fee2e2',
+            color: reportado.estadoCuenta === 'activo' ? '#15803d' : '#dc2626',
+          }}>
+            {reportado.estadoCuenta || 'sin estado'}
+          </span>
+        </div>
+
+        <div style={styles.reportMeta}>
+          <strong>{item.cantidadReportes} reporte(s)</strong>
+          <span>Último: {formatDate(reportesDetalle[0]?.createdAt)}</span>
+        </div>
+
+        <div style={styles.reportesDetalleList}>
+          {reportesDetalle.map((reporte, index) => (
+            <article key={`${reportado.id}-${reporte.id || index}`} style={styles.reporteDetalleCard}>
+              <div style={styles.reporteDetalleHeader}>
+                <strong>Reporte {index + 1}</strong>
+                <span style={styles.reporteDetalleDate}>{formatDate(reporte.createdAt)}</span>
+              </div>
+              <p style={styles.reporteDetalleText}>
+                <strong>Motivo:</strong> {formatLabel(reporte.motivo, motivoLabels)}
+              </p>
+              <p style={styles.reporteDetalleText}>
+                <strong>Acción:</strong> {formatLabel(reporte.accion, accionLabels)}
+              </p>
+              <p style={styles.reporteDetalleText}>
+                <strong>Estado:</strong> {formatLabel(reporte.estado, estadoLabels)}
+              </p>
+              <p style={styles.reporteDetalleText}>
+                <strong>Reportado por:</strong> {reporte.reporter?.nombreCompleto || reporte.reporter?.email || 'Sin dato'}
+              </p>
+            </article>
+          ))}
+        </div>
+
+        <div style={styles.actions}>
+          {suspendido ? (
+            <>
+              <button type="button" onClick={() => resolver(item, 'mantener')} style={styles.actionButton}>
+                <ShieldCheck size={16} /> Mantener suspendida
+              </button>
+              <button type="button" onClick={() => resolver(item, 'reactivar')} style={styles.secondaryButton}>
+                <RotateCcw size={16} /> Reactivar
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={() => resolver(item, 'mantener')} style={styles.actionButton}>
+                <ShieldCheck size={16} /> Mantener
+              </button>
+              <button type="button" onClick={() => resolver(item, 'suspender')} style={{ ...styles.actionButton, ...styles.dangerButton }}>
+                <ShieldOff size={16} /> Suspender
+              </button>
+            </>
+          )}
+        </div>
+      </article>
+    );
   };
 
   return (
@@ -137,73 +222,25 @@ const AdminReportesUsuarios = () => {
           <p style={styles.muted}>No hay usuarios reportados pendientes.</p>
         )}
 
-        <div style={styles.list}>
-          {reportes.map((item) => {
-            const reportado = item.reportado || {};
-            const reportesDetalle = Array.isArray(item.reportes) ? item.reportes : [];
-            return (
-              <article key={reportado.id} style={styles.reportCard}>
-                <div style={styles.reportHeader}>
-                  <div>
-                    <div style={styles.badgeRow}>
-                      <span style={styles.reportCountBadge}>{item.cantidadReportes}</span>
-                      <p style={styles.eyebrow}>{reportado.rol || 'Usuario'}</p>
-                    </div>
-                    <h3 style={styles.cardTitle}>{reportado.nombreCompleto || 'Sin nombre'}</h3>
-                    <p style={styles.cardSubtitle}>{reportado.email || 'Sin correo'}</p>
-                  </div>
-                  <span style={{
-                    ...styles.statusBadge,
-                    backgroundColor: reportado.estadoCuenta === 'activo' ? '#dcfce7' : '#fee2e2',
-                    color: reportado.estadoCuenta === 'activo' ? '#15803d' : '#dc2626',
-                  }}>
-                    {reportado.estadoCuenta || 'sin estado'}
-                  </span>
-                </div>
+        {!loading && !error && reportesActivos.length > 0 && (
+          <>
+            <h3 style={styles.sectionTitle}>Pendientes de revisión</h3>
+            <div style={styles.list}>
+              {reportesActivos.map((item) => renderCard(item, { suspendido: false }))}
+            </div>
+          </>
+        )}
 
-                <div style={styles.reportMeta}>
-                  <strong>{item.cantidadReportes} reporte(s)</strong>
-                  <span>Último: {formatDate(reportesDetalle[0]?.createdAt)}</span>
-                </div>
-
-                <div style={styles.reportesDetalleList}>
-                  {reportesDetalle.map((reporte, index) => (
-                    <article key={`${reportado.id}-${reporte.id || index}`} style={styles.reporteDetalleCard}>
-                      <div style={styles.reporteDetalleHeader}>
-                        <strong>Reporte {index + 1}</strong>
-                        <span style={styles.reporteDetalleDate}>{formatDate(reporte.createdAt)}</span>
-                      </div>
-                      <p style={styles.reporteDetalleText}>
-                        <strong>Motivo:</strong> {formatLabel(reporte.motivo, motivoLabels)}
-                      </p>
-                      <p style={styles.reporteDetalleText}>
-                        <strong>Acción:</strong> {formatLabel(reporte.accion, accionLabels)}
-                      </p>
-                      <p style={styles.reporteDetalleText}>
-                        <strong>Estado:</strong> {formatLabel(reporte.estado, estadoLabels)}
-                      </p>
-                      <p style={styles.reporteDetalleText}>
-                        <strong>Reportado por:</strong> {reporte.reporter?.nombreCompleto || reporte.reporter?.email || 'Sin dato'}
-                      </p>
-                    </article>
-                  ))}
-                </div>
-
-                <div style={styles.actions}>
-                  <button type="button" onClick={() => resolver(item, 'mantener')} style={styles.actionButton}>
-                    <ShieldCheck size={16} /> Mantener
-                  </button>
-                  <button type="button" onClick={() => resolver(item, 'suspender')} style={{ ...styles.actionButton, ...styles.dangerButton }}>
-                    <ShieldOff size={16} /> Suspender
-                  </button>
-                  <button type="button" onClick={() => resolver(item, 'reactivar')} style={styles.secondaryButton}>
-                    <RotateCcw size={16} /> Reactivar
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+        {!loading && !error && reportesSuspendidos.length > 0 && (
+          <>
+            <h3 style={{ ...styles.sectionTitle, marginTop: reportesActivos.length > 0 ? '24px' : 0 }}>
+              Cuentas suspendidas
+            </h3>
+            <div style={styles.list}>
+              {reportesSuspendidos.map((item) => renderCard(item, { suspendido: true }))}
+            </div>
+          </>
+        )}
       </section>
     </div>
   );
@@ -226,6 +263,7 @@ const styles = {
   statLabel: { margin: '0 0 4px', fontSize: '13px', color: '#64748b' },
   statValue: { margin: 0, fontSize: '28px', lineHeight: 1.1, color: '#0f172a' },
   contentCard: { borderRadius: '22px', padding: '22px', backgroundColor: '#fff', border: '1px solid rgba(15, 23, 42, 0.06)', boxShadow: '0 12px 30px rgba(15, 23, 42, 0.07)' },
+  sectionTitle: { margin: '0 0 14px', fontSize: '15px', fontWeight: 800, color: '#0f172a' },
   list: { display: 'grid', gap: '14px' },
   reportCard: { border: '1px solid #e2e8f0', borderRadius: '18px', padding: '18px', backgroundColor: '#f8fafc' },
   reportHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' },

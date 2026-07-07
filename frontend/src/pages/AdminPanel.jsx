@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BadgeCheck, ClipboardList, FlagTriangleRight, ShieldCheck, Users as UsersIcon } from 'lucide-react';
 import { useAuth } from '@context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { obtenerPublicacionesReportadas } from '@services/reportes.service.js';
+import { obtenerPublicacionesReportadas, obtenerPublicacionesInactivas } from '@services/reportes.service.js';
 import { obtenerUsuarios } from '@services/user.service.js';
 
 const normalizeText = (value) => String(value || '').trim().toLowerCase();
@@ -52,6 +52,7 @@ const AdminPanel = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [reportes, setReportes] = useState([]);
+    const [publicacionesInactivas, setPublicacionesInactivas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -68,15 +69,17 @@ const AdminPanel = () => {
             setLoading(true);
             setError('');
 
-            const [[usuariosData, usuariosError], [reportesData, reportesError]] = await Promise.all([
+            const [[usuariosData, usuariosError], [reportesData, reportesError], [inactivasData, inactivasError]] = await Promise.all([
                 obtenerUsuarios(),
-                obtenerPublicacionesReportadas()
+                obtenerPublicacionesReportadas(),
+                obtenerPublicacionesInactivas()
             ]);
 
             setUsers(Array.isArray(usuariosData) ? usuariosData : []);
             setReportes(Array.isArray(reportesData) ? reportesData : []);
+            setPublicacionesInactivas(Array.isArray(inactivasData) ? inactivasData : []);
 
-            const errors = [usuariosError, reportesError].filter(Boolean);
+            const errors = [usuariosError, reportesError, inactivasError].filter(Boolean);
             setError(errors.length ? errors.join(' ') : '');
             setLoading(false);
         };
@@ -94,7 +97,7 @@ const AdminPanel = () => {
         const suspendedUsers = registeredUsers.filter((item) => normalizeText(item.estadoCuenta) === 'suspendido');
         const totalPendingReports = reportes.reduce((sum, item) => sum + Number(item.cantidadReportes || 0), 0);
         const reportedPublications = reportes.length;
-        const inactiveReportedPublications = reportes.filter((item) => normalizeText(item.publicacion?.estado) === 'inactiva').length;
+        const inactiveReportedPublications = publicacionesInactivas.length;
 
         const usersList = buildRecentUsers(users);
         const docsList = buildPendingDocuments(verifiableUsers);
@@ -139,7 +142,7 @@ const AdminPanel = () => {
                 }
             ]
         };
-    }, [reportes, users]);
+    }, [reportes, users, publicacionesInactivas]);
 
     const goToUsers = () => navigate('/admin/users');
     const goToReportes = () => navigate('/admin/reportes');
