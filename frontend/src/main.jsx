@@ -11,6 +11,7 @@ import RegisterPending from '@pages/RegisterPending';
 import Error404 from '@pages/Error404';
 import Root from '@pages/Root';
 import ProtectedRoute from '@components/ProtectedRoute';
+import { AuthProvider } from '@context/AuthContext';
 import Profile from '@pages/Profile';
 import AdminPanel from '@pages/AdminPanel';
 import PageTransition from '@components/PageTransition';
@@ -263,7 +264,13 @@ const router = createBrowserRouter([
   },
   {
     path: '/pasarela-pagos',
-    element: withPageTransition(<PasarelaPagos />)
+    element: withPageTransition(
+      <AuthProvider>
+        <ProtectedRoute allowedRoles={['arrendador']}>
+          <PasarelaPagos />
+        </ProtectedRoute>
+      </AuthProvider>
+    )
   }
 ])
 

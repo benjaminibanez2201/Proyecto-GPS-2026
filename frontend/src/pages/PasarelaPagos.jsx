@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, CreditCard, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { patrocinarPublicacion } from '@services/user.service.js';
 
@@ -21,18 +22,23 @@ const PasarelaPagos = () => {
       return {};
     }
   }, [token]);
-  const plan = searchParams.get('plan') || storedContext.plan || 'Plan promocional';
-  const planId = searchParams.get('planId') || storedContext.planId || '';
-  const amount = searchParams.get('amount') || storedContext.amount || '0';
-  const days = searchParams.get('days') || storedContext.days || '';
-  const title = searchParams.get('title') || storedContext.title || 'Publicacion';
-  const publicacionId = searchParams.get('publicacionId') || storedContext.publicacionId || '';
-  const returnTo = searchParams.get('returnTo') || storedContext.returnTo || (publicacionId ? `/publicacion/${publicacionId}` : '/mis-publicaciones');
+  const hasPendingOrder = Boolean(token && storedContext?.token === token && storedContext?.publicacionId);
+  const plan = storedContext.plan || searchParams.get('plan') || 'Plan promocional';
+  const planId = storedContext.planId || searchParams.get('planId') || '';
+  const amount = storedContext.amount || searchParams.get('amount') || '0';
+  const days = storedContext.days || searchParams.get('days') || '';
+  const title = storedContext.title || searchParams.get('title') || 'Publicacion';
+  const publicacionId = storedContext.publicacionId || searchParams.get('publicacionId') || '';
+  const returnTo = storedContext.returnTo || searchParams.get('returnTo') || (publicacionId ? `/publicacion/${publicacionId}` : '/mis-publicaciones');
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
+
+  if (!hasPendingOrder) {
+    return <Navigate to="/mis-publicaciones" replace />;
+  }
 
   const hasPreviousPage = () => Boolean(window.opener && !window.opener.closed);
 
