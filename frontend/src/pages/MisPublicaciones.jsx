@@ -70,13 +70,13 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => 
   "'": '&#39;',
 }[char]));
 
-const WEBPAY_APPROVED_MESSAGE = 'ARRENDU_WEBPAY_APPROVED';
+const PAYMENT_APPROVED_MESSAGE = 'ARRENDU_PAYMENT_APPROVED';
 
 const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
   let paymentPayload = null;
   let timerId = null;
-  let closeWebpayListener = null;
-  let webpayWindow = null;
+  let closePaymentListener = null;
+  let paymentWindow = null;
   let selectedPlan = defaultSponsorshipPlan;
 
   const planOptionsHtml = sponsorshipPlans.map((plan) => `
@@ -95,7 +95,7 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
   const result = await Swal.fire({
     html: `
       <style>
-        @keyframes webpay-card-shine { 0% { transform: translateX(-140%) rotate(18deg); } 55%, 100% { transform: translateX(140%) rotate(18deg); } }
+        @keyframes payment-card-shine { 0% { transform: translateX(-140%) rotate(18deg); } 55%, 100% { transform: translateX(140%) rotate(18deg); } }
         .sponsor-modal { text-align:left; font-family:'Segoe UI',Roboto,sans-serif; color:#0f172a; }
         .sponsor-header { display:flex; align-items:flex-start; gap:14px; margin-bottom:18px; }
         .sponsor-icon { width:46px; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:#fef3c7; color:#b45309; border:1px solid #fde68a; }
@@ -124,18 +124,18 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
         .sponsor-tab.active { background:#0f766e; color:#fff; border-color:#0f766e; box-shadow:0 8px 18px rgba(15,118,110,0.18); }
         .sponsor-panel { border:1px solid #e2e8f0; border-radius:14px; padding:16px; background:#ffffff; min-height:210px; }
         .sponsor-label { font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.06em; }
-        .webpay-hero { display:grid; grid-template-columns:minmax(230px, 0.9fr) 1.1fr; gap:18px; align-items:center; }
-        .webpay-card { position:relative; min-height:160px; border-radius:18px; overflow:hidden; padding:20px; color:#fff; background:linear-gradient(135deg,#c1121f 0%,#8f1119 58%,#24110f 100%); box-shadow:0 20px 34px rgba(127,29,29,0.24); }
-        .webpay-card::after { content:""; position:absolute; inset:-50%; width:58%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.32),transparent); animation:webpay-card-shine 3.2s ease-in-out infinite; pointer-events:none; }
-        .webpay-logo { position:relative; z-index:1; font-size:28px; font-weight:900; letter-spacing:0; }
-        .webpay-logo small { display:block; margin-top:2px; color:#fecaca; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; }
-        .webpay-card p { position:relative; z-index:1; margin:26px 0 0; color:#fee2e2; font-weight:700; }
-        .webpay-card-footer { position:absolute; z-index:1; left:20px; right:20px; bottom:18px; display:flex; justify-content:space-between; color:#fff; font-size:12px; font-weight:800; text-transform:uppercase; }
-        .webpay-terminal { display:flex; flex-direction:column; gap:10px; }
-        .webpay-terminal h3 { margin:0; color:#0f172a; font-size:20px; font-weight:900; }
-        .webpay-terminal p { margin:0; color:#64748b; font-size:13px; line-height:1.45; }
-        .webpay-terminal-row { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid #edf2f7; color:#475569; font-size:13px; }
-        .webpay-terminal-row strong { color:#0f172a; text-align:right; }
+        .payment-hero { display:grid; grid-template-columns:minmax(230px, 0.9fr) 1.1fr; gap:18px; align-items:center; }
+        .payment-card { position:relative; min-height:160px; border-radius:18px; overflow:hidden; padding:20px; color:#fff; background:linear-gradient(135deg,#123c46 0%,#0f766e 58%,#172554 100%); box-shadow:0 20px 34px rgba(15,118,110,0.2); }
+        .payment-card::after { content:""; position:absolute; inset:-50%; width:58%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.28),transparent); animation:payment-card-shine 3.2s ease-in-out infinite; pointer-events:none; }
+        .payment-logo { position:relative; z-index:1; font-size:28px; font-weight:900; letter-spacing:0; }
+        .payment-logo small { display:block; margin-top:2px; color:#ccfbf1; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; }
+        .payment-card p { position:relative; z-index:1; margin:26px 0 0; color:#d7fbf4; font-weight:700; }
+        .payment-card-footer { position:absolute; z-index:1; left:20px; right:20px; bottom:18px; display:flex; justify-content:space-between; color:#fff; font-size:12px; font-weight:800; text-transform:uppercase; }
+        .payment-terminal { display:flex; flex-direction:column; gap:10px; }
+        .payment-terminal h3 { margin:0; color:#0f172a; font-size:20px; font-weight:900; }
+        .payment-terminal p { margin:0; color:#64748b; font-size:13px; line-height:1.45; }
+        .payment-terminal-row { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid #edf2f7; color:#475569; font-size:13px; }
+        .payment-terminal-row strong { color:#0f172a; text-align:right; }
         .sponsor-transfer-box { display:flex; flex-direction:column; gap:10px; padding:14px; border-radius:12px; background:#f8fafc; border:1px dashed #cbd5e1; }
         .sponsor-transfer-row { display:flex; justify-content:space-between; gap:12px; font-size:13px; color:#334155; }
         .sponsor-transfer-row strong { color:#0f172a; text-align:right; }
@@ -151,7 +151,7 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
         .sponsor-hidden-confirm { display:none !important; }
         @media (max-width:720px) {
           .sponsor-plan-grid { grid-template-columns:1fr; }
-          .webpay-hero { grid-template-columns:1fr; }
+          .payment-hero { grid-template-columns:1fr; }
         }
       </style>
       <div class="sponsor-modal">
@@ -193,9 +193,9 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
           </div>
 
           <div class="sponsor-tabs">
-            <button type="button" class="sponsor-tab active" data-method="webpay">
+            <button type="button" class="sponsor-tab active" data-method="tarjeta">
               <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>
-              WebPay tarjeta
+              Tarjeta
             </button>
             <button type="button" class="sponsor-tab" data-method="transferencia">
               <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"></line><line x1="6" x2="6" y1="18" y2="11"></line><line x1="10" x2="10" y1="18" y2="11"></line><line x1="14" x2="14" y1="18" y2="11"></line><line x1="18" x2="18" y1="18" y2="11"></line><polygon points="12 2 20 7 4 7"></polygon></svg>
@@ -204,28 +204,27 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
           </div>
 
           <div id="sponsor-card-panel" class="sponsor-panel">
-            <div class="webpay-hero">
-              <div class="webpay-card">
-                <div class="webpay-logo">WebPay<small>Plus</small></div>
+            <div class="payment-hero">
+              <div class="payment-card">
+                <div class="payment-logo">Pago<small>Seguro</small></div>
                 <p>Pago seguro con tarjeta</p>
-                <div class="webpay-card-footer"><span>ArriendU</span><span>CLP</span></div>
+                <div class="payment-card-footer"><span>ArriendU</span><span>CLP</span></div>
               </div>
-              <div class="webpay-terminal">
+              <div class="payment-terminal">
                 <span class="sponsor-label">Pago con tarjeta</span>
-                <h3>Continua en WebPay</h3>
+                <h3>Continua en la pasarela</h3>
                 <p>Se abrira una ventana de autorizacion. Al aprobar, vuelve a esta pagina para ver el plan activo.</p>
-                <div class="webpay-terminal-row"><span>Comercio</span><strong>ArriendU</strong></div>
-                <div class="webpay-terminal-row"><span>Plan</span><strong id="sponsor-webpay-plan">${selectedPlan.label}</strong></div>
-                <div class="webpay-terminal-row"><span>Monto</span><strong id="sponsor-webpay-amount">$${selectedPlan.price.toLocaleString('es-CL')}</strong></div>
+                <div class="payment-terminal-row"><span>Comercio</span><strong>ArriendU</strong></div>
+                <div class="payment-terminal-row"><span>Plan</span><strong id="sponsor-card-plan">${selectedPlan.label}</strong></div>
+                <div class="payment-terminal-row"><span>Monto</span><strong id="sponsor-card-amount">$${selectedPlan.price.toLocaleString('es-CL')}</strong></div>
               </div>
             </div>
           </div>
 
           <div id="sponsor-transfer-panel" class="sponsor-panel" style="display:none;">
             <div class="sponsor-transfer-box">
-              <div class="sponsor-transfer-row"><span>Banco</span><strong>Banco Simulado GPS</strong></div>
-              <div class="sponsor-transfer-row"><span>Cuenta</span><strong>000-123456-7</strong></div>
-              <div class="sponsor-transfer-row"><span>RUT</span><strong>76.000.000-0</strong></div>
+              <div class="sponsor-transfer-row"><span>Destino</span><strong>Cuenta de recaudacion ArriendU</strong></div>
+              <div class="sponsor-transfer-row"><span>Referencia</span><strong id="sponsor-transfer-reference">Orden de patrocinio</strong></div>
               <div class="sponsor-transfer-row"><span>Monto</span><strong id="sponsor-transfer-amount">$${selectedPlan.price.toLocaleString('es-CL')}</strong></div>
               <div class="sponsor-transfer-row"><span>Asunto</span><strong id="sponsor-transfer-subject">Patrocinio ${selectedPlan.label} ${escapeHtml(pub?.publicId || '')}</strong></div>
             </div>
@@ -240,7 +239,7 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
           <div class="sponsor-footer">
             <button id="sponsor-back" type="button" class="sponsor-cancel">Cambiar plan</button>
             <button id="sponsor-cancel" type="button" class="sponsor-cancel">Cancelar</button>
-            <button id="sponsor-submit" type="button" class="sponsor-submit">Continuar a WebPay</button>
+            <button id="sponsor-submit" type="button" class="sponsor-submit">Continuar a pagar</button>
           </div>
         </section>
       </div>
@@ -257,11 +256,11 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
     preConfirm: () => paymentPayload,
     willClose: () => {
       if (timerId) clearInterval(timerId);
-      if (closeWebpayListener) closeWebpayListener();
-      if (webpayWindow && !webpayWindow.closed && !paymentPayload) webpayWindow.close();
+      if (closePaymentListener) closePaymentListener();
+      if (paymentWindow && !paymentWindow.closed && !paymentPayload) paymentWindow.close();
     },
     didOpen: () => {
-      let metodoPago = 'webpay';
+      let metodoPago = 'tarjeta';
       const root = Swal.getPopup();
       const get = (id) => root?.querySelector(`#${id}`);
       const planButtons = root?.querySelectorAll('.sponsor-plan-option') || [];
@@ -305,16 +304,17 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
         if (get('sponsor-transfer-subject')) {
           get('sponsor-transfer-subject').textContent = `Patrocinio ${selectedPlan.label} ${pub?.publicId || ''}`;
         }
-        if (get('sponsor-webpay-plan')) get('sponsor-webpay-plan').textContent = selectedPlan.label;
-        if (get('sponsor-webpay-amount')) get('sponsor-webpay-amount').textContent = `$${selectedPlan.price.toLocaleString('es-CL')}`;
+        if (get('sponsor-transfer-reference')) get('sponsor-transfer-reference').textContent = `Patrocinio ${selectedPlan.label}`;
+        if (get('sponsor-card-plan')) get('sponsor-card-plan').textContent = selectedPlan.label;
+        if (get('sponsor-card-amount')) get('sponsor-card-amount').textContent = `$${selectedPlan.price.toLocaleString('es-CL')}`;
       };
 
       const setMetodoPago = (nextMethod) => {
         metodoPago = nextMethod;
         tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.method === nextMethod));
-        if (cardPanel) cardPanel.style.display = nextMethod === 'webpay' ? 'block' : 'none';
+        if (cardPanel) cardPanel.style.display = nextMethod === 'tarjeta' ? 'block' : 'none';
         if (transferPanel) transferPanel.style.display = nextMethod === 'transferencia' ? 'block' : 'none';
-        if (submitButton) submitButton.textContent = nextMethod === 'webpay' ? 'Continuar a WebPay' : 'Confirmar transferencia';
+        if (submitButton) submitButton.textContent = nextMethod === 'tarjeta' ? 'Continuar a pagar' : 'Confirmar transferencia';
         setError('');
       };
 
@@ -341,21 +341,21 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
         Swal.showLoading();
       };
 
-      const setWebpayPending = (pending) => {
+      const setPaymentPending = (pending) => {
         tabs.forEach((tab) => {
           tab.disabled = pending;
         });
         if (backButton) backButton.disabled = pending;
         if (submitButton) {
           submitButton.disabled = pending;
-          submitButton.textContent = pending ? 'Esperando WebPay' : 'Continuar a WebPay';
+          submitButton.textContent = pending ? 'Esperando autorizacion' : 'Continuar a pagar';
         }
       };
 
-      const openWebpay = () => {
+      const openPaymentGateway = () => {
         setError('');
-        const token = `webpay-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-        const webpayContext = {
+        const token = `pago-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const paymentContext = {
           token,
           publicacionId: pub?.publicId || '',
           title: pub?.titulo || 'Publicacion',
@@ -368,53 +368,53 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
 
         try {
           window.localStorage.setItem(
-            `arriendu:webpay:${token}`,
-            JSON.stringify({ ...webpayContext, createdAt: Date.now() }),
+            `arriendu:payment-gateway:${token}`,
+            JSON.stringify({ ...paymentContext, createdAt: Date.now() }),
           );
         } catch (_) {
           // El query string mantiene el contexto principal si storage no esta disponible.
         }
 
-        const params = new URLSearchParams(webpayContext);
+        const params = new URLSearchParams(paymentContext);
 
-        const handleWebpayMessage = (event) => {
+        const handlePaymentMessage = (event) => {
           if (event.origin !== window.location.origin) return;
           const data = event.data || {};
-          if (data.type !== WEBPAY_APPROVED_MESSAGE || data.token !== token) return;
-          paymentPayload = buildPaymentPayload('webpay');
+          if (data.type !== PAYMENT_APPROVED_MESSAGE || data.token !== token) return;
+          paymentPayload = buildPaymentPayload('tarjeta');
           if (timerId) clearInterval(timerId);
-          if (closeWebpayListener) closeWebpayListener();
-          closeWebpayListener = null;
+          if (closePaymentListener) closePaymentListener();
+          closePaymentListener = null;
           Swal.clickConfirm();
         };
 
-        if (closeWebpayListener) closeWebpayListener();
-        window.addEventListener('message', handleWebpayMessage);
-        closeWebpayListener = () => window.removeEventListener('message', handleWebpayMessage);
+        if (closePaymentListener) closePaymentListener();
+        window.addEventListener('message', handlePaymentMessage);
+        closePaymentListener = () => window.removeEventListener('message', handlePaymentMessage);
 
-        webpayWindow = window.open(
-          `${window.location.origin}/webpay?${params.toString()}`,
+        paymentWindow = window.open(
+          `${window.location.origin}/pasarela-pagos?${params.toString()}`,
           token,
           'popup=yes,width=540,height=760,resizable=yes,scrollbars=yes',
         );
 
-        if (!webpayWindow) {
-          if (closeWebpayListener) closeWebpayListener();
-          closeWebpayListener = null;
-          setError('El navegador bloqueo la ventana de WebPay. Habilita ventanas emergentes para continuar.');
+        if (!paymentWindow) {
+          if (closePaymentListener) closePaymentListener();
+          closePaymentListener = null;
+          setError('El navegador bloqueo la ventana de pago. Habilita ventanas emergentes para continuar.');
           return;
         }
 
-        webpayWindow.focus();
-        setWebpayPending(true);
+        paymentWindow.focus();
+        setPaymentPending(true);
 
         timerId = setInterval(() => {
-          if (webpayWindow?.closed && !paymentPayload) {
+          if (paymentWindow?.closed && !paymentPayload) {
             clearInterval(timerId);
-            if (closeWebpayListener) closeWebpayListener();
-            closeWebpayListener = null;
-            setWebpayPending(false);
-            setError('La ventana de WebPay se cerro antes de autorizar el pago.');
+            if (closePaymentListener) closePaymentListener();
+            closePaymentListener = null;
+            setPaymentPending(false);
+            setError('La ventana de pago se cerro antes de autorizar la operacion.');
           }
         }, 800);
       };
@@ -444,8 +444,8 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
       };
 
       const beginPayment = () => {
-        if (metodoPago === 'webpay') {
-          openWebpay();
+        if (metodoPago === 'tarjeta') {
+          openPaymentGateway();
           return;
         }
 

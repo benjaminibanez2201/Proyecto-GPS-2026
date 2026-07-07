@@ -187,11 +187,11 @@ export const publicacionQueryValidation = Joi.object({
 
 export const publicacionPatrocinioValidation = Joi.object({
   metodoPago: Joi.string()
-    .valid("webpay", "transferencia")
+    .valid("tarjeta", "transferencia")
     .required()
     .messages({
       "any.required": "El metodo de pago es obligatorio.",
-      "any.only": "El metodo de pago debe ser webpay o transferencia.",
+      "any.only": "El metodo de pago debe ser tarjeta o transferencia.",
     }),
   monto: Joi.number()
     .integer()

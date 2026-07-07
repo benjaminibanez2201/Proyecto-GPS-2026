@@ -29,7 +29,7 @@ import Mensajes from '@pages/Mensajes.jsx';
 import MisReportes from '@pages/MisReportes.jsx';
 import AdminReportes from '@pages/AdminReportes.jsx';
 import AdminReportesUsuarios from '@pages/AdminReportesUsuarios.jsx';
-import WebpaySimulado from '@pages/WebpaySimulado.jsx';
+import PasarelaPagos from '@pages/PasarelaPagos.jsx';
 
 const APP_NAME = 'ArriendU';
 
@@ -64,7 +64,7 @@ function getTitleFromPath(pathname) {
     
     // Arrendador
     { pattern: /^\/mis-publicaciones\/?$/, title: `Mis publicaciones - ${APP_NAME}` }, 
-    { pattern: /^\/webpay\/?$/, title: `WebPay - ${APP_NAME}` }, 
+    { pattern: /^\/pasarela-pagos\/?$/, title: `Pasarela de pagos - ${APP_NAME}` },
     
     // Compartidos (Estudiante y Arrendador)
     { pattern: /^\/notificaciones\/?$/, title: `Notificaciones - ${APP_NAME}` }, 
@@ -262,8 +262,8 @@ const router = createBrowserRouter([
     element: withPageTransition(<RegisterPending/>)
   },
   {
-    path: '/webpay',
-    element: withPageTransition(<WebpaySimulado />)
+    path: '/pasarela-pagos',
+    element: withPageTransition(<PasarelaPagos />)
   }
 ])
 

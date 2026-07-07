@@ -2,21 +2,21 @@ import { useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, CreditCard, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { patrocinarPublicacion } from '@services/user.service.js';
 
-const WEBPAY_APPROVED_MESSAGE = 'ARRENDU_WEBPAY_APPROVED';
+const PAYMENT_APPROVED_MESSAGE = 'ARRENDU_PAYMENT_APPROVED';
 
 const formatAmount = (value) => {
   const amount = Number(value || 0);
   return amount > 0 ? `$${amount.toLocaleString('es-CL')}` : '$0';
 };
 
-const WebpaySimulado = () => {
+const PasarelaPagos = () => {
   const searchParams = useMemo(() => new URLSearchParams(window.location.search), []);
   const token = searchParams.get('token') || '';
   const storedContext = useMemo(() => {
     if (!token) return {};
 
     try {
-      return JSON.parse(window.localStorage.getItem(`arriendu:webpay:${token}`) || '{}');
+      return JSON.parse(window.localStorage.getItem(`arriendu:payment-gateway:${token}`) || '{}');
     } catch (_) {
       return {};
     }
@@ -40,7 +40,7 @@ const WebpaySimulado = () => {
     if (!hasPreviousPage()) return false;
 
     window.opener.postMessage({
-      type: WEBPAY_APPROVED_MESSAGE,
+      type: PAYMENT_APPROVED_MESSAGE,
       token,
       approved: true,
       publicacionId,
@@ -53,7 +53,7 @@ const WebpaySimulado = () => {
     if (!token) return;
 
     try {
-      window.localStorage.removeItem(`arriendu:webpay:${token}`);
+      window.localStorage.removeItem(`arriendu:payment-gateway:${token}`);
     } catch (_) {
       // No requiere accion si el navegador no permite modificar storage.
     }
@@ -65,9 +65,9 @@ const WebpaySimulado = () => {
     }
 
     return patrocinarPublicacion(publicacionId, {
-      metodoPago: 'webpay',
+      metodoPago: 'tarjeta',
       monto: Number(amount || 0),
-      plan: planId || `webpay_${days || '7'}_dias`,
+      plan: planId || `pasarela_${days || '7'}_dias`,
       vigenciaDias: Number(days || 7),
     });
   };
@@ -151,9 +151,9 @@ const WebpaySimulado = () => {
       <section style={styles.shell}>
         <div style={styles.brandPanel}>
           <div style={styles.logoRow}>
-            <div style={styles.logoMark}>W</div>
+            <div style={styles.logoMark}>P</div>
             <div>
-              <p style={styles.kicker}>WebPay Plus</p>
+              <p style={styles.kicker}>Pasarela de pagos</p>
               <h1 style={styles.title}>Pago protegido</h1>
             </div>
           </div>
@@ -163,7 +163,7 @@ const WebpaySimulado = () => {
               <span>ArriendU</span>
               <CreditCard size={22} />
             </div>
-            <p style={styles.cardNumber}>{cardNumber || '4242 4242 4242 4242'}</p>
+            <p style={styles.cardNumber}>{cardNumber || 'Numero de tarjeta'}</p>
             <div style={styles.cardBottom}>
               <span>Vence {expiry || 'MM/AA'}</span>
               <span>CLP</span>
@@ -179,7 +179,7 @@ const WebpaySimulado = () => {
         <div style={styles.checkoutPanel}>
           <header style={styles.header}>
             <div>
-              <span style={styles.secureBadge}>Entorno de prueba</span>
+              <span style={styles.secureBadge}>Autorizacion segura</span>
               <h2 style={styles.checkoutTitle}>{isApproved ? 'Pago autorizado' : 'Confirma tu tarjeta'}</h2>
             </div>
           </header>
@@ -189,7 +189,7 @@ const WebpaySimulado = () => {
               <div style={styles.checkCircle}><CheckCircle2 size={42} /></div>
               <h3 style={styles.approvedTitle}>Listo, pago autorizado</h3>
               <p style={styles.approvedText}>Sigue el proceso desde la pagina anterior.</p>
-              <p style={styles.approvedHint}>El plan se activara en ArriendU. Si esta ventana quedo sola, volveras a tus publicaciones.</p>
+              <p style={styles.approvedHint}>El plan se activara en ArriendU. Si esta ventana quedo sola, volveras a la aplicacion.</p>
               <button type="button" style={styles.primaryButton} onClick={returnToArriendU}>
                 <ArrowLeft size={18} />
                 Volver a ArriendU
@@ -223,7 +223,7 @@ const WebpaySimulado = () => {
                     style={styles.input}
                     inputMode="numeric"
                     maxLength={19}
-                    placeholder="4242 4242 4242 4242"
+                    placeholder="Ingresa tu tarjeta"
                     value={cardNumber}
                     onChange={handleCardNumberChange}
                     disabled={isAuthorizing}
@@ -249,7 +249,7 @@ const WebpaySimulado = () => {
                       style={styles.input}
                       inputMode="numeric"
                       maxLength={4}
-                      placeholder="123"
+                      placeholder="CVV"
                       value={cvv}
                       onChange={(event) => setCvv(event.target.value.replace(/\D/g, '').slice(0, 4))}
                       disabled={isAuthorizing}
@@ -541,4 +541,4 @@ const styles = {
   },
 };
 
-export default WebpaySimulado;
+export default PasarelaPagos;
