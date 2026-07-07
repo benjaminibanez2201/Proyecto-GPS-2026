@@ -16,11 +16,30 @@ const motivoUsuarioLabels = {
   otro: 'Otro motivo',
 };
 
-const accionLabels = {
+const accionPublicacionLabels = {
   sin_accion: 'Sin acción',
   mantenida: 'Publicación mantenida',
   desactivada: 'Publicación desactivada',
   reactivada: 'Publicación reactivada',
+};
+
+const accionUsuarioLabels = {
+  sin_accion: 'Sin acción',
+  mantenida: 'Cuenta mantenida',
+  suspendida: 'Cuenta suspendida',
+  reactivada: 'Cuenta reactivada',
+};
+
+const estadoPublicacionMeta = {
+  activa: { label: 'Publicación activa', color: '#15803d', backgroundColor: '#dcfce7' },
+  disponible: { label: 'Publicación activa', color: '#15803d', backgroundColor: '#dcfce7' },
+  arrendada: { label: 'Publicación arrendada', color: '#1d4ed8', backgroundColor: '#eff6ff' },
+  inactiva: { label: 'Publicación desactivada', color: '#b91c1c', backgroundColor: '#fee2e2' },
+};
+
+const estadoCuentaMeta = {
+  activo: { label: 'Cuenta activa', color: '#15803d', backgroundColor: '#dcfce7' },
+  suspendido: { label: 'Cuenta suspendida', color: '#b91c1c', backgroundColor: '#fee2e2' },
 };
 
 const formatLabel = (value, mapping) => {
@@ -209,7 +228,18 @@ export default function MisReportes() {
 
                     <div style={styles.reportFooter}>
                       <div style={styles.reportChipRow}>
-                        <span style={styles.chip}>Acción: {reporte.accion || 'sin acción'}</span>
+                        <span style={styles.chip}>Acción: {formatLabel(reporte.accion, accionPublicacionLabels)}</span>
+                        {reporte.publicacion?.estado && (
+                          <span
+                            style={{
+                              ...styles.chip,
+                              color: (estadoPublicacionMeta[reporte.publicacion.estado] || {}).color,
+                              backgroundColor: (estadoPublicacionMeta[reporte.publicacion.estado] || {}).backgroundColor,
+                            }}
+                          >
+                            Estado actual: {(estadoPublicacionMeta[reporte.publicacion.estado] || {}).label || reporte.publicacion.estado}
+                          </span>
+                        )}
                       </div>
 
                       <button
@@ -268,7 +298,18 @@ export default function MisReportes() {
 
                   <div style={styles.reportFooter}>
                     <div style={styles.reportChipRow}>
-                      <span style={styles.chip}>Acción: {formatLabel(reporte.accion, accionLabels)}</span>
+                      <span style={styles.chip}>Acción: {formatLabel(reporte.accion, accionUsuarioLabels)}</span>
+                      {reporte.reportado?.estadoCuenta && (
+                        <span
+                          style={{
+                            ...styles.chip,
+                            color: (estadoCuentaMeta[reporte.reportado.estadoCuenta] || {}).color,
+                            backgroundColor: (estadoCuentaMeta[reporte.reportado.estadoCuenta] || {}).backgroundColor,
+                          }}
+                        >
+                          Estado actual: {(estadoCuentaMeta[reporte.reportado.estadoCuenta] || {}).label || reporte.reportado.estadoCuenta}
+                        </span>
+                      )}
                     </div>
 
                     {reporte.conversacionId && (
