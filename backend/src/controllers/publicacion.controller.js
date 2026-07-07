@@ -1,16 +1,19 @@
 "use strict";
 import { 
+  cancelarPatrocinioPublicacionService,
   createPublicacionService,
   deletePublicacionService,
   getPublicacionDetalleService,
   getPublicacionesService,
   obtenerPublicacionesArrendadorService,
+  patrocinarPublicacionService,
   updatePublicacionService 
 } from "../services/publicacion.service.js";
 import { incrementarVisualizacionesPublicacionServicio } from "../services/publicacion.estadisticas.service.js";
 import { obtenerCoordenadasArriendo } from "../helpers/geocoding.helper.js";
 import {
   publicacionBodyValidation,
+  publicacionPatrocinioValidation,
   publicacionQueryValidation,
   publicacionUpdateValidation
 } from "../validations/publicacion.validation.js";
@@ -244,6 +247,53 @@ export async function deletePublicacion(req, res) {
     if (error) return handleErrorClient(res, 400, "Error al eliminar publicación", error);
 
     handleSuccess(res, 200, "Publicación eliminada correctamente", null);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function patrocinarPublicacion(req, res) {
+  try {
+    const { id: publicacionId } = req.params;
+    const { id: arrendadorId, rol } = req.user;
+
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden patrocinar publicaciones");
+    }
+
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "ID invalido", "El identificador de la publicacion no es valido");
+    }
+
+    const { error: bodyError, value } = publicacionPatrocinioValidation.validate(req.body);
+    if (bodyError) return handleErrorClient(res, 400, "Error de validacion", bodyError.message);
+
+    const [publicacion, error] = await patrocinarPublicacionService(publicacionId, arrendadorId, value);
+    if (error) return handleErrorClient(res, 400, "Error al patrocinar publicacion", error);
+
+    handleSuccess(res, 200, "Publicacion patrocinada correctamente", agregarPublicId(publicacion));
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function cancelarPatrocinioPublicacion(req, res) {
+  try {
+    const { id: publicacionId } = req.params;
+    const { id: arrendadorId, rol } = req.user;
+
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden cancelar patrocinios");
+    }
+
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "ID invalido", "El identificador de la publicacion no es valido");
+    }
+
+    const [publicacion, error] = await cancelarPatrocinioPublicacionService(publicacionId, arrendadorId);
+    if (error) return handleErrorClient(res, 400, "Error al cancelar patrocinio", error);
+
+    handleSuccess(res, 200, "Patrocinio cancelado correctamente", agregarPublicId(publicacion));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

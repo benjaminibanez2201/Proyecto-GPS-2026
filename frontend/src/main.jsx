@@ -11,6 +11,7 @@ import RegisterPending from '@pages/RegisterPending';
 import Error404 from '@pages/Error404';
 import Root from '@pages/Root';
 import ProtectedRoute from '@components/ProtectedRoute';
+import { AuthProvider } from '@context/AuthContext';
 import Profile from '@pages/Profile';
 import AdminPanel from '@pages/AdminPanel';
 import PageTransition from '@components/PageTransition';
@@ -29,6 +30,7 @@ import Mensajes from '@pages/Mensajes.jsx';
 import MisReportes from '@pages/MisReportes.jsx';
 import AdminReportes from '@pages/AdminReportes.jsx';
 import AdminReportesUsuarios from '@pages/AdminReportesUsuarios.jsx';
+import PasarelaPagos from '@pages/PasarelaPagos.jsx';
 
 const APP_NAME = 'ArriendU';
 
@@ -63,6 +65,7 @@ function getTitleFromPath(pathname) {
     
     // Arrendador
     { pattern: /^\/mis-publicaciones\/?$/, title: `Mis publicaciones - ${APP_NAME}` }, 
+    { pattern: /^\/pasarela-pagos\/?$/, title: `Pasarela de pagos - ${APP_NAME}` },
     
     // Compartidos (Estudiante y Arrendador)
     { pattern: /^\/notificaciones\/?$/, title: `Notificaciones - ${APP_NAME}` }, 
@@ -258,6 +261,16 @@ const router = createBrowserRouter([
   {
     path: '/register/pending',
     element: withPageTransition(<RegisterPending/>)
+  },
+  {
+    path: '/pasarela-pagos',
+    element: withPageTransition(
+      <AuthProvider>
+        <ProtectedRoute allowedRoles={['arrendador']}>
+          <PasarelaPagos />
+        </ProtectedRoute>
+      </AuthProvider>
+    )
   }
 ])
 
