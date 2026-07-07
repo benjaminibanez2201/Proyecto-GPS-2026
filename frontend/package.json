@@ -1,7 +1,7 @@
 {
   "name": "proyecto-gps-2026-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.3",
   "description": "Frontend de Proyecto-GPS-2026",
   "type": "module",
   "author": "Benjamín Ibáñez Verdejo",
