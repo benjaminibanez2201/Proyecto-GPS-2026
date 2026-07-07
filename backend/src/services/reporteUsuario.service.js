@@ -70,7 +70,7 @@ export async function listarUsuariosReportados() {
         estado: x.estado,
         accion: x.accion,
         createdAt: x.createdAt,
-        conversacionId: x.conversacion?.id ?? null,
+        conversacionId: x.conversacion?.uuid ?? null,
         reporter: x.reporter ? {
           id: x.reporter.id,
           nombreCompleto: x.reporter.nombreCompleto,
@@ -104,7 +104,7 @@ export async function listarReportesUsuarioDeReportante(reporterId) {
       createdAt: reporte.createdAt,
       resolvedAt: reporte.resolvedAt,
       reportado: reporte.reportado,
-      conversacionId: reporte.conversacion?.id ?? null,
+      conversacionId: reporte.conversacion?.uuid ?? null,
     }));
 
     return [result, null];

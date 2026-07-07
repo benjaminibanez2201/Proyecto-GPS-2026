@@ -7,11 +7,12 @@ import { obtenerMisReportesUsuario } from '@services/reportesUsuario.service.js'
 
 const accent = '#0f766e';
 
-const motivoLabels = {
-  informacion_incorrecta: 'Información incorrecta',
-  contenido_engañoso: 'Contenido engañoso',
-  fraude_sospechoso: 'Sospecha de fraude',
-  spam: 'Spam o contenido repetido',
+const motivoUsuarioLabels = {
+  acoso_o_amenazas: 'Acoso o amenazas',
+  lenguaje_inapropiado: 'Lenguaje inapropiado',
+  intento_de_fraude: 'Intento de fraude o estafa',
+  suplantacion_identidad: 'Suplantación de identidad',
+  spam: 'Spam o mensajes repetidos',
   otro: 'Otro motivo',
 };
 
@@ -209,7 +210,6 @@ export default function MisReportes() {
                     <div style={styles.reportFooter}>
                       <div style={styles.reportChipRow}>
                         <span style={styles.chip}>Acción: {reporte.accion || 'sin acción'}</span>
-                        <span style={styles.chip}>ID reporte #{reporte.id}</span>
                       </div>
 
                       <button
@@ -263,7 +263,7 @@ export default function MisReportes() {
                   </div>
 
                   <p style={styles.reportReason}>
-                    <strong>Motivo:</strong> {formatLabel(reporte.motivo, motivoLabels)}
+                    <strong>Motivo:</strong> {formatLabel(reporte.motivo, motivoUsuarioLabels)}
                   </p>
 
                   <div style={styles.reportFooter}>
@@ -280,13 +280,6 @@ export default function MisReportes() {
                         Ver conversación
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/publicacion/${reporte.publicacion?.publicId}`)}
-                      style={styles.linkButton}
-                    >
-                      Ver publicación
-                    </button>
                   </div>
                 </article>
               );
