@@ -1,5 +1,6 @@
 "use strict";
 import { 
+  cancelarPatrocinioPublicacionService,
   createPublicacionService,
   deletePublicacionService,
   getPublicacionDetalleService,
@@ -271,6 +272,28 @@ export async function patrocinarPublicacion(req, res) {
     if (error) return handleErrorClient(res, 400, "Error al patrocinar publicacion", error);
 
     handleSuccess(res, 200, "Publicacion patrocinada correctamente", agregarPublicId(publicacion));
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function cancelarPatrocinioPublicacion(req, res) {
+  try {
+    const { id: publicacionId } = req.params;
+    const { id: arrendadorId, rol } = req.user;
+
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden cancelar patrocinios");
+    }
+
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "ID invalido", "El identificador de la publicacion no es valido");
+    }
+
+    const [publicacion, error] = await cancelarPatrocinioPublicacionService(publicacionId, arrendadorId);
+    if (error) return handleErrorClient(res, 400, "Error al cancelar patrocinio", error);
+
+    handleSuccess(res, 200, "Patrocinio cancelado correctamente", agregarPublicId(publicacion));
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

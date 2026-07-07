@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion, patrocinarPublicacion } from '@services/user.service.js';
+import { getMisPublicaciones, eliminarPublicacion, editarPublicacion, crearPublicacion, patrocinarPublicacion, cancelarPatrocinioPublicacion } from '@services/user.service.js';
 import { finalizarArriendoPorPublicacion } from '@services/rentalsAndReviews.service.js';
 import { Building2, BarChart3, Pencil, Trash2, Home, Eye, Heart, MessageCircle, RotateCcw, TrendingUp, Image, Lock, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -72,7 +72,7 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => 
 
 const WEBPAY_APPROVED_MESSAGE = 'ARRENDU_WEBPAY_APPROVED';
 
-const abrirPasarelaPatrocinio = async (pub) => {
+const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
   let paymentPayload = null;
   let timerId = null;
   let closeWebpayListener = null;
@@ -160,8 +160,8 @@ const abrirPasarelaPatrocinio = async (pub) => {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#facc15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
           </div>
           <div>
-            <h2 class="sponsor-title">Patrocinar publicacion</h2>
-            <p id="sponsor-step-copy" class="sponsor-subtitle">Elige cuanto tiempo quieres destacar esta publicacion.</p>
+            <h2 class="sponsor-title">${editMode ? 'Editar promocion' : 'Patrocinar publicacion'}</h2>
+            <p id="sponsor-step-copy" class="sponsor-subtitle">${editMode ? 'Elige el nuevo plan para actualizar este destaque.' : 'Elige cuanto tiempo quieres destacar esta publicacion.'}</p>
           </div>
         </div>
 
@@ -179,7 +179,7 @@ const abrirPasarelaPatrocinio = async (pub) => {
           </div>
           <div class="sponsor-footer">
             <button id="sponsor-plan-cancel" type="button" class="sponsor-cancel">Cancelar</button>
-            <button id="sponsor-plan-continue" type="button" class="sponsor-submit">Confirmar plan y pagar</button>
+            <button id="sponsor-plan-continue" type="button" class="sponsor-submit">${editMode ? 'Actualizar plan y pagar' : 'Confirmar plan y pagar'}</button>
           </div>
         </section>
 
@@ -328,7 +328,7 @@ const abrirPasarelaPatrocinio = async (pub) => {
       const showPlanStep = () => {
         if (paymentStep) paymentStep.style.display = 'none';
         if (planStep) planStep.style.display = 'block';
-        if (stepCopy) stepCopy.textContent = 'Elige cuanto tiempo quieres destacar esta publicacion.';
+        if (stepCopy) stepCopy.textContent = editMode ? 'Elige el nuevo plan para actualizar este destaque.' : 'Elige cuanto tiempo quieres destacar esta publicacion.';
         setError('');
       };
 
@@ -537,34 +537,96 @@ const MisPublicaciones = () => {
     fetchPublicaciones();
   };
 
+  const handleCancelarPatrocinio = async (pub) => {
+    const confirm = await Swal.fire({
+      icon: 'warning',
+      title: 'Cortar patrocinio',
+      text: 'La publicacion dejara de aparecer destacada inmediatamente.',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Si, cortar patrocinio',
+      cancelButtonText: 'Volver',
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    Swal.fire({
+      title: 'Cortando patrocinio',
+      text: 'Actualizando la publicacion.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    const response = await cancelarPatrocinioPublicacion(pub.publicId);
+
+    if (response?.status === 'Success') {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Patrocinio cortado',
+        text: 'La publicacion ya no aparece como destacada.',
+        confirmButtonColor: accent,
+      });
+      fetchPublicaciones();
+      return;
+    }
+
+    Swal.fire({
+      icon: 'error',
+      title: 'No se pudo cortar',
+      text: response?.details || response?.message || 'No se pudo cancelar el patrocinio.',
+      confirmButtonColor: accent,
+    });
+  };
+
   const handlePatrocinar = async (pub) => {
     if (!pub?.publicId) return;
 
-    if (isPublicacionPatrocinada(pub)) {
-      Swal.fire({
+    const estaPatrocinada = isPublicacionPatrocinada(pub);
+    let editMode = false;
+
+    if (estaPatrocinada) {
+      const action = await Swal.fire({
         icon: 'info',
-        title: 'Publicacion ya patrocinada',
+        title: 'Gestionar patrocinio',
         text: `Este destaque sigue vigente hasta ${formatSponsorshipDate(pub.patrocinadaHasta)}.`,
+        showCancelButton: true,
+        showDenyButton: true,
         confirmButtonColor: accent,
+        denyButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Editar plan',
+        denyButtonText: 'Cortar patrocinio',
+        cancelButtonText: 'Cerrar',
       });
-      return;
+
+      if (action.isDenied) {
+        await handleCancelarPatrocinio(pub);
+        return;
+      }
+
+      if (!action.isConfirmed) return;
+      editMode = true;
     }
 
     if (pub.estado === 'inactiva' || pub.estado === 'arrendada') {
       Swal.fire({
         icon: 'warning',
-        title: 'No se puede patrocinar',
-        text: 'Solo puedes patrocinar publicaciones activas o disponibles.',
+        title: editMode ? 'No se puede editar' : 'No se puede patrocinar',
+        text: editMode
+          ? 'Solo puedes editar el plan de publicaciones activas o disponibles. Si quieres detenerlo, usa Cortar patrocinio.'
+          : 'Solo puedes patrocinar publicaciones activas o disponibles.',
         confirmButtonColor: accent,
       });
       return;
     }
 
-    const paymentPayload = await abrirPasarelaPatrocinio(pub);
+    const paymentPayload = await abrirPasarelaPatrocinio(pub, { editMode });
     if (!paymentPayload) return;
 
     Swal.fire({
-      title: 'Activando patrocinio',
+      title: editMode ? 'Actualizando patrocinio' : 'Activando patrocinio',
       text: 'Guardando el plan promocionado.',
       allowOutsideClick: false,
       allowEscapeKey: false,
@@ -576,7 +638,7 @@ const MisPublicaciones = () => {
     if (response?.status === 'Success') {
       await Swal.fire({
         icon: 'success',
-        title: 'Publicacion patrocinada',
+        title: editMode ? 'Patrocinio actualizado' : 'Publicacion patrocinada',
         text: `Tu publicacion quedo destacada por ${paymentPayload.vigenciaDias} dia${paymentPayload.vigenciaDias === 1 ? '' : 's'}.`,
         confirmButtonColor: accent,
       });
@@ -586,7 +648,7 @@ const MisPublicaciones = () => {
 
     Swal.fire({
       icon: 'error',
-      title: 'No se pudo patrocinar',
+      title: editMode ? 'No se pudo editar' : 'No se pudo patrocinar',
       text: response?.details || response?.message || 'No se pudo activar el patrocinio.',
       confirmButtonColor: accent,
     });
@@ -1592,8 +1654,8 @@ const MisPublicaciones = () => {
                       ...(patrocinada ? styles.btnSponsorActive : {}),
                       ...(!patrocinada && patrocinioBloqueado ? styles.btnSponsorDisabled : {}),
                     }}
-                    title={patrocinada ? 'Publicacion destacada' : 'Patrocinar publicacion'}
-                    aria-label={patrocinada ? 'Publicacion destacada' : 'Patrocinar publicacion'}
+                    title={patrocinada ? 'Gestionar patrocinio' : 'Patrocinar publicacion'}
+                    aria-label={patrocinada ? 'Gestionar patrocinio' : 'Patrocinar publicacion'}
                   >
                     <Zap size={16} fill={patrocinada ? '#facc15' : 'none'} strokeWidth={2.4} />
                   </button>

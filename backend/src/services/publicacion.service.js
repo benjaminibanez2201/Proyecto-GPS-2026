@@ -174,6 +174,34 @@ export async function patrocinarPublicacionService(publicacionUuid, arrendadorId
   }
 }
 
+export async function cancelarPatrocinioPublicacionService(publicacionUuid, arrendadorId) {
+  try {
+    const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);
+
+    const publicacion = await publicacionRepository.findOne({
+      where: { uuid: publicacionUuid, arrendador: { id: arrendadorId } },
+    });
+
+    if (!publicacion) return [null, "La publicacion no existe o no tienes permisos"];
+
+    if (!publicacion.patrocinada) {
+      return [null, "La publicacion no tiene un patrocinio activo."];
+    }
+
+    publicacion.patrocinada = false;
+    publicacion.patrocinadaHasta = null;
+    publicacion.patrocinioMetodo = null;
+    publicacion.patrocinioMonto = null;
+
+    await publicacionRepository.save(publicacion);
+
+    return [publicacion, null];
+  } catch (error) {
+    console.error("Error al cancelar patrocinio:", error);
+    return [null, "Error interno del servidor al cancelar el patrocinio"];
+  }
+}
+
 export async function getPublicacionDetalleService(uuid) {
   try {
     const publicacionRepository = AppDataSource.getRepository(PublicacionSchema);

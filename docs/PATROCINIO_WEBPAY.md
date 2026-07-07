@@ -28,6 +28,17 @@ Payload esperado:
 
 La opcion de transferencia sigue siendo una confirmacion dentro de la app y usa el mismo endpoint cuando termina la espera.
 
+## Editar o cortar patrocinio
+
+Cuando una publicacion ya esta destacada, el boton con trueno abre una gestion del patrocinio:
+
+- `Editar plan`: vuelve al selector de planes y, luego del pago, actualiza el destaque desde ese momento.
+- `Cortar patrocinio`: desactiva el destaque inmediatamente con el endpoint real:
+
+```http
+DELETE /api/publicacion/:id/patrocinio
+```
+
 ## Capturas
 
 Formulario WebPay:
