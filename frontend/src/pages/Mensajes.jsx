@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle, ShieldAlert, XCircle, MoreVertical, Eye } from 'lucide-react';
+import { MessageCircle, Send, RefreshCw, Inbox, Sparkles, CheckCircle, ShieldAlert, XCircle, MoreVertical, Eye } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
 import {
@@ -582,9 +582,6 @@ export default function Mensajes() {
 
           {isContactComposerVisible && !hasSelectedConversation && (
             <section className="mensajes-detail">
-              <button type="button" className="mensajes-back" onClick={() => navigate(-1)}>
-                <ArrowLeft size={18} /> Volver a la publicación
-              </button>
               <div className="mensajes-detail__card mensajes-detail__card--compact">
                 <div className="mensajes-detail__header">
                   <div>
@@ -592,7 +589,7 @@ export default function Mensajes() {
                     <h2>{publicacionObjetivo?.titulo || 'Iniciar conversación'}</h2>
                     <p className="mensajes-detail__meta">{publicacionObjetivo?.ubicacion || 'La publicación seleccionada'}</p>
                   </div>
-                  <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${publicationTargetId}`)}>
+                  <button type="button" className="mensajes-pill-btn mensajes-pill-btn--solid" onClick={() => navigate(`/publicacion/${publicationTargetId}`)}>
                     Ver publicación
                   </button>
                 </div>
