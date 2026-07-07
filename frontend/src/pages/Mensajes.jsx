@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle, ShieldAlert, XCircle } from 'lucide-react';
+import { MessageCircle, Send, RefreshCw, Inbox, Sparkles, CheckCircle, ShieldAlert, XCircle, MoreVertical, Eye } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
 import {
@@ -111,10 +111,29 @@ export default function Mensajes() {
   const [rentalForConversation, setRentalForConversation] = useState(null);
   const [loadingRentalConfirmation, setLoadingRentalConfirmation] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [menuOpcionesAbierto, setMenuOpcionesAbierto] = useState(false);
+  const menuOpcionesRef = useRef(null);
   const threadRef = useRef(null);
 
   const publicationTargetId = publicationIdParam || null;
   const conversationTargetId = conversationIdParam || null;
+
+  useEffect(() => {
+    setMenuOpcionesAbierto(false);
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    if (!menuOpcionesAbierto) return undefined;
+
+    const handleClickOutside = (event) => {
+      if (menuOpcionesRef.current && !menuOpcionesRef.current.contains(event.target)) {
+        setMenuOpcionesAbierto(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpcionesAbierto]);
 
   const fetchConversations = async () => {
     setLoadingConversations(true);
@@ -563,9 +582,6 @@ export default function Mensajes() {
 
           {isContactComposerVisible && !hasSelectedConversation && (
             <section className="mensajes-detail">
-              <button type="button" className="mensajes-back" onClick={() => navigate(-1)}>
-                <ArrowLeft size={18} /> Volver a la publicación
-              </button>
               <div className="mensajes-detail__card mensajes-detail__card--compact">
                 <div className="mensajes-detail__header">
                   <div>
@@ -573,7 +589,7 @@ export default function Mensajes() {
                     <h2>{publicacionObjetivo?.titulo || 'Iniciar conversación'}</h2>
                     <p className="mensajes-detail__meta">{publicacionObjetivo?.ubicacion || 'La publicación seleccionada'}</p>
                   </div>
-                  <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${publicationTargetId}`)}>
+                  <button type="button" className="mensajes-pill-btn mensajes-pill-btn--solid" onClick={() => navigate(`/publicacion/${publicationTargetId}`)}>
                     Ver publicación
                   </button>
                 </div>
@@ -626,18 +642,9 @@ export default function Mensajes() {
                     </div>
                   </div>
                   <div className="mensajes-detail__header-actions">
-                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${selectedConversation?.publicacion?.publicId}`)}>
-                      Ver publicación
-                    </button>
-                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--danger" onClick={() => setReportModalOpen(true)}>
-                      <ShieldAlert size={16} /> Reportar usuario
-                    </button>
-                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--danger" onClick={() => handleDeleteConversation(selectedConversation)}>
-                      Ocultar chat
-                    </button>
                     {isPublicacionArrendadaPorOtro && (
                       <button type="button" className="mensajes-send-btn" disabled>
-                        <XCircle size={18} /> Este inmueble ya fue arrendado
+                        <XCircle size={18} /> Está Arrendado
                       </button>
                     )}
                     {shouldShowConfirmRentalButton && !currentUserConfirmed && (
@@ -659,6 +666,45 @@ export default function Mensajes() {
                         <CheckCircle size={18} /> Arriendo aceptado
                       </button>
                     )}
+                    <div className="mensajes-menu-wrap" ref={menuOpcionesRef}>
+                      <button
+                        type="button"
+                        className="mensajes-icon-btn mensajes-menu-trigger"
+                        onClick={() => setMenuOpcionesAbierto((prev) => !prev)}
+                        aria-haspopup="true"
+                        aria-expanded={menuOpcionesAbierto}
+                        aria-label="Más opciones"
+                        title="Más opciones"
+                      >
+                        <MoreVertical size={18} />
+                      </button>
+
+                      {menuOpcionesAbierto && (
+                        <div className="mensajes-menu">
+                          <button
+                            type="button"
+                            className="mensajes-menu__item"
+                            onClick={() => { setMenuOpcionesAbierto(false); navigate(`/publicacion/${selectedConversation?.publicacion?.publicId}`); }}
+                          >
+                            <Eye size={16} /> Ver publicación
+                          </button>
+                          <button
+                            type="button"
+                            className="mensajes-menu__item"
+                            onClick={() => { setMenuOpcionesAbierto(false); setReportModalOpen(true); }}
+                          >
+                            <ShieldAlert size={16} /> Reportar usuario
+                          </button>
+                          <button
+                            type="button"
+                            className="mensajes-menu__item mensajes-menu__item--danger"
+                            onClick={() => { setMenuOpcionesAbierto(false); handleDeleteConversation(selectedConversation); }}
+                          >
+                            <XCircle size={16} /> Ocultar chat
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

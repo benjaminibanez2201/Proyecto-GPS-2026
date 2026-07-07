@@ -75,7 +75,8 @@ function getTitleFromPath(pathname) {
     { pattern: /^\/admin\/?$/, title: `Panel administrador - ${APP_NAME}` },
     { pattern: /^\/admin\/reportes\/?$/, title: `Publicaciones reportadas - ${APP_NAME}` },
     { pattern: /^\/admin\/reportes-usuarios\/?$/, title: `Usuarios reportados - ${APP_NAME}` },
-    { pattern: /^\/admin\/users\/?$/, title: `Gestión de usuarios - ${APP_NAME}` }, 
+    { pattern: /^\/admin\/users\/?$/, title: `Gestión de usuarios - ${APP_NAME}` },
+    { pattern: /^\/admin\/auditoria\/?$/, title: `Auditoría - ${APP_NAME}` },
   ];
 
   const matchedRule = titleRules.find((rule) => rule.pattern.test(pathname));

@@ -7,19 +7,39 @@ import { obtenerMisReportesUsuario } from '@services/reportesUsuario.service.js'
 
 const accent = '#0f766e';
 
-const motivoLabels = {
-  informacion_incorrecta: 'Información incorrecta',
-  contenido_engañoso: 'Contenido engañoso',
-  fraude_sospechoso: 'Sospecha de fraude',
-  spam: 'Spam o contenido repetido',
+const motivoUsuarioLabels = {
+  acoso_o_amenazas: 'Acoso o amenazas',
+  lenguaje_inapropiado: 'Lenguaje inapropiado',
+  intento_de_fraude: 'Intento de fraude o estafa',
+  suplantacion_identidad: 'Suplantación de identidad',
+  spam: 'Spam o mensajes repetidos',
   otro: 'Otro motivo',
 };
 
-const accionLabels = {
+const accionPublicacionLabels = {
   sin_accion: 'Sin acción',
   mantenida: 'Publicación mantenida',
   desactivada: 'Publicación desactivada',
   reactivada: 'Publicación reactivada',
+};
+
+const accionUsuarioLabels = {
+  sin_accion: 'Sin acción',
+  mantenida: 'Cuenta mantenida',
+  suspendida: 'Cuenta suspendida',
+  reactivada: 'Cuenta reactivada',
+};
+
+const estadoPublicacionMeta = {
+  activa: { label: 'Publicación activa', color: '#15803d', backgroundColor: '#dcfce7' },
+  disponible: { label: 'Publicación activa', color: '#15803d', backgroundColor: '#dcfce7' },
+  arrendada: { label: 'Publicación arrendada', color: '#1d4ed8', backgroundColor: '#eff6ff' },
+  inactiva: { label: 'Publicación desactivada', color: '#b91c1c', backgroundColor: '#fee2e2' },
+};
+
+const estadoCuentaMeta = {
+  activo: { label: 'Cuenta activa', color: '#15803d', backgroundColor: '#dcfce7' },
+  suspendido: { label: 'Cuenta suspendida', color: '#b91c1c', backgroundColor: '#fee2e2' },
 };
 
 const formatLabel = (value, mapping) => {
@@ -208,8 +228,18 @@ export default function MisReportes() {
 
                     <div style={styles.reportFooter}>
                       <div style={styles.reportChipRow}>
-                        <span style={styles.chip}>Acción: {reporte.accion || 'sin acción'}</span>
-                        <span style={styles.chip}>ID reporte #{reporte.id}</span>
+                        <span style={styles.chip}>Acción: {formatLabel(reporte.accion, accionPublicacionLabels)}</span>
+                        {reporte.publicacion?.estado && (
+                          <span
+                            style={{
+                              ...styles.chip,
+                              color: (estadoPublicacionMeta[reporte.publicacion.estado] || {}).color,
+                              backgroundColor: (estadoPublicacionMeta[reporte.publicacion.estado] || {}).backgroundColor,
+                            }}
+                          >
+                            Estado actual: {(estadoPublicacionMeta[reporte.publicacion.estado] || {}).label || reporte.publicacion.estado}
+                          </span>
+                        )}
                       </div>
 
                       <button
@@ -263,12 +293,23 @@ export default function MisReportes() {
                   </div>
 
                   <p style={styles.reportReason}>
-                    <strong>Motivo:</strong> {formatLabel(reporte.motivo, motivoLabels)}
+                    <strong>Motivo:</strong> {formatLabel(reporte.motivo, motivoUsuarioLabels)}
                   </p>
 
                   <div style={styles.reportFooter}>
                     <div style={styles.reportChipRow}>
-                      <span style={styles.chip}>Acción: {formatLabel(reporte.accion, accionLabels)}</span>
+                      <span style={styles.chip}>Acción: {formatLabel(reporte.accion, accionUsuarioLabels)}</span>
+                      {reporte.reportado?.estadoCuenta && (
+                        <span
+                          style={{
+                            ...styles.chip,
+                            color: (estadoCuentaMeta[reporte.reportado.estadoCuenta] || {}).color,
+                            backgroundColor: (estadoCuentaMeta[reporte.reportado.estadoCuenta] || {}).backgroundColor,
+                          }}
+                        >
+                          Estado actual: {(estadoCuentaMeta[reporte.reportado.estadoCuenta] || {}).label || reporte.reportado.estadoCuenta}
+                        </span>
+                      )}
                     </div>
 
                     {reporte.conversacionId && (
@@ -280,13 +321,6 @@ export default function MisReportes() {
                         Ver conversación
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/publicacion/${reporte.publicacion?.publicId}`)}
-                      style={styles.linkButton}
-                    >
-                      Ver publicación
-                    </button>
                   </div>
                 </article>
               );

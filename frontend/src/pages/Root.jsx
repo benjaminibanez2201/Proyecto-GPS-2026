@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from 'react';
 
 import { NavLink, useLocation, useNavigate, useOutlet } from 'react-router-dom';
@@ -26,7 +25,7 @@ import { obtenerCantidadNotificacionesNoLeidas } from '@services/notificacion.se
 import { obtenerConversaciones } from '@services/mensaje.service.js';
 import { connectSocket, disconnectSocket } from '@services/socket.service.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
-import SpotlightTour from '@components/SpotlightTour.jsx';
+import SpotlightTour, { ESTUDIANTE_STEPS, ARRENDADOR_STEPS } from '@components/SpotlightTour.jsx';
 import FaqModal from '@components/FaqModal.jsx';
 import slidebaar from '../assets/slidebaar.png';
 import miLogo from '../assets/miLogo.png';
@@ -92,7 +91,6 @@ function PageRoot() {
         { label: 'Gestión de Usuarios', icon: Users, to: '/admin/users?estado=todos' },
         { label: 'Publicaciones Reportadas', icon: FlagTriangleRight, to: '/admin/reportes' },
         { label: 'Usuarios Reportados', icon: ShieldAlert, to: '/admin/reportes-usuarios' },
-        { label: 'Auditoría', icon: History, to: '/admin/auditoria' },
         { label: 'Auditoría', icon: ShieldCog, to: '/admin/auditoria' },
       ],
     },
@@ -180,6 +178,11 @@ function PageRoot() {
       <NavLink
         key={item.label}
         to={item.to}
+        data-tour={
+          item.label === 'Mensajes' ? 'mensajes-nav' :
+          item.label === 'Historial de Arriendos' ? 'historial-nav' :
+          undefined
+        }
         onClick={(event) => preventCurrentSectionNavigation(event, item)}
         onMouseEnter={() => setHoveredItem(hoverKey)}
         onMouseLeave={() => setHoveredItem(null)}
@@ -273,11 +276,11 @@ function PageRoot() {
   }, [user?.id, refreshUnreadMessagesCount]);
 
   useEffect(() => {
-    if (!user?.id || normalizedRole !== 'estudiante') return;
+    if (!user?.id || !['estudiante', 'arrendador'].includes(normalizedRole)) return;
 
-    const seenKey = `tourVisto_estudiante_${user.id}`;
+    const seenKey = `tourVisto_${normalizedRole}_${user.id}`;
     if (!localStorage.getItem(seenKey)) {
-      navigate('/buscar');
+      navigate(normalizedRole === 'arrendador' ? '/mis-publicaciones' : '/buscar');
       setTourActive(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -285,7 +288,7 @@ function PageRoot() {
 
   const markTourAsSeen = () => {
     if (user?.id) {
-      localStorage.setItem(`tourVisto_estudiante_${user.id}`, '1');
+      localStorage.setItem(`tourVisto_${normalizedRole}_${user.id}`, '1');
     }
   };
 
@@ -301,9 +304,11 @@ function PageRoot() {
 
   const restartTour = () => {
     setShowHelpMenu(false);
-    navigate('/buscar');
+    navigate(normalizedRole === 'arrendador' ? '/mis-publicaciones' : '/buscar');
     setTourActive(true);
   };
+
+  const tourSteps = normalizedRole === 'arrendador' ? ARRENDADOR_STEPS : ESTUDIANTE_STEPS;
 
   const notificationsItem = { to: '/notificaciones' };
   const isNotificationsCurrent = isSidebarItemCurrent(notificationsItem);
@@ -437,7 +442,7 @@ function PageRoot() {
             {!isSidebarCollapsed && <span>Centro de Notificaciones</span>}
           </NavLink>
 
-          {normalizedRole === 'estudiante' && (
+          {['estudiante', 'arrendador'].includes(normalizedRole) && (
             <button
               type="button"
               onClick={restartTour}
@@ -509,9 +514,9 @@ function PageRoot() {
         </main>
       </div>
 
-      <SpotlightTour active={tourActive} onClose={closeTour} onFinish={finishTour} />
+      <SpotlightTour active={tourActive} onClose={closeTour} onFinish={finishTour} steps={tourSteps} />
 
-      {normalizedRole === 'estudiante' && (
+      {['estudiante', 'arrendador'].includes(normalizedRole) && (
         <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1500 }}>
           {showHelpMenu && (
             <div style={styles.helpMenu}>
