@@ -156,11 +156,12 @@ export async function getUsersService() {
   }
 }
 
-export async function updateUserService(query, body) {
+export async function updateUserService(query, body, adminId = null) {
   try {
     const { id, rut, email } = query;
 
     const userRepository = AppDataSource.getRepository(User);
+    const auditoriaRepository = AppDataSource.getRepository(AuditoriaAdmin);
 
     const userFound = await userRepository.findOne({
       where: [{ id: id }, { rut: rut }, { email: email }],
@@ -415,7 +416,7 @@ export async function updateProfileService(id, body) {
 
     const userFound = await userRepository.findOne({ 
       where: { id },
-      select: ["id", "nombreCompleto", "universidad", "carrera", "telefono", "fotoPerfil", "password", "email"]
+      select: ['id', 'nombreCompleto', 'universidad', 'carrera', 'telefono', 'fotoPerfil', 'password', 'email']
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];
@@ -447,7 +448,7 @@ export async function updateProfileService(id, body) {
       updatedAt: new Date(),
     };
 
-    if (body.newPassword && body.newPassword.trim() !== "") {
+    if (body.newPassword && body.newPassword.trim() !== '') {
       dataToUpdate.password = await encryptPassword(body.newPassword);
     }
 
@@ -461,7 +462,7 @@ export async function updateProfileService(id, body) {
       try {
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
-          ["password"]
+          ['password']
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
@@ -472,7 +473,7 @@ export async function updateProfileService(id, body) {
       try {
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
-          ["email"]
+          ['email']
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
@@ -529,7 +530,7 @@ export async function updateArrendadorProfileService(id, body) {
 
     const userFound = await userRepository.findOne({ 
       where: { id },
-      select: ["id", "nombreCompleto", "email", "telefono", "fotoPerfil", "rol", "estadoVerificacion", "password"]
+      select: ['id', 'nombreCompleto', 'email', 'telefono', 'fotoPerfil', 'rol', 'estadoVerificacion', 'password']
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];
@@ -560,7 +561,7 @@ export async function updateArrendadorProfileService(id, body) {
       updatedAt: new Date(),
     };
 
-    if (body.newPassword && body.newPassword.trim() !== "") {
+    if (body.newPassword && body.newPassword.trim() !== '') {
       dataToUpdate.password = await encryptPassword(body.newPassword);
     }
 
@@ -576,7 +577,7 @@ export async function updateArrendadorProfileService(id, body) {
       try {
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
-          ["email"]
+          ['email']
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
@@ -587,7 +588,7 @@ export async function updateArrendadorProfileService(id, body) {
       try {
         await sendCredentialChangedEmail(
           { email: userFound.email, nombreCompleto: userFound.nombreCompleto },
-          ["password"]
+          ['password']
         );
       } catch (emailError) {
         console.error("Error al enviar correo de aviso:", emailError);
@@ -607,7 +608,7 @@ export async function verifyPasswordService(id, password) {
 
     const userFound = await userRepository.findOne({ 
       where: { id },
-      select: ["id", "password"]
+      select: ['id', 'password']
     });
 
     if (!userFound) return [null, "Usuario no encontrado"];

@@ -223,7 +223,7 @@ export async function getPublicacionDetalleService(uuid) {
         "publicacion.estado",
         "publicacion.patrocinada",
         "publicacion.patrocinadaHasta",
-        "publicacion.createdAt",          
+        "publicacion.createdAt",
         "publicacion.updatedAt"
       ])
       .addSelect([

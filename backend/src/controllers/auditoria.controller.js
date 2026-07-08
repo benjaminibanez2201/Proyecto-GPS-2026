@@ -5,7 +5,7 @@ import {
   handleErrorClient,
   handleErrorServer,
   handleSuccess,
-} from "../handlers/responseHandlers.js"; 
+} from "../handlers/responseHandlers.js";
 
 export async function getAuditoria(req, res) {
   try {

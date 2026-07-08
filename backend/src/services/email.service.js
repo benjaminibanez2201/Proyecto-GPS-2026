@@ -64,7 +64,6 @@ function getBannerOnlyAttachment() {
   ];
 }
 
-
 async function sendTemplateEmail({ attachments = [], data, subject, template, to }) {
   const { html, text } = await renderEmailTemplate(template, data);
 

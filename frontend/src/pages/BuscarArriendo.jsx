@@ -469,9 +469,9 @@ export default function BuscarArriendos() {
                       />
                     </div>
                   </div>
-                </div>
               </div>
-            </>
+            </div>
+          </>
         )}
       </section>
 

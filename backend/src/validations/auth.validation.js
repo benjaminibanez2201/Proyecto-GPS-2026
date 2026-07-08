@@ -2,7 +2,7 @@
 import Joi from "joi";
 
 const namePattern = /^[a-zA-Z\u00C0-\u017F\s]+$/;
-const passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/;
+const passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).+$/;
 const rutPattern = /^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/;
 const MAX_PROFILE_PHOTO_SIZE = 8 * 1024 * 1024;
 const MAX_VERIFICATION_DOCUMENT_SIZE = 8 * 1024 * 1024;

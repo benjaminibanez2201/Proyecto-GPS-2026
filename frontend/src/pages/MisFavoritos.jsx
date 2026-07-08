@@ -145,7 +145,7 @@ const MisFavoritos = () => {
                 Comparar seleccionadas
               </button>
               <button type="button" onClick={limpiarComparacion} style={styles.compareClearButton}>
-                Limpiar selecciÃ³n
+                Limpiar selección
               </button>
             </div>
           </div>
@@ -195,8 +195,8 @@ const MisFavoritos = () => {
                         ...(seleccionadaParaComparar ? styles.compareIconButtonSelected : {}),
                         ...(comparacionDeshabilitada ? styles.compareIconButtonDisabled : {}),
                       }}
-                      title={comparacionDeshabilitada ? 'Puedes comparar hasta tres publicaciones' : seleccionadaParaComparar ? 'Quitar de comparaciÃ³n' : 'Seleccionar para comparar'}
-                      aria-label={seleccionadaParaComparar ? 'Quitar de comparaciÃ³n' : 'Seleccionar para comparar'}
+                      title={comparacionDeshabilitada ? 'Puedes comparar hasta tres publicaciones' : seleccionadaParaComparar ? 'Quitar de comparación' : 'Seleccionar para comparar'}
+                      aria-label={seleccionadaParaComparar ? 'Quitar de comparación' : 'Seleccionar para comparar'}
                     >
                       <GitCompareArrows size={18} strokeWidth={2.4} />
                     </button>

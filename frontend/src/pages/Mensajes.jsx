@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-
 import { MessageCircle, Send, RefreshCw, Inbox, Sparkles, CheckCircle, ShieldAlert, XCircle, MoreVertical, Eye } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
@@ -528,7 +527,6 @@ export default function Mensajes() {
               const otherParticipant = getOtherParticipant(conversation, user?.id, userRole);
               const isSelected = conversation.publicId === selectedConversationId;
               const unreadCount = getUnreadConversationBadgeCount(conversation, userRole);
-
               const isMenuOpen = menuOpcionesAbierto === conversation.publicId;
 
               return (

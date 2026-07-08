@@ -1,5 +1,5 @@
 "use strict";
-import { 
+import {
   cancelarPatrocinioPublicacionService,
   createPublicacionService,
   deletePublicacionService,
@@ -7,7 +7,7 @@ import {
   getPublicacionesService,
   obtenerPublicacionesArrendadorService,
   patrocinarPublicacionService,
-  updatePublicacionService 
+  updatePublicacionService
 } from "../services/publicacion.service.js";
 import { incrementarVisualizacionesPublicacionServicio } from "../services/publicacion.estadisticas.service.js";
 import { obtenerCoordenadasArriendo } from "../helpers/geocoding.helper.js";
@@ -318,4 +318,3 @@ export async function geocodificarUbicacion(req, res) {
     handleErrorServer(res, 500, error.message);
   }
 }
-

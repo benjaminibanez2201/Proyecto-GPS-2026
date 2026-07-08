@@ -64,7 +64,7 @@ function getTitleFromPath(pathname) {
     {pattern: /^\/arriendo\/[^/]+\/?$/, title: `Detalle de arriendo - ${APP_NAME}` },
     
     // Arrendador
-    { pattern: /^\/mis-publicaciones\/?$/, title: `Mis publicaciones - ${APP_NAME}` }, 
+    { pattern: /^\/mis-publicaciones\/?$/, title: `Mis publicaciones - ${APP_NAME}` },
     { pattern: /^\/pasarela-pagos\/?$/, title: `Pasarela de pagos - ${APP_NAME}` },
     
     // Compartidos (Estudiante y Arrendador)

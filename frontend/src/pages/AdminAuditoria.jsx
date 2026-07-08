@@ -7,7 +7,7 @@ const ACCION_LABELS = {
   BLOQUEAR: 'Suspendió la cuenta',
   DESBLOQUEAR: 'Reactivó la cuenta',
   ELIMINAR: 'Eliminó al usuario',
-   EDITAR_USUARIO: 'Editó los datos del usuario',
+  EDITAR_USUARIO: 'Editó los datos del usuario',
   APROBAR_DOCUMENTOS: 'Aprobó los documentos',
   RECHAZAR_DOCUMENTOS: 'Rechazó los documentos',
   SOLICITAR_ANTECEDENTES: 'Solicitó antecedentes adicionales',

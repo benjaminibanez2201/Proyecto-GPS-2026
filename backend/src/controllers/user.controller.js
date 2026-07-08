@@ -353,12 +353,7 @@ export async function toggleUserStatus(req, res) {
     const id = rawId !== undefined && rawId !== null ? Number(rawId) : null;
 
     if (req.user?.rol !== "admin") {
-      return handleErrorClient(
-        res,
-        403,
-        "Acceso denegado",
-        "Solo los administradores pueden gestionar el estado de las cuentas",
-      );
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los administradores pueden gestionar el estado de las cuentas");
     }
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -366,12 +361,7 @@ export async function toggleUserStatus(req, res) {
     }
 
     if (!estadoCuenta || !["activo", "suspendido"].includes(estadoCuenta)) {
-      return handleErrorClient(
-        res,
-        400,
-        "Error de validación",
-        "El estado de la cuenta debe ser 'activo' o 'suspendido'",
-      );
+      return handleErrorClient(res, 400, "Error de validación", "El estado de la cuenta debe ser 'activo' o 'suspendido'");
     }
 
     const [user, error] = await toggleUserStatusService(adminId, id, estadoCuenta);

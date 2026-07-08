@@ -173,7 +173,7 @@ export const profileBodyValidation = Joi.object({
   newPassword: Joi.string()
     .min(8)
     .max(50)
-    .pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/)
+    .pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).+$/)
     .messages({
       "string.empty": "La nueva contraseña no puede estar vacía.",
       "string.base": "La nueva contraseña debe ser de tipo string.",
@@ -242,7 +242,7 @@ export const profileArrendadorBodyValidation = Joi.object({
   newPassword: Joi.string()
     .min(8)
     .max(50)
-    .pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/)
+    .pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).+$/)
     .messages({
       "string.empty": "La nueva contraseña no puede estar vacía.",
       "string.base": "La nueva contraseña debe ser de tipo string.",

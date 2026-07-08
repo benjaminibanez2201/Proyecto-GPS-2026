@@ -18,7 +18,7 @@ const PasarelaPagos = () => {
 
     try {
       return JSON.parse(window.localStorage.getItem(`arriendu:payment-gateway:${token}`) || '{}');
-    } catch (_) {
+    } catch {
       return {};
     }
   }, [token]);
@@ -60,7 +60,7 @@ const PasarelaPagos = () => {
 
     try {
       window.localStorage.removeItem(`arriendu:payment-gateway:${token}`);
-    } catch (_) {
+    } catch {
       // No requiere accion si el navegador no permite modificar storage.
     }
   };

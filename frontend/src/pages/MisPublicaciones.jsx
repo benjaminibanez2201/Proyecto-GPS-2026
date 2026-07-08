@@ -371,7 +371,7 @@ const abrirPasarelaPatrocinio = async (pub, { editMode = false } = {}) => {
             `arriendu:payment-gateway:${token}`,
             JSON.stringify({ ...paymentContext, createdAt: Date.now() }),
           );
-        } catch (_) {
+        } catch {
           // El query string mantiene el contexto principal si storage no esta disponible.
         }
 
@@ -1676,7 +1676,7 @@ const MisPublicaciones = () => {
 
                   <button
                     onClick={() => handleEliminar(pub.publicId)}
-                    style={{ ...styles.iconBtnAction, color: '#dc2626', backgroundColor: '#fef2f2' } }
+                    style={{ ...styles.iconBtnAction, color: '#dc2626', backgroundColor: '#fef2f2' }}
                     title="Eliminar"
                     data-tour="eliminar-btn"
                   >
