@@ -9,7 +9,7 @@ import slidebaar from '@assets/slidebaar.png';
 import '@styles/form.css';
 
 const patternRut = /^(?:(?:[1-9]\d{0}|[1-2]\d{1})(\.\d{3}){2}|[1-9]\d{6}|[1-2]\d{7}|29\.999\.999|29999999)-[\dkK]$/;
-const patternPassword = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]+$/;
+const patternPassword = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).+$/;
 const patternNombre = /^[a-zA-Z\u00C0-\u017F\s]+$/;
 const patternTelefono = /^[0-9+\-\s()]+$/;
 const MAX_PROFILE_PHOTO_SIZE = 8 * 1024 * 1024;
