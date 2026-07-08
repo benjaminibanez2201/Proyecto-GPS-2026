@@ -1,15 +1,19 @@
 "use strict";
-import { 
+import {
+  cancelarPatrocinioPublicacionService,
   createPublicacionService,
   deletePublicacionService,
   getPublicacionDetalleService,
   getPublicacionesService,
   obtenerPublicacionesArrendadorService,
-  updatePublicacionService 
+  patrocinarPublicacionService,
+  updatePublicacionService
 } from "../services/publicacion.service.js";
 import { incrementarVisualizacionesPublicacionServicio } from "../services/publicacion.estadisticas.service.js";
+import { obtenerCoordenadasArriendo } from "../helpers/geocoding.helper.js";
 import {
   publicacionBodyValidation,
+  publicacionPatrocinioValidation,
   publicacionQueryValidation,
   publicacionUpdateValidation
 } from "../validations/publicacion.validation.js";
@@ -248,3 +252,69 @@ export async function deletePublicacion(req, res) {
   }
 }
 
+export async function patrocinarPublicacion(req, res) {
+  try {
+    const { id: publicacionId } = req.params;
+    const { id: arrendadorId, rol } = req.user;
+
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden patrocinar publicaciones");
+    }
+
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "ID invalido", "El identificador de la publicacion no es valido");
+    }
+
+    const { error: bodyError, value } = publicacionPatrocinioValidation.validate(req.body);
+    if (bodyError) return handleErrorClient(res, 400, "Error de validacion", bodyError.message);
+
+    const [publicacion, error] = await patrocinarPublicacionService(publicacionId, arrendadorId, value);
+    if (error) return handleErrorClient(res, 400, "Error al patrocinar publicacion", error);
+
+    handleSuccess(res, 200, "Publicacion patrocinada correctamente", agregarPublicId(publicacion));
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function cancelarPatrocinioPublicacion(req, res) {
+  try {
+    const { id: publicacionId } = req.params;
+    const { id: arrendadorId, rol } = req.user;
+
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden cancelar patrocinios");
+    }
+
+    if (!isValidPublicId(publicacionId)) {
+      return handleErrorClient(res, 400, "ID invalido", "El identificador de la publicacion no es valido");
+    }
+
+    const [publicacion, error] = await cancelarPatrocinioPublicacionService(publicacionId, arrendadorId);
+    if (error) return handleErrorClient(res, 400, "Error al cancelar patrocinio", error);
+
+    handleSuccess(res, 200, "Patrocinio cancelado correctamente", agregarPublicId(publicacion));
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}
+
+export async function geocodificarUbicacion(req, res) {
+  try {
+    const { rol } = req.user;
+    const { ubicacion, comuna } = req.query;
+
+    if (rol !== "arrendador") {
+      return handleErrorClient(res, 403, "Acceso denegado", "Solo los arrendadores pueden geocodificar direcciones");
+    }
+
+    if (!ubicacion || String(ubicacion).trim().length < 5) {
+      return handleErrorClient(res, 400, "Error de validación", "La ubicación debe tener al menos 5 caracteres");
+    }
+
+    const coordenadas = await obtenerCoordenadasArriendo(ubicacion, comuna);
+    handleSuccess(res, 200, "Coordenadas obtenidas", coordenadas);
+  } catch (error) {
+    handleErrorServer(res, 500, error.message);
+  }
+}

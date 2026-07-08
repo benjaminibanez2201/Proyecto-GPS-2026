@@ -130,6 +130,24 @@ export async function crearPublicacion(data) {
     }
 }
 
+export async function patrocinarPublicacion(id, data) {
+    try {
+        const response = await axios.post(`/publicacion/${id}/patrocinio`, data);
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { message: 'Error al patrocinar publicacion' };
+    }
+}
+
+export async function cancelarPatrocinioPublicacion(id) {
+    try {
+        const response = await axios.delete(`/publicacion/${id}/patrocinio`);
+        return response.data;
+    } catch (error) {
+        return error.response?.data || { message: 'Error al cancelar patrocinio' };
+    }
+}
+
 export async function getMisFavoritos() {
     try {
         const response = await axios.get('/favoritos');

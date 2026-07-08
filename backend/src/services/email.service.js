@@ -3,7 +3,6 @@ import nodemailer from "nodemailer";
 import { fileURLToPath } from "url";
 import path from "path";
 import {
-  BACKEND_URL,
   EMAIL_FROM,
   EMAIL_PASS,
   EMAIL_USER,
@@ -36,38 +35,8 @@ function normalizeBaseUrl(url = "http://localhost:5173") {
   return url.replace(/\/$/, "");
 }
 
-function buildPublicBackendUrl() {
-  if (process.env.BACKEND_URL) {
-    return normalizeBaseUrl(process.env.BACKEND_URL);
-  }
-
-  const frontendUrl = normalizeBaseUrl(FRONTEND_URL);
-  const isLocalFrontend = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(frontendUrl);
-
-  if (!isLocalFrontend) {
-    try {
-      const publicBackendUrl = new URL(frontendUrl);
-      const frontendPort = Number(publicBackendUrl.port);
-
-      publicBackendUrl.pathname = "";
-      publicBackendUrl.search = "";
-      publicBackendUrl.hash = "";
-
-      if (frontendPort > 1) {
-        publicBackendUrl.port = String(frontendPort - 1);
-      }
-
-      return normalizeBaseUrl(publicBackendUrl.toString());
-    } catch {
-      return frontendUrl;
-    }
-  }
-
-  return normalizeBaseUrl(BACKEND_URL);
-}
-
 function buildEmailConfirmationUrl(token) {
-  return `${buildPublicBackendUrl()}/auth/confirm-email/${encodeURIComponent(token)}`;
+  return `${normalizeBaseUrl(FRONTEND_URL)}/auth/confirm-email/${encodeURIComponent(token)}`;
 }
 
 function getBrandAttachments() {
@@ -85,6 +54,15 @@ function getBrandAttachments() {
   ];
 }
 
+function getBannerOnlyAttachment() {
+  return [
+    {
+      filename: "slidebaar.png",
+      path: bannerPath,
+      cid: bannerCid,
+    },
+  ];
+}
 
 async function sendTemplateEmail({ attachments = [], data, subject, template, to }) {
   const { html, text } = await renderEmailTemplate(template, data);
@@ -174,7 +152,8 @@ export async function sendRentalCompleteEmail(rental) {
   try {
     const transporter = createTransporter();
     const baseUrl = normalizeBaseUrl(FRONTEND_URL);
-    const nextPath = `/arriendo/${rental.uuid}`;
+    const rentalRef = rental.uuid || rental.id;
+    const nextPath = `/arriendo/${rental.uuid}?origen=correo`;
     const loginWithNextUrl = `${baseUrl}/auth?next=${encodeURIComponent(nextPath)}`;
     const greetingNameArrendador = rental.arrendador?.nombreCompleto || "Arrendador";
     const greetingNameEstudiante = rental.estudiante?.nombreCompleto || "Estudiante";
@@ -261,28 +240,42 @@ export async function sendRentalCompleteEmail(rental) {
         "  </div>",
         "</div>",
       ].join("\n"),
-      attachments: getBrandAttachments(),
+      attachments: getBannerOnlyAttachment(),
     });
 
     if (rental.arrendador?.email) {
-      await transporter.sendMail(buildMail({
-        name: greetingNameArrendador,
-        otherName: greetingNameEstudiante,
-        subject: "Arriendo confirmado",
-        to: rental.arrendador.email,
-      }));
+      try {
+        await transporter.sendMail(buildMail({
+          name: greetingNameArrendador,
+          otherName: greetingNameEstudiante,
+          subject: "Arriendo confirmado",
+          to: rental.arrendador.email,
+        }));
+        console.log(`Correo de arriendo ${rentalRef} enviado a arrendador (${rental.arrendador.email})`);
+      } catch (error) {
+        console.error(`Error al enviar correo de arriendo ${rentalRef} a arrendador:`, error);
+      }
+    } else {
+      console.warn(`Arriendo ${rentalRef}: no se envio correo al arrendador (sin email)`);
     }
 
     if (rental.estudiante?.email) {
-      await transporter.sendMail(buildMail({
-        name: greetingNameEstudiante,
-        otherName: greetingNameArrendador,
-        subject: "Arriendo confirmado",
-        to: rental.estudiante.email,
-      }));
+      try {
+        await transporter.sendMail(buildMail({
+          name: greetingNameEstudiante,
+          otherName: greetingNameArrendador,
+          subject: "Arriendo confirmado",
+          to: rental.estudiante.email,
+        }));
+        console.log(`Correo de arriendo ${rentalRef} enviado a estudiante (${rental.estudiante.email})`);
+      } catch (error) {
+        console.error(`Error al enviar correo de arriendo ${rentalRef} a estudiante:`, error);
+      }
+    } else {
+      console.warn(`Arriendo ${rentalRef}: no se envio correo al estudiante (sin email)`);
     }
   } catch (error) {
-    console.error("Error al enviar correos de arriendo completado:", error);
+    console.error(`Error al preparar correos de arriendo completado - arriendo ${rental?.uuid || rental?.id}:`, error);
   }
 }
 
@@ -295,7 +288,7 @@ export async function sendCredentialChangedEmail(user, tiposCambio = []) {
     to: user.email, // se envía al correo anterior
     subject: "Aviso de seguridad: cambio de credenciales en ArriendU",
     template: "credenciales-cambio",
-    attachments: getBrandAttachments(),
+    attachments: getBannerOnlyAttachment(),
     data: {
       nombreCompleto: user.nombreCompleto,
       descripcion,

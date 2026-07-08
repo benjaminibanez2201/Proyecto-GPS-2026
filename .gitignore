@@ -12,3 +12,5 @@ build/
 coverage/
 
 .DS_Store
+.codex/
+.claude/

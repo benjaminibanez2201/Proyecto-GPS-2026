@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageCircle, Send, RefreshCw, Inbox, ArrowLeft, Sparkles, CheckCircle, Trash2 } from 'lucide-react';
+import { MessageCircle, Send, RefreshCw, Inbox, Sparkles, CheckCircle, ShieldAlert, XCircle, MoreVertical, Eye } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@context/AuthContext';
 import {
@@ -12,6 +12,7 @@ import {
 } from '@services/mensaje.service.js';
 import { createArriendo, listarArriendos } from '@services/rentalsAndReviews.service.js';
 import { getPublicacionPorId } from '@services/publicacion.service.js';
+import ModalReportarUsuario from '@components/ModalReportarUsuario.jsx';
 import { connectSocket } from '@services/socket.service.js';
 import AvatarCirculo from '@components/AvatarCirculo.jsx';
 import '@styles/mensajes.css';
@@ -108,10 +109,27 @@ export default function Mensajes() {
   const [searchText, setSearchText] = useState('');
   const [rentalForConversation, setRentalForConversation] = useState(null);
   const [loadingRentalConfirmation, setLoadingRentalConfirmation] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState(null);
+  const [menuOpcionesAbierto, setMenuOpcionesAbierto] = useState(null);
+  const menuOpcionesRef = useRef(null);
   const threadRef = useRef(null);
 
   const publicationTargetId = publicationIdParam || null;
   const conversationTargetId = conversationIdParam || null;
+
+  useEffect(() => {
+    if (!menuOpcionesAbierto) return undefined;
+
+    const handleClickOutside = (event) => {
+      if (menuOpcionesRef.current && !menuOpcionesRef.current.contains(event.target)) {
+        setMenuOpcionesAbierto(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpcionesAbierto]);
 
   const fetchConversations = async () => {
     setLoadingConversations(true);
@@ -276,12 +294,19 @@ export default function Mensajes() {
 
   const isRentalCompleted = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'COMPLETED');
   const isRentalCancelled = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'CANCELLED');
+  const isRentalFinished = Boolean(rentalForConversation?.id && rentalForConversation?.status === 'FINISHED');
   const isCurrentUserArrendador = Boolean(
     selectedConversation?.arrendador?.id && Number(user?.id) === Number(selectedConversation.arrendador.id),
   );
+  const currentUserConfirmed = !isRentalFinished && Boolean(
+    isCurrentUserArrendador ? rentalForConversation?.confirmedByArrendador : rentalForConversation?.confirmedByEstudiante,
+  );
+  const isPublicacionArrendadaPorOtro = Boolean(
+    selectedConversation?.publicacion?.estado === 'arrendada' && !isRentalCompleted,
+  );
   const shouldShowConfirmRentalButton = Boolean(
-    selectedConversation?.publicacion?.id && selectedConversation?.arrendador?.id && selectedConversation?.estudiante?.id && isCurrentUserArrendador,
-  ) && !isRentalCompleted && !isRentalCancelled;
+    selectedConversation?.publicacion?.id && selectedConversation?.arrendador?.id && selectedConversation?.estudiante?.id,
+  ) && !isRentalCompleted && !isRentalCancelled && !isPublicacionArrendadaPorOtro;
 
   const handleSelectConversation = async (conversationId) => {
     setSearchParams({ conversacion: conversationId });
@@ -404,14 +429,9 @@ export default function Mensajes() {
       return;
     }
 
-    if (!isCurrentUserArrendador) {
-      await Swal.fire('No autorizado', 'Solo el arrendador puede aceptar el arriendo desde el chat.', 'warning');
-      return;
-    }
-
     const confirm = await Swal.fire({
       title: '¿Quiere aceptar este arriendo?',
-      text: 'La publicación pasará a estado arrendada y ya no estará disponible para otros interesados.',
+      text: 'Al aceptar, queda confirmado de tu lado. Cuando la otra persona también acepte, el arriendo quedará cerrado.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#0f766e',
@@ -438,7 +458,13 @@ export default function Mensajes() {
     }
 
     setRentalForConversation(acceptedRental || null);
-    await Swal.fire('Arriendo aceptado', 'El arriendo quedó concretado y la publicación pasó a estado arrendada.', 'success');
+
+    if (acceptedRental?.status === 'COMPLETED') {
+      await Swal.fire('Arriendo aceptado', 'El arriendo quedó concretado y la publicación pasó a estado arrendada.', 'success');
+    } else {
+      await Swal.fire('Confirmación registrada', 'Falta que la otra parte también acepte para concretar el arriendo.', 'success');
+    }
+
     await loadRentalForConversation(selectedConversation);
   };
 
@@ -501,6 +527,7 @@ export default function Mensajes() {
               const otherParticipant = getOtherParticipant(conversation, user?.id, userRole);
               const isSelected = conversation.publicId === selectedConversationId;
               const unreadCount = getUnreadConversationBadgeCount(conversation, userRole);
+              const isMenuOpen = menuOpcionesAbierto === conversation.publicId;
 
               return (
                 <div key={conversation.id} className="mensajes-list-item-wrap">
@@ -513,7 +540,6 @@ export default function Mensajes() {
                     <div className="mensajes-list-item__body">
                       <div className="mensajes-list-item__top">
                         <strong>{otherParticipant?.nombreCompleto || 'Sin nombre'}</strong>
-                        {unreadCount > 0 && <span className="mensajes-badge mensajes-badge--unread">{unreadCount}</span>}
                       </div>
                       <span className="mensajes-list-item__title">{getConversationTitle(conversation)}</span>
                       <span className="mensajes-list-item__meta">
@@ -523,15 +549,65 @@ export default function Mensajes() {
                     </div>
                   </button>
 
-                  <button
-                    type="button"
-                    className="mensajes-list-delete-btn"
-                    onClick={() => handleDeleteConversation(conversation)}
-                    title="Ocultar conversación"
-                    aria-label="Ocultar conversación"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  {unreadCount > 0 && (
+                    <span className="mensajes-badge mensajes-badge--unread mensajes-list-item-unread-badge">{unreadCount}</span>
+                  )}
+
+                  <div className="mensajes-list-item-menu-wrap" ref={isMenuOpen ? menuOpcionesRef : null}>
+                    <button
+                      type="button"
+                      className="mensajes-icon-btn mensajes-menu-trigger mensajes-list-item-menu-trigger"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setMenuOpcionesAbierto((prev) => (prev === conversation.publicId ? null : conversation.publicId));
+                      }}
+                      aria-haspopup="true"
+                      aria-expanded={isMenuOpen}
+                      aria-label="Más opciones"
+                      title="Más opciones"
+                    >
+                      <MoreVertical size={16} />
+                    </button>
+
+                    {isMenuOpen && (
+                      <div className="mensajes-menu">
+                        <button
+                          type="button"
+                          className="mensajes-menu__item"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setMenuOpcionesAbierto(null);
+                            navigate(`/publicacion/${conversation?.publicacion?.publicId}`);
+                          }}
+                        >
+                          <Eye size={16} /> Ver publicación
+                        </button>
+                        <button
+                          type="button"
+                          className="mensajes-menu__item"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setMenuOpcionesAbierto(null);
+                            setReportTarget({ conversacionId: conversation.id, usuario: otherParticipant });
+                            setReportModalOpen(true);
+                          }}
+                        >
+                          <ShieldAlert size={16} /> Reportar usuario
+                        </button>
+                        <button
+                          type="button"
+                          className="mensajes-menu__item mensajes-menu__item--danger"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setMenuOpcionesAbierto(null);
+                            handleDeleteConversation(conversation);
+                          }}
+                        >
+                          <XCircle size={16} /> Ocultar chat
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -562,9 +638,6 @@ export default function Mensajes() {
 
           {isContactComposerVisible && !hasSelectedConversation && (
             <section className="mensajes-detail">
-              <button type="button" className="mensajes-back" onClick={() => navigate(-1)}>
-                <ArrowLeft size={18} /> Volver a la publicación
-              </button>
               <div className="mensajes-detail__card mensajes-detail__card--compact">
                 <div className="mensajes-detail__header">
                   <div>
@@ -572,7 +645,7 @@ export default function Mensajes() {
                     <h2>{publicacionObjetivo?.titulo || 'Iniciar conversación'}</h2>
                     <p className="mensajes-detail__meta">{publicacionObjetivo?.ubicacion || 'La publicación seleccionada'}</p>
                   </div>
-                  <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${publicationTargetId}`)}>
+                  <button type="button" className="mensajes-pill-btn mensajes-pill-btn--solid" onClick={() => navigate(`/publicacion/${publicationTargetId}`)}>
                     Ver publicación
                   </button>
                 </div>
@@ -625,19 +698,23 @@ export default function Mensajes() {
                     </div>
                   </div>
                   <div className="mensajes-detail__header-actions">
-                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--secondary" onClick={() => navigate(`/publicacion/${selectedConversation?.publicacion?.publicId}`)}>
-                      Ver publicación
-                    </button>
-                    <button type="button" className="mensajes-icon-btn mensajes-icon-btn--danger" onClick={() => handleDeleteConversation(selectedConversation)}>
-                      Ocultar chat
-                    </button>
-                    {shouldShowConfirmRentalButton && (
+                    {isPublicacionArrendadaPorOtro && (
+                      <button type="button" className="mensajes-send-btn" disabled>
+                        <XCircle size={18} /> Está Arrendado
+                      </button>
+                    )}
+                    {shouldShowConfirmRentalButton && !currentUserConfirmed && (
                       <button type="button" className="mensajes-send-btn" onClick={handleConfirmRental} disabled={loadingRentalConfirmation}>
                         {loadingRentalConfirmation ? (
                           <><RefreshCw size={18} className="spin" /> Aceptando...</>
                         ) : (
                           <><CheckCircle size={18} /> Aceptar arriendo</>
                         )}
+                      </button>
+                    )}
+                    {shouldShowConfirmRentalButton && currentUserConfirmed && (
+                      <button type="button" className="mensajes-send-btn" disabled>
+                        <CheckCircle size={18} /> Ya aceptaste, falta la otra persona
                       </button>
                     )}
                     {isRentalCompleted && (
@@ -709,6 +786,13 @@ export default function Mensajes() {
           )}
         </main>
       </div>
+
+      <ModalReportarUsuario
+        conversacionId={reportTarget?.conversacionId}
+        usuarioReportado={reportTarget?.usuario}
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+      />
     </div>
   );
 }

@@ -59,8 +59,15 @@
 .noti-footer {
   margin-top: 12px;
   display: flex;
+  align-items: center;
   gap: 8px;
   justify-content: flex-end;
+}
+
+.noti-pagination-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .noti-empty {

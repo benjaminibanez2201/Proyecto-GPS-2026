@@ -156,11 +156,12 @@ export async function getUsersService() {
   }
 }
 
-export async function updateUserService(query, body) {
+export async function updateUserService(query, body, adminId = null) {
   try {
     const { id, rut, email } = query;
 
     const userRepository = AppDataSource.getRepository(User);
+    const auditoriaRepository = AppDataSource.getRepository(AuditoriaAdmin);
 
     const userFound = await userRepository.findOne({
       where: [{ id: id }, { rut: rut }, { email: email }],
@@ -216,6 +217,20 @@ export async function updateUserService(query, body) {
     }
 
     const { password, ...userUpdated } = userData;
+
+    if (adminId) {
+      try {
+        const registroAuditoria = auditoriaRepository.create({
+          accion: "EDITAR_USUARIO",
+          usuarioAfectadoId: userUpdated.id,
+          usuarioAfectadoEmail: userUpdated.email,
+          adminResponsable: { id: adminId },
+        });
+        await auditoriaRepository.save(registroAuditoria);
+      } catch (auditoriaError) {
+        console.error("Error al registrar auditoria de edicion de usuario:", auditoriaError);
+      }
+    }
 
     return [userUpdated, null];
   } catch (error) {

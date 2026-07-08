@@ -5,12 +5,12 @@ import {
   getPublicProfileService,
   getUserService,
   getUsersService,
+  toggleUserStatusService,
+  updateArrendadorProfileService,
   updateProfileService,
   updateUserService,
   updateUserVerificationStatusService,
-  updateArrendadorProfileService,
   verifyPasswordService,
-  toggleUserStatusService,
 } from "../services/user.service.js";
 import {
   profileArrendadorBodyValidation,
@@ -97,7 +97,7 @@ export async function updateUser(req, res) {
         bodyError.message,
       );
 
-    const [user, userError] = await updateUserService({ rut, id, email }, body);
+    const [user, userError] = await updateUserService({ rut, id, email }, body,req.user?.id || null);
 
     if (userError) return handleErrorClient(res, 400, "Error modificando al usuario", userError);
 

@@ -4,7 +4,7 @@ import { validate as validateRut } from 'rut.js';
 import { register } from '@services/auth.service.js';
 import Form from '@components/Form';
 import useRegister from '@hooks/auth/useRegister.jsx';
-import { showErrorAlert, showSuccessAlert } from '@helpers/sweetAlert.js';
+import { showErrorAlert } from '@helpers/sweetAlert.js';
 import slidebaar from '@assets/slidebaar.png';
 import '@styles/form.css';
 
@@ -49,10 +49,13 @@ const Register = () => {
             const response = await register(data);
 
             if (response.status === 'Success') {
-                showSuccessAlert('Registro recibido', 'Revisaremos tus antecedentes y te avisaremos por correo.');
-                setTimeout(() => {
-                    navigate('/auth');
-                }, 3000);
+                navigate('/register/pending', {
+                    replace: true,
+                    state: {
+                        email: data.email?.trim().toLowerCase(),
+                        role: data.rol || 'estudiante',
+                    },
+                });
             } else if (response.status === 'Client error') {
                 errorData(response.details);
             }

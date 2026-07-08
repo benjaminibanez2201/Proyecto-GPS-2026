@@ -6,6 +6,7 @@ import {
   registerService,
   resetPasswordService,
 } from "../services/auth.service.js";
+import { FRONTEND_URL } from "../config/configEnv.js";
 import {
   authValidation,
   newPasswordValidation,
@@ -70,6 +71,14 @@ function getRegisterValidation(body) {
   }
 
   return null;
+}
+
+function normalizeBaseUrl(url = "http://localhost:5173") {
+  return url.replace(/\/$/, "");
+}
+
+function isDirectConfirmationRoute(req) {
+  return req.baseUrl === "/auth";
 }
 
 export async function login(req, res) {
@@ -145,6 +154,14 @@ export async function logout(req, res) {
 export async function confirmEmail(req, res) {
   try {
     const { token } = req.params;
+
+    if (isDirectConfirmationRoute(req)) {
+      return res.redirect(
+        302,
+        `${normalizeBaseUrl(FRONTEND_URL)}/auth/confirm-email/${encodeURIComponent(token)}`,
+      );
+    }
+
     const [confirmation, errorConfirmation] = await confirmEmailService(token);
 
     if (errorConfirmation) {
