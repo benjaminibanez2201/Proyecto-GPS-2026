@@ -1669,7 +1669,8 @@ const MisPublicaciones = () => {
                       ...(!patrocinada && patrocinioBloqueado ? styles.btnSponsorDisabled : {}),
                     }}
                     title={patrocinada ? 'Gestionar patrocinio' : 'Patrocinar publicacion'}
-                    aria-label={patrocinada ? 'Gestionar patrocinio' : 'Patrocinar publicacion'}
+                    aria-label={patrocinada ? 'Gestionar patrocinio' : 'Patrocinar publicacion'} 
+                    data-tour="patrocinar-btn"
                   >
                     <Zap size={16} fill={patrocinada ? '#facc15' : 'none'} strokeWidth={2.4} />
                   </button>

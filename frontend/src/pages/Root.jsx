@@ -547,7 +547,7 @@ function PageRoot() {
         </div>
       )}
 
-      <FaqModal open={showFaq} onClose={() => setShowFaq(false)} />
+      <FaqModal open={showFaq} onClose={() => setShowFaq(false)} role={normalizedRole} />
     </div>
   );
 }

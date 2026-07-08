@@ -316,13 +316,7 @@ export default function DetallePublicacion() {
               <MapPin size={16} color="#008080" />
               {publicacion.ubicacion || 'Ubicación no especificada'}
             </p>
-
-            {publicacion.distanciaCampus != null && (
-              <p style={{ color: '#475569', lineHeight: '1.6', marginTop: '6px' }}>
-                A <strong>{publicacion.distanciaCampus} km</strong> del campus
-              </p>
-            )}
-
+            
             <h3 style={{ color: '#2c3e50', marginTop: '20px', marginBottom: '15px' }}>Reglas de Convivencia</h3>
             <p style={{ color: '#475569', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
               {publicacion.reglasConvivencia || 'El dueño no ha especificado reglas de convivencia.'}

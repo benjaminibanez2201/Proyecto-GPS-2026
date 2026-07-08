@@ -110,11 +110,17 @@ const AdminAuditoria = () => {
     cargarAuditoria(nuevaPagina, filtrosAplicados);
   };
 
-  const stats = useMemo(() => ([
+  const stats = useMemo(() => {
+  const filtrosActivosCount = Object.values(filtrosAplicados).filter(
+    (valor) => String(valor || '').trim() !== ''
+  ).length;
+
+  return [
     { label: 'Registros totales', value: total, icon: History },
     { label: 'Página actual', value: `${pagina} / ${totalPaginas}`, icon: ClipboardList },
-    { label: 'Filtro activo', value: Object.keys(filtrosAplicados).length > 0 ? 'Sí' : 'No', icon: SearchIcon },
-  ]), [total, pagina, totalPaginas, filtrosAplicados]);
+    { label: 'Filtro activo', value: filtrosActivosCount > 0 ? 'Sí' : 'No', icon: SearchIcon },
+  ];
+}, [total, pagina, totalPaginas, filtrosAplicados]);
 
   return (
     <div style={styles.page}>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import '@styles/faqModal.css';
 
-const FAQS = [
+const FAQS_ESTUDIANTE = [
   {
     question: '¿Cómo busco un arriendo?',
     answer: 'Ve a "Buscar Arriendos" en el menú lateral. Puedes filtrar por tipo de inmueble, precio y servicios incluidos (como internet).',
@@ -29,10 +29,43 @@ const FAQS = [
   },
 ];
 
-export default function FaqModal({ open, onClose }) {
+const FAQS_ARRENDADOR = [
+  {
+    question: '¿Cómo publico un inmueble?',
+    answer: 'Ve a "Mis Publicaciones" en el menú lateral y toca "Publicar Inmueble". Completa título, tipo de inmueble, precio, ubicación, una foto y los servicios incluidos.',
+  },
+  {
+    question: '¿Por qué no puedo publicar todavía?',
+    answer: 'Tu cuenta debe estar verificada por un administrador antes de crear publicaciones. Revisa el estado de tu verificación desde "Mi Perfil".',
+  },
+  {
+    question: '¿Cómo edito o elimino una publicación?',
+    answer: 'Desde "Mis Publicaciones", usa los botones "Editar" o "Eliminar" en cada tarjeta. Eliminar una publicación es una acción permanente.',
+  },
+  {
+    question: '¿Qué son las estadísticas de mi publicación?',
+    answer: 'Toca "Estadísticas" en cualquiera de tus publicaciones para ver cuántas visitas, favoritos y conversaciones ha generado.',
+  },
+  {
+    question: '¿Cómo respondo a un estudiante interesado?',
+    answer: 'Ve a "Mensajes" en el menú lateral para ver y responder las conversaciones asociadas a cada una de tus publicaciones.',
+  },
+  {
+    question: '¿Cómo se confirma que un arriendo se concretó?',
+    answer: 'Tanto tú como el estudiante deben tocar "Aceptar arriendo" desde el hilo de conversación correspondiente. El arriendo queda concretado recién cuando ambas partes aceptaron.',
+  },
+  {
+    question: '¿Cómo edito mi perfil?',
+    answer: 'Ve a "Mi Perfil" en el menú lateral para actualizar tu información personal, teléfono y foto de perfil.',
+  },
+];
+
+export default function FaqModal({ open, onClose, role }) {
   const [openIndex, setOpenIndex] = useState(0);
 
   if (!open) return null;
+
+  const faqs = role === 'arrendador' ? FAQS_ARRENDADOR : FAQS_ESTUDIANTE;
 
   const toggleQuestion = (index) => {
     setOpenIndex((prev) => (prev === index ? -1 : index));
@@ -49,7 +82,7 @@ export default function FaqModal({ open, onClose }) {
         <p className="faq-subtitle">Resolvemos las dudas más comunes sobre ArriendU.</p>
 
         <div className="faq-list">
-          {FAQS.map((faq, index) => {
+          {faqs.map((faq, index) => {
             const isOpen = index === openIndex;
             return (
               <div key={faq.question} className={`faq-item ${isOpen ? 'is-open' : ''}`}>

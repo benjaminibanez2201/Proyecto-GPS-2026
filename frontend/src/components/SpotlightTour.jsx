@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { X, ArrowRight, ArrowLeft, Info } from 'lucide-react';
 import { getPublicaciones } from '@services/publicacion.service.js';
 import { getMisPublicaciones } from '@services/user.service.js';
 import '@styles/spotlightTour.css';
@@ -61,6 +61,17 @@ export const ARRENDADOR_STEPS = [
     },
   },
   {
+    id: 'patrocinar',
+    route: '/mis-publicaciones',
+    selector: '[data-tour="patrocinar-btn"]',
+    title: 'Destaca tu publicación',
+    text: 'Patrocina tu aviso para que aparezca primero en las búsquedas. Elige entre 1 día, 1 semana o 1 mes de destaque.',
+    checkExists: async () => {
+      const data = await getMisPublicaciones();
+      return Array.isArray(data) && data.length > 0;
+    },
+  },
+  {
     id: 'eliminar',
     route: '/mis-publicaciones',
     selector: '[data-tour="eliminar-btn"]',
@@ -108,12 +119,16 @@ export default function SpotlightTour({ active, onClose, onFinish, steps = ESTUD
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState(null);
   const [contactoPath, setContactoPath] = useState(null);
+  const [pasosOmitidosIds, setPasosOmitidosIds] = useState([]);
   const cancelledRef = useRef(false);
+  const directionRef = useRef(1); 
 
   useEffect(() => {
     if (active) {
       setStepIndex(0);
       setContactoPath(null);
+      setPasosOmitidosIds([]);
+      directionRef.current = 1;
     }
   }, [active]);
 
@@ -135,6 +150,21 @@ export default function SpotlightTour({ active, onClose, onFinish, steps = ESTUD
       });
     };
 
+    const moverEnDireccion = () => {
+      const siguienteIndice = stepIndex + directionRef.current;
+
+      if (siguienteIndice < 0) {
+        return;
+      }
+
+      if (siguienteIndice >= steps.length) {
+        handleFinishTour();
+        return;
+      }
+
+      setStepIndex(siguienteIndice);
+    };
+
     const pollForElement = (startedAt) => {
       if (cancelledRef.current) return;
 
@@ -149,7 +179,7 @@ export default function SpotlightTour({ active, onClose, onFinish, steps = ESTUD
       }
 
       if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
-        handleSkipStep();
+        moverEnDireccion();
         return;
       }
 
@@ -160,11 +190,12 @@ export default function SpotlightTour({ active, onClose, onFinish, steps = ESTUD
       if (step.checkExists) {
         const existe = await step.checkExists();
         if (cancelledRef.current) return;
-        if (!existe) {
-          handleSkipStep();
-          return;
+          if (!existe) {
+            setPasosOmitidosIds((prev) => (prev.includes(step.id) ? prev : [...prev, step.id]));
+            moverEnDireccion();
+            return;
+          }
         }
-      }
 
       if (step.dynamic) {
         let targetPath = contactoPath;
@@ -237,15 +268,8 @@ export default function SpotlightTour({ active, onClose, onFinish, steps = ESTUD
   const isLast = stepIndex === steps.length - 1;
   const isFirst = stepIndex === 0;
 
-  const handleSkipStep = () => {
-    if (isLast) {
-      handleFinishTour();
-    } else {
-      setStepIndex((prev) => prev + 1);
-    }
-  };
-
   const handleNext = () => {
+    directionRef.current = 1;
     if (isLast) {
       handleFinishTour();
       return;
@@ -254,6 +278,7 @@ export default function SpotlightTour({ active, onClose, onFinish, steps = ESTUD
   };
 
   const handlePrev = () => {
+    directionRef.current = -1;
     if (isFirst) return;
     setStepIndex((prev) => prev - 1);
   };
@@ -291,6 +316,27 @@ export default function SpotlightTour({ active, onClose, onFinish, steps = ESTUD
         <span className="spotlight-step-count">Paso {stepIndex + 1} de {steps.length}</span>
         <h3>{step.title}</h3>
         <p>{step.text}</p>
+
+        {pasosOmitidosIds.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '8px',
+              backgroundColor: '#fffbeb',
+              border: '1px solid #fde68a',
+              borderRadius: '10px',
+              padding: '10px 12px',
+              marginTop: '4px',
+              marginBottom: '4px',
+            }}
+          >
+            <Info size={15} color="#b45309" style={{ flexShrink: 0, marginTop: '1px' }} />
+            <span style={{ fontSize: '12.5px', lineHeight: 1.4, color: '#92400e' }}>
+              Se {pasosOmitidosIds.length === 1 ? 'omitió 1 paso' : `omitieron ${pasosOmitidosIds.length} pasos`} porque aún no tienes publicaciones. Podrás verlo{pasosOmitidosIds.length === 1 ? '' : 's'} cuando publiques tu primer inmueble.
+            </span>
+          </div>
+        )}
 
         <div className="spotlight-actions">
           <button type="button" className="spotlight-btn spotlight-btn--ghost" onClick={handleClose}>
