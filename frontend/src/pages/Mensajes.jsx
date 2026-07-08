@@ -111,7 +111,8 @@ export default function Mensajes() {
   const [rentalForConversation, setRentalForConversation] = useState(null);
   const [loadingRentalConfirmation, setLoadingRentalConfirmation] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [menuOpcionesAbierto, setMenuOpcionesAbierto] = useState(false);
+  const [reportTarget, setReportTarget] = useState(null);
+  const [menuOpcionesAbierto, setMenuOpcionesAbierto] = useState(null);
   const menuOpcionesRef = useRef(null);
   const threadRef = useRef(null);
 
@@ -119,15 +120,11 @@ export default function Mensajes() {
   const conversationTargetId = conversationIdParam || null;
 
   useEffect(() => {
-    setMenuOpcionesAbierto(false);
-  }, [selectedConversationId]);
-
-  useEffect(() => {
     if (!menuOpcionesAbierto) return undefined;
 
     const handleClickOutside = (event) => {
       if (menuOpcionesRef.current && !menuOpcionesRef.current.contains(event.target)) {
-        setMenuOpcionesAbierto(false);
+        setMenuOpcionesAbierto(null);
       }
     };
 
@@ -532,6 +529,8 @@ export default function Mensajes() {
               const isSelected = conversation.publicId === selectedConversationId;
               const unreadCount = getUnreadConversationBadgeCount(conversation, userRole);
 
+              const isMenuOpen = menuOpcionesAbierto === conversation.publicId;
+
               return (
                 <div key={conversation.id} className="mensajes-list-item-wrap">
                   <button
@@ -543,7 +542,6 @@ export default function Mensajes() {
                     <div className="mensajes-list-item__body">
                       <div className="mensajes-list-item__top">
                         <strong>{otherParticipant?.nombreCompleto || 'Sin nombre'}</strong>
-                        {unreadCount > 0 && <span className="mensajes-badge mensajes-badge--unread">{unreadCount}</span>}
                       </div>
                       <span className="mensajes-list-item__title">{getConversationTitle(conversation)}</span>
                       <span className="mensajes-list-item__meta">
@@ -552,6 +550,66 @@ export default function Mensajes() {
                       <span className="mensajes-list-item__date">{formatDate(conversation?.ultimaFechaMensaje || conversation?.updatedAt)}</span>
                     </div>
                   </button>
+
+                  {unreadCount > 0 && (
+                    <span className="mensajes-badge mensajes-badge--unread mensajes-list-item-unread-badge">{unreadCount}</span>
+                  )}
+
+                  <div className="mensajes-list-item-menu-wrap" ref={isMenuOpen ? menuOpcionesRef : null}>
+                    <button
+                      type="button"
+                      className="mensajes-icon-btn mensajes-menu-trigger mensajes-list-item-menu-trigger"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setMenuOpcionesAbierto((prev) => (prev === conversation.publicId ? null : conversation.publicId));
+                      }}
+                      aria-haspopup="true"
+                      aria-expanded={isMenuOpen}
+                      aria-label="Más opciones"
+                      title="Más opciones"
+                    >
+                      <MoreVertical size={16} />
+                    </button>
+
+                    {isMenuOpen && (
+                      <div className="mensajes-menu">
+                        <button
+                          type="button"
+                          className="mensajes-menu__item"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setMenuOpcionesAbierto(null);
+                            navigate(`/publicacion/${conversation?.publicacion?.publicId}`);
+                          }}
+                        >
+                          <Eye size={16} /> Ver publicación
+                        </button>
+                        <button
+                          type="button"
+                          className="mensajes-menu__item"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setMenuOpcionesAbierto(null);
+                            setReportTarget({ conversacionId: conversation.id, usuario: otherParticipant });
+                            setReportModalOpen(true);
+                          }}
+                        >
+                          <ShieldAlert size={16} /> Reportar usuario
+                        </button>
+                        <button
+                          type="button"
+                          className="mensajes-menu__item mensajes-menu__item--danger"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setMenuOpcionesAbierto(null);
+                            handleDeleteConversation(conversation);
+                          }}
+                        >
+                          <XCircle size={16} /> Ocultar chat
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -666,45 +724,6 @@ export default function Mensajes() {
                         <CheckCircle size={18} /> Arriendo aceptado
                       </button>
                     )}
-                    <div className="mensajes-menu-wrap" ref={menuOpcionesRef}>
-                      <button
-                        type="button"
-                        className="mensajes-icon-btn mensajes-menu-trigger"
-                        onClick={() => setMenuOpcionesAbierto((prev) => !prev)}
-                        aria-haspopup="true"
-                        aria-expanded={menuOpcionesAbierto}
-                        aria-label="Más opciones"
-                        title="Más opciones"
-                      >
-                        <MoreVertical size={18} />
-                      </button>
-
-                      {menuOpcionesAbierto && (
-                        <div className="mensajes-menu">
-                          <button
-                            type="button"
-                            className="mensajes-menu__item"
-                            onClick={() => { setMenuOpcionesAbierto(false); navigate(`/publicacion/${selectedConversation?.publicacion?.publicId}`); }}
-                          >
-                            <Eye size={16} /> Ver publicación
-                          </button>
-                          <button
-                            type="button"
-                            className="mensajes-menu__item"
-                            onClick={() => { setMenuOpcionesAbierto(false); setReportModalOpen(true); }}
-                          >
-                            <ShieldAlert size={16} /> Reportar usuario
-                          </button>
-                          <button
-                            type="button"
-                            className="mensajes-menu__item mensajes-menu__item--danger"
-                            onClick={() => { setMenuOpcionesAbierto(false); handleDeleteConversation(selectedConversation); }}
-                          >
-                            <XCircle size={16} /> Ocultar chat
-                          </button>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
 
@@ -771,8 +790,8 @@ export default function Mensajes() {
       </div>
 
       <ModalReportarUsuario
-        conversacionId={selectedConversation?.id}
-        usuarioReportado={selectedOtherParticipant}
+        conversacionId={reportTarget?.conversacionId}
+        usuarioReportado={reportTarget?.usuario}
         open={reportModalOpen}
         onClose={() => setReportModalOpen(false)}
       />

@@ -157,14 +157,6 @@
   box-shadow: 0 12px 24px rgba(0, 128, 128, 0.24);
 }
 
-.mensajes-detail__header-actions .mensajes-icon-btn:not(.mensajes-menu-trigger) {
-  display: none !important;
-}
-
-.mensajes-menu-wrap {
-  position: relative;
-}
-
 .mensajes-menu-trigger {
   background: rgba(15, 23, 42, 0.06);
   color: #334155;
@@ -316,6 +308,34 @@
 
 .mensajes-list-item-wrap {
   position: relative;
+}
+
+.mensajes-list-item-menu-wrap {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+}
+
+.mensajes-list-item-menu-trigger {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #64748b;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.mensajes-list-item-menu-trigger:hover {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.mensajes-list-item-unread-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 5;
 }
 
 .mensajes-list-delete-btn {
