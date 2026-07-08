@@ -12,15 +12,15 @@ const ResenaEsquema = new EntitySchema({
     },
     rentalId: {
       type: "int",
-      nullable: false,
+      nullable: true,
     },
     authorId: {
       type: "int",
-      nullable: false,
+      nullable: true,
     },
     targetUserId: {
       type: "int",
-      nullable: false,
+      nullable: true,
     },
     rating: {
       type: "int",
@@ -40,6 +40,35 @@ const ResenaEsquema = new EntitySchema({
       type: "timestamp with time zone",
       default: () => "CURRENT_TIMESTAMP",
       nullable: false,
+    },
+  },
+  relations: {
+    rental: {
+      type: "many-to-one",
+      target: "Arriendo",
+      joinColumn: {
+        name: "rentalId",
+      },
+      nullable: true,
+      onDelete: "SET NULL",
+    },
+    author: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: {
+        name: "authorId",
+      },
+      nullable: true,
+      onDelete: "SET NULL",
+    },
+    targetUser: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: {
+        name: "targetUserId",
+      },
+      nullable: true,
+      onDelete: "SET NULL",
     },
   },
 });
