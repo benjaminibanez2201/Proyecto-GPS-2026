@@ -1,0 +1,56 @@
+backend/src/services/email.service.js
+  s_f1ade8b32edbdf::t_841a12d94bec1e 132
+  s_f1ade8b32edbdf::t_7fc3cd87cf8a2c 233
+  s_f1ade8b32edbdf::t_c03c0f35b06117 142
+  s_f1ade8b32edbdf::t_defc3468ef4b33 118
+backend/src/templates/emails/verification-info-request.txt
+  s_f1ade8b32edbdf::t_b43aa17d180a24 8,10
+backend/src/templates/emails/account-rejected.html
+  s_f1ade8b32edbdf::t_d9a6f287d5496c 11,30
+backend/src/templates/emails/account-approved.html
+  s_f1ade8b32edbdf::t_f9b7f3c9ea3ade 71,81
+  s_f1ade8b32edbdf::t_369fcf336f3011 51,88
+backend/src/templates/emails/password-recovery.html
+  s_f1ade8b32edbdf::t_5ea78fbe904276 6,10,26,39,61,68,79
+backend/src/templates/emails/account-rejected.txt
+  s_f1ade8b32edbdf::t_d9a6f287d5496c 9
+backend/src/templates/emails/password-recovery.txt
+  s_f1ade8b32edbdf::t_5ea78fbe904276 3,10
+backend/src/templates/emails/registration-received.txt
+  s_f1ade8b32edbdf::t_19556e1c0ae25f 5,7,9,12
+backend/src/templates/emails/registration-received.html
+  s_f1ade8b32edbdf::t_32e8eafea77c99 28
+  s_f1ade8b32edbdf::t_94cf9012c13f30 94
+  s_f1ade8b32edbdf::t_2b81e75ac5f9a9 102
+  s_f1ade8b32edbdf::t_311dd395d2bd65 60
+  s_f1ade8b32edbdf::t_fa37ac3455e8fc 118
+  s_f1ade8b32edbdf::t_c4fcc053d01e93 10
+  s_f1ade8b32edbdf::t_4779ed5d4a691d 49
+  s_f1ade8b32edbdf::t_da11e5fa7101f7 82
+  s_f1ade8b32edbdf::t_a693c36dae69e2 39
+  s_f1ade8b32edbdf::t_31d99d670781db 70
+backend/src/templates/emails/account-approved.txt
+  s_f1ade8b32edbdf::t_f9b7f3c9ea3ade 5,8
+  s_f1ade8b32edbdf::t_369fcf336f3011 11
+backend/src/templates/emails/verification-info-request.html
+  s_f1ade8b32edbdf::t_c8c6c75aa8d261 24,30
+frontend/src/styles/form.css
+  s_f1ade8b32edbdf::t_23a7d26736fc26 154
+  s_f1ade8b32edbdf::t_fce7db39a5016f 305,308
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2096e1a1b13c1824f43f74174cafee3f4771cb81",
+  "prompts": {},
+  "sessions": {
+    "s_f1ade8b32edbdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f0a012bd-9744-4196-b45a-066feee73ae8",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "maacuna_meli <marco.acuna@mercadolibre.cl>"
+    }
+  }
+}
