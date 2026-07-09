@@ -8,6 +8,7 @@ import PublicationMap from '@components/PublicationMap';
 import Swal from 'sweetalert2';
 import '@styles/buscarArriendos.css';
 import '@styles/basePublicaciones.css';
+import { getPublicaciones } from '@services/publicacion.service.js';
 
 function getPublicacionId(publicacion) {
   return publicacion?.id_publicacion || publicacion?.id || publicacion?._id;
@@ -31,8 +32,8 @@ const SERVICIOS_VALIDOS = [
   { id: "lavadora", label: "Lavadora" }
 ];
 
-const PRECIO_MIN_RANGO = 0;
-const PRECIO_MAX_RANGO = 1500000;
+const PRECIO_MIN_RANGO_DEFAULT = 0;
+const PRECIO_MAX_RANGO_DEFAULT = 1500000;
 const PRECIO_PASO = 10000;
 const COMPARACION_STORAGE_KEY = 'buscarArriendoComparacion';
 
@@ -67,6 +68,11 @@ export default function BuscarArriendos() {
   const [filtrosAplicados, setFiltrosAplicados] = useState({});
   const [filtrosVisibles, setFiltrosVisibles] = useState(false);
 
+  const [rangoPrecio, setRangoPrecio] = useState({
+    min: PRECIO_MIN_RANGO_DEFAULT,
+    max: PRECIO_MAX_RANGO_DEFAULT,
+  });
+
   const [filtros, setFiltros] = useState({
     titulo: "",
     tipoInmueble: [],
@@ -75,6 +81,33 @@ export default function BuscarArriendos() {
     direccionOrden: "",
     servicios: []
   });
+
+  useEffect(() => {
+    const cargarPrecioMaximo = async () => {
+      const [data, fetchError] = await getPublicaciones({
+        ordenarPor: 'precioMensual',
+        direccionOrden: 'DESC',
+        pagina: 1,
+      });
+
+      if (fetchError) return;
+
+      const lista = Array.isArray(data) 
+        ? data 
+        : (data?.data || data?.publicaciones || data?.registros || []);
+
+      const maxReal = lista[0]?.precioMensual;
+
+      if (maxReal && maxReal > 0) {
+        setRangoPrecio({
+          min: PRECIO_MIN_RANGO_DEFAULT,
+          max: Math.ceil((maxReal * 1.1) / PRECIO_PASO) * PRECIO_PASO,
+        });
+      }
+    };
+
+    cargarPrecioMaximo();
+  }, []);
 
   const publicacionesVisibles = useMemo(() => publicaciones, [publicaciones]);
 
@@ -114,7 +147,7 @@ export default function BuscarArriendos() {
       setFiltros((prev) => ({ ...prev, precioMin: value }));
       return;
     }
-    const clamped = Math.min(Math.max(Number(value), PRECIO_MIN_RANGO), PRECIO_MAX_RANGO);
+    const clamped = Math.min(Math.max(Number(value), rangoPrecio.min), rangoPrecio.max);
     setFiltros((prev) => ({ ...prev, precioMin: String(clamped) }));
   };
 
@@ -124,14 +157,14 @@ export default function BuscarArriendos() {
       setFiltros((prev) => ({ ...prev, precioMax: value }));
       return;
     }
-    const clamped = Math.min(Math.max(Number(value), PRECIO_MIN_RANGO), PRECIO_MAX_RANGO);
+    const clamped = Math.min(Math.max(Number(value), rangoPrecio.min), rangoPrecio.max);
     setFiltros((prev) => ({ ...prev, precioMax: String(clamped) }));
   };
 
   const handleRangoMinChange = (e) => {
     const nextValue = Number(e.target.value);
     setFiltros((prev) => {
-      const maxActual = Number(prev.precioMax || PRECIO_MAX_RANGO);
+      const maxActual = Number(prev.precioMax || rangoPrecio.max);
       return { ...prev, precioMin: String(Math.min(nextValue, maxActual)) };
     });
   };
@@ -139,7 +172,7 @@ export default function BuscarArriendos() {
   const handleRangoMaxChange = (e) => {
     const nextValue = Number(e.target.value);
     setFiltros((prev) => {
-      const minActual = Number(prev.precioMin || PRECIO_MIN_RANGO);
+      const minActual = Number(prev.precioMin || rangoPrecio.min);
       return { ...prev, precioMax: String(Math.max(nextValue, minActual)) };
     });
   };
@@ -174,7 +207,7 @@ export default function BuscarArriendos() {
     try {
       sessionStorage.setItem(COMPARACION_STORAGE_KEY, JSON.stringify(comparacion));
     } catch {
-      // Si el navegador bloquea sessionStorage, la comparación sigue funcionando en memoria.
+      // ignore
     }
   }, [comparacion]);
 
@@ -214,8 +247,12 @@ export default function BuscarArriendos() {
       if (filtros.tipoInmueble && filtros.tipoInmueble.length > 0) {
         parametrosConsulta.tipoInmueble = filtros.tipoInmueble.join(',');
       }
-      if (filtros.precioMin) parametrosConsulta.precioMin = filtros.precioMin;
-      if (filtros.precioMax) parametrosConsulta.precioMax = filtros.precioMax;
+      if (filtros.precioMin && Number(filtros.precioMin) > 0) {
+        parametrosConsulta.precioMin = filtros.precioMin;
+      }
+      if (filtros.precioMax && Number(filtros.precioMax) > 0) {
+        parametrosConsulta.precioMax = filtros.precioMax;
+      }
       if (filtros.servicios && filtros.servicios.length > 0) {
         parametrosConsulta.servicios = filtros.servicios.join(',');
       }
@@ -291,8 +328,8 @@ export default function BuscarArriendos() {
     return 0;
   };
 
-  const precioMinPorcentaje = Math.min(100, Math.max(0, ((Number(filtros.precioMin || PRECIO_MIN_RANGO) - PRECIO_MIN_RANGO) / (PRECIO_MAX_RANGO - PRECIO_MIN_RANGO)) * 100));
-  const precioMaxPorcentaje = Math.min(100, Math.max(0, ((Number(filtros.precioMax || PRECIO_MAX_RANGO) - PRECIO_MIN_RANGO) / (PRECIO_MAX_RANGO - PRECIO_MIN_RANGO)) * 100));
+  const precioMinPorcentaje = Math.min(100, Math.max(0, ((Number(filtros.precioMin || rangoPrecio.min) - rangoPrecio.min) / (rangoPrecio.max - rangoPrecio.min)) * 100));
+  const precioMaxPorcentaje = Math.min(100, Math.max(0, ((Number(filtros.precioMax || rangoPrecio.max) - rangoPrecio.min) / (rangoPrecio.max - rangoPrecio.min)) * 100));
 
   return (
     <div className="ba-page">
@@ -420,7 +457,7 @@ export default function BuscarArriendos() {
                         <span className="ba-price-currency">$</span>
                         <input
                           type="number"
-                          min={0}
+                          min={rangoPrecio.min}
                           step={PRECIO_PASO}
                           value={filtros.precioMin}
                           onChange={handlePrecioMinTextoChange}
@@ -433,7 +470,7 @@ export default function BuscarArriendos() {
                         <span className="ba-price-currency">$</span>
                         <input
                           type="number"
-                          min={0}
+                          min={rangoPrecio.min}
                           step={PRECIO_PASO}
                           value={filtros.precioMax}
                           onChange={handlePrecioMaxTextoChange}
@@ -451,19 +488,19 @@ export default function BuscarArriendos() {
                       />
                       <input
                         type="range"
-                        min={PRECIO_MIN_RANGO}
-                        max={PRECIO_MAX_RANGO}
+                        min={rangoPrecio.min}
+                        max={rangoPrecio.max}
                         step={PRECIO_PASO}
-                        value={filtros.precioMin || PRECIO_MIN_RANGO}
+                        value={filtros.precioMin || rangoPrecio.min}
                         onChange={handleRangoMinChange}
                         className="ba-range-input"
                       />
                       <input
                         type="range"
-                        min={PRECIO_MIN_RANGO}
-                        max={PRECIO_MAX_RANGO}
+                        min={rangoPrecio.min}
+                        max={rangoPrecio.max}
                         step={PRECIO_PASO}
-                        value={filtros.precioMax || PRECIO_MAX_RANGO}
+                        value={filtros.precioMax || rangoPrecio.max}
                         onChange={handleRangoMaxChange}
                         className="ba-range-input"
                       />

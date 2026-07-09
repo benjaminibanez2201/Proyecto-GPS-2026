@@ -113,21 +113,25 @@ export const publicacionQueryValidation = Joi.object({
       "string.max": "El título de búsqueda debe tener como máximo 255 caracteres."
     }),
   precioMin: Joi.number()
-    .integer()
-    .positive()
-    .optional()
-    .messages({
-      "number.base": "El precio mínimo debe ser un número.",
-      "number.positive": "El precio mínimo debe ser positivo."
-    }),
+  .integer()
+  .positive()
+  .optional()
+  .messages({
+    "number.base": "El precio mínimo debe ser un número.",
+    "number.positive": "El precio mínimo debe ser positivo."
+  }),
   precioMax: Joi.number()
     .integer()
     .positive()
-    .min(Joi.ref("precioMin"))
+    .when('precioMin', {
+      is: Joi.exist(),
+      then: Joi.number().min(Joi.ref('precioMin')),
+    })
     .optional()
     .messages({
       "number.base": "El precio máximo debe ser un número.",
-      "number.positive": "El precio máximo debe ser positivo."
+      "number.positive": "El precio máximo debe ser positivo.",
+      "number.min": "El precio máximo debe ser mayor o igual al precio mínimo."
     }),
   tipoInmueble: Joi.alternatives()
     .try(
