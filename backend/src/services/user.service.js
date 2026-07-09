@@ -55,7 +55,7 @@ async function notifyVerificationResult(user, estadoVerificacion, reviewData) {
 
   if (estadoVerificacion === "aprobado") {
     tipo = "verificacion_aprobada";
-    mensaje = "Tu cuenta fue aprobada. Confirma tu correo para activar el acceso.";
+    mensaje = "Tu cuenta fue aprobada. Ya puedes usar ArriendU.";
     sendEmail = () => sendAccountApprovedEmail(user);
   } else if (estadoVerificacion === "rechazado") {
     tipo = "verificacion_rechazada";
