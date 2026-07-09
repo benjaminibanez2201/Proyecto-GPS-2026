@@ -1,33 +1,67 @@
 <!doctype html>
 <html lang="es">
-  <body style="margin:0;padding:0;background:#f6f7fb;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f7fb;padding:24px 0;">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Antecedentes requeridos - ArriendU</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f8fafa;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+      Necesitamos nuevos antecedentes para seguir revisando tu cuenta ArriendU.
+    </div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafa;padding:28px 12px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e6e8ef;border-radius:8px;overflow:hidden;">
+          <table role="presentation" width="620" cellspacing="0" cellpadding="0" style="width:100%;max-width:620px;background:#ffffff;border:1px solid #d7eeee;border-radius:16px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,0.12);">
             <tr>
-              <td style="padding:18px 24px;background:#0b2a5b;color:#ffffff;">
-                <h1 style="margin:0;font-size:20px;">ArriendU</h1>
-                <p style="margin:6px 0 0;font-size:13px;">Antecedentes requeridos</p>
+              <td style="padding:0;background:#008080;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#008080;">
+                  <tr>
+                    <td style="padding:28px 34px 18px;">
+                      <img src="cid:arriendu-banner" alt="ArriendU" style="display:block;width:330px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 34px 30px;color:#ffffff;">
+                      <p style="margin:0 0 10px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#dffafa;">Antecedentes requeridos</p>
+                      <h1 style="margin:0;font-size:28px;line-height:1.2;font-weight:800;letter-spacing:0;color:#ffffff;">
+                        Necesitamos un poco más de información
+                      </h1>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
-              <td style="padding:24px;">
-                <p style="margin:0 0 12px;font-size:14px;line-height:1.6;">Hola {{ nombreCompleto }},</p>
-                <p style="margin:0 0 16px;font-size:14px;line-height:1.6;">
+              <td style="padding:30px 34px 28px;">
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#003f3f;">Hola {{ nombreCompleto }},</p>
+                <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#244348;">
                   Revisamos tu solicitud de cuenta y necesitamos nuevos antecedentes antes de aprobarla.
                 </p>
-                <p style="margin:0 0 16px;font-size:14px;line-height:1.6;">
-                  Solicitud del administrador: {{ solicitudAntecedentes }}
-                </p>
-                <p style="margin:0;font-size:13px;line-height:1.6;color:#6b7280;">
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:22px 0;border:2px solid #008080;border-radius:12px;background:#f0fbfb;">
+                  <tr>
+                    <td style="width:72px;padding:18px 0 18px 20px;vertical-align:top;">
+                      <img src="cid:arriendu-logo" alt="" width="48" height="48" style="display:block;width:48px;height:48px;border-radius:10px;border:0;background:#008080;" />
+                    </td>
+                    <td style="padding:18px 20px 18px 12px;">
+                      <p style="margin:0 0 6px;font-size:12px;line-height:1.4;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#008080;">Solicitud del administrador</p>
+                      <p style="margin:0;font-size:15px;line-height:1.5;font-weight:700;color:#003f3f;">{{ solicitudAntecedentes }}</p>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#647477;">
                   Responde este correo o contacta al soporte de ArriendU con la información solicitada.
+                </p>
+                <p style="margin:0;font-size:13px;line-height:1.6;color:#647477;">
+                  Tu cuenta seguirá pendiente hasta que el administrador termine la revisión.
                 </p>
               </td>
             </tr>
             <tr>
-              <td style="padding:16px 24px;background:#f9fafb;border-top:1px solid #e6e8ef;color:#6b7280;font-size:12px;">
-                Tu cuenta seguirá pendiente hasta que el administrador termine la revisión.
+              <td style="padding:18px 34px;background:#f0fbfb;border-top:1px solid #d7eeee;color:#647477;font-size:12px;line-height:1.6;">
+                Este es un mensaje automático, por favor no respondas a este correo.
               </td>
             </tr>
           </table>

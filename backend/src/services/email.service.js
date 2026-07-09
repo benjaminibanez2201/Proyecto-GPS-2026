@@ -114,6 +114,7 @@ export async function sendAccountRejectedEmail(user, motivoRechazo = "") {
     to: user.email,
     subject: "Tu cuenta ArriendU fue revisada",
     template: "account-rejected",
+    attachments: getBrandAttachments(),
     data: {
       motivoRechazo: motivoRechazo || "No se especificó un motivo.",
       nombreCompleto: user.nombreCompleto,
@@ -126,6 +127,7 @@ export async function sendVerificationInfoRequestEmail(user, solicitudAntecedent
     to: user.email,
     subject: "Necesitamos nuevos antecedentes para revisar tu cuenta",
     template: "verification-info-request",
+    attachments: getBrandAttachments(),
     data: {
       nombreCompleto: user.nombreCompleto,
       solicitudAntecedentes: solicitudAntecedentes
