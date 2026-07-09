@@ -1,0 +1,24 @@
+backend/src/services/email.service.js
+  s_f1ade8b32edbdf::t_67d75c5f864516 117
+  s_f1ade8b32edbdf::t_9cad875937444b 130
+backend/src/templates/emails/verification-info-request.html
+  s_f1ade8b32edbdf::t_97d1bf2c907cb0 3-12,15,17-32,36-38,41-54,57-59,63-64
+backend/src/templates/emails/account-rejected.html
+  s_f1ade8b32edbdf::t_20cfd0ffc439b2 3-12,15,17-32,36-38,41-58,63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "870fa2840867d01392bf65b7239f83c20ba5427d",
+  "prompts": {},
+  "sessions": {
+    "s_f1ade8b32edbdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f0a012bd-9744-4196-b45a-066feee73ae8",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "maacuna_meli <marco.acuna@mercadolibre.cl>"
+    }
+  }
+}
