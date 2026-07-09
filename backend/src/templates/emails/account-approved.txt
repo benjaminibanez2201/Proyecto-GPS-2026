@@ -2,10 +2,10 @@ Hola {{ nombreCompleto }},
 
 Tu cuenta fue aprobada. Para activar el acceso a ArriendU, confirma primero que este correo te pertenece.
 
-Confirma tu correo aqui:
+Confirma tu correo aquí:
 {{ confirmEmailUrl }}
 
-Despues de confirmar tu correo, puedes iniciar sesion aqui:
+Después de confirmar tu correo, puedes iniciar sesión aquí:
 {{ loginUrl }}
 
-Este es un mensaje automatico, por favor no respondas a este correo.
+Este es un mensaje automático, por favor no respondas a este correo.
