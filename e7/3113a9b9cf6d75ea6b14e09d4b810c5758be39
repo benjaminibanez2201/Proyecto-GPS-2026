@@ -1,0 +1,27 @@
+frontend/src/pages/Profile.jsx
+  s_f1ade8b32edbdf::t_983d7f2743b762 235
+frontend/src/pages/Register.jsx
+  s_f1ade8b32edbdf::t_d39fb270f51b86 123
+backend/src/validations/auth.validation.js
+  s_f1ade8b32edbdf::t_09fec83cc9f130 53,61
+backend/src/validations/user.validation.js
+  s_f1ade8b32edbdf::t_7a95f373d49af2 58,64,138,144,211,217
+backend/src/services/publicacion.service.js
+  s_f1ade8b32edbdf::t_42ef3394745953 56-57,59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e73113a9b9cf6d75ea6b14e09d4b810c5758be39",
+  "prompts": {},
+  "sessions": {
+    "s_f1ade8b32edbdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f0a012bd-9744-4196-b45a-066feee73ae8",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "maacuna_meli <marco.acuna@mercadolibre.cl>"
+    }
+  }
+}
