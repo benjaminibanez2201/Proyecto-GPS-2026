@@ -144,14 +144,6 @@ export const publicacionQueryValidation = Joi.object({
     .messages({
       "alternatives.match": "El tipo de inmueble a buscar debe ser: departamento, casa, pieza o estudio."
     }),
-  distanciaCampus: Joi.number()
-    .integer()
-    .positive()
-    .optional()
-    .messages({
-      "number.base": "La distancia al campus debe ser un número.",
-      "number.positive": "La distancia al campus debe ser positiva."
-    }),
   servicios: Joi.alternatives()
     .try(
       Joi.array().items(

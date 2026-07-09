@@ -53,11 +53,10 @@ export async function getPublicacionesService(filtros) {
       precioMin, 
       precioMax, 
       tipoInmueble, 
-      ordenarPor, 
-      direccionOrden, 
+      ordenarPor,
+      direccionOrden,
       pagina,
-      distanciaCampus,
-      servicios 
+      servicios
     } = filtros;
 
     const query = publicacionRepository.createQueryBuilder("publicacion")
@@ -78,10 +77,6 @@ export async function getPublicacionesService(filtros) {
     if (tipoInmueble) {
       const tiposArray = Array.isArray(tipoInmueble) ? tipoInmueble : tipoInmueble.split(",");
       query.andWhere("publicacion.tipoInmueble IN (:...tiposArray)", { tiposArray });
-    }
-
-    if (distanciaCampus) {
-      query.andWhere("publicacion.distanciaCampus <= :distanciaCampus", { distanciaCampus: parseInt(distanciaCampus) });
     }
 
     if (servicios) {

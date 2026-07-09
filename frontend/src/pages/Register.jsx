@@ -120,7 +120,7 @@ const Register = () => {
                             fieldType: 'input',
                             type: 'text',
                             required: true,
-                            minLength: 15,
+                            minLength: 3,
                             maxLength: 50,
                             pattern: patternNombre,
                             patternMessage: 'Debe contener solo letras y espacios',

@@ -232,7 +232,7 @@ const Profile = () => {
     if (field === 'nombreCompleto') {
       return {
         required: 'El nombre completo es obligatorio',
-        minLength: { value: 15, message: 'El nombre completo debe tener al menos 15 caracteres' },
+        minLength: { value: 3, message: 'El nombre completo debe tener al menos 3 caracteres' },
         maxLength: { value: 50, message: 'El nombre completo debe tener máximo 50 caracteres' },
         pattern: { value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, message: 'Solo puede contener letras y espacios' },
       };
