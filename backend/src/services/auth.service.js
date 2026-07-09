@@ -12,6 +12,7 @@ import {
 } from "./email.service.js";
 import {
   commitVerificationUploads,
+  commitProfilePhotoUpload,
   removeStoredFiles,
   removeUploadedTempFiles,
 } from "../helpers/upload.helper.js";
@@ -226,6 +227,11 @@ export async function registerService(user, uploadedFiles = {}) {
       || uploadedFiles.carnetIdentidadReverso?.[0]
       || uploadedFiles.fotoPerfil?.[0]
     ) {
+      const fotoPerfilFile = uploadedFiles.fotoPerfil?.[0];
+      if (fotoPerfilFile) {
+        delete uploadedFiles.fotoPerfil;
+      }
+
       const { stored, storedPaths } = await commitVerificationUploads(newUser.id, uploadedFiles);
       uploadsCommitted = true;
       storedFilePaths = storedPaths;
@@ -250,8 +256,11 @@ export async function registerService(user, uploadedFiles = {}) {
         newUser.carnetIdentidadReverso = stored.carnetIdentidadReverso;
       }
 
-      if (stored.fotoPerfil) {
-        newUser.fotoPerfil = stored.fotoPerfil;
+      if (fotoPerfilFile) {
+        const fotoUrl = await commitProfilePhotoUpload(newUser.id, fotoPerfilFile);
+        if (fotoUrl) {
+          newUser.fotoPerfil = fotoUrl;
+        }
       }
 
       await userRepository.save(newUser);
