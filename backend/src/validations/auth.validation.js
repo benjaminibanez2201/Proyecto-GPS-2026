@@ -50,7 +50,7 @@ const loginPasswordSchema = Joi.string()
   });
 
 const nombreCompletoSchema = Joi.string()
-  .min(15)
+  .min(3)
   .max(50)
   .pattern(namePattern)
   .required()
@@ -58,7 +58,7 @@ const nombreCompletoSchema = Joi.string()
     "string.empty": "El nombre completo no puede estar vacio.",
     "any.required": "El nombre completo es obligatorio.",
     "string.base": "El nombre completo debe ser de tipo texto.",
-    "string.min": "El nombre completo debe tener al menos 15 caracteres.",
+    "string.min": "El nombre completo debe tener al menos 3 caracteres.",
     "string.max": "El nombre completo debe tener como maximo 50 caracteres.",
     "string.pattern.base": "El nombre completo solo puede contener letras y espacios.",
   });

@@ -114,8 +114,9 @@ export async function sendAccountRejectedEmail(user, motivoRechazo = "") {
     to: user.email,
     subject: "Tu cuenta ArriendU fue revisada",
     template: "account-rejected",
+    attachments: getBrandAttachments(),
     data: {
-      motivoRechazo: motivoRechazo || "No se especifico un motivo.",
+      motivoRechazo: motivoRechazo || "No se especificó un motivo.",
       nombreCompleto: user.nombreCompleto,
     },
   });
@@ -126,10 +127,11 @@ export async function sendVerificationInfoRequestEmail(user, solicitudAntecedent
     to: user.email,
     subject: "Necesitamos nuevos antecedentes para revisar tu cuenta",
     template: "verification-info-request",
+    attachments: getBrandAttachments(),
     data: {
       nombreCompleto: user.nombreCompleto,
       solicitudAntecedentes: solicitudAntecedentes
-        || "El administrador solicito nuevos antecedentes para completar la revision.",
+        || "El administrador solicitó nuevos antecedentes para completar la revisión.",
     },
   });
 }
@@ -139,7 +141,7 @@ export async function sendRecoveryEmail(email, resetToken) {
 
   return sendTemplateEmail({
     to: email,
-    subject: "Restablecer contrasena",
+    subject: "Restablecer contraseña",
     template: "password-recovery",
     attachments: getBrandAttachments(),
     data: {
@@ -230,7 +232,7 @@ export async function sendRentalCompleteEmail(rental) {
         `          <a href="${loginWithNextUrl}" style="${buttonStyle}">Ver arriendo</a>`,
         "        </div>",
         "        <p style=\"margin:0;font-size:13px;line-height:1.6;color:#6b7280;\">",
-        "          Este es un mensaje automatico, por favor no respondas.",
+        "          Este es un mensaje automático, por favor no respondas.",
         "        </p>",
         "      </div>",
         `      <div style="${footerStyle}">`,

@@ -6,4 +6,4 @@ Motivo: {{ motivoRechazo }}
 
 Si crees que esto fue un error, contacta al soporte de ArriendU.
 
-Este es un mensaje automatico, por favor no respondas a este correo.
+Este es un mensaje automático, por favor no respondas a este correo.
